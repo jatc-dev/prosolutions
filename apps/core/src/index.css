@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ui-bg: #f8fafc;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f8fafc;
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+  --ui-text: #0f172a;
+  --ui-text-muted: #475569;
+  --ui-focus: #4f46e5;
+  --ui-radius-sm: 0.625rem;
+  --ui-radius-md: 0.875rem;
+  --ui-radius-lg: 1rem;
+  --ui-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
+  --ui-shadow-md: 0 10px 24px -16px rgba(15, 23, 42, 0.35);
+}
+
+.dark {
+  --ui-bg: #020617;
+  --ui-surface: #0f172a;
+  --ui-surface-soft: #111827;
+  --ui-border: #334155;
+  --ui-border-strong: #475569;
+  --ui-text: #e2e8f0;
+  --ui-text-muted: #94a3b8;
+  --ui-focus: #818cf8;
+  --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
+  --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
+}
+
+@layer base {
+  h1, h2, h3, h4 {
+    color: var(--ui-text);
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    font-size: clamp(1.875rem, 2.5vw, 3rem);
+    line-height: 1.1;
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: clamp(1.375rem, 1.9vw, 2rem);
+    line-height: 1.2;
+    font-weight: 750;
+  }
+
+  h3 {
+    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    line-height: 1.25;
+    font-weight: 700;
+  }
+
+  p, label, input, button, select, textarea {
+    letter-spacing: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--ui-focus);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .ui-page {
+    background: var(--ui-bg);
+    color: var(--ui-text);
+  }
+
+  .ui-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6;
+  }
+
+  .ui-surface {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-sm);
+  }
+
+  .ui-card {
+    @apply ui-surface p-6;
+  }
+
+  .ui-muted {
+    color: var(--ui-text-muted);
+  }
+
+  .ui-gradient-text {
+    @apply bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 bg-clip-text text-transparent dark:from-brand-400 dark:via-cyan-300 dark:to-cyan-200;
+  }
+
+  .ui-glass-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/80;
+  }
+
+  .ui-halo {
+    @apply pointer-events-none absolute -z-10 h-72 w-72 rounded-full bg-brand-400/20 blur-3xl dark:bg-brand-500/10;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  font-family: "Manrope", "Segoe UI", Inter, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+/* Utility: hide scrollbar while keeping scroll available */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

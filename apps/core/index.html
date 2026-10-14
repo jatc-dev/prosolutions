@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <script>
+      // Apply the resolved theme before first paint to avoid a light/dark flash.
+      // Precedence: explicit stored preference > OS prefers-color-scheme > light.
+      (function () {
+        try {
+          var preference = "system";
+          var saved = localStorage.getItem("theme-storage");
+          if (saved) {
+            var parsed = JSON.parse(saved);
+            var stored = parsed && parsed.state && (parsed.state.preference || parsed.state.theme);
+            if (stored === "light" || stored === "dark") preference = stored;
+          }
+          var dark =
+            preference === "dark" ||
+            (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {
+          /* ignore: fall back to the light default */
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary meta -->
+    <title>ProSolutions — Ecosistema de herramientas profesionales tech</title>
+    <meta
+      name="description"
+      content="ProSolutions es el ecosistema de herramientas profesionales tech: crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs."
+    />
+    <meta name="keywords" content="ProSolutions, ProCV, ProJobs, hoja de vida, CV, empleos tech remotos, ATS" />
+    <meta name="author" content="jatc.dev" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1e1b4b" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Icons and manifest -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ProSolutions" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content="ProSolutions — Ecosistema de herramientas profesionales tech" />
+    <meta
+      property="og:description"
+      content="Crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs. Un solo ecosistema para tu carrera."
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ProSolutions — Ecosistema de herramientas profesionales tech" />
+    <meta
+      name="twitter:description"
+      content="Crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs."
+    />
+
+    <!-- Google AdSense: reemplaza ca-pub-XXXXXXXXXXXXXXXX por tu client ID y descomenta.
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    -->
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ProSolutions",
+        "description": "Ecosistema de herramientas profesionales tech: ProCV (hojas de vida) y ProJobs (empleos tech remotos).",
+        "inLanguage": "es",
+        "author": {
+          "@type": "Organization",
+          "name": "JATC.DEV",
+          "url": "https://jatc.dev"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
