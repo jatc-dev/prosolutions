@@ -1,6 +1,11 @@
 from datetime import datetime
 import json
+import sys
 import urllib.request
+
+# Evita UnicodeEncodeError en consolas Windows (cp1252) al imprimir emojis.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Configuración básica de la web
 SITE_URL = "https://jatc-dev.github.io/empleos-tech-remoto/"
