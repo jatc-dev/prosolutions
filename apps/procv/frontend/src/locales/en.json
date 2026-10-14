@@ -1,0 +1,1207 @@
+{
+  "theme": {
+    "darkMode": "Dark Mode",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "user": {
+    "menu": "User Menu"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "select": "Select",
+    "selected": "Selected",
+    "language": "Language",
+    "user": "User",
+    "errorBoundary": {
+      "title": "Something went wrong",
+      "message": "An unexpected error occurred. Please try again.",
+      "retry": "Try Again"
+    },
+    "retry": "Retry"
+  },
+  "profile": {
+    "personalInfo": "Personal Information",
+    "personalInfoDesc": "Update your personal information and account settings",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "fullNameHelp": "This is the name that will appear on your CVs",
+    "email": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "emailHelp": "This email will be used for account notifications",
+    "accountInfo": "Account Information",
+    "accountType": "Account Type",
+    "updateSuccess": "Profile updated successfully"
+  },
+  "navigation": {
+    "menu": "Menu",
+    "dashboard": "Dashboard",
+    "dashboardShort": "Dashboard",
+    "dashboardLong": "Main Dashboard",
+    "goToDashboard": "Go to dashboard",
+    "more": "More",
+    "editor": "Editor",
+    "templates": "Templates",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "admin": "Admin",
+    "adminShort": "Admin",
+    "adminLong": "Administration"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Full Name",
+    "login": "Login",
+    "register": "Register",
+    "loginTitle": "Sign In",
+    "registerTitle": "Create Account",
+    "loginButton": "Sign In",
+    "registerButton": "Create Account",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "welcomeBack": "Welcome back!",
+    "getStarted": "Get started with your professional CV",
+    "registerDescription": "Join ProCV and create professional resumes that stand out. Register now and access all premium functionalities.",
+    "createAccount": "Create Account",
+    "loginSubtitle": "Sign in to your account",
+    "registerSubtitle": "Join thousands of professionals",
+    "namePlaceholder": "Enter your full name",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "registerError": "Failed to create account",
+    "loginError": "Login failed.",
+    "rateLimited": "Too many attempts. Try again in {{minutes}} min.",
+    "verification": {
+      "title": "Verify Your Email",
+      "subtitle": "Please check your email to verify your account",
+      "description": "A verification email has been sent to",
+      "button": "Verify My Email",
+      "resendLink": "Resend verification email",
+      "checking": "Checking...",
+      "verifiedTitle": "Email Verified",
+      "verifiedMessage": "Your email has been verified successfully. You can now sign in.",
+      "error": "Verification failed",
+      "errorExpired": "Invalid or expired verification link.",
+      "resendSuccess": "Verification email sent!",
+      "resendError": "Failed to send verification email. Please try again.",
+      "backToLogin": "Back to Login",
+      "enterEmail": "Enter your email to resend verification",
+      "resendButton": "Resend Verification Email",
+      "resendCooldown": "Resend in {{seconds}}s"
+    },
+    "redirecting": "Redirecting to dashboard...",
+    "registerFeatures": {
+      "quick": {
+        "title": "Quick Registration",
+        "description": "Create your account in seconds and start creating your professional CV."
+      },
+      "templates": {
+        "title": "Exclusive Templates",
+        "description": "Access premium templates once you register."
+      },
+      "cloud": {
+        "title": "Cloud Synchronization",
+        "description": "Save and access your CVs from any device."
+      },
+      "support": {
+        "title": "Priority Support",
+        "description": "Registered users receive preferred technical assistance."
+      },
+      "updates": {
+        "title": "Early Updates",
+        "description": "Be the first to try new functionalities."
+      }
+    },
+    "reset": {
+      "title": "Reset Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "descriptionSubmitted": "Check your email for a password reset link.",
+      "emailSentMessage": "If an account with that email exists, a reset link has been sent.",
+      "sendButton": "Send Reset Link",
+      "sendingButton": "Sending...",
+      "sendAgain": "Send again",
+      "resetTitle": "Set New Password",
+      "resetDescription": "Enter a new password for your account.",
+      "passwordRequirements": "Minimum 8 characters with at least one uppercase letter, one lowercase letter, and one number.",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "submitButton": "Reset Password",
+      "submittingButton": "Resetting...",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters long",
+      "invalidToken": "Invalid or expired reset token",
+      "resetFailed": "Failed to reset password",
+      "successMessage": "Your password has been reset successfully."
+    }
+  },
+  "cv": {
+    "title": "CV Title",
+    "template": "Template",
+    "personal": "Personal Information",
+    "experience": "Work Experience",
+    "education": "Education",
+    "skills": "Skills",
+    "languages": "Languages",
+    "certificates": "Certificates",
+    "links": "Links",
+    "summary": "Professional Summary",
+    "fullName": "Full Name",
+    "professionalTitle": "Professional Title",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "website": "Website",
+    "company": "Company",
+    "position": "Position",
+    "location": "Location",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "currentPosition": "Current Position",
+    "description": "Description",
+    "achievements": "Achievements",
+    "technologies": "Technologies Used",
+    "institution": "Institution",
+    "degree": "Degree",
+    "fieldOfStudy": "Field of Study",
+    "gpa": "GPA",
+    "activities": "Activities",
+    "skillName": "Skill Name",
+    "skillLevel": "Skill Level",
+    "languageName": "Language",
+    "proficiency": "Proficiency Level",
+    "certificateName": "Certificate Name",
+    "issuingOrg": "Issuing Organization",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "linkLabel": "Link Label",
+    "url": "URL",
+    "preview": "Preview",
+    "actions": "Actions",
+    "saveChanges": "Save Changes",
+    "exportPdf": "Export PDF",
+    "exportXml": "Export XML",
+    "exportJson": "Export JSON",
+    "importFile": "Import File",
+    "versionHistory": "Version History",
+    "autoSave": "Auto Save",
+    "lastSaved": "Last saved",
+    "unsavedChanges": "Unsaved changes",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "saveSuccess": "CV saved successfully",
+    "exportSuccess": "Export completed successfully",
+    "importSuccess": "Import completed successfully",
+    "errorSave": "Error saving CV",
+    "errorExport": "Error exporting",
+    "errorImport": "Error importing file",
+    "selectFile": "Select File",
+    "dragDrop": "Drag and drop files here",
+    "supportedFormats": "Supported formats: .json, .xml",
+    "noFileSelected": "No file selected",
+    "invalidFile": "Invalid file format",
+    "fileTooLarge": "File too large"
+  },
+  "ai": {
+    "suggestions": "AI Suggestions",
+    "powerVerbs": "Power Verbs",
+    "achievements": "Quantifiable Achievements",
+    "optimizedFor": "Optimized for",
+    "generalSuggestions": "High-impact suggestions tailored to professional CV writing",
+    "clickToCopy": "Tip: click any suggestion to copy it instantly",
+    "replacePlaceholders": "Replace {percentage}, {number}, and {currency}{amount} with your real business metrics.",
+    "basedOn": "Suggestions aligned with ATS best practices and professional resume standards",
+    "copySuccess": "Copied to clipboard",
+    "copyError": "Unable to copy suggestion",
+    "insertSuccess": "Suggestion inserted into your CV",
+    "noExperienceToInsert": "Add at least one experience entry before inserting suggestions there",
+    "copyAction": "Copy",
+    "insertAction": "Insert",
+    "expandPanel": "Expand",
+    "minimizePanel": "Minimize panel",
+    "collapsePanel": "Collapse",
+    "advancedFilters": "Advanced filters",
+    "showFilters": "Show filters",
+    "hideFilters": "Hide filters",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "verbsDescription": "Use strong action verbs to describe ownership, execution, and outcomes.",
+    "achievementsDescription": "Use measurable outcomes to demonstrate impact and business value.",
+    "tipLabel": "Tip:",
+    "seniorityLabel": "Seniority level",
+    "industryLabel": "Industry focus",
+    "seniorityLevels": {
+      "junior": "Junior",
+      "mid": "Mid-level",
+      "senior": "Senior",
+      "lead": "Lead",
+      "executive": "Executive"
+    },
+    "industries": {
+      "general": "General",
+      "technology": "Technology",
+      "finance": "Finance",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "retail": "Retail"
+    },
+    "categories": {
+      "management": "Management",
+      "technical": "Technical",
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "finance": "Finance",
+      "creative": "Creative",
+      "general": "General"
+    },
+    "summary": "Professional Summary",
+    "experience": "Work Experience",
+    "skills": "Skills",
+    "result": "AI Result",
+    "title": "AI Assistant",
+    "placeholder": "E.g., Improve my summary for a senior developer role",
+    "apply": "Apply",
+    "discard": "Discard"
+  },
+  "ats": {
+    "title": "ATS Optimizer",
+    "analyzeButton": "Analyze ATS",
+    "analyzing": "Analyzing...",
+    "tailorButton": "Automatic Tailoring",
+    "tailoring": "Tailoring...",
+    "applyKeywords": "Apply Keywords",
+    "applyTailoring": "Apply Tailoring",
+    "analyzeAgainstVacancy": "Analyze fit against job posting",
+    "jobDescriptionPlaceholder": "Paste the job description here to analyze keywords and ATS compatibility...",
+    "scoreComparison": "Score comparison",
+    "keywordComparison": "Keyword comparison",
+    "score": "Score",
+    "completeness": "Completeness",
+    "keywords": "Keywords",
+    "impact": "Impact",
+    "missingKeywords": "Missing Keywords",
+    "noMissingKeywords": "Excellent. No critical keywords pending.",
+    "recommendations": "Recommendations",
+    "tailoringReady": "Tailoring Ready",
+    "insertedKeywords": "Inserted Keywords",
+    "noChanges": "no changes",
+    "tailoringSummary": "Proposed summary and {{count}} optimized experience blocks.",
+    "history": "ATS History"
+  },
+  "templates": {
+    "minimal": "Minimal",
+    "sidebar": "Sidebar",
+    "corporate": "Corporate",
+    "developer": "Developer",
+    "creative": "Creative",
+    "classic": "Classic",
+    "modern": "Modern",
+    "atsFriendly": "ATS Friendly",
+    "executive": "Executive",
+    "timeline": "Timeline",
+    "compact": "Compact"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "minLength": "Must be at least {count} characters",
+    "maxLength": "Must be less than {count} characters",
+    "invalidDate": "Invalid date format",
+    "invalidUrl": "Invalid URL format",
+    "duplicateEmail": "This email is already in use",
+    "weakPassword": "Password must be at least 8 characters",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Email is not valid",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must have at least {{count}} characters",
+    "passwordComplexity": "Password must contain uppercase, lowercase, and a number",
+    "nameRequired": "Name is required",
+    "nameMinLength": "Name must have at least {{count}} characters"
+  },
+  "passwordStrength": {
+    "none": "",
+    "weak": "Weak",
+    "fair": "Fair",
+    "good": "Good",
+    "strong": "Strong"
+  },
+  "passwordRule": {
+    "length": "8+ chars",
+    "upperLower": "Upper & lower",
+    "number": "Number",
+    "special": "Special char"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "account": "Account",
+    "preferences": "Preferences",
+    "english": "English",
+    "spanish": "Spanish",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "appearance": "Appearance",
+    "appearanceDesc": "Customize how the application looks",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "themeUpdated": "Theme updated"
+  },
+  "dashboard": {
+    "myCVs": "My CVs",
+    "myTemplates": "My Templates",
+    "newCV": "New CV",
+    "deleteCV": "Delete CV",
+    "duplicateCV": "Duplicate CV",
+    "editCV": "Edit CV",
+    "noCVs": "No CVs yet",
+    "noCVsYet": "You don't have any CVs yet",
+    "createFirst": "Create your first CV to get started",
+    "createFirstDescription": "Create your first professional CV in minutes. Choose a template, enter or import your data, and export to PDF, XML or JSON.",
+    "createFirstCV": "Create my first CV",
+    "viewCv": "View CV",
+    "templateLabel": "Template",
+    "lastUpdated": "Last updated",
+    "errorLoadingCVs": "Error loading CVs.",
+    "errorCreatingCV": "Could not create CV",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saved": "Saved successfully",
+    "error": "Error occurred"
+  },
+  "editor": {
+    "tabs": {
+      "personal": "Personal",
+      "experience": "Experience",
+      "education": "Education",
+      "skills": "Skills",
+      "languages": "Languages",
+      "certificates": "Certificates",
+      "links": "Links"
+    },
+    "actions": {
+      "save": "Save",
+      "preview": "Preview",
+      "show": "Show",
+      "hide": "Hide",
+      "reset": "Reset",
+      "export": "Export",
+      "import": "Import",
+      "versions": "Versions"
+    },
+    "importer": {
+      "button": "Upload Resume",
+      "loading": "Parsing...",
+      "success": "Information imported into the editor",
+      "error": "Could not import the resume",
+      "reviewTitle": "Review import",
+      "reviewDescription": "Confirm the detected data before applying it to the editor.",
+      "fileLabel": "File",
+      "itemsDetected": "{{count}} detected",
+      "nothingDetected": "Not enough data was detected to fill the editor.",
+      "apply": "Apply to editor",
+      "cancel": "Cancel"
+    },
+    "loadingEditor": "Loading editor...",
+    "templateSelector": {
+      "title": "Template Selector",
+      "free": "Free",
+      "lockedHint": "Account required",
+      "proLabel": "Pro"
+    },
+    "guest": {
+      "adSlot": "Ad Space (Affiliates / Display)"
+    },
+    "validationBeforeChange": "There are errors in section {{section}}. Please fix them before continuing.",
+    "confirmReset": "Are you sure you want to reset the CV? All unsaved changes will be lost.",
+    "resetSuccess": "CV reset",
+    "cvPreview": "CV Preview",
+    "contacts": {
+      "customLabel": "Custom",
+      "customEmailPlaceholder": "e.g. Billing Email",
+      "customPhonePlaceholder": "e.g. Direct Line",
+      "emailTypes": {
+        "personal": "Personal",
+        "work": "Work",
+        "education": "Education",
+        "other": "Other"
+      },
+      "phoneTypes": {
+        "personal": "Personal",
+        "office": "Office",
+        "home": "Home",
+        "whatsapp": "WhatsApp",
+        "other": "Other"
+      },
+      "emailLabels": {
+        "personalPrimary": "Personal Email",
+        "personalSecondary": "Secondary Email",
+        "workPrimary": "Work Email",
+        "workCorporate": "Corporate Email",
+        "workRecruiting": "Recruiting Email",
+        "educationPrimary": "Education Email",
+        "educationInstitutional": "Institutional Email",
+        "other": "Other Email"
+      },
+      "phoneLabels": {
+        "personalPrimary": "Personal Phone",
+        "personalMobile": "Mobile",
+        "officePrimary": "Office Phone",
+        "officeSwitchboard": "Switchboard",
+        "officeReception": "Reception",
+        "home": "Home Phone",
+        "whatsapp": "WhatsApp",
+        "other": "Other Phone"
+      }
+    },
+    "common": {
+      "validationErrors": "There are errors that need to be corrected.",
+      "saveChanges": "Save Changes",
+      "select": "Select"
+    },
+    "personal": {
+      "title": "Personal Information",
+      "description": "Basic information about you and how to contact you",
+      "profileImageAlt": "Profile preview",
+      "changePhoto": "Change Photo",
+      "uploadPhoto": "Upload Photo",
+      "profileImageStyles": {
+        "round": "Round",
+        "square": "Square",
+        "portrait": "Portrait"
+      },
+      "showProfileImage": "Show profile photo on resume",
+      "showBirthDate": "Show birth date on resume",
+      "showAge": "Show age on resume",
+      "showAddress": "Show address on resume",
+      "showCity": "Show city on resume",
+      "showCountry": "Show country on resume",
+      "showValuePropositionTitle": "Show Value Proposition title on template",
+      "contactInfo": "Contact Information",
+      "emailsTitle": "Email Addresses",
+      "phonesTitle": "Phones",
+      "addEmail": "Add Email",
+      "addPhone": "Add Phone",
+      "primaryEmail": "Primary email",
+      "primaryPhone": "Primary phone",
+      "socialLinks": "Social Links",
+      "ageValue": "{{age}} years",
+      "agePlaceholder": "Calculated automatically",
+      "fields": {
+        "fullName": "Full Name",
+        "professionalTitle": "Professional Title",
+        "profileImage": "Profile Photo",
+        "profileImageStyle": "Photo Style",
+        "birthDate": "Date of Birth",
+        "date": "Date",
+        "calculatedAge": "Age (calculated)",
+        "type": "Type",
+        "label": "Label",
+        "phoneNumber": "Phone Number",
+        "address": "Address",
+        "city": "City",
+        "country": "Country",
+        "website": "Personal Website",
+        "linkedin": "LinkedIn",
+        "github": "GitHub",
+        "twitter": "Twitter",
+        "valueProposition": "Value Proposition",
+        "summary": "Professional Summary"
+      },
+      "help": {
+        "professionalTitle": "e.g. Full Stack Developer, UX/UI Designer",
+        "profileImage": "Square image, max 5MB. Formats: JPG, PNG. You can choose whether to show it.",
+        "birthDate": "Age is calculated automatically from the selected date",
+        "address": "Optional - Street or full address",
+        "website": "Your portfolio, blog, or personal website",
+        "valueProposition": "Summarize in 2-3 lines the main benefit you bring to the company. Do not list duties; highlight your differentiator, the specific problem you solve, and a measurable achievement that proves your ability to deliver immediate results.",
+        "summary": "A brief description of your experience, skills, and professional goals"
+      },
+      "placeholders": {
+        "fullName": "e.g. John Doe",
+        "professionalTitle": "Your role or specialization",
+        "email": "you@email.com",
+        "phone": "+1 555 123 4567",
+        "address": "e.g. 123 Main St",
+        "city": "e.g. New York",
+        "country": "e.g. USA",
+        "website": "https://yourportfolio.com",
+        "linkedin": "https://linkedin.com/in/your-profile",
+        "github": "https://github.com/your-username",
+        "twitter": "https://twitter.com/your-username",
+        "valueProposition": "e.g. I shorten tech hiring cycles by up to 30% through automation and talent analytics, enabling teams to deliver faster.",
+        "summary": "e.g. Full Stack Developer with 5 years of experience in modern web technologies..."
+      },
+      "alerts": {
+        "invalidImage": "Please select a valid image file.",
+        "imageTooLarge": "The image cannot be larger than 5MB."
+      }
+    },
+    "experience": {
+      "title": "Work Experience",
+      "description": "Your professional history and achievements",
+      "emptyTitle": "No work experience yet",
+      "emptyDescription": "Add your first work experience to get started.",
+      "addExperience": "Add Experience",
+      "addAnotherExperience": "Add Another Experience",
+      "noPosition": "No position specified",
+      "noCompany": "No company specified",
+      "current": "Current",
+      "confirmDelete": "Are you sure you want to delete this work experience?",
+      "currentJobCheckbox": "I currently work here",
+      "untilCurrentDate": "Up to current date",
+      "achievementsTitle": "Key Achievements",
+      "addAchievement": "Add Achievement",
+      "emptyAchievements": "Add measurable achievements to highlight your impact",
+      "technologiesTitle": "Technologies and Tools",
+      "employmentTypes": {
+        "fullTime": "Full-time",
+        "partTime": "Part-time",
+        "freelance": "Freelance",
+        "contract": "Contract",
+        "internship": "Internship"
+      },
+      "fields": {
+        "position": "Position",
+        "company": "Company",
+        "location": "Location",
+        "employmentType": "Employment Type",
+        "currentJob": "Current Job",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "jobDescription": "Role Description"
+      },
+      "help": {
+        "location": "City, Country (optional)",
+        "jobDescription": "Describe your main responsibilities and duties"
+      },
+      "placeholders": {
+        "position": "e.g. Full Stack Developer",
+        "company": "e.g. Tech Solutions Inc.",
+        "location": "e.g. New York, USA",
+        "jobDescription": "Describe your responsibilities, duties, and contributions in this role...",
+        "achievement": "e.g. Increased website load speed by 40% by optimizing images and code",
+        "searchTechnology": "Search technology..."
+      }
+    },
+    "education": {
+      "title": "Education",
+      "description": "Your academic background and earned degrees",
+      "emptyTitle": "No education added",
+      "emptyDescription": "Add your academic education to get started.",
+      "addEducation": "Add Education",
+      "addAnotherEducation": "Add Another Education",
+      "noDegree": "No degree specified",
+      "noInstitution": "No institution specified",
+      "inProgress": "In progress",
+      "confirmDelete": "Are you sure you want to delete this education entry?",
+      "selectDegreeType": "Select degree type",
+      "untilCurrentDate": "Up to current date",
+      "currentlyStudyingCheckbox": "I am currently studying here",
+      "activitiesTitle": "Extracurricular Activities",
+      "addActivity": "Add Activity",
+      "emptyActivities": "Add extracurricular activities, clubs, sports, or volunteering",
+      "achievementsTitle": "Academic Achievements",
+      "addAchievement": "Add Achievement",
+      "emptyAchievements": "Add honors, awards, scholarships, or academic recognition",
+      "degreeTypes": {
+        "highSchool": "High School",
+        "associate": "Associate/Technical",
+        "bachelor": "Bachelor",
+        "master": "Master",
+        "doctorate": "Doctorate",
+        "postDoctorate": "Post-Doctorate",
+        "certificate": "Certificate",
+        "diploma": "Diploma",
+        "other": "Other"
+      },
+      "fields": {
+        "degree": "Type",
+        "fieldOfStudy": "Degree Obtained",
+        "institution": "Educational Institution",
+        "location": "Location",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "currentlyStudying": "Currently Studying",
+        "gpa": "GPA"
+      },
+      "help": {
+        "degree": "Select the academic type",
+        "fieldOfStudy": "e.g. Computer Engineering, Business Administration",
+        "location": "City, Country (optional)",
+        "gpa": "GPA, grade average, or grading scale (optional)"
+      },
+      "placeholders": {
+        "fieldOfStudy": "e.g. Computer Engineering",
+        "institution": "e.g. National University",
+        "location": "e.g. New York, USA",
+        "gpa": "e.g. 3.8/4.0, 85%, Excellent",
+        "activity": "e.g. Programming club president, Math olympiad participant",
+        "achievement": "e.g. Top GPA of semester, Academic excellence scholarship"
+      }
+    },
+    "skills": {
+      "title": "Skills",
+      "description": "Your technical, soft, and certification skills",
+      "addNew": "Add New Skill",
+      "addSkill": "Add Skill",
+      "emptyByCategory": "No skills in this category",
+      "certified": "Certified",
+      "count": "{{count}} skills",
+      "placeholderPrefix": "e.g.",
+      "fields": {
+        "category": "Category",
+        "name": "Skill Name",
+        "level": "Level",
+        "yearsOfExperience": "Years of experience",
+        "certified": "Certified"
+      },
+      "categories": {
+        "technical": "Technical",
+        "soft": "Soft",
+        "certification": "Certification"
+      },
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "expert": "Expert"
+      },
+      "levelDescriptions": {
+        "beginner": "Basic knowledge",
+        "intermediate": "Solid knowledge",
+        "advanced": "Significant experience",
+        "expert": "Full mastery"
+      },
+      "years": {
+        "1": "1 year",
+        "2": "2 years",
+        "3": "3 years",
+        "4": "4 years",
+        "5": "5 years",
+        "6": "6-8 years",
+        "9": "9+ years",
+        "unspecified": "Do not specify"
+      },
+      "alerts": {
+        "duplicate": "This skill is already added."
+      }
+    },
+    "languages": {
+      "title": "Languages",
+      "description": "Your language skills with CEFR levels",
+      "addNew": "Add New Language",
+      "addLanguage": "Add Language",
+      "addAnotherLanguage": "Add Another Language",
+      "emptyTitle": "No languages added",
+      "emptyDescription": "Add the languages you know to complete your profile.",
+      "certified": "Certified",
+      "yearsOfStudyLabel": "{{count}} years of study",
+      "fields": {
+        "language": "Language",
+        "certification": "Certification",
+        "yearsOfStudy": "Years of Study"
+      },
+      "help": {
+        "certification": "e.g. TOEFL, DELE, Cambridge English",
+        "yearsOfStudy": "Years dedicated to studying this language"
+      },
+      "placeholders": {
+        "language": "e.g. English, French, German...",
+        "certification": "Certification name"
+      },
+      "skills": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "speaking": "Speaking",
+        "writing": "Writing"
+      },
+      "levels": {
+        "a1": "Beginner",
+        "a2": "Basic",
+        "b1": "Intermediate",
+        "b2": "Upper intermediate",
+        "c1": "Advanced",
+        "c2": "Native/Expert"
+      },
+      "years": {
+        "1": "1 year",
+        "2": "2 years",
+        "3": "3 years",
+        "4": "4 years",
+        "5": "5 years",
+        "6": "6-8 years",
+        "9": "9-10 years",
+        "11": "More than 10 years",
+        "unspecified": "Do not specify"
+      },
+      "alerts": {
+        "duplicate": "This language is already added."
+      }
+    },
+    "certificates": {
+      "title": "Certifications",
+      "description": "Your certifications, diplomas, and professional recognitions",
+      "addNew": "Add New Certification",
+      "addCertificate": "Add Certification",
+      "addAnotherCertificate": "Add Another Certification",
+      "emptyTitle": "No certifications added",
+      "emptyDescription": "Add your professional certifications to highlight your credentials.",
+      "issuedOn": "Issued",
+      "expired": "Expired",
+      "expiresSoon": "Expiring soon",
+      "verifiable": "Verifiable",
+      "fileUploaded": "File uploaded",
+      "removeFile": "Remove",
+      "uploadFile": "Upload File",
+      "fields": {
+        "title": "Certification Title",
+        "issuer": "Issuing Organization",
+        "credentialId": "Credential ID",
+        "issueDate": "Issue Date",
+        "expiryDate": "Expiry Date",
+        "verificationUrl": "Verification URL",
+        "file": "Certificate File",
+        "description": "Description"
+      },
+      "help": {
+        "credentialId": "Unique certificate identification number",
+        "expiryDate": "Optional - some certificates do not expire",
+        "verificationUrl": "Link to verify certificate authenticity",
+        "file": "Upload certificate PDF or image (max 10MB)",
+        "description": "Additional details about the certificate or how you obtained it"
+      },
+      "placeholders": {
+        "title": "e.g. AWS Certified Solutions Architect, PMP...",
+        "issuer": "e.g. Amazon Web Services, Cisco Systems",
+        "credentialId": "e.g. AWS-123456789",
+        "verificationUrl": "https://verify.certification.com/...",
+        "description": "Describe acquired knowledge, certification process..."
+      },
+      "alerts": {
+        "invalidFileType": "Only PDF, JPG, or PNG files are allowed.",
+        "fileTooLarge": "File cannot be larger than 10MB."
+      }
+    },
+    "links": {
+      "title": "Relevant Links",
+      "description": "Your professional profiles, portfolio, and social networks",
+      "addNew": "Add New Link",
+      "addLink": "Add Link",
+      "emptyTitle": "No links added",
+      "emptyDescription": "Add your professional profiles so recruiters can know you better.",
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "typePrefix": "Type",
+      "fields": {
+        "type": "Type",
+        "label": "Label",
+        "url": "URL"
+      },
+      "types": {
+        "portfolio": "Portfolio",
+        "website": "Website",
+        "other": "Other"
+      },
+      "placeholders": {
+        "label": "e.g. My Portfolio, Personal GitHub",
+        "linkedin": "https://linkedin.com/in/your-profile",
+        "github": "https://github.com/your-username",
+        "portfolio": "https://yourportfolio.com",
+        "website": "https://yourwebsite.com",
+        "twitter": "https://twitter.com/your-username",
+        "other": "https://otherlink.com"
+      },
+      "alerts": {
+        "invalidUrl": "Please enter a valid URL.",
+        "duplicateUrl": "This URL is already added."
+      }
+    }
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "dashboardShort": "Dashboard",
+    "users": "Users",
+    "usersShort": "Users",
+    "settings": "Settings",
+    "settingsShort": "Settings",
+    "landingPage": "Landing Page",
+    "landingPageShort": "Landing",
+    "auditLogs": {
+      "title": "Audit Logs",
+      "subtitle": "Complete log of all administrative actions",
+      "loading": "Loading audit logs...",
+      "dismiss": "Dismiss",
+      "activityLogsCount": "Activity Logs ({{count}})",
+      "noDetails": "No details",
+      "idPrefix": "ID:",
+      "notAvailable": "N/A",
+      "showing": "Showing {{from}} to {{to}} of {{total}} logs",
+      "empty": "No audit logs found",
+      "table": {
+        "admin": "Admin",
+        "action": "Action",
+        "resource": "Resource",
+        "details": "Details",
+        "ipAddress": "IP Address",
+        "timestamp": "Timestamp"
+      },
+      "errors": {
+        "loadLogs": "Error loading audit logs"
+      }
+    },
+    "auditLogsShort": "Audit",
+    "overview": "Overview of your ProCV platform",
+    "totalUsers": "Total Users",
+    "totalCVs": "Total CVs",
+    "growth": "Growth",
+    "userGrowth30Days": "User Growth (Last 30 Days)",
+    "newUsers": "New Users",
+    "cvTrends30Days": "CV Creation Trends (Last 30 Days)",
+    "cvsCreated": "CVs Created",
+    "recentUsers": "Recent Users",
+    "unnamedUser": "Unnamed User",
+    "noRecentUsers": "No recent users",
+    "loadingDashboard": "Loading dashboard...",
+    "errorLoadingDashboard": "Error loading dashboard data",
+    "loggedInAs": "Logged in as",
+    "logout": "Logout",
+    "userManagement": {
+      "title": "User Management",
+      "subtitle": "Manage platform users and their permissions",
+      "loading": "Loading users...",
+      "dismiss": "Dismiss",
+      "searchUsers": "Search Users",
+      "searchPlaceholder": "Search by name or email...",
+      "filterByRole": "Filter by Role",
+      "allRoles": "All Roles",
+      "roleUser": "User",
+      "roleAdmin": "Admin",
+      "applyFilters": "Apply Filters",
+      "selectedUsers": "{{count}} user(s) selected",
+      "changeRole": "Change Role",
+      "setAsUser": "Set as User",
+      "setAsAdmin": "Set as Admin",
+      "deleteSelected": "Delete Selected",
+      "usersCount": "Users ({{count}})",
+      "exportCsv": "Export CSV",
+      "never": "Never",
+      "resetPassword": "Reset Password",
+      "editUser": "Edit User",
+      "showing": "Showing {{from}} to {{to}} of {{total}} users",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "cvs": "CVs",
+        "created": "Created",
+        "lastLogin": "Last Login",
+        "emailVerified": "Email verified",
+        "actions": "Actions"
+      },
+      "verified": "Verified",
+      "pending": "Pending",
+      "confirm": {
+        "deleteUsers": "Are you sure you want to delete {{count}} users?",
+        "deleteUser": "Are you sure you want to delete this user?"
+      },
+      "prompts": {
+        "newPassword": "Enter new password for user:"
+      },
+      "success": {
+        "passwordReset": "Password reset successfully"
+      },
+      "errors": {
+        "loadUsers": "Error loading users",
+        "deleteUsers": "Error deleting users",
+        "updateUsers": "Error updating users",
+        "exportUsers": "Error exporting users",
+        "updateUser": "Error updating user",
+        "deleteUser": "Error deleting user",
+        "resetPassword": "Error resetting password"
+      },
+      "selectAllUsers": "Select all users",
+      "selectUser": "Select user"
+    },
+    "landingManagement": {
+      "title": "Landing Page Management",
+      "subtitle": "Manage landing page features in multiple languages",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "featuresTitle": "Landing Page Features",
+      "featuresSubtitle": "Customize all landing page features in English and Spanish",
+      "addFeature": "Add Feature",
+      "featureLabel": "Feature {{number}}",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "empty": "No features defined. Click \"Add Feature\" to create your first feature.",
+      "placeholders": {
+        "enTitle": "Feature title in English",
+        "enDescription": "Feature description in English",
+        "esTitle": "Feature title in Spanish",
+        "esDescription": "Feature description in Spanish"
+      },
+      "success": {
+        "saved": "Features saved successfully!"
+      },
+      "errors": {
+        "loadFeatures": "Error loading landing page features",
+        "saveFeatures": "Error saving features"
+      }
+    },
+    "platformSettings": {
+      "title": "Platform Settings",
+      "subtitle": "Manage ProCV Platform general configuration",
+      "loading": "Loading settings...",
+      "valuePlaceholder": "Value...",
+      "notConfigured": "Not configured",
+      "directUrlPlaceholder": "Or enter direct URL",
+      "cssPlaceholder": "Enter custom CSS...",
+      "cssChars": "{{count}} characters",
+      "noCustomCss": "No custom CSS",
+      "emailTemplatePlaceholder": "Write the email template...",
+      "noTemplateConfigured": "No template configured",
+      "tabs": {
+        "general": "General",
+        "branding": "UI & Branding",
+        "security": "Security",
+        "email": "Email & SMTP",
+        "files": "Files",
+        "cv": "CVs & Templates",
+        "users": "Users",
+        "analytics": "Analytics",
+        "backup": "Backup"
+      },
+      "tabsShort": {
+        "general": "General",
+        "branding": "Brand",
+        "security": "Security",
+        "email": "Email",
+        "files": "Files",
+        "cv": "CVs",
+        "users": "Users",
+        "analytics": "Analytics",
+        "backup": "Backup"
+      },
+      "tabDescriptions": {
+        "general": "Main platform settings",
+        "branding": "Customize platform appearance and branding",
+        "security": "Manage platform security and protection policies",
+        "email": "Configure email sending and notification templates",
+        "files": "Manage file limits, allowed types and storage",
+        "cv": "Manage templates, limits and export options",
+        "users": "Manage registration, roles and user administration",
+        "analytics": "Manage metrics, data retention and reporting",
+        "backup": "Manage automatic backups, cleanup and system configuration"
+      },
+      "initialConfig": {
+        "title": "Initial Configuration",
+        "description": "There are no saved settings. Click the button to initialize default configuration.",
+        "initializing": "Initializing...",
+        "initialize": "Initialize Settings"
+      },
+      "options": {
+        "template": {
+          "minimal": "Minimal",
+          "sidebar": "Sidebar",
+          "corporate": "Professional",
+          "executive": "Executive",
+          "timeline": "Timeline",
+          "compact": "Compact",
+          "creative": "Creative"
+        },
+        "compression": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        },
+        "userRole": {
+          "user": "User",
+          "admin": "Admin"
+        },
+        "backupFrequency": {
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly"
+        }
+      },
+      "errors": {
+        "loadSettings": "Error loading settings",
+        "updateSetting": "Error updating setting",
+        "initializeSettings": "Error initializing settings"
+      },
+      "success": {
+        "updated": "Setting updated successfully",
+        "initialized": "{{count}} settings initialized successfully"
+      },
+      "tabsAriaLabel": "Platform settings categories"
+    }
+  },
+  "app": {
+    "name": "ProCV Platform",
+    "description": "Professional CV Creator"
+  },
+  "landing": {
+    "description": "Create your professional resume in minutes. Choose a template, update your data and export in PDF, XML or JSON.",
+    "goToDashboard": "Go to Dashboard",
+    "featuresLoadError": "Could not load custom features.",
+    "noCustomFeatures": "No custom features are published yet.",
+    "retryLoad": "Retry",
+    "featuresTitle": "Why Choose ProCV?",
+    "featuresSubtitle": "Everything you need to create professional CVs",
+    "ctaTitle": "Ready to Get Started?",
+    "ctaSubtitle": "Join thousands of professionals who trust ProCV",
+    "getStarted": "Get Started Now",
+    "continueFromDemo": "Continue and improve my score",
+    "guestEditorCta": "Try Editor Free",
+    "guestEditorHint": "No account required",
+    "features": {
+      "intuitiveEditor": {
+        "title": "Intuitive Editor",
+        "description": "Edit your CV in real-time with instant preview."
+      },
+      "professionalTemplates": {
+        "title": "Professional Templates",
+        "description": "Choose from multiple modern and adaptable styles."
+      },
+      "exportFormats": {
+        "title": "Export as PDF, XML or JSON",
+        "description": "Download your CV in formats you can use and share."
+      },
+      "smartContacts": {
+        "title": "Smart Contact Tags",
+        "description": "Add multiple emails and phones with tags and reorder them by drag."
+      },
+      "autoSave": {
+        "title": "Auto Save",
+        "description": "Your changes are saved automatically, no need to worry."
+      }
+    }
+  },
+  "footer": {
+    "description": "ProCV — the professional CV generator",
+    "engineering": "Engineering by"
+  },
+  "workspace": {
+    "loadingSection": "Loading section...",
+    "dashboardTitle": "My Workspace",
+    "dashboardSubtitle": "Create and manage your professional resumes",
+    "myResumes": "My Resumes",
+    "never": "Never",
+    "sectionNotFound": "Section not found",
+    "stats": {
+      "totalCvs": "Total CVs",
+      "completed": "Completed",
+      "lastUpdated": "Last updated"
+    },
+    "empty": {
+      "title": "Start your professional journey",
+      "description": "Create your first professional resume with our modern templates and advanced editing tools."
+    },
+    "editor": {
+      "title": "CV Editor",
+      "subtitle": "Complete your professional information",
+      "cvTitlePlaceholder": "My Professional CV"
+    },
+    "templates": {
+      "sidebar": "Sidebar",
+      "minimal": "Minimal",
+      "corporate": "Professional",
+      "developer": "Developer",
+      "creative": "Creative",
+      "classic": "Classic",
+      "executive": "Executive",
+      "extensa": "Extensive",
+      "timeline": "Timeline",
+      "compact": "Compact",
+      "ats-optimized": "ATS Optimized",
+      "photo-professional": "Professional with Photo",
+      "modern-sidebar": "Modern Sidebar",
+      "elegant": "Elegant"
+    },
+    "confirm": {
+      "deleteCvNamed": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "deleteCurrentCv": "Are you sure you want to delete this CV? This action cannot be undone."
+    },
+    "success": {
+      "cvDeleted": "CV deleted successfully",
+      "cvDuplicated": "CV duplicated successfully"
+    },
+    "export": {
+      "generatingPdf": "Generating PDF...",
+      "pdfSuccess": "PDF exported successfully",
+      "jsonSuccess": "JSON exported successfully",
+      "xmlSuccess": "XML exported successfully"
+    },
+    "errors": {
+      "selectJsonXml": "Select a .json or .xml file",
+      "invalidXml": "Invalid XML",
+      "importXml": "Could not import XML.",
+      "invalidJson": "Invalid JSON",
+      "importJson": "Could not import JSON.",
+      "exportContentNotFound": "Could not find content to export",
+      "exportPdf": "Error exporting PDF",
+      "loadCv": "Error loading CV.",
+      "deleteCv": "Error deleting CV",
+      "duplicateCv": "Error duplicating CV"
+    },
+    "quickStartTitle": "Quick ATS Onboarding",
+    "quickStartProgress": "{{done}} of 3 completed",
+    "atsTrendTitle": "ATS Trend",
+    "atsTrendSubtitle": "Track score progress across recent optimizations",
+    "atsScoreDisplay": "Current score: {{score}} · {{coverage}}% keywords",
+    "atsCompactHint": "Paste a job posting and run ATS analysis",
+    "aiCompactHint": "Suggested verbs and achievements to improve impact and ATS",
+    "aiActiveHint": "Action verbs and achievements ready to insert",
+    "skipOnboarding": "Skip",
+    "noTrendData": "Run ATS analysis on this CV to start tracking progress.",
+    "keywordsShort": "KW",
+    "latestScore": "Score",
+    "pointsVsFirst": "points vs first run",
+    "toast": {
+      "atsAnalysisCompleted": "ATS analysis completed",
+      "atsAnalysisError": "Unable to analyze CV",
+      "tailoringCompleted": "Tailoring completed",
+      "tailoringError": "Unable to generate tailoring",
+      "tailoringApplied": "Tailoring applied to summary and experience",
+      "keywordsAdded": "{{count}} keywords added to skills"
+    }
+  },
+  "session": {
+    "expiringSoon": "Your session expires in {{seconds}} seconds. Refreshing...",
+    "refreshed": "Session renewed successfully",
+    "expired": "Your session has expired. Please sign in again."
+  }
+}

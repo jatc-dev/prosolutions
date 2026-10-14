@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String?
+  passwordHash            String
+  role                    String                   @default("user")
+  lastLoginAt             DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  emailVerified           Boolean                  @default(false)
+  cvs                     CV[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  sessions                Session[]
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  refreshToken     String    @unique
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  revokedAt        DateTime?
+  lastAccessedAt   DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model CVVersion {
+  id        String   @id @default(cuid())
+  cvId      String?
+  snapshot  String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([cvId])
+}
+
+model CV {
+  id          String          @id @default(cuid())
+  userId      String
+  title       String
+  template    String          @default("minimal")
+  data        String          @default("{}")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  atsAnalyses CVAtsAnalysis[]
+}
+
+model CVAtsAnalysis {
+  id             String   @id @default(cuid())
+  cvId           String
+  jobDescription String   @default("")
+  analysis       String   @default("{}")
+  tailoring      String   @default("{}")
+  cvSnapshot     String   @default("{}")
+  createdAt      DateTime @default(now())
+  cv             CV       @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  @@index([cvId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  adminEmail String
+  action     String
+  resource   String
+  resourceId String?
+  details    String?  @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        String   @default("string")
+  category    String   @default("general")
+  description String?
+  isPublic    Boolean  @default(false)
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

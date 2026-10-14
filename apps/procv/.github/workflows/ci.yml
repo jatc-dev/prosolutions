@@ -1,0 +1,243 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+# A new push supersedes the previous run instead of letting both finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  # Backend Tests & Build
+  backend-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv_test?schema=public
+
+    # PostgreSQL service container (native Actions service; no marketplace action).
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: procv_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        # Node 20 LTS (matches production). ESLint 10 requires Node >= 20.19.
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Run database migrations
+        run: npm run prisma:migrate:deploy
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Upload coverage reports
+        # Reporting only: never fail the pipeline. Private repos need the
+        # CODECOV_TOKEN secret (repo Settings -> Secrets); public repos work
+        # without it.
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+      - name: Build application
+        run: npm run build
+
+  # Frontend Tests & Build
+  frontend-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:4000/api
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: frontend-build
+          path: frontend/dist/
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [backend-test, frontend-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run Trivy vulnerability scanner
+        # Pinned release (never @master: mutable refs are a supply-chain risk).
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: trivy-results-sarif
+          path: trivy-results.sarif
+          if-no-files-found: warn
+
+  # Docker Build Test
+  docker-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [backend-test, frontend-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: procv-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: procv-frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deployment to Render (only on main branch)
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [backend-test, frontend-test, security-scan, docker-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      RENDER_BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+      RENDER_FRONTEND_DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      # Migrations are NOT run from CI: Render runs them at container startup
+      # against the direct Supabase connection (start:migrate + DIRECT_DATABASE_URL),
+      # which avoids the PgBouncer pooler hang and keeps a single migration runner.
+
+      - name: Trigger Render deploy (Backend)
+        if: ${{ env.RENDER_BACKEND_DEPLOY_HOOK != '' }}
+        run: |
+          curl -X POST "$RENDER_BACKEND_DEPLOY_HOOK" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -d '{"clearCache": true}'
+          echo "Backend deploy triggered on Render"
+
+      - name: Trigger Render deploy (Frontend)
+        if: ${{ env.RENDER_FRONTEND_DEPLOY_HOOK != '' }}
+        run: |
+          curl -X POST "$RENDER_FRONTEND_DEPLOY_HOOK" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -d '{"clearCache": true}'
+          echo "Frontend deploy triggered on Render/Vercel"

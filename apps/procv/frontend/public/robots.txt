@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://procv-platform.onrender.com/sitemap.xml

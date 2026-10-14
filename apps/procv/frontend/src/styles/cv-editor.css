@@ -1,0 +1,341 @@
+/* ProCV Platform - CV Editor Custom Styles */
+
+/* CSS Variables for consistent branding */
+:root {
+  --cv-brand-primary: #4f46e5; /* brand.600 */
+  --cv-brand-primary-hover: #4338ca; /* brand.700 */
+  --cv-brand-primary-focus: #6366f1; /* brand.500 */
+  --cv-brand-secondary: #eef2ff; /* brand.50 */
+  --cv-brand-accent: #e0e7ff; /* brand.100 */
+  --cv-brand-border: #c7d2fe; /* brand.200 */
+  --cv-brand-text: #4338ca; /* brand.700 */
+  --cv-brand-text-light: #4f46e5; /* brand.600 */
+}
+
+/* Override default blue colors with brand colors */
+.cv-editor {
+  /* Focus rings */
+  --tw-ring-color: var(--cv-brand-primary-focus);
+}
+
+.cv-editor .focus\\:ring-blue-500:focus {
+  --tw-ring-color: var(--cv-brand-primary-focus);
+}
+
+.cv-editor .focus\\:ring-blue-600:focus {
+  --tw-ring-color: var(--cv-brand-primary-focus);
+}
+
+/* Background colors */
+.cv-editor .bg-blue-50 {
+  background-color: var(--cv-brand-secondary);
+}
+
+.cv-editor .bg-blue-100 {
+  background-color: var(--cv-brand-accent);
+}
+
+.cv-editor .bg-blue-600 {
+  background-color: var(--cv-brand-primary);
+}
+
+.cv-editor .hover\\:bg-blue-50:hover {
+  background-color: var(--cv-brand-secondary);
+}
+
+.cv-editor .hover\\:bg-blue-700:hover {
+  background-color: var(--cv-brand-primary-hover);
+}
+
+/* Text colors */
+.cv-editor .text-blue-600 {
+  color: var(--cv-brand-text-light);
+}
+
+.cv-editor .text-blue-700 {
+  color: var(--cv-brand-text);
+}
+
+.cv-editor .text-blue-800 {
+  color: #312e81; /* brand-like dark blue */
+}
+
+.cv-editor .text-blue-900 {
+  color: #1e1b4b; /* brand-like darker blue */
+}
+
+/* Border colors */
+.cv-editor .border-blue-200 {
+  border-color: var(--cv-brand-border);
+}
+
+.cv-editor .border-blue-300 {
+  border-color: theme('colors.brand.400');
+}
+
+.cv-editor .hover\\:border-blue-300:hover {
+  border-color: theme('colors.brand.400');
+}
+
+/* Ring colors for focus states */
+.cv-editor .focus\\:ring-blue-500:focus {
+  --tw-ring-color: var(--cv-brand-primary-focus);
+}
+
+/* Custom utility classes */
+.cv-editor-gradient {
+  background: linear-gradient(135deg, var(--cv-brand-secondary) 0%, theme('colors.blue.50') 100%);
+}
+
+.cv-editor-header {
+  background: linear-gradient(135deg, white 0%, var(--cv-brand-secondary) 100%);
+  border-bottom: 1px solid var(--cv-brand-border);
+}
+
+.cv-editor-card {
+  background: white;
+  border: 1px solid theme('colors.gray.200');
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease-in-out;
+}
+
+.cv-editor-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Loading animations */
+.cv-editor-loading {
+  background: linear-gradient(90deg, transparent, var(--cv-brand-accent), transparent);
+  background-size: 200% 100%;
+  animation: cv-editor-shimmer 1.5s infinite;
+}
+
+@keyframes cv-editor-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Progress bars */
+.cv-editor-progress {
+  background-color: var(--cv-brand-primary);
+  transition: width 0.3s ease-out;
+}
+
+/* Status indicators */
+.cv-editor-status-success {
+  background-color: theme('colors.green.100');
+  color: theme('colors.green.800');
+}
+
+.cv-editor-status-warning {
+  background-color: theme('colors.yellow.100');
+  color: theme('colors.yellow.800');
+}
+
+.cv-editor-status-error {
+  background-color: theme('colors.red.100');
+  color: theme('colors.red.800');
+}
+
+/* Form enhancements */
+.cv-editor input:focus,
+.cv-editor select:focus,
+.cv-editor textarea:focus {
+  border-color: var(--cv-brand-primary-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Button enhancements */
+.cv-editor .cv-btn-primary {
+  background-color: var(--cv-brand-primary);
+  border-color: var(--cv-brand-primary);
+  color: white;
+}
+
+.cv-editor .cv-btn-primary:hover {
+  background-color: var(--cv-brand-primary-hover);
+  border-color: var(--cv-brand-primary-hover);
+}
+
+.cv-editor .cv-btn-secondary {
+  background-color: white;
+  border-color: var(--cv-brand-border);
+  color: var(--cv-brand-text);
+}
+
+.cv-editor .cv-btn-secondary:hover {
+  background-color: var(--cv-brand-secondary);
+  border-color: var(--cv-brand-primary-focus);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cv-editor {
+    --cv-mobile-padding: 1rem;
+  }
+
+  .cv-editor .cv-editor-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Dark mode support (future enhancement) */
+@media (prefers-color-scheme: dark) {
+  .cv-editor {
+    --cv-brand-secondary: #1e1b4b; /* Dark brand color */
+    --cv-brand-accent: #312e81; /* Darker brand color */
+  }
+}
+
+/* ============================================
+   Custom Template Styles (Personalización total)
+   ============================================ */
+
+  /* Wrapper con CSS variables personalizadas */
+  .cv-custom-wrapper {
+    font-family: var(--font-body, system-ui, sans-serif);
+    color: var(--color-text, #1e293b);
+  }
+
+  .cv-custom-wrapper h1,
+  .cv-custom-wrapper h2,
+  .cv-custom-wrapper h3,
+  .cv-custom-wrapper h4,
+  .cv-custom-wrapper .ats-name,
+  .cv-custom-wrapper .ats-section-title,
+  .cv-custom-wrapper [class*="font-bold"] {
+    font-family: var(--font-heading, system-ui, sans-serif);
+    color: var(--color-heading, #0f172a);
+  }
+
+  .cv-custom-wrapper a,
+  .cv-custom-wrapper [class*="text-brand-"],
+  .cv-custom-wrapper [class*="text-blue-600"],
+  .cv-custom-wrapper [class*="text-blue-700"] {
+    color: var(--color-link, #2563eb);
+  }
+
+  /* Densidad: Compacto */
+  .cv-custom-wrapper.density-compact {
+    --density-gap: 0.5rem;
+    --density-padding: 0.75rem;
+  }
+
+  .cv-custom-wrapper.density-compact .ats-section {
+    margin-bottom: 0.5rem;
+  }
+
+  .cv-custom-wrapper.density-compact .ats-experience-item,
+  .cv-custom-wrapper.density-compact .ats-education-item {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Densidad: Equilibrado (default) */
+  .cv-custom-wrapper.density-balanced {
+    --density-gap: 1rem;
+    --density-padding: 1rem;
+  }
+
+  .cv-custom-wrapper.density-balanced .ats-section {
+    margin-bottom: 1rem;
+  }
+
+  .cv-custom-wrapper.density-balanced .ats-experience-item,
+  .cv-custom-wrapper.density-balanced .ats-education-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Densidad: Espacioso */
+  .cv-custom-wrapper.density-spacious {
+    --density-gap: 1.5rem;
+    --density-padding: 1.5rem;
+  }
+
+  .cv-custom-wrapper.density-spacious .ats-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .cv-custom-wrapper.density-spacious .ats-experience-item,
+  .cv-custom-wrapper.density-spacious .ats-education-item {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  /* Espaciado entre secciones */
+  .cv-custom-wrapper [class*="mb-"] {
+    margin-bottom: calc(var(--section-spacing, 2) * 0.25rem) !important;
+  }
+
+  /* Aplicar color de acento a elementos brand */
+  .cv-custom-wrapper .bg-brand-600,
+  .cv-custom-wrapper .bg-brand-700 {
+    background-color: var(--color-accent, #3b82f6) !important;
+  }
+
+  .cv-custom-wrapper .text-brand-600,
+  .cv-custom-wrapper .text-brand-700 {
+    color: var(--color-accent, #3b82f6) !important;
+  }
+
+  .cv-custom-wrapper .border-brand-500,
+  .cv-custom-wrapper .border-brand-600 {
+    border-color: var(--color-accent, #3b82f6) !important;
+  }
+
+  /* Sidebar */
+  .cv-custom-wrapper [class*="sidebar"] {
+    color: var(--color-sidebar-text, #e2e8f0) !important;
+  }
+
+  .cv-custom-wrapper [class*="sidebar"] [class*="title"],
+  .cv-custom-wrapper [class*="sidebar"] h2,
+  .cv-custom-wrapper [class*="sidebar"] h3 {
+    color: var(--color-sidebar-section, #f1f5f9) !important;
+  }
+
+  /* Texto secundario */
+  .cv-custom-wrapper .text-slate-500,
+  .cv-custom-wrapper .text-slate-600,
+  .cv-custom-wrapper .text-slate-700 {
+    color: var(--color-muted, #64748b) !important;
+  }
+
+/* ============================================
+     Print styles for CV export
+     ============================================ */
+  @media print {
+    .cv-editor {
+      --cv-brand-primary: black;
+      --cv-brand-text: black;
+    }
+
+    .cv-editor header,
+    .cv-editor main,
+    .cv-editor aside,
+    .cv-editor section,
+    .cv-editor article,
+    .cv-editor .ats-experience-item,
+    .cv-editor .ats-education-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .cv-editor h1,
+    .cv-editor h2,
+    .cv-editor h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+.cv-editor .cv-editor-card {
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
+    }
+  }
