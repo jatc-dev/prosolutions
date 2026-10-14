@@ -1,0 +1,17 @@
+{
+  "name": "prosolutions-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:procv": "npm run dev --workspace=apps/procv",
+    "dev:projobs": "npm run dev --workspace=apps/projobs",
+    "dev:core": "npm run dev --workspace=apps/core",
+    "build:procv": "npm run build --workspace=apps/procv",
+    "build:projobs": "npm run build --workspace=apps/projobs",
+    "build:core": "npm run build --workspace=apps/core"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@prosolutions/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "build": "echo 'UI package ready'"
+  }
+}
