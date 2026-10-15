@@ -10,12 +10,12 @@ const env: Record<string, string | undefined> =
 export const APP_URLS = {
   core: env.VITE_CORE_URL ?? "/",
   procv: env.VITE_PROCV_URL ?? "https://procv-platform.onrender.com",
-  projobs: env.VITE_PROJOBS_URL ?? "https://jatc-dev.github.io/empleos-tech-remoto",
+  projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",
 } as const;
 
 export const JATC_URL = env.VITE_JATC_URL ?? "https://github.com/jatc-dev";
 export const PRIVACY_URL =
-  env.VITE_PRIVACY_URL ?? "https://jatc-dev.github.io/empleos-tech-remoto/privacidad.html";
+  env.VITE_PRIVACY_URL ?? "https://projobs.prosolutions.page/privacidad.html";
 export const TERMS_URL = env.VITE_TERMS_URL ?? "#terminos";
 
 /** Marca si la URL apunta a otro origen (abre en pestaña nueva). */

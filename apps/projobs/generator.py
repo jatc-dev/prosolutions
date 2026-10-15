@@ -8,7 +8,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Configuración básica de la web
-SITE_URL = "https://jatc-dev.github.io/empleos-tech-remoto/"
+SITE_URL = "https://projobs.prosolutions.page/"
 SITE_TITLE = "Empleos Tech Remotos | Ofertas Diarias para Programadores"
 SITE_DESC = "Encuentra las mejores ofertas de trabajo remoto en tecnología: Desarrollo Web, Python, React, Data y DevOps. Actualizado todos los días."
 
