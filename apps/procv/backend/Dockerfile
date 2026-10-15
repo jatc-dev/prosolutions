@@ -27,14 +27,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copiamos package.json y instalamos dependencias primero
-COPY package*.json ./
+# Copiamos package.json e instalamos dependencias primero
+# (el contexto de build es la raíz del monorepo)
+COPY apps/procv/backend/package*.json ./
 RUN npm ci
 
 # --- PASO CRUCIAL ---
 # Copiamos TODO el código (incluyendo la carpeta prisma/)
 # ANTES de correr el generate
-COPY . .
+COPY apps/procv/backend/ ./
 
 # Limpiamos cualquier cliente de Prisma anterior y generamos uno nuevo
 RUN rm -rf node_modules/.prisma

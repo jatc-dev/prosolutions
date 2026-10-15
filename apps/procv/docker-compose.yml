@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ../../
+      dockerfile: apps/procv/backend/Dockerfile
     ports:
       - "4000:4000"
     environment:
@@ -20,7 +22,9 @@ services:
       - db
 
   frontend:
-    build: ./frontend
+    build:
+      context: ../../
+      dockerfile: apps/procv/frontend/Dockerfile
     ports:
       - "80:80"
     environment:

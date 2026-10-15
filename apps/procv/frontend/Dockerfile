@@ -4,14 +4,15 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (el contexto de build es la raíz del monorepo)
+COPY apps/procv/frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy frontend source and the shared UI package (@prosolutions/ui)
+COPY apps/procv/frontend/ ./
+COPY packages/ui /packages/ui
 
 # Build the application
 RUN npm run build
