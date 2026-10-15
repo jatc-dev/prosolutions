@@ -506,10 +506,17 @@ export async function resetUserPassword(req: Request, res: Response) {
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
-    await prisma.user.update({
-      where: { id },
-      data: { passwordHash },
-    });
+    // Revoke all existing sessions after an administrator changes a user's
+    // password, matching the self-service password-reset security behavior.
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id },
+        data: { passwordHash },
+      }),
+      prisma.session.deleteMany({
+        where: { userId: id },
+      }),
+    ]);
 
     return res.json({ message: 'Password reset successfully' });
   } catch (error) {
