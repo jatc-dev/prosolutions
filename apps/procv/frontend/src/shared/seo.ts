@@ -9,7 +9,7 @@ export interface SeoOptions {
   jsonLd?: Array<Record<string, unknown>>;
 }
 
-const SITE_ORIGIN = "https://procv-platform.onrender.com";
+const SITE_ORIGIN = "https://procv.prosolutions.page";
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
   let element = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
