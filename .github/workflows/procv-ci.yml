@@ -101,6 +101,22 @@ jobs:
       - name: Install workspace dependencies (repo root)
         run: npm ci --include=dev --workspaces --include-workspace-root
 
+      # Comprobacion explicita: el lockfile raiz ubica eslint 10 y
+      # eslint-plugin-prettier en apps/procv/backend/node_modules (subarbol
+      # anidado). Si no se materializa, el lint falla con ERR_MODULE_NOT_FOUND,
+      # asi que se verifica la resolucion antes de llegar al lint.
+      - name: Verify backend ESLint toolchain
+        working-directory: apps/procv/backend
+        run: |
+          for pkg in eslint eslint-plugin-prettier; do
+            if node --input-type=module -e "console.log('OK   $pkg ->', import.meta.resolve('$pkg'))"; then
+              :
+            else
+              echo "::error::No se pudo resolver '$pkg' desde apps/procv/backend. El lockfile raiz lo ubica en apps/procv/backend/node_modules; revisa el arbol instalado y el paso de instalacion."
+              exit 1
+            fi
+          done
+
       - name: Generate Prisma client
         working-directory: apps/procv/backend
         run: npm run prisma:generate
