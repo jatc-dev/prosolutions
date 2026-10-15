@@ -1,4 +1,1 @@
-# Google AdSense — ecosistema ProSolutions (JATC.DEV)
-# Publisher ID oficial configurado. Para cambiarlo, actualiza este valor
-# y la variable VITE_ADSENSE_CLIENT (por defecto ca-pub-3956322934366702).
 google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0
