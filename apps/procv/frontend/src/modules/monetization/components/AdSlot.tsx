@@ -1,13 +1,37 @@
 import React from "react";
 import { Megaphone } from "lucide-react";
+import { useAdSensePush, useAdSenseScript } from "@prosolutions/ui";
 
 interface AdSlotProps {
   placement: string;
+  /** ID de bloque de AdSense (data-ad-slot). */
+  slot?: string;
   className?: string;
 }
 
-/** In-feed ad placeholder. Render the AdSense <ins> here once the account is approved. */
-export function AdSlot({ placement, className = "" }: AdSlotProps) {
+const env: Record<string, string | undefined> =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+
+/** In-feed ad placeholder. Con VITE_ADSENSE_CLIENT renderiza el bloque real de AdSense. */
+export function AdSlot({ placement, slot, className = "" }: AdSlotProps) {
+  const client = env.VITE_ADSENSE_CLIENT;
+  useAdSenseScript(client);
+  useAdSensePush(Boolean(client));
+
+  if (client) {
+    return (
+      <ins
+        className={`adsbygoogle block ${className}`}
+        style={{ display: "block" }}
+        data-ad-client={client}
+        data-ad-slot={slot}
+        data-ad-format="fluid"
+        data-full-width-responsive="true"
+        data-ad-placement={placement}
+      />
+    );
+  }
+
   return (
     <div
       role="complementary"

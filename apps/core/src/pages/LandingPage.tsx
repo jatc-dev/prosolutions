@@ -11,8 +11,8 @@ export function LandingPage() {
       <main className="flex-1">
         <Hero />
         <Modules />
-        <AdsSection />
         <Premium />
+        <AdsSection />
       </main>
       <ProFooter />
     </div>

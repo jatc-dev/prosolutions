@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 import sys
 import urllib.request
 
@@ -17,6 +18,36 @@ SITE_DESC = "Encuentra las mejores ofertas de trabajo remoto en tecnología: Des
 PROCV_URL = "https://procv-platform.onrender.com"
 CORE_URL = "/"  # Landing de ProSolutions (apps/core): ajustar al despliegue real
 JATC_URL = "https://github.com/jatc-dev"
+
+# Google AdSense: define VITE_ADSENSE_CLIENT (ca-pub-XXXX) para servir anuncios reales.
+ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "")
+ADS_EVERY = 6  # Bloque in-feed cada N ofertas (espejo del AdSlot de packages/ui)
+
+ADSENSE_SCRIPT_TAG = (
+    f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
+    if ADSENSE_CLIENT
+    else ""
+)
+
+
+def ad_block(placement: str) -> str:
+    """Bloque de anuncio in-feed: real si hay cliente de AdSense, placeholder si no."""
+    if ADSENSE_CLIENT:
+        return f"""
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="{ADSENSE_CLIENT}"
+             data-ad-format="fluid"
+             data-full-width-responsive="true"
+             data-ad-placement="{placement}"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({{}});</script>
+        """
+    return f"""
+        <div class="pro-ad-slot" data-ad-placement="{placement}" role="complementary" aria-label="Espacio publicitario">
+            <p class="pro-ad-label">Espacio publicitario</p>
+            <p class="pro-ad-hint">Google AdSense &middot; {placement}</p>
+        </div>
+    """
 
 all_jobs = []
 
@@ -234,6 +265,7 @@ html_content = f"""<!DOCTYPE html>
     <meta name="keywords" content="empleo remoto, trabajo tech, programador remoto, ofertas python, desarrollo web, react, devops">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{SITE_URL}">
+    {ADSENSE_SCRIPT_TAG}
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="{SITE_URL}">
@@ -284,6 +316,11 @@ html_content = f"""<!DOCTYPE html>
         .pro-pill-beta {{ background: #d1fae5; color: #065f46; }}
         .pro-cta {{ display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; border-radius: 12px; background: #4f46e5; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; }}
         .pro-cta:hover {{ background: #4338ca; }}
+
+        /* Bloque de anuncios in-feed (espejo estático del AdSlot de packages/ui) */
+        .pro-ad-slot {{ margin: 16px 0; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; text-align: center; }}
+        .pro-ad-label {{ margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #94a3b8; }}
+        .pro-ad-hint {{ margin: 4px 0 0; font-size: 11px; color: #94a3b8; }}
 
         /* Footer unificado */
         .pro-footer {{ background: #ffffff; border-top: 1px solid #e2e8f0; }}
@@ -342,7 +379,7 @@ html_content = f"""<!DOCTYPE html>
     <main id="jobsList">
 """
 
-for job in all_jobs:
+for index, job in enumerate(all_jobs):
   title = job.get("title")
   company = job.get("company")
   location = job.get("location")
@@ -357,6 +394,10 @@ for job in all_jobs:
             <a href="{job_url}" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     """
+
+  # Bloque de anuncio in-feed entre ofertas (nunca después de la última)
+  if (index + 1) % ADS_EVERY == 0 and index + 1 < len(all_jobs):
+    html_content += ad_block(f"projobs-list-after-{index + 1}")
 
 html_content += f"""
     </main>

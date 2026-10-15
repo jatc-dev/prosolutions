@@ -16,6 +16,7 @@ import {
 } from "../components/editor/ATSOptimizationPanel";
 import { TemplateColorCustomizer } from "../components/editor/TemplateColorCustomizer";
 import { TemplateSelector } from "../components/editor/components/TemplateSelector";
+import { AdSlot } from "../modules/monetization/components/AdSlot";
 import type { CVData, ContactItem, ContactType } from "../components/TemplateRenderer";
 import {
   createId,
@@ -1933,10 +1934,13 @@ export function WorkspacePage() {
                  </div>
                </div>
              </div>
-           )}
-         </div>
+          )}
+        </div>
 
-
+        {/* Monetizacion: bloque de anuncio al final del dashboard */}
+        <div className="mt-8">
+          <AdSlot placement="procv-dashboard" />
+        </div>
       </div>
 
       {/* Toast notifications */}
