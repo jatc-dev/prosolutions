@@ -27,21 +27,26 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copiamos package.json e instalamos dependencias primero
-# (el contexto de build es la raíz del monorepo)
-COPY apps/procv/backend/package*.json ./
-RUN npm ci
+# Instalar desde la raiz del monorepo usando el lockfile canonico.
+# Se copian los manifiestos de todos los workspaces para que npm pueda
+# validar el package-lock raiz antes de instalar el workspace del backend.
+COPY package.json package-lock.json ./
+COPY apps/procv/package.json ./apps/procv/package.json
+COPY apps/procv/backend/package.json ./apps/procv/backend/package.json
+COPY apps/procv/frontend/package.json ./apps/procv/frontend/package.json
+COPY apps/core/package.json ./apps/core/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 
-# --- PASO CRUCIAL ---
-# Copiamos TODO el código (incluyendo la carpeta prisma/)
-# ANTES de correr el generate
-COPY apps/procv/backend/ ./
+RUN npm ci --include=dev --workspace=apps/procv/backend --include-workspace-root
 
-# Limpiamos cualquier cliente de Prisma anterior y generamos uno nuevo
-RUN rm -rf node_modules/.prisma
+# Copiamos el backend en su ruta de workspace para mantener la resolucion
+# de dependencias desde /app/node_modules.
+COPY apps/procv/backend/ ./apps/procv/backend/
+WORKDIR /app/apps/procv/backend
+
+# Generar el cliente Prisma y compilar TypeScript
+RUN rm -rf /app/node_modules/.prisma
 RUN npx prisma generate
-
-# Compilamos el código de TypeScript
 RUN npm run build
 
 # Puerto de Render
