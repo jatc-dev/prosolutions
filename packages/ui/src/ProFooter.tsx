@@ -8,7 +8,7 @@ const NAV_GROUPS: Array<{ title: string; links: Array<{ label: string; href: str
     title: "Ecosistema",
     links: [
       { label: "Inicio", href: APP_URLS.core, external: isExternalUrl(APP_URLS.core) },
-      { label: "ProCV", href: APP_URLS.procv, external: true },
+      { label: "ProCV", href: APP_URLS.procvLogin, external: true },
       { label: "ProJobs", href: APP_URLS.projobs, external: true },
       { label: "Planes Premium", href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
     ],
