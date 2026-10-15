@@ -17,7 +17,7 @@ Set these in your backend Render service:
 
 1. NODE_ENV=production
 2. PORT=10000 (or Render-provided PORT)
-3. FRONTEND_URL=https://procv-platform.onrender.com
+3. FRONTEND_URL=https://procv.prosolutions.page (canonical production origin; update if the frontend domain changes)
 4. DATABASE_URL=postgresql://... (Supabase pooler or direct URL)
 5. JWT_SECRET=<strong random value, at least 32 chars>
 6. JWT_EXPIRES_IN=15m
@@ -61,20 +61,40 @@ After deployment, verify:
 1. Take the Supabase direct/session connection string (port 5432, not the PgBouncer pooler on 6543). The region in the hostname is Supabase's project region, not Render's.
 2. Set it in the Render backend environment as `DIRECT_DATABASE_URL` (secret). `DATABASE_URL` keeps pointing to the pooler for runtime traffic.
 
-### Apply migrations on every deploy (no paid plan needed)
+### Current Render deployment behavior and migration safety
 
-Render's pre-deploy command requires a paid instance. On any plan, use the service **Docker Command** (Settings → Build & Deploy → Docker Command) so migrations run at container startup, before the server:
+The current backend Render service uses the **Node runtime** with build command
+`npm install --include=dev && npm run prisma:generate && npm run build` and start command
+`npm start`. Its Dockerfile is not used by this service configuration. Therefore the
+Docker Command instructions below do not describe the currently deployed service, and
+`npm start` does **not** run `prisma migrate deploy`.
 
-```
-npm run start:migrate
-```
+Do not switch production startup to `npm run start:migrate` until the existing Supabase
+database has been baselined and verified. Production has previously received schema changes
+outside Prisma migrations (including the boot-time compatibility guard), so a blind
+`migrate deploy` may try to recreate objects that already exist and stop the service.
 
-- The backend ships a `start:migrate` script (`prisma migrate deploy` with `DATABASE_URL` pointed at `DIRECT_DATABASE_URL`, then `node dist/index.js`). Keep the Docker Command to that single token: inline `sh -c '...'` wrappers with quotes fail on Render (exit 127).
-- The Prisma CLI is available in the image (`npm ci` installs devDependencies) and the direct URL comes from `DIRECT_DATABASE_URL`.
-- If a migration fails, the container exits and Render keeps the previous working version (fail-fast).
-- Safe only with a single instance (no concurrent migrations). Free tier runs one instance.
-- The script is Linux/container-only (POSIX variable assignment prefix); use `npm start` locally.
-- The equivalent paid-only alternative is the Pre-deploy command: `DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy`.
+Recommended controlled procedure:
+
+1. Confirm `DIRECT_DATABASE_URL` is set as a secret and points to Supabase's direct/session
+   connection (port 5432). Keep `DATABASE_URL` for normal application traffic.
+2. From a trusted workstation, set `DATABASE_URL` to the direct connection temporarily and run
+   `npx prisma migrate status` from `apps/procv/backend`.
+3. Inspect the actual columns, constraints and tables for every pending migration. Only mark a
+   migration as applied with `prisma migrate resolve --applied` after independently verifying
+   that all of its effects already exist. Resolve failed records deliberately; do not delete
+   migration history as a shortcut.
+4. Run `npx prisma migrate deploy`, then `npx prisma migrate status`; the status must report
+   that the schema is up to date.
+5. Only after the baseline is verified, choose and test a release process that applies migrations
+   before the new application version receives traffic. For Render Node services, use a supported
+   pre-deploy/release mechanism or a controlled migration job; do not rely on Docker-only settings.
+   If the service plan has no pre-deploy support, keep migrations as a deliberate release step
+   until a safe automated process is configured.
+
+The backend's `start:migrate` script is POSIX-shell syntax intended for a Linux container and
+uses `DIRECT_DATABASE_URL`. It is not currently the configured Render start command. Never
+enable it in production before completing the baseline checks above.
 
 ### One-off migrations from a workstation
 
