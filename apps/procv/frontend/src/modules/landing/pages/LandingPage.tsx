@@ -1,5 +1,4 @@
 ﻿import React from "react";
-import { Link } from "react-router-dom";
 import { BrandLogo } from "../../../components/BrandLogo";
 
 export function LandingPage() {
@@ -13,18 +12,18 @@ export function LandingPage() {
         Tu plataforma profesional para crear CVs y encontrar empleos tech.
       </p>
       <div className="flex gap-4">
-        <Link
-          to="/procv"
+        <a
+          href="https://procv.prosolutions.page/login" target="_blank" rel="noreferrer"
           className="inline-flex items-center px-6 py-3 bg-procv-600 text-white font-medium rounded-md hover:bg-procv-700 dark:bg-procv-500 dark:hover:bg-procv-800"
         >
           Explorar ProCV
-        </Link>
-        <Link
-          to="/projobs"
+        </a>
+        <a
+          href="https://projobs.prosolutions.page" target="_blank" rel="noreferrer"
           className="inline-flex items-center px-6 py-3 bg-projobs-600 text-white font-medium rounded-md hover:bg-projobs-700 dark:bg-projobs-500 dark:hover:bg-projobs-800"
         >
           Ver empleos tech
-        </Link>
+        </a>
       </div>
     </div>
   );

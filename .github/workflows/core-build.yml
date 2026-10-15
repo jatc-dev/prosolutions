@@ -1,0 +1,41 @@
+name: Core Build Validation
+
+on:
+  push:
+    branches:
+      - fix/procv-navigation-clean
+    paths:
+      - "apps/core/**"
+      - "packages/ui/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/core-build.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/core/**"
+      - "packages/ui/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/core-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  core-build:
+    name: Core (TypeScript + Vite build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Build Core and shared UI
+        run: npm run build:core

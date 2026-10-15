@@ -28,7 +28,7 @@ const MODULES: ModuleCard[] = [
       "Crea, edita y descarga tu hoja vida con plantillas disenadas para superar filtros ATS.",
     features: ["Plantillas optimizadas para ATS", "Exportacion a PDF, JSON y XML", "Edicion en tiempo real"],
     ctaLabel: "Ir a ProCV",
-    ctaHref: LINKS.procv,
+    ctaHref: LINKS.procvLogin,
     icon: FileText,
     iconWrapClass: "bg-brand-100 text-brand-600 ring-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:ring-brand-800",
     haloClass: "bg-brand-400/20 group-hover:bg-brand-400/30",

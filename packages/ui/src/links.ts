@@ -26,9 +26,12 @@ const env = readEnv();
  * (VITE_CORE_URL, VITE_PROCV_URL, VITE_PROJOBS_URL, VITE_JATC_URL, VITE_PRIVACY_URL)
  * con fallbacks seguros a URLs relativas o por defecto.
  */
+const procvUrl = env.VITE_PROCV_URL ?? "https://procv.prosolutions.page";
+
 export const APP_URLS = {
   core: env.VITE_CORE_URL ?? "/",
-  procv: env.VITE_PROCV_URL ?? "https://procv-platform.onrender.com",
+  procv: procvUrl,
+  procvLogin: `${procvUrl.replace(/\/+$/, "")}/login`,
   projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",
 } as const;
 
