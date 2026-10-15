@@ -11,7 +11,7 @@ const PLANS = [
     description: "Para crear tu primer CV profesional y explorar el ecosistema.",
     features: ["Editor completo de ProCV", "Plantillas base optimizadas para ATS", "Exportacion en PDF estandar"],
     ctaLabel: "Empezar gratis",
-    ctaHref: LINKS.procv,
+    ctaHref: LINKS.procvLogin,
     highlight: false,
   },
   {
@@ -27,7 +27,7 @@ const PLANS = [
       "Exportacion PDF, JSON y XML",
     ],
     ctaLabel: "Hazte Pro",
-    ctaHref: LINKS.procv,
+    ctaHref: LINKS.procvLogin,
     highlight: true,
   },
   {
