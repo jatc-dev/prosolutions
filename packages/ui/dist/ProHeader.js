@@ -22,8 +22,8 @@ function CTA_BY_APP(activeApp) {
     if (activeApp === "procv")
         return { label: "Explorar Empleos", href: APP_URLS.projobs };
     if (activeApp === "projobs")
-        return { label: "Crear mi CV Gratis", href: APP_URLS.procv };
-    return { label: "Crear mi CV Gratis", href: APP_URLS.procv };
+        return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
+    return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
 }
 /**
  * Header unificado del ecosistema ProSolutions.
