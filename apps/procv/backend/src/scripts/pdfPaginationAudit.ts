@@ -173,7 +173,7 @@ async function run() {
       const html = buildPdfHtml(cv);
       const page = await browser.newPage();
       await page.setViewport({ width: 794, height: 1123 });
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
       await page.emulateMediaType('print');
 
       const metrics = await page.evaluate(pageHeightPx => {

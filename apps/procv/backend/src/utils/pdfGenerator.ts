@@ -41,7 +41,7 @@ export async function renderToPdf(html: string): Promise<Buffer> {
   const browserInstance = await getBrowser();
   const page = await browserInstance.newPage();
   try {
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'load' });
     // Force predictable print behavior across templates to reduce broken blocks and orphaned headings.
     await page.addStyleTag({
       content: `
