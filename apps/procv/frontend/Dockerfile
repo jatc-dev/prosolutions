@@ -1,27 +1,30 @@
-# Use Node.js 18 as base image
+# Node.js 18 frontend image; build context is the monorepo root.
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files (el contexto de build es la raíz del monorepo)
-COPY apps/procv/frontend/package*.json ./
+# Copy the root lockfile and every package manifest matched by the workspace layout.
+COPY package.json package-lock.json ./
+COPY apps/procv/package.json ./apps/procv/package.json
+COPY apps/procv/frontend/package.json ./apps/procv/frontend/package.json
+COPY apps/procv/backend/package.json ./apps/procv/backend/package.json
+COPY apps/core/package.json ./apps/core/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 
-# Install dependencies
-RUN npm ci
+# Install the frontend workspace from the single root lockfile.
+RUN npm ci --include=dev --workspace=apps/procv/frontend --include-workspace-root
 
-# Copy frontend source and the shared UI package (@prosolutions/ui)
-COPY apps/procv/frontend/ ./
-COPY packages/ui /packages/ui
+# Copy frontend source and the shared UI workspace.
+COPY apps/procv/frontend/ ./apps/procv/frontend/
+COPY packages/ui/ ./packages/ui/
 
-# Build the application
+WORKDIR /app/apps/procv/frontend
+
+# Build the application.
 RUN npm run build
 
-# Install a simple static server
+# Install a simple static server.
 RUN npm install -g serve
 
-# Expose port
 EXPOSE 3000
-
-# Start the application
 CMD ["serve", "-s", "dist", "-l", "3000"]
