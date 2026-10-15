@@ -1,5 +1,4 @@
 import React from "react";
-import { Megaphone } from "lucide-react";
 import { ADSENSE_CLIENT, useAdSensePush, useAdSenseScript } from "@prosolutions/ui";
 import { useEntitlements } from "../../../shared/feature-flags";
 
@@ -19,9 +18,11 @@ export function AdSlot({ placement, slot, className = "" }: AdSlotProps) {
   // Premium users (and admins) have the no-ads entitlement. Keep hooks unconditional,
   // but do not load the AdSense script or enqueue an ad request for those users.
   useAdSenseScript(shouldShowAds ? client : undefined);
-  useAdSensePush(shouldShowAds);
+  useAdSensePush(shouldShowAds && Boolean(slot));
 
-  if (!shouldShowAds) return null;
+  // Most placements currently have no AdSense ad-unit ID. Do not render an empty <ins>:
+  // the global script in index.html handles Auto ads, while manual units need a real slot ID.
+  if (!shouldShowAds || !client || !slot) return null;
 
   if (client) {
     return (
@@ -30,7 +31,7 @@ export function AdSlot({ placement, slot, className = "" }: AdSlotProps) {
         style={{ display: "block" }}
         data-ad-client={client}
         data-ad-slot={slot}
-        data-ad-format="fluid"
+        data-ad-format="auto"
         data-full-width-responsive="true"
         data-ad-placement={placement}
       />
