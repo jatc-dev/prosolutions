@@ -19,8 +19,9 @@ PROCV_URL = "https://procv-platform.onrender.com"
 CORE_URL = "/"  # Landing de ProSolutions (apps/core): ajustar al despliegue real
 JATC_URL = "https://github.com/jatc-dev"
 
-# Google AdSense: define VITE_ADSENSE_CLIENT (ca-pub-XXXX) para servir anuncios reales.
-ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "")
+# Google AdSense: cliente del ecosistema (pub-3956322934366702).
+# VITE_ADSENSE_CLIENT permite sobreescribirlo por entorno si hiciera falta.
+ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "") or "ca-pub-3956322934366702"
 ADS_EVERY = 6  # Bloque in-feed cada N ofertas (espejo del AdSlot de packages/ui)
 
 ADSENSE_SCRIPT_TAG = (

@@ -18,6 +18,9 @@ export const PRIVACY_URL =
   env.VITE_PRIVACY_URL ?? "https://projobs.prosolutions.page/privacidad.html";
 export const TERMS_URL = env.VITE_TERMS_URL ?? "#terminos";
 
+/** Cliente de Google AdSense del ecosistema (pub-3956322934366702 / ca-pub-3956322934366702). */
+export const ADSENSE_CLIENT = env.VITE_ADSENSE_CLIENT ?? "ca-pub-3956322934366702";
+
 /** Marca si la URL apunta a otro origen (abre en pestaña nueva). */
 export function isExternalUrl(url: string): boolean {
   return /^https?:\/\//i.test(url);

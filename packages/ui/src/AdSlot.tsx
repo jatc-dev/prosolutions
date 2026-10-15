@@ -1,7 +1,8 @@
 import React from "react";
 import { Megaphone } from "lucide-react";
-import { cn } from "./utils";
-import { useAdSensePush, useAdSenseScript } from "./useAdSense";
+import { ADSENSE_CLIENT } from "./links.js";
+import { cn } from "./utils.js";
+import { useAdSensePush, useAdSenseScript } from "./useAdSense.js";
 
 export type AdFormat = "leaderboard" | "in-feed" | "rectangle" | "native" | "auto";
 
@@ -14,18 +15,15 @@ interface AdSlotProps {
   className?: string;
 }
 
-const env: Record<string, string | undefined> =
-  (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
-
 /**
  * Bloque de anuncio unificado del ecosistema.
- * Con VITE_ADSENSE_CLIENT definido renderiza el <ins> real de Google AdSense;
- * sin la variable muestra un placeholder estetico (nunca rompe el build).
+ * Renderiza el <ins> real de Google AdSense con el cliente del ecosistema
+ * (VITE_ADSENSE_CLIENT, por defecto ca-pub-3956322934366702).
  */
 export function AdSlot({ placement = "default", slot, format = "auto", className }: AdSlotProps) {
-  const client = env.VITE_ADSENSE_CLIENT;
+  const client = ADSENSE_CLIENT;
   useAdSenseScript(client);
-  useAdSensePush(Boolean(client));
+  useAdSensePush(true);
 
   if (client) {
     return (
