@@ -57,7 +57,10 @@ jest.mock('../../src/config', () => ({
 }));
 
 // Loose mock function type for Prisma test doubles.
-type MockedFn = jest.Mock<any>;
+// Loose mock function type for Prisma test doubles.
+// Con @jest/globals v30, jest.Mock<T> tipa la funcion mockeada (no el valor de
+// retorno como en @types/jest), por lo que hay que usar la firma de la funcion.
+type MockedFn = jest.MockedFunction<(...args: any[]) => Promise<any>>;
 
 const mockPrisma = prismaClient as unknown as {
   user: { findUnique: MockedFn; update: MockedFn };
