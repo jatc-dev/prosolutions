@@ -1,7 +1,10 @@
 const env = import.meta.env;
 
+const procvUrl = env.VITE_PROCV_URL ?? "https://procv.prosolutions.page";
+
 export const LINKS = {
-  procv: env.VITE_PROCV_URL ?? "https://procv-platform.onrender.com",
+  procv: procvUrl,
+  procvLogin: `${procvUrl.replace(/\/+$/, "")}/login`,
   projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",
   projobsPrivacy: env.VITE_PROJOBS_URL
     ? `${env.VITE_PROJOBS_URL}/privacidad.html`
