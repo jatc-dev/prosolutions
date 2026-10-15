@@ -13,11 +13,9 @@ name: ProCV CI
 #     incluye los cinco workspaces y resuelve @prosolutions/ui como workspace de
 #     packages/ui. Un npm ci dentro de apps/procv/frontend apuntaria a una ruta
 #     inexistente (file:../../packages/ui).
-#   * El lockfile raiz ademas anida apps/procv/backend/node_modules/{eslint 10,
-#     @eslint/js, eslint-plugin-prettier, eslint-config-prettier} porque el
-#     backend usa ESLint 10 frente al ESLint 9 de frontend/core. Ejecutando los
-#     comandos con working-directory=apps/procv/backend se resuelve primero ese
-#     node_modules y el lint del backend funciona.
+#   * El backend y el frontend usan ESLint 9, alineado con el lockfile raiz.
+#     La herramienta y los plugins se resuelven desde el arbol de dependencias
+#     instalado por npm ci en la raiz del monorepo.
 #   * Los dos Dockerfiles usan como contexto la RAIZ del monorepo
 #     (COPY apps/procv/... y COPY packages/ui), no ./backend.
 
@@ -84,7 +82,7 @@ jobs:
 
     strategy:
       matrix:
-        # Node 20 LTS (coincide con produccion). ESLint 10 requiere Node >= 20.19.
+        # Node 20 LTS (coincide con produccion); se usa para los jobs del backend.
         node-version: [20.x]
 
     steps:
@@ -101,10 +99,8 @@ jobs:
       - name: Install workspace dependencies (repo root)
         run: npm ci --include=dev --workspaces --include-workspace-root
 
-      # Comprobacion explicita: el lockfile raiz ubica eslint 10 y
-      # eslint-plugin-prettier en apps/procv/backend/node_modules (subarbol
-      # anidado). Si no se materializa, el lint falla con ERR_MODULE_NOT_FOUND,
-      # asi que se verifica la resolucion antes de llegar al lint.
+      # Verificar que ESLint y su plugin de Prettier se resuelvan desde el
+      # workspace del backend antes de ejecutar el lint.
       - name: Verify backend ESLint toolchain
         working-directory: apps/procv/backend
         run: |
