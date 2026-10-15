@@ -120,7 +120,7 @@ export function TemplatesPage() {
                 </div>
 
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  {t(`procv.templateCategory.${template.category}`, template.category)} ·{" "}
+                  {String(t(`procv.templateCategory.${template.category}`, template.category))} ·{" "}
                   {template.atsFriendly ? t("procv.atsFriendly", "ATS friendly") : t("procv.notAts", "Diseño visual")}
                 </p>
 

@@ -9,14 +9,14 @@ function BrandLogoComponent({
   className = "",
   to = "/dashboard",
 }: {
-  size?: number;
-  variant?: "compact" | "large" | "small" | "hero";
+  size?: number | "small" | "medium" | "large";
+  variant?: "compact" | "large" | "small" | "hero" | "platform";
   hideSubtitle?: boolean;
   className?: string;
   to?: string;
 }) {
   const { t } = useTranslation();
-  const showText = variant === "large" || variant === "hero";
+  const showText = variant === "large" || variant === "hero" || variant === "platform";
   const showSubtitle = showText && !hideSubtitle;
 
   const sizeMap = {
@@ -35,6 +35,11 @@ function BrandLogoComponent({
       title: "text-3xl",
       subtitle: "text-sm",
     },
+    platform: {
+      wrap: "min-h-[96px] min-w-[240px] rounded-3xl px-8 py-5 md:min-h-[112px] md:min-w-[300px]",
+      title: "text-4xl md:text-5xl",
+      subtitle: "text-sm md:text-base",
+    },
     hero: {
       wrap: "min-h-[128px] min-w-[320px] rounded-3xl px-9 py-6 md:min-h-[148px] md:min-w-[420px] md:px-11 md:py-7",
       title: "text-6xl md:text-8xl",
@@ -44,8 +49,9 @@ function BrandLogoComponent({
 
   const current = sizeMap[variant];
 
+  const pixelSize = typeof size === "number" ? size : { small: 42, medium: 64, large: 128 }[size];
 
-  const dotSize = Math.max(8, Math.round(size * 0.12));
+  const dotSize = Math.max(8, Math.round(pixelSize * 0.12));
 
   return (
     <Link

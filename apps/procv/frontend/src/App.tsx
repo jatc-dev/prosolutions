@@ -1,4 +1,4 @@
-﻿import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./stores/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
 import React, { Suspense, lazy, useEffect } from "react";
@@ -23,12 +23,11 @@ const UserManagement = lazy(() => import("./pages/admin/UserManagement").then((m
 const PlatformSettings = lazy(() => import("./pages/admin/PlatformSettings").then((m) => ({ default: m.PlatformSettings })));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs").then((m) => ({ default: m.AuditLogs })));
 const LandingPageManagement = lazy(() =>
+  import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
+);
 const LandingPage = lazy(() => import("./modules/landing/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const ProCVHomePage = lazy(() => import("./modules/procv/pages/ProCVHomePage").then((m) => ({ default: m.ProCVHomePage })));
 const JobsPage = lazy(() => import("./modules/projobs/pages/JobsPage").then((m) => ({ default: m.JobsPage })));
-
-  import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
-);
 
 function RouteFallback() {
   const { t } = useTranslation();
@@ -65,7 +64,8 @@ export default function App() {
         <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />`r`n            <Route path="/login" element={<AuthPage />} />`r`n            <Route path="/login" element={<AuthPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage />} />
             <Route path="/auth" element={<Navigate to="/" replace />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -139,6 +139,25 @@ docker-compose up --build
 | `npx prisma migrate dev` | Nueva migración en desarrollo |
 | `npx prisma migrate deploy` | Aplicar migraciones (usar conexión directa, ver abajo) |
 
+### Scripts del monorepo (desde `apps/procv`)
+
+ProCV es un workspace del monorepo ProSolutions. Su `package.json` orquesta frontend y backend:
+
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Levanta backend (4000) y frontend (5173) a la vez (`scripts/dev-all.mjs`) |
+| `npm run dev:backend` / `npm run dev:frontend` | Levanta solo una parte |
+| `npm run build` | Compila frontend (`tsc && vite build`) y backend (`prisma generate` + `tsc`) |
+| `npm run build:frontend` / `npm run build:backend` | Compila solo una parte |
+| `npm start` | Arranca el backend compilado (`node dist/index.js`) |
+| `npm run prisma:generate` | Genera el cliente de Prisma del backend |
+
+Desde la raíz del monorepo: `npm run build:procv`, `npm run dev:procv`.
+
+> Nota: Render despliega cada parte por separado usando los `Dockerfile` de `backend/` y
+> `frontend/` (rootDir por servicio). Los scripts de `apps/procv` son para builds y
+> desarrollo locales del monorepo.
+
 ---
 
 ## 🔧 Variables de entorno
