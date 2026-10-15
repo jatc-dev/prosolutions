@@ -1,35 +1,38 @@
+import React from "react";
 import { ArrowUpRight } from "lucide-react";
-import { LINKS } from "../config/links";
-import { Logo } from "./Logo";
+import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
+import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 
-const NAV_GROUPS = [
+const NAV_GROUPS: Array<{ title: string; links: Array<{ label: string; href: string; external?: boolean }> }> = [
   {
     title: "Ecosistema",
     links: [
-      { label: "ProCV", href: LINKS.procv, external: true },
-      { label: "ProJobs", href: LINKS.projobs, external: true },
-      { label: "Planes Premium", href: "#planes" },
+      { label: "Inicio", href: APP_URLS.core, external: isExternalUrl(APP_URLS.core) },
+      { label: "ProCV", href: APP_URLS.procv, external: true },
+      { label: "ProJobs", href: APP_URLS.projobs, external: true },
+      { label: "Planes Premium", href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacidad", href: LINKS.projobsPrivacy, external: true },
-      { label: "Terminos", href: "#terminos" },
+      { label: "Privacidad", href: PRIVACY_URL, external: true },
+      { label: "Terminos", href: TERMS_URL },
     ],
   },
 ];
 
-export function Footer() {
+/** Footer unificado del ecosistema ProSolutions con el credito de JATC.DEV. */
+export function ProFooter() {
   return (
     <footer id="terminos" className="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="ui-container py-14">
+      <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <Logo />
+            <ProSolutionsLogo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS
-              y encuentra tu proximo empleo remoto.
+              El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y
+              encuentra tu proximo empleo remoto con ProJobs.
             </p>
           </div>
 
@@ -59,9 +62,9 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 text-center dark:border-slate-700 sm:flex-row sm:text-left">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            &copy; 2026 ProSolutions. Un producto desarrollado por{" "}
+            &copy; {new Date().getFullYear()} ProSolutions. Un producto desarrollado por{" "}
             <a
-              href={LINKS.jatcDev}
+              href={JATC_URL}
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-slate-700 transition-colors hover:text-brand-600 dark:text-slate-200 dark:hover:text-brand-300"

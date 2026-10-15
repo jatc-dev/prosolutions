@@ -42,16 +42,64 @@
 
         .no-results { display: none; text-align: center; color: #57606a; padding: 30px; font-size: 1.05rem; }
 
-        footer { text-align: center; margin-top: 40px; font-size: 0.85rem; color: #6e7781; border-top: 1px solid #d0d7de; padding-top: 20px; }
-        footer a { color: #0969da; text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
+        /* Header unificado ProSolutions (espejo estático de packages/ui) */
+        .pro-nav { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
+        .pro-nav-inner { max-width: 80rem; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .pro-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+        .pro-mark { display: inline-flex; height: 36px; width: 36px; align-items: center; justify-content: center; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #06b6d4); color: #ffffff; font-weight: 900; font-size: 13px; }
+        .pro-wordmark { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: #0f172a; line-height: 1.1; }
+        .pro-wordmark em { font-style: normal; background: linear-gradient(90deg, #4f46e5, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .pro-eyebrow { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; }
+        .pro-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .pro-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; color: #475569; text-decoration: none; }
+        .pro-links a:hover { background: #f1f5f9; color: #0f172a; }
+        .pro-links a.active { background: #f1f5f9; color: #0f172a; }
+        .pro-pill { border-radius: 999px; padding: 2px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .pro-pill-active { background: #e0e7ff; color: #3730a3; }
+        .pro-pill-beta { background: #d1fae5; color: #065f46; }
+        .pro-cta { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; border-radius: 12px; background: #4f46e5; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .pro-cta:hover { background: #4338ca; }
+
+        /* Footer unificado */
+        .pro-footer { background: #ffffff; border-top: 1px solid #e2e8f0; }
+        .pro-footer-inner { max-width: 80rem; margin: 0 auto; padding: 48px 16px 24px; }
+        .pro-footer-grid { display: grid; gap: 32px; grid-template-columns: 1fr; }
+        @media (min-width: 768px) { .pro-footer-grid { grid-template-columns: 1.4fr 1fr 1fr; } }
+        .pro-footer h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: #94a3b8; margin: 0 0 12px; }
+        .pro-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+        .pro-footer a { color: #475569; text-decoration: none; font-size: 14px; }
+        .pro-footer a:hover { color: #4f46e5; }
+        .pro-footer-about { font-size: 14px; color: #475569; line-height: 1.6; max-width: 24rem; margin: 12px 0 0; }
+        .pro-footer-bottom { margin-top: 36px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; font-size: 12px; color: #64748b; }
+        @media (min-width: 640px) { .pro-footer-bottom { flex-direction: row; justify-content: space-between; text-align: left; } }
+        .pro-footer-bottom strong { color: #334155; }
+        .pro-footer-bottom a { color: #334155; font-weight: 700; }
     </style>
 </head>
 <body>
+    <nav class="pro-nav" aria-label="Navegacion del ecosistema ProSolutions">
+        <div class="pro-nav-inner">
+            <a class="pro-brand" href="/">
+                <span class="pro-mark" aria-hidden="true">PS</span>
+                <span>
+                    <span class="pro-wordmark">Pro<em>Solutions</em></span>
+                    <span class="pro-eyebrow">Ecosystem</span>
+                </span>
+            </a>
+            <div class="pro-links">
+                <a href="/">Inicio</a>
+                <a href="https://procv-platform.onrender.com" target="_blank" rel="noopener">ProCV</a>
+                <a href="https://jatc-dev.github.io/empleos-tech-remoto/" class="active" aria-current="page">ProJobs <span class="pro-pill pro-pill-active">Activo</span> <span class="pro-pill pro-pill-beta">Beta</span></a>
+                <a href="/#planes">Planes Premium</a>
+            </div>
+            <a class="pro-cta" href="https://procv-platform.onrender.com" target="_blank" rel="noopener">Crear mi CV Gratis</a>
+        </div>
+    </nav>
+
     <header>
         <h1>💼 Portal de Empleos Tech Remotos</h1>
         <p class="subtitle">Agregador diario de vacantes internacionales de programación y tecnología</p>
-        <p class="subtitle"><strong>Última actualización:</strong> 14/10/2026 a las 18:52 UTC</p>
+        <p class="subtitle"><strong>Última actualización:</strong> 14/10/2026 a las 20:51 UTC</p>
     </header>
 
     <!-- BUSCADOR -->
@@ -70,107 +118,107 @@
 
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Satellite Systems Engineer (m/w/d), Space & Defense Industry</h2>
-            <div class="job-info">🏢 <strong>CTG Consulting GmbH</strong> &nbsp;|&nbsp; 📍 Munich</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/ctg-consulting-gmbh/satellite-systems-engineer-space-defense-industry-munich-325039" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Produktmanager Managed Services - Cloud & Infrastructure (m/w/d) - Remote</h2>
+            <div class="job-info">🏢 <strong>Swissitsecuritygroup</strong> &nbsp;|&nbsp; 📍 </div>
+            <a href="https://www.arbeitnow.com/jobs/companies/swissitsecuritygroup/produktmanager-managed-services-cloud-infrastructure-remote-356812" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Business Development Manager (m/w/d), Raumfahrt & Verteidigung</h2>
-            <div class="job-info">🏢 <strong>CTG Consulting GmbH</strong> &nbsp;|&nbsp; 📍 Munich</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/ctg-consulting-gmbh/business-development-manager-raumfahrt-verteidigung-munich-169284" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Senior Project Planner | Finsterwalde</h2>
+            <div class="job-info">🏢 <strong>Kirbygroupengineering</strong> &nbsp;|&nbsp; 📍 </div>
+            <a href="https://www.arbeitnow.com/jobs/companies/kirbygroupengineering/senior-project-planner-finsterwalde-221006" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">R&D and Innovation Manager (m/w/d), Space & Defense Industry</h2>
-            <div class="job-info">🏢 <strong>CTG Consulting GmbH</strong> &nbsp;|&nbsp; 📍 Munich</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/ctg-consulting-gmbh/rd-and-innovation-manager-space-defense-industry-munich-105575" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Senior Electrical Quantity Surveyor | Germany</h2>
+            <div class="job-info">🏢 <strong>Kirbygroupengineering</strong> &nbsp;|&nbsp; 📍 </div>
+            <a href="https://www.arbeitnow.com/jobs/companies/kirbygroupengineering/senior-electrical-quantity-surveyor-germany-39629" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Proposal & Project Manager (m/w/d), Space & Defense Industry</h2>
-            <div class="job-info">🏢 <strong>CTG Consulting GmbH</strong> &nbsp;|&nbsp; 📍 Munich</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/ctg-consulting-gmbh/proposal-project-manager-space-defense-industry-munich-449488" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">(Senior) Account Manager (m/w/d)</h2>
+            <div class="job-info">🏢 <strong>Superchat</strong> &nbsp;|&nbsp; 📍 Berlin, Berlin</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/superchat/senior-account-manager-berlin-berlin-474336" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Strategic Account Executive (DACH)</h2>
-            <div class="job-info">🏢 <strong>Bloomreach</strong> &nbsp;|&nbsp; 📍 </div>
-            <a href="https://www.arbeitnow.com/jobs/companies/bloomreach/strategic-account-executive-dach-119476" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Group Digital Director</h2>
+            <div class="job-info">🏢 <strong>GumGum</strong> &nbsp;|&nbsp; 📍 Dusseldorf, North Rhine-Westphalia, Germany</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/gumgum/group-digital-director-dusseldorf-350618" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Solutions Architect - EMEA</h2>
-            <div class="job-info">🏢 <strong>Endorlabs</strong> &nbsp;|&nbsp; 📍 </div>
-            <a href="https://www.arbeitnow.com/jobs/companies/endorlabs/solutions-architect-emea-466435" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Working Student - LLM Quantization & Inference Performance</h2>
+            <div class="job-info">🏢 <strong>Tensordyne</strong> &nbsp;|&nbsp; 📍 Munich, Bavaria, Germany</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/tensordyne/working-student-llm-quantization-inference-performance-munich-124483" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Talent Attraction Specialist (m/f/d)</h2>
-            <div class="job-info">🏢 <strong>isaraerospace</strong> &nbsp;|&nbsp; 📍 Parsdorf, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/isaraerospace/senior-talent-attraction-specialist-parsdorf-bavaria-171419" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Internal Context Engineer</h2>
+            <div class="job-info">🏢 <strong>N8N</strong> &nbsp;|&nbsp; 📍 Berlin Office</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/n8n/internal-context-engineer-berlin-422357" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">(Senior) Design Engineer (m/f/d)</h2>
-            <div class="job-info">🏢 <strong>isaraerospace</strong> &nbsp;|&nbsp; 📍 Parsdorf, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/isaraerospace/senior-design-engineer-parsdorf-bavaria-226987" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Internal AI Enablement Lead</h2>
+            <div class="job-info">🏢 <strong>N8N</strong> &nbsp;|&nbsp; 📍 Berlin Office</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/n8n/internal-ai-enablement-lead-berlin-118279" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Avionics Hardware Engineer (m/f/d)</h2>
-            <div class="job-info">🏢 <strong>isaraerospace</strong> &nbsp;|&nbsp; 📍 Ottobrunn, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/isaraerospace/senior-avionics-hardware-engineer-ottobrunn-bavaria-391668" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Senior People Partner (Remote Europe)</h2>
+            <div class="job-info">🏢 <strong>N8N</strong> &nbsp;|&nbsp; 📍 Germany</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/n8n/senior-people-partner-remote-europe-germany-326144" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Technical Recruiter (m/f/d)</h2>
-            <div class="job-info">🏢 <strong>Alpineeagle</strong> &nbsp;|&nbsp; 📍 Karlsruhe, Baden-Württemberg, München, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/alpineeagle/technical-recruiter-karlsruhe-baden-wurttemberg-munchen-bavaria-243845" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Sr Security Engineer | Remote | Europe</h2>
+            <div class="job-info">🏢 <strong>N8N</strong> &nbsp;|&nbsp; 📍 Berlin Office</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/n8n/sr-security-engineer-remote-europe-berlin-198654" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Radar Signal Processing Engineer (All Genders)</h2>
-            <div class="job-info">🏢 <strong>Skdse</strong> &nbsp;|&nbsp; 📍 Munich, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/skdse/senior-radar-signal-processing-engineer-all-genders-munich-bavaria-67437" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Public Affairs, Head of Germany</h2>
+            <div class="job-info">🏢 <strong>Mistral.ai</strong> &nbsp;|&nbsp; 📍 Berlin</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/mistralai/public-affairs-head-of-germany-berlin-275593" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Radar Navigation Engineer (All Genders)</h2>
-            <div class="job-info">🏢 <strong>Skdse</strong> &nbsp;|&nbsp; 📍 Munich, Bavaria</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/skdse/senior-radar-navigation-engineer-all-genders-munich-bavaria-421713" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Don't see your role but inspired to apply?</h2>
+            <div class="job-info">🏢 <strong>Stealthrocketrystartup</strong> &nbsp;|&nbsp; 📍 Germany</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/stealthrocketrystartup/dont-see-your-role-but-inspired-to-apply-germany-24400" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Configuration Manager (All Genders)</h2>
-            <div class="job-info">🏢 <strong>Skdse</strong> &nbsp;|&nbsp; 📍 </div>
-            <a href="https://www.arbeitnow.com/jobs/companies/skdse/senior-configuration-manager-all-genders-399655" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Talent Acquisition Manager (all genders)</h2>
+            <div class="job-info">🏢 <strong>Integral De</strong> &nbsp;|&nbsp; 📍 Berlin</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/integral-de/talent-acquisition-manager-all-genders-berlin-293953" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Full Stack Developer</h2>
-            <div class="job-info">🏢 <strong>thinkcellsoftware</strong> &nbsp;|&nbsp; 📍 </div>
-            <a href="https://www.arbeitnow.com/jobs/companies/thinkcellsoftware/senior-full-stack-developer-340313" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Elektriker:in / Techniker:in (alle Geschlechter)</h2>
+            <div class="job-info">🏢 <strong>væridion</strong> &nbsp;|&nbsp; 📍 Manufacturing & Testing Facility</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/vaeridion/elektrikerin-technikerin-alle-geschlechter-gauting-50328" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
             <span class="badge">Fuente: Arbeitnow</span>
-            <h2 class="job-title">Senior Site Controller (all genders)</h2>
-            <div class="job-info">🏢 <strong>hellofresh</strong> &nbsp;|&nbsp; 📍 Verden, Niedersachsen</div>
-            <a href="https://www.arbeitnow.com/jobs/companies/hellofresh/senior-site-controller-all-genders-verden-niedersachsen-122390" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
+            <h2 class="job-title">Battery Assembly Electrician / Technician (all genders)</h2>
+            <div class="job-info">🏢 <strong>væridion</strong> &nbsp;|&nbsp; 📍 Manufacturing & Testing Facility</div>
+            <a href="https://www.arbeitnow.com/jobs/companies/vaeridion/battery-assembly-electrician-technician-all-genders-gauting-91123" class="btn" target="_blank" rel="noopener">Ver Oferta Completa</a>
         </article>
     
         <article class="job-card">
@@ -284,10 +332,41 @@
         <p>No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
     </div>
 
-    <footer>
-        <p>Total de ofertas activas cargadas hoy: <strong>30</strong></p>
-        <p>© 2026 Empleos Tech Remoto — Actualizado automáticamente con GitHub Actions</p>
-        <p><a href="privacidad.html">Política de Privacidad</a></p>
+    <footer class="pro-footer" id="terminos">
+        <div class="pro-footer-inner">
+            <div class="pro-footer-grid">
+                <div>
+                    <a class="pro-brand" href="/">
+                        <span class="pro-mark" aria-hidden="true">PS</span>
+                        <span>
+                            <span class="pro-wordmark">Pro<em>Solutions</em></span>
+                            <span class="pro-eyebrow">Ecosystem</span>
+                        </span>
+                    </a>
+                    <p class="pro-footer-about">El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo remoto con ProJobs.</p>
+                </div>
+                <div>
+                    <h4>Ecosistema</h4>
+                    <ul>
+                        <li><a href="/">Inicio</a></li>
+                        <li><a href="https://procv-platform.onrender.com" target="_blank" rel="noopener">ProCV</a></li>
+                        <li><a href="https://jatc-dev.github.io/empleos-tech-remoto/">ProJobs</a></li>
+                        <li><a href="/#planes">Planes Premium</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="privacidad.html">Privacidad</a></li>
+                        <li><a href="#terminos">Términos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pro-footer-bottom">
+                <p>Total de ofertas activas cargadas hoy: <strong>30</strong></p>
+                <p>&copy; 2026 ProSolutions. Un producto desarrollado por <a href="https://github.com/jatc-dev" target="_blank" rel="noopener">JATC.DEV</a></p>
+            </div>
+        </div>
     </footer>
 
     <!-- FILTRO EN TIEMPO REAL CON JS -->

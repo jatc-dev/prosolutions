@@ -1,6 +1,5 @@
 import React from "react";
-import { AppHeader } from "../../components/AppHeader";
-import { Footer } from "../../components/Footer";
+import { ProFooter, ProHeader } from "@prosolutions/ui";
 
 interface PlatformLayoutProps {
   headerActions?: React.ReactNode;
@@ -11,7 +10,7 @@ interface PlatformLayoutProps {
   children: React.ReactNode;
 }
 
-/** Shared shell for module pages: unified header, content area and footer. */
+/** Shared shell for module pages: unified ProSolutions header, content area and footer. */
 export function PlatformLayout({
   headerActions,
   width = "default",
@@ -21,7 +20,7 @@ export function PlatformLayout({
 }: PlatformLayoutProps) {
   return (
     <div className="ui-page flex min-h-screen flex-col">
-      <AppHeader showUserInfo={false} rightExtra={headerActions} />
+      <ProHeader activeApp="procv" actions={headerActions} />
       <main
         className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 ${
           width === "wide" ? "max-w-screen-2xl" : "max-w-7xl"
@@ -29,7 +28,7 @@ export function PlatformLayout({
       >
         {children}
       </main>
-      {hideFooter ? null : <Footer />}
+      {hideFooter ? null : <ProFooter />}
     </div>
   );
 }

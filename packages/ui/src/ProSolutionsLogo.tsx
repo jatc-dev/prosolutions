@@ -1,6 +1,7 @@
-import { cn } from "../lib/utils";
+import { cn } from "./utils.js";
 
-export function Logo({
+/** Marca ProSolutions: cuadrado con gradiente indigo->cyan y monograma PS. */
+export function ProSolutionsLogo({
   className,
   showWordmark = true,
 }: {
@@ -18,7 +19,7 @@ export function Logo({
       {showWordmark ? (
         <span className="leading-tight">
           <span className="block text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Pro<span className="ui-gradient-text">Solutions</span>
+            Pro<span className="bg-gradient-to-r from-brand-600 to-cyan-500 bg-clip-text text-transparent dark:from-brand-400 dark:to-cyan-300">Solutions</span>
           </span>
           <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
             Ecosystem
