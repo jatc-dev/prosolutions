@@ -99,7 +99,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install workspace dependencies (repo root)
-        run: npm ci
+        run: npm ci --include=dev --workspaces --include-workspace-root
 
       - name: Generate Prisma client
         working-directory: apps/procv/backend
