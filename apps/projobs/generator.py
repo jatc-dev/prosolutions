@@ -15,7 +15,7 @@ SITE_DESC = "Encuentra las mejores ofertas de trabajo remoto en tecnología: Des
 
 # URLs del ecosistema ProSolutions (espejo estático de packages/ui):
 # unifican la navegación con apps/core, apps/procv y apps/projobs.
-PROCV_URL = "https://procv-platform.onrender.com"
+PROCV_URL = "https://procv.prosolutions.page"
 CORE_URL = "/"  # Landing de ProSolutions (apps/core): ajustar al despliegue real
 JATC_URL = "https://github.com/jatc-dev"
 
