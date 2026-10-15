@@ -2,7 +2,7 @@
 
 ProCV Platform es una aplicación web full-stack para **crear, editar y exportar hojas de vida profesionales**: editor visual en tiempo real, plantillas modernas, autoguardado con versiones, verificación de correo, análisis ATS y exportación a PDF de alta fidelidad (A4).
 
-- **Producción**: https://procv-platform.onrender.com/
+- **Producción**: https://procv.prosolutions.page/
 - **API**: https://procvbkn.onrender.com (`/health` para health check)
 
 ---
@@ -207,7 +207,7 @@ Como red de seguridad, el backend ejecuta al arrancar un **schema guard idempote
 ### Verificación post-deploy
 
 ```powershell
-.\render-health-check.ps1 -BackendUrl https://procvbkn.onrender.com -FrontendOrigin https://procv-platform.onrender.com
+.\render-health-check.ps1 -BackendUrl https://procvbkn.onrender.com -FrontendOrigin https://procv.prosolutions.page
 ```
 
 ---
