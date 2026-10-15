@@ -1,6 +1,7 @@
 import React from "react";
 import { Megaphone } from "lucide-react";
 import { ADSENSE_CLIENT, useAdSensePush, useAdSenseScript } from "@prosolutions/ui";
+import { useEntitlements } from "../../../shared/feature-flags";
 
 interface AdSlotProps {
   placement: string;
@@ -12,8 +13,15 @@ interface AdSlotProps {
 /** In-feed ad placeholder. Usa el cliente AdSense del ecosistema (ca-pub-3956322934366702 por defecto). */
 export function AdSlot({ placement, slot, className = "" }: AdSlotProps) {
   const client = ADSENSE_CLIENT;
-  useAdSenseScript(client);
-  useAdSensePush(true);
+  const { can } = useEntitlements();
+  const shouldShowAds = !can("platform_no_ads");
+
+  // Premium users (and admins) have the no-ads entitlement. Keep hooks unconditional,
+  // but do not load the AdSense script or enqueue an ad request for those users.
+  useAdSenseScript(shouldShowAds ? client : undefined);
+  useAdSensePush(shouldShowAds);
+
+  if (!shouldShowAds) return null;
 
   if (client) {
     return (
