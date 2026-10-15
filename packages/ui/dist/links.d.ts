@@ -15,3 +15,8 @@ export declare const TERMS_URL: string;
 export declare const ADSENSE_CLIENT: string;
 /** Marca si la URL apunta a otro origen (abre en pestaña nueva). */
 export declare function isExternalUrl(url: string): boolean;
+/**
+ * Normaliza un ID de AdSense al formato que esperan los scripts y los <ins>:
+ * siempre con prefijo `ca-`. Acepta `pub-XXXX`, `ca-pub-XXXX` o valores vacios.
+ */
+export declare function normalizeAdSenseClient(client: string | null | undefined): string | undefined;

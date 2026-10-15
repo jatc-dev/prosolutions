@@ -21,7 +21,10 @@ JATC_URL = "https://github.com/jatc-dev"
 
 # Google AdSense: cliente del ecosistema (pub-3956322934366702).
 # VITE_ADSENSE_CLIENT permite sobreescribirlo por entorno si hiciera falta.
-ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "") or "ca-pub-3956322934366702"
+ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "").strip() or "ca-pub-3956322934366702"
+# Normaliza al formato que exigen los scripts: siempre con prefijo ca-pub-
+if ADSENSE_CLIENT.startswith("pub-"):
+    ADSENSE_CLIENT = "ca-" + ADSENSE_CLIENT
 ADS_EVERY = 6  # Bloque in-feed cada N ofertas (espejo del AdSlot de packages/ui)
 
 ADSENSE_SCRIPT_TAG = (
