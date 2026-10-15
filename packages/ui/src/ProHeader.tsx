@@ -50,8 +50,8 @@ function navItems(): NavItem[] {
 
 function CTA_BY_APP(activeApp: ActiveApp): { label: string; href: string } {
   if (activeApp === "procv") return { label: "Explorar Empleos", href: APP_URLS.projobs };
-  if (activeApp === "projobs") return { label: "Crear mi CV Gratis", href: APP_URLS.procv };
-  return { label: "Crear mi CV Gratis", href: APP_URLS.procv };
+  if (activeApp === "projobs") return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
+  return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
 }
 
 /**
