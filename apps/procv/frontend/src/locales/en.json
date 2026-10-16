@@ -234,7 +234,7 @@
     "fileTooLarge": "File too large"
   },
   "ai": {
-    "suggestions": "AI Suggestions",
+    "suggestions": "Writing ideas",
     "powerVerbs": "Power Verbs",
     "achievements": "Quantifiable Achievements",
     "optimizedFor": "Optimized for",
@@ -443,6 +443,9 @@
       "proLabel": "Pro"
     },
     "guest": {
+      "mode": "You are using Guest Mode. Your changes are stored only in this browser.",
+      "importPrivacy": "Resume files are parsed temporarily on the server and are not saved.",
+      "saveToCloud": "Save to cloud (Free)",
       "adSlot": "Ad Space (Affiliates / Display)"
     },
     "validationBeforeChange": "There are errors in section {{section}}. Please fix them before continuing.",
@@ -1183,9 +1186,18 @@
     "atsTrendSubtitle": "Track score progress across recent optimizations",
     "atsScoreDisplay": "Current score: {{score}} · {{coverage}}% keywords",
     "atsCompactHint": "Paste a job posting and run ATS analysis",
-    "aiCompactHint": "Suggested verbs and achievements to improve impact and ATS",
-    "aiActiveHint": "Action verbs and achievements ready to insert",
+    "aiCompactHint": "Action verb and achievement ideas to adapt to your experience and the job",
+    "aiActiveHint": "Choose examples and tailor them before adding them to your CV",
     "skipOnboarding": "Skip",
+    "stepTemplateTitle": "1. Choose a template",
+    "stepTemplateSubtitle": "Select a layout that fits your role and style",
+    "stepJobTitle": "2. Add a target job posting",
+    "stepJobSubtitle": "The analysis compares keywords and suggests relevant improvements",
+    "stepAtsTitle": "3. Analyze and improve your CV",
+    "stepAtsSubtitle": "Review ATS alignment and apply the improvements that fit",
+    "openStep": "Open step",
+    "completed": "Completed",
+    "atsTitle": "ATS Optimizer",
     "noTrendData": "Run ATS analysis on this CV to start tracking progress.",
     "keywordsShort": "KW",
     "latestScore": "Score",

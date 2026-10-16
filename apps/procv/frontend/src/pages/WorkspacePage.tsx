@@ -500,15 +500,40 @@ export function WorkspacePage() {
           } as LinkItem;
         })
         .filter((item): item is LinkItem => Boolean(item));
+      const importedCertificates = (Array.from(doc.getElementsByTagName("certificates")[0]?.getElementsByTagName("certificate") ?? []) as Element[])
+        .map((item, index) => {
+          const getCertificateText = (tag: string) => item.getElementsByTagName(tag)[0]?.textContent ?? "";
+          return {
+            id: getCertificateText("id") || createId(),
+            title: getCertificateText("title"),
+            issuingOrganization: getCertificateText("issuingOrganization"),
+            issueDate: getCertificateText("issueDate"),
+            expiryDate: getCertificateText("expiryDate"),
+            credentialId: getCertificateText("credentialId"),
+            verificationUrl: getCertificateText("verificationUrl") || getCertificateText("url"),
+            description: getCertificateText("description"),
+            fileUrl: getCertificateText("fileUrl"),
+            order: index,
+          };
+        })
+        .filter((certificate) => certificate.title.trim());
 
       const newData: CVData = {
         personal: {
           name: getText("name"),
           role: getText("role"),
+          profileImage: getText("profileImage") || getText("photo") || undefined,
           profileImageStyle: normalizeProfileImageStyle(getText("profileImageStyle")),
+          showProfileImage: parseXmlBoolean(getText("showProfileImage"), true),
           address: getText("address"),
           city: getText("city"),
           country: getText("country"),
+          website: getText("website"),
+          linkedin: getText("linkedin"),
+          github: getText("github"),
+          birthDate: getText("birthDate"),
+          showBirthDate: parseXmlBoolean(getText("showBirthDate"), false),
+          showAge: parseXmlBoolean(getText("showAge"), false),
           showAddress: parseXmlBoolean(getText("showAddress"), true),
           showCity: parseXmlBoolean(getText("showCity"), true),
           showCountry: parseXmlBoolean(getText("showCountry"), true),
@@ -542,7 +567,7 @@ export function WorkspacePage() {
         skills: parseSkills(),
         languages: parseLanguages(),
         links: buildWorkspaceVisibleLinks(importedLinkItems),
-        certificates: [],
+        certificates: normalizeWorkspaceCertificatesData(importedCertificates),
       };
 
       if (importedTitle) setCvTitle(importedTitle);
@@ -676,10 +701,18 @@ export function WorkspacePage() {
       xml += '  <personal>\n';
       xml += `    <name>${escapeXml(data.personal.name)}</name>\n`;
       xml += `    <role>${escapeXml(data.personal.role)}</role>\n`;
+      xml += `    <profileImage>${escapeXml((data.personal as any).profileImage)}</profileImage>\n`;
       xml += `    <profileImageStyle>${escapeXml((data.personal as any).profileImageStyle || 'round')}</profileImageStyle>\n`;
+      xml += `    <showProfileImage>${(data.personal as any).showProfileImage !== false}</showProfileImage>\n`;
       xml += `    <city>${escapeXml(data.personal.city)}</city>\n`;
       xml += `    <country>${escapeXml(data.personal.country)}</country>\n`;
       xml += `    <address>${escapeXml((data.personal as any).address)}</address>\n`;
+      xml += `    <website>${escapeXml((data.personal as any).website)}</website>\n`;
+      xml += `    <linkedin>${escapeXml((data.personal as any).linkedin)}</linkedin>\n`;
+      xml += `    <github>${escapeXml((data.personal as any).github)}</github>\n`;
+      xml += `    <birthDate>${escapeXml((data.personal as any).birthDate)}</birthDate>\n`;
+      xml += `    <showBirthDate>${(data.personal as any).showBirthDate === true}</showBirthDate>\n`;
+      xml += `    <showAge>${(data.personal as any).showAge === true}</showAge>\n`;
       xml += `    <showAddress>${(data.personal as any).showAddress !== false}</showAddress>\n`;
       xml += `    <showCity>${(data.personal as any).showCity !== false}</showCity>\n`;
       xml += `    <showCountry>${(data.personal as any).showCountry !== false}</showCountry>\n`;
@@ -766,6 +799,24 @@ export function WorkspacePage() {
         xml += '    </language>\n';
       });
       xml += '  </languages>\n';
+    }
+
+    if (data.certificates?.length) {
+      xml += '  <certificates>\n';
+      data.certificates.forEach((certificate: any) => {
+        xml += '    <certificate>\n';
+        xml += `      <id>${escapeXml(certificate.id)}</id>\n`;
+        xml += `      <title>${escapeXml(certificate.title)}</title>\n`;
+        xml += `      <issuingOrganization>${escapeXml(certificate.issuingOrganization)}</issuingOrganization>\n`;
+        xml += `      <issueDate>${escapeXml(certificate.issueDate)}</issueDate>\n`;
+        xml += `      <expiryDate>${escapeXml(certificate.expiryDate)}</expiryDate>\n`;
+        xml += `      <credentialId>${escapeXml(certificate.credentialId)}</credentialId>\n`;
+        xml += `      <verificationUrl>${escapeXml(certificate.verificationUrl || certificate.url)}</verificationUrl>\n`;
+        xml += `      <description>${escapeXml(certificate.description)}</description>\n`;
+        xml += `      <fileUrl>${escapeXml(certificate.fileUrl)}</fileUrl>\n`;
+        xml += '    </certificate>\n';
+      });
+      xml += '  </certificates>\n';
     }
 
     // Links
@@ -1452,20 +1503,29 @@ export function WorkspacePage() {
       {
         id: "template",
         done: hasTemplate,
-        title: t("workspace.stepTemplateTitle", "1. Choose a template"),
-        subtitle: t("workspace.stepTemplateSubtitle", "Select a layout that fits your role and style"),
+        title: t("workspace.stepTemplateTitle"),
+        subtitle: t("workspace.stepTemplateSubtitle"),
+        onClick: () => document.getElementById("workspace-template-selector")?.scrollIntoView({ behavior: "smooth", block: "center" }),
       },
       {
         id: "job",
         done: hasJobDescription,
-        title: t("workspace.stepJobTitle", "2. Paste target job description"),
-        subtitle: t("workspace.stepJobSubtitle", "This powers keyword matching and tailored suggestions"),
+        title: t("workspace.stepJobTitle"),
+        subtitle: t("workspace.stepJobSubtitle"),
+        onClick: () => {
+          setEditorPanels((prev) => ({ ...prev, ats: true }));
+          window.requestAnimationFrame(() => document.getElementById("workspace-ats-optimizer")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        },
       },
       {
         id: "ats",
         done: hasAts,
-        title: t("workspace.stepAtsTitle", "3. Run ATS and apply improvements"),
-        subtitle: t("workspace.stepAtsSubtitle", "Use one-click keyword and tailoring actions to boost your score"),
+        title: t("workspace.stepAtsTitle"),
+        subtitle: t("workspace.stepAtsSubtitle"),
+        onClick: () => {
+          setEditorPanels((prev) => ({ ...prev, ats: true }));
+          window.requestAnimationFrame(() => document.getElementById("workspace-ats-optimizer")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        },
       },
     ];
 
@@ -1571,33 +1631,25 @@ export function WorkspacePage() {
       {/* Editor Layout */}
       <div className="space-y-8">
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-          <button
-            type="button"
-            onClick={() =>
-              setEditorPanels((prev) => ({
-                ...prev,
-                quickStart: !prev.quickStart,
-              }))
-            }
-            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left hover:bg-amber-100/80 dark:border-amber-900/60 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
-          >
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left dark:border-amber-900/60 dark:bg-amber-950/20">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t("workspace.quickStartTitle", "Quick ATS Onboarding")}</p>
-              {doneCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setEditorPanels((prev) => ({ ...prev, quickStart: false }))}
-                  className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                  {t("workspace.skipOnboarding", "Saltar")}
-                </button>
-              )}
-              <svg className={`h-4 w-4 text-slate-600 transition-transform dark:text-slate-300 ${editorPanels.quickStart ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <button
+                type="button"
+                aria-expanded={editorPanels.quickStart}
+                onClick={() => setEditorPanels((prev) => ({ ...prev, quickStart: !prev.quickStart }))}
+                className="flex min-h-8 flex-1 items-center justify-between gap-2 text-left"
+              >
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t("workspace.quickStartTitle")}</span>
+                <svg className={`h-4 w-4 text-slate-600 transition-transform dark:text-slate-300 ${editorPanels.quickStart ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <button type="button" onClick={() => setEditorPanels((prev) => ({ ...prev, quickStart: false }))} className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-300 dark:hover:bg-amber-900/40">
+                {t("workspace.skipOnboarding")}
+              </button>
             </div>
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t("workspace.quickStartProgress", "{{done}} of 3 completed", { done: doneCount })}</p>
-          </button>
+          </div>
 
           <button
             type="button"
@@ -1610,7 +1662,7 @@ export function WorkspacePage() {
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
           >
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">ATS Optimizer</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t("workspace.atsTitle")}</p>
               <svg className={`h-4 w-4 text-slate-600 transition-transform dark:text-slate-300 ${editorPanels.ats ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -1651,9 +1703,11 @@ export function WorkspacePage() {
           <div className="rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3 dark:border-amber-900/60 dark:from-slate-900 dark:to-amber-950/20">
             <div className="grid gap-2 md:grid-cols-3">
               {onboardingSteps.map((step) => (
-                <div
+                <button
+                  type="button"
                   key={step.id}
-                  className={`rounded-lg border p-3 text-sm ${
+                  onClick={step.onClick}
+                  className={`rounded-lg border p-3 text-left text-sm transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                     step.done
                       ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200"
                       : "border-slate-200 bg-white/90 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
@@ -1661,13 +1715,15 @@ export function WorkspacePage() {
                 >
                   <p className="font-semibold">{step.title}</p>
                   <p className="mt-1 text-xs opacity-85">{step.subtitle}</p>
-                </div>
+                  <span className="mt-2 inline-block text-xs font-semibold underline underline-offset-2">{step.done ? t("workspace.completed") : t("workspace.openStep")}</span>
+                </button>
               ))}
             </div>
           </div>
         )}
 
         {editorPanels.ats && (
+          <div id="workspace-ats-optimizer">
           <ATSOptimizationPanel
             jobDescription={jobDescription}
             onJobDescriptionChange={setJobDescription}
@@ -1774,6 +1830,7 @@ export function WorkspacePage() {
             history={atsHistory}
             comparison={atsComparison}
           />
+          </div>
         )}
 
         {editorPanels.aiSuggestions && (
@@ -1813,7 +1870,7 @@ export function WorkspacePage() {
                   <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
                     {t("cv.template")}
                   </label>
-                  <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                  <div id="workspace-template-selector" className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                     <TemplateSelector
                       templates={templates}
                       currentTemplate={template}

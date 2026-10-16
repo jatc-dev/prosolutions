@@ -144,6 +144,27 @@
         "title": "Actualizaciones anticipadas",
         "description": "Sé el primero en probar nuevas funcionalidades."
       }
+    },
+    "reset": {
+      "title": "Restablecer contraseña",
+      "description": "Escribe tu correo y te enviaremos un enlace para restablecer la contraseña.",
+      "descriptionSubmitted": "Revisa tu correo para encontrar el enlace de restablecimiento.",
+      "emailSentMessage": "Si existe una cuenta con ese correo, enviaremos un enlace de restablecimiento.",
+      "sendButton": "Enviar enlace de restablecimiento",
+      "sendingButton": "Enviando...",
+      "sendAgain": "Enviar de nuevo",
+      "resetTitle": "Crear una contraseña nueva",
+      "resetDescription": "Escribe una contraseña nueva para tu cuenta.",
+      "passwordRequirements": "Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "submitButton": "Restablecer contraseña",
+      "submittingButton": "Restableciendo...",
+      "passwordsDoNotMatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "invalidToken": "El enlace de restablecimiento no es válido o ha caducado",
+      "resetFailed": "No se pudo restablecer la contraseña",
+      "successMessage": "La contraseña se restableció correctamente."
     }
   },
   "cv": {
@@ -213,7 +234,7 @@
     "fileTooLarge": "Archivo demasiado grande"
   },
   "ai": {
-    "suggestions": "Sugerencias de IA",
+    "suggestions": "Ideas de redacción",
     "powerVerbs": "Verbos de Poder",
     "achievements": "Logros Cuantificables",
     "optimizedFor": "Optimizado para",
@@ -437,6 +458,9 @@
       "proLabel": "Pro"
     },
     "guest": {
+      "mode": "Estás en el modo de invitado. Tus cambios se guardan solo en este navegador.",
+      "importPrivacy": "Los archivos se procesan temporalmente en el servidor y no se almacenan.",
+      "saveToCloud": "Guardar en la nube (gratis)",
       "adSlot": "Espacio de anuncios (Afiliados / Display)"
     },
     "validationBeforeChange": "Hay errores en la sección {{section}}. Corrígelos antes de continuar.",
@@ -1156,16 +1180,25 @@
       "deleteCv": "Error al eliminar el CV",
       "duplicateCv": "Error al duplicar el CV"
     },
-    "quickStartTitle": "Quick ATS Onboarding",
+    "quickStartTitle": "Inicio rápido de ATS",
     "quickStartProgress": "{{done}} de 3 completados",
     "atsTrendTitle": "ATS Trend",
     "atsTrendSubtitle": "Track score progress across recent optimizations",
     "atsScoreDisplay": "Score actual: {{score}} · {{coverage}}% keywords",
-    "atsCompactHint": "Pega una vacante y ejecuta analisis ATS",
-    "aiCompactHint": "Verbos y logros sugeridos para mejorar impacto y ATS",
-    "aiActiveHint": "Verbos y logros listos para insertar",
+    "atsCompactHint": "Pega una vacante y ejecuta el análisis ATS",
+    "aiCompactHint": "Ideas de verbos y logros para adaptar a tu experiencia y a la vacante",
+    "aiActiveHint": "Elige ejemplos y personalízalos antes de agregarlos a tu CV",
     "skipOnboarding": "Saltar",
-    "noTrendData": "Run ATS analysis on this CV to start tracking progress.",
+    "stepTemplateTitle": "1. Elige una plantilla",
+    "stepTemplateSubtitle": "Selecciona un diseño que encaje con tu perfil y estilo",
+    "stepJobTitle": "2. Añade la vacante objetivo",
+    "stepJobSubtitle": "El análisis compara palabras clave y propone mejoras relacionadas",
+    "stepAtsTitle": "3. Analiza y mejora tu CV",
+    "stepAtsSubtitle": "Revisa el ajuste con ATS y aplica las mejoras que te resulten útiles",
+    "openStep": "Abrir paso",
+    "completed": "Completado",
+    "atsTitle": "Optimizador ATS",
+    "noTrendData": "Analiza este CV con ATS para empezar a ver tu progreso.",
     "latestScore": "Puntación",
     "keywordsShort": "KW",
     "pointsVsFirst": "puntos vs primera",

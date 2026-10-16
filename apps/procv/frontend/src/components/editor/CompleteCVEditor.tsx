@@ -3,6 +3,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useTheme } from '@prosolutions/ui';
 import { LanguageSelector } from '../../components/ui/LanguageSelector';
 import { useCVEditorStore } from '../../stores/cvEditorStore';
@@ -619,7 +620,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       }
 
       const options = {
-        margin: 0.5,
+        // CV templates already include page padding; a second PDF margin clips content.
+        margin: 0,
         filename: `${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
@@ -794,14 +796,17 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
           </svg>
           <span className="text-sm text-amber-800 dark:text-amber-200">
-            Estás en Modo Invitado. Tus cambios se guardan automáticamente en tu navegador.
+            {t('editor.guest.mode', 'You are using Guest Mode. Your changes are stored only in this browser.')}
+            <span className="mt-1 block text-xs text-amber-700 dark:text-amber-300">
+              {t('editor.guest.importPrivacy', 'Resume files are parsed temporarily on the server and are not saved.')}
+            </span>
           </span>
         </div>
         <a
           href="/register"
           className="inline-flex items-center px-3 py-1 text-xs font-medium text-amber-900 bg-amber-100 rounded-md hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-100 dark:hover:bg-amber-900/70 transition-colors"
         >
-          Guardar en la nube (Gratis)
+          {t('editor.guest.saveToCloud', 'Save to cloud (Free)')}
           <svg className="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
@@ -831,7 +836,11 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <div className="border-b border-brand-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+              <Link
+                to="/dashboard"
+                aria-label={t('navigation.dashboardShort', 'Dashboard')}
+                className="flex items-center space-x-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
                 <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -844,7 +853,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     <span className="ml-2 font-normal text-gray-600 dark:text-slate-300">- {cvData.title}</span>
                   </h1>
                 </div>
-              </div>
+              </Link>
               <AutoSaveIndicator
                 isSaving={isSaving}
                 lastSaved={lastSaved}
@@ -853,6 +862,16 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             </div>
 
             <div className="flex items-center space-x-2">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10.5 12 3l9 7.5M5.25 9v11.25h13.5V9M9 20.25v-7.5h6v7.5" />
+                </svg>
+                <span className="hidden sm:inline">{t('navigation.dashboardShort', 'Dashboard')}</span>
+              </Link>
+
               <input
                 ref={fileInputRef}
                 type="file"

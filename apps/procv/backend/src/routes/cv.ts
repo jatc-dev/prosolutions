@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { authMiddleware } from '../middleware/auth';
+import { publicImportLimiter } from '../middleware/rateLimiter';
 import {
   analyzeCVATS,
   analyzeDraftATS,
@@ -24,13 +25,16 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+// Parsing only returns an in-memory draft. Keep guest editor imports available
+// while bounding unauthenticated file processing per client IP.
+router.post('/import/parse', publicImportLimiter, upload.single('file'), parseCVUpload);
+
 router.use(authMiddleware);
 
 router.get('/', listCVs);
 router.post('/', createCV);
 router.post('/analyze-draft', analyzeDraftATS);
 router.post('/tailor-draft', tailorDraftATS);
-router.post('/import/parse', upload.single('file'), parseCVUpload);
 router.get('/:id', getCV);
 router.post('/:id/analyze', analyzeCVATS);
 router.post('/:id/tailor', tailorCVATS);

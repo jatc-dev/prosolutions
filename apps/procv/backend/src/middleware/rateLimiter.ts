@@ -70,6 +70,12 @@ export const cvLimiter = createRateLimiter({
   message: 'Demasiadas operaciones en CVs. Intenta de nuevo en 1 hora.',
 });
 
+export const publicImportLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: isDevelopment ? 100 : 20,
+  message: 'Demasiadas importaciones. Intenta de nuevo en 1 hora.',
+});
+
 export const verificationLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   max: isDevelopment ? 100 : 5,
