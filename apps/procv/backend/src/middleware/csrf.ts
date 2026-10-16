@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, createHash } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config';
 import { logger } from '../utils/logger';
@@ -20,12 +20,12 @@ function signPayload(payload: string): string {
 }
 
 function constantTimeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) {
+  const aBytes = Buffer.from(a);
+  const bBytes = Buffer.from(b);
+  if (aBytes.length !== bBytes.length) {
     return false;
   }
-  return (
-    createHash('sha256').update(a).digest('hex') === createHash('sha256').update(b).digest('hex')
-  );
+  return timingSafeEqual(aBytes, bBytes);
 }
 
 /**
