@@ -1213,7 +1213,6 @@
   },
   "session": {
     "expiringSoon": "Your session expires in {{seconds}} seconds. Refreshing...",
-    "refreshed": "Session renewed successfully",
     "expired": "Your session has expired. Please sign in again."
   }
 }
