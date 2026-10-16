@@ -239,15 +239,17 @@ function buildSidebarTemplate(cv: CV) {
     <style>
       body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; background: #f8fafc; margin: 0; padding: 0; }
       ${SHARED_TEMPLATE_UTILS_CSS}
-      .container { width: 100%; max-width: 900px; margin: 0 auto; background: white; display: grid; grid-template-columns: 1fr 2fr; }
-      .sidebar { padding: 32px 28px; background: ${sidebarBg}; color: white; }
+      .container { width: 100%; max-width: 900px; margin: 0 auto; background: white; display: grid; grid-template-columns: 1fr 2fr; align-items: start; }
+      .sidebar { padding: 0; background: transparent; color: white; align-self: start; }
+      .sidebar-content { padding: 24px 28px; background: ${sidebarBg}; color: white; }
+      .sidebar-content .blk { margin-bottom: 16px; }
       .main { padding: 32px 28px; }
       .blk { margin-bottom: 24px; }
       .blk-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
       .heading { font-size: 2rem; font-weight: 700; margin: 0; }
       .subheading { font-size: 1rem; margin: 4px 0 0; color: rgba(255,255,255,0.8); }
       .label { font-weight: 600; color: rgba(255,255,255,0.85); }
-      .text { color: rgba(255,255,255,0.9); }
+      .sidebar .text { color: rgba(255,255,255,0.9); }
       .entry { margin-bottom: 12px; }
       .title { color: #0f172a; font-weight: 700; margin: 0; }
       .subtitle { margin: 0; color: #334155; font-size: 0.9rem; }
@@ -266,6 +268,7 @@ function buildSidebarTemplate(cv: CV) {
   <body>
     <div class="container">
       <aside class="sidebar">
+        <div class="sidebar-content">
         <div>
           <h1 class="heading">${escapeHtml(personal.name || 'Tu Nombre')}</h1>
           <p class="subheading">${escapeHtml(personal.role || 'Tu título profesional')}</p>
@@ -308,6 +311,7 @@ function buildSidebarTemplate(cv: CV) {
                 .join('')}</div>`
             : ''
         }
+        </div>
       </aside>
 
       <main class="main">
@@ -459,7 +463,7 @@ function buildMinimalTemplate(cv: CV) {
           ? `<div class="blk"><div class="blk-title">Experiencia</div><div class="cluster space-y-3">${experience
               .map((item: any) => {
                 const location = formatLocation(item.city, item.country);
-                return `<div><div class="flex justify-between items-start"><div><p class="font-semibold text-slate-900">${escapeHtml(item.role || 'Rol')}</p><p class="text-xs text-slate-600">${escapeHtml(item.company || 'Empresa')}${location ? ` • ${escapeHtml(location)}` : ''}</p></div><p class="text-xs text-slate-600">${escapeHtml(formatRange(item.from, item.to))}</p></div>${item.description ? `<p class="mt-1 text-slate-700">${escapeHtml(item.description)}</p>` : ''}</div>`;
+                return `<div class="entry"><div class="flex justify-between items-start"><div><p class="font-semibold text-slate-900">${escapeHtml(item.role || 'Rol')}</p><p class="text-xs text-slate-600">${escapeHtml(item.company || 'Empresa')}${location ? ` • ${escapeHtml(location)}` : ''}</p></div><p class="text-xs text-slate-600">${escapeHtml(formatRange(item.from, item.to))}</p></div>${item.description ? `<p class="mt-1 text-slate-700">${escapeHtml(item.description)}</p>` : ''}</div>`;
               })
               .join('')}</div></div>`
           : ''

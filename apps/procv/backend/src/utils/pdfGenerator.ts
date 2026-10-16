@@ -66,16 +66,33 @@ export async function renderToPdf(html: string): Promise<Buffer> {
         }
 
         .container,
-        .section,
-        .item,
+        .blk,
+        .main,
+        .sidebar,
+        main,
+        aside {
+          page-break-inside: auto !important;
+          break-inside: auto !important;
+        }
+
         section,
         article,
-        aside,
-        main,
         header,
         footer {
           page-break-inside: avoid;
           break-inside: avoid;
+        }
+
+        .entry,
+        .panel {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+
+        .blk-title,
+        .section-title {
+          page-break-after: avoid;
+          break-after: avoid;
         }
 
         .container {

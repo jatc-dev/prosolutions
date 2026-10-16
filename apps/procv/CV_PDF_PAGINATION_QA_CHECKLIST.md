@@ -114,3 +114,30 @@ Outcome:
 - Heuristic metrics remained stable (same counts as previous run).
 - This is expected when browser geometry heuristics do not fully model pagination constraints.
 - Proceed with human visual verification as the final gate for PASS/MINOR/FAIL.
+
+## Visual and automated verification (2026-10-16)
+
+Corrections made after the previous visual review:
+- Scope the white sidebar text color to the sidebar so experience descriptions remain readable in the main column.
+- Keep sidebar profile content grouped and compact so it ends on page one without a stray link on the next page.
+- Allow document and section wrappers to fragment across pages while keeping individual `.entry` and `.panel` blocks together.
+- Add the missing entry class to Minimal template experience items.
+- Close the shared Puppeteer browser after PDF smoke generation so the command exits successfully.
+
+Commands and results:
+- `npm run pdf:smoke`: PASS; generated all nine templates and exited with code 0 using the installed Chrome executable.
+- `npm run pdf:audit`: PASS; all nine templates report zero split sections, orphan headings, horizontal clipping, or first-page header overflow.
+
+| Template | Audit result | Estimated pages | Split blocks | Orphan headings | Horizontal clip | Visual review |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| minimal | PASS | 6 | 0 | 0 | 0 | PASS |
+| sidebar | PASS | 6 | 0 | 0 | 0 | PASS |
+| corporate | PASS | 7 | 0 | 0 | 0 | PASS |
+| developer | PASS | 7 | 0 | 0 | 0 | PASS |
+| creative | PASS | 7 | 0 | 0 | 0 | PASS |
+| classic | PASS | 5 | 0 | 0 | 0 | PASS |
+| executive | PASS | 7 | 0 | 0 | 0 | PASS |
+| timeline | PASS | 7 | 0 | 0 | 0 | PASS |
+| compact | PASS | 5 | 0 | 0 | 0 | PASS |
+
+Visual review covered all pages across all nine PDFs, including expanded checks of the affected templates and page transitions. No clipped text, broken experience blocks, isolated section headings, or double content margins remain in the smoke scenarios. This closes the PDF visual QA gate for the current long-content fixtures.
