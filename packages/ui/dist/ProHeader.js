@@ -13,7 +13,7 @@ function ThemeToggle() {
 function navItems() {
     return [
         { label: "Inicio", href: APP_URLS.core, app: "core" },
-        { label: "ProCV", href: APP_URLS.procv, app: "procv" },
+        { label: "ProCV", href: APP_URLS.procvLogin, app: "procv" },
         { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", badge: "Beta" },
         { label: "Planes Premium", href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
     ];
