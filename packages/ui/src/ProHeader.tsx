@@ -49,7 +49,7 @@ function navItems(locale: "es" | "en"): NavItem[] {
     : { home: "Inicio", plans: "Planes Premium", beta: "Beta" };
   return [
     { label: labels.home, href: APP_URLS.core, app: "core" },
-    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv" },
+    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", badge: labels.beta },
     { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", badge: labels.beta },
     { label: labels.plans, href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
   ];

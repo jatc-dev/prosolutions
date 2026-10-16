@@ -14,7 +14,7 @@ export const MODULES: PlatformModule[] = [
     name: "ProCV",
     tagline: "Hojas de vida profesionales",
     path: "/procv",
-    status: "active",
+    status: "beta",
     description:
       "Crea, edita y exporta tu hoja de vida con plantillas optimizadas para ATS, edición en tiempo real y exportación a PDF, JSON y XML.",
   },

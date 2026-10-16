@@ -66,7 +66,7 @@ export const messages = {
     },
     plans: {
       eyebrow: "Planes Premium",
-      title: "Potencia tu carrera con ProSolutions Pro",
+      title: "Potencia tu carrera con ProSolutions Premium",
       description: "Empieza gratis y escala cuando lo necesites. Todos los planes incluyen acceso al ecosistema completo de herramientas.",
       free: { name: "Gratis", period: "/siempre", description: "Para crear tu primer CV profesional y explorar el ecosistema.", features: ["Editor completo de ProCV", "Plantillas base optimizadas para ATS", "Exportación en PDF estándar"], cta: "Empezar gratis" },
       pro: { name: "Pro", period: "/mes", description: "Para profesionales tech que se postulan activamente.", features: ["Todas las plantillas premium", "Análisis y puntaje ATS avanzado", "Múltiples versiones de tu CV", "Exportación PDF, JSON y XML"], cta: "Hazte Pro" },
@@ -149,7 +149,7 @@ export const messages = {
     },
     plans: {
       eyebrow: "Premium plans",
-      title: "Move your career forward with ProSolutions Pro",
+      title: "Move your career forward with ProSolutions Premium",
       description: "Start for free and upgrade when you need more. Every plan includes access to the full tools ecosystem.",
       free: { name: "Free", period: "/forever", description: "Create your first professional CV and explore the ecosystem.", features: ["Full ProCV editor", "ATS-optimized starter templates", "Standard PDF export"], cta: "Get started free" },
       pro: { name: "Pro", period: "/month", description: "For tech professionals actively applying for jobs.", features: ["All premium templates", "Advanced ATS analysis and scoring", "Multiple CV versions", "PDF, JSON, and XML export"], cta: "Get Pro" },
