@@ -144,6 +144,21 @@ describe('CSRF middleware', () => {
       expect(res.body).toEqual({ message: 'CSRF token mismatch' });
     });
 
+    it('rejects cookie and header tokens with different byte lengths', () => {
+      const res = mockResponse();
+      const next = jest.fn();
+
+      validateCSRF(
+        mockRequest({ csrfToken: 'short' }, 'POST', { 'x-csrf-token': 'a-much-longer-token' }),
+        asResponse(res),
+        next,
+      );
+
+      expect(next).not.toHaveBeenCalled();
+      expect(res.statusCode).toBe(403);
+      expect(res.body).toEqual({ message: 'CSRF token mismatch' });
+    });
+
     it('accepts a validly signed header token when the cookie differs (blocked or rotated cookie)', () => {
       const signedToken = issueToken();
       const res = mockResponse();
