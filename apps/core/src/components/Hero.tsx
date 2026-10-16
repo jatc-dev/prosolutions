@@ -1,5 +1,5 @@
 import { ArrowRight, Briefcase, FileText, Sparkles } from "lucide-react";
-import { LINKS } from "../config/links";
+import { APP_URLS } from "@prosolutions/ui";
 
 const STATS = [
   { value: "2", label: "Modulos activos" },
@@ -34,7 +34,7 @@ export function Hero() {
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href={LINKS.procvLogin}
+              href={APP_URLS.procvLogin}
               target="_blank"
               rel="noreferrer"
               className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 text-base font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 hover:shadow-brand-600/40 active:scale-[0.99] sm:w-auto dark:bg-brand-500 dark:hover:bg-brand-400"
@@ -44,7 +44,7 @@ export function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
-              href={LINKS.projobs}
+              href={APP_URLS.projobs}
               target="_blank"
               rel="noreferrer"
               className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-7 text-base font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.99] sm:w-auto dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
