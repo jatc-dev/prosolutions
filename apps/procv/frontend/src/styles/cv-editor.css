@@ -310,32 +310,42 @@
 /* ============================================
      Print styles for CV export
      ============================================ */
-  @media print {
-    .cv-editor {
-      --cv-brand-primary: black;
-      --cv-brand-text: black;
-    }
-
-    .cv-editor header,
-    .cv-editor main,
-    .cv-editor aside,
-    .cv-editor section,
-    .cv-editor article,
-    .cv-editor .ats-experience-item,
-    .cv-editor .ats-education-item {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-
-    .cv-editor h1,
-    .cv-editor h2,
-    .cv-editor h3 {
-      break-after: avoid;
-      page-break-after: avoid;
-    }
-
-.cv-editor .cv-editor-card {
-      box-shadow: none;
-      border: 1px solid #e5e7eb;
-    }
+@media print {
+  .cv-editor {
+    --cv-brand-primary: black;
+    --cv-brand-text: black;
   }
+
+  .cv-editor header,
+  .cv-editor main,
+  .cv-editor aside,
+  .cv-editor section,
+  .cv-editor article,
+  .cv-editor .ats-experience-item,
+  .cv-editor .ats-education-item,
+  .cv-editor .job-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .cv-editor h1,
+  .cv-editor h2,
+  .cv-editor h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .cv-editor .cv-editor-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+/* Ajustes específicos para impresión PDF */
+.print-only {
+  display: block !important;
+}
+
+.screen-only {
+  display: none !important;
+}
