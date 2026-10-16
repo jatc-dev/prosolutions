@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderToPdf } from '../utils/pdfGenerator';
+import { closeBrowser, renderToPdf } from '../utils/pdfGenerator';
 import { buildPdfHtml } from '../utils/templates';
 
 type TemplateKey =
@@ -110,30 +110,34 @@ async function run() {
   const outputDir = path.resolve(process.cwd(), '../uploads/temp/pdf-smoke');
   await mkdir(outputDir, { recursive: true });
 
-  const data = buildLongCvData();
+  try {
+    const data = buildLongCvData();
 
-  for (const template of templates) {
-    const cv = {
-      id: `smoke-${template}`,
-      userId: 'smoke-user',
-      title: `Smoke ${template}`,
-      template,
-      data: data as unknown as string,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as any;
+    for (const template of templates) {
+      const cv = {
+        id: `smoke-${template}`,
+        userId: 'smoke-user',
+        title: `Smoke ${template}`,
+        template,
+        data: data as unknown as string,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any;
 
-    const html = buildPdfHtml(cv);
-    const pdf = await renderToPdf(html);
-    const filePath = path.join(outputDir, `smoke-${template}.pdf`);
-    await writeFile(filePath, pdf);
-    console.log(`[pdf-smoke] generated ${filePath}`);
+      const html = buildPdfHtml(cv);
+      const pdf = await renderToPdf(html);
+      const filePath = path.join(outputDir, `smoke-${template}.pdf`);
+      await writeFile(filePath, pdf);
+      console.log(`[pdf-smoke] generated ${filePath}`);
+    }
+
+    console.log(`[pdf-smoke] completed for ${templates.length} templates`);
+  } finally {
+    await closeBrowser();
   }
-
-  console.log(`[pdf-smoke] completed for ${templates.length} templates`);
 }
 
 run().catch(error => {
   console.error('[pdf-smoke] failed', error);
-  process.exit(1);
+  process.exitCode = 1;
 });
