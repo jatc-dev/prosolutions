@@ -1,6 +1,7 @@
 import { ArrowRight, Briefcase, Check, FileText, Layers } from "lucide-react";
 import { APP_URLS } from "@prosolutions/ui";
 import { cn } from "@prosolutions/ui";
+import { useCoreLocale, type CoreCopy } from "../i18n";
 
 interface ModuleCard {
   id: string;
@@ -107,7 +108,7 @@ function ModuleCardView({ module }: { module: ModuleCard }) {
   );
 }
 
-function ComingSoonCard() {
+function ComingSoonCard({ copy }: { copy: CoreCopy["modules"] }) {
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-7 shadow-sm dark:border-slate-600 dark:bg-slate-900/40">
       <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-slate-400/10 blur-3xl" aria-hidden="true" />
@@ -117,39 +118,43 @@ function ComingSoonCard() {
       </div>
 
       <div className="mt-5">
-        <h3 className="text-xl font-bold text-slate-500 dark:text-slate-400">Proximamente</h3>
-        <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">Nuevos modulos SaaS</p>
+        <h3 className="text-xl font-bold text-slate-500 dark:text-slate-400">{copy.comingSoon}</h3>
+        <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">{copy.newModules}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-          Estamos construyendo nuevos modulos para el ecosistema ProSolutions: analitica de carrera,
-          portafolios y mas herramientas para profesionales tech.
+          {copy.futureDescription}
         </p>
       </div>
 
       <div className="mt-7 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500">
-        Muy pronto
+        {copy.soon}
       </div>
     </article>
   );
 }
 
 export function Modules() {
+  const { copy } = useCoreLocale();
+  const modules = MODULES.map((module) => {
+    const localized = module.id === "procv" ? copy.modules.procv : copy.modules.projobs;
+    return { ...module, ...localized, ctaLabel: localized.cta, features: [...localized.features] };
+  });
+
   return (
     <section id="modulos" className="py-20 md:py-24">
       <div className="ui-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">Modulos</span>
-          <h2 className="mt-3">Un ecosistema, multiples herramientas</h2>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">{copy.modules.eyebrow}</span>
+          <h2 className="mt-3">{copy.modules.title}</h2>
           <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
-            Cada modulo de ProSolutions resuelve una etapa de tu carrera profesional. Usalos por separado
-            o en conjunto: tu informacion siempre bajo tu control.
+            {copy.modules.description}
           </p>
         </div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {MODULES.map((module) => (
+          {modules.map((module) => (
             <ModuleCardView key={module.id} module={module} />
           ))}
-          <ComingSoonCard />
+          <ComingSoonCard copy={copy.modules} />
         </div>
       </div>
     </section>
