@@ -3,10 +3,9 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
 import { LanguageSelector } from "../components/ui/LanguageSelector";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Input, Button } from "@prosolutions/ui";
+import { useTheme } from "@prosolutions/ui";
 import { authApi, VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../services/api";
-import { useTheme } from "../stores/themeStore";
 import { useAuthStore } from "../stores/authStore";
 
 const RESEND_COOLDOWN_KEY = "procv_verification_resend_until";
@@ -34,8 +33,8 @@ export function EmailVerificationPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useTheme((state) => state.theme);
-  const toggleTheme = useTheme((state) => state.toggleTheme);
+  const { theme } = useTheme();
+  const { toggle } = useTheme();
   const signInWithToken = useAuthStore((state) => state.signInWithToken);
 
   const language = i18n.language?.split("-")[0] || "en";
@@ -151,7 +150,7 @@ export function EmailVerificationPage() {
         <div className="ui-container flex items-center justify-end gap-2">
           <button
             type="button"
-            onClick={toggleTheme}
+            onClick={toggle}
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
             aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}
             title={theme === "dark" ? t("theme.light") : t("theme.dark")}

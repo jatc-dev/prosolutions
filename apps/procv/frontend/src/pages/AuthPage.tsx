@@ -6,12 +6,12 @@ import { LanguageSelector } from "../components/ui/LanguageSelector";
 import { useAuth } from "../stores/authStore";
 import { useCVEditorStore } from "../stores/cvEditorStore";
 import { useFormValidation, validateLogin, validateRegister } from "../hooks/useFormValidation";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Input } from "@prosolutions/ui";
+import { Button } from "@prosolutions/ui";
 import { PasswordStrengthMeter } from "../components/PasswordStrengthMeter";
 import { useLandingFeatures } from "../hooks/useLandingFeatures";
 import { LandingFeaturesGrid } from "../components/LandingFeaturesGrid";
-import { useTheme } from "../stores/themeStore";
+import { useTheme } from "@prosolutions/ui";
 import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
 import { VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../services/api";
 
@@ -20,8 +20,8 @@ export function AuthPage() {
   const navigate = useNavigate();
   const { isAuthenticated, login, register } = useAuth();
   const { setIsGuest } = useCVEditorStore();
-  const theme = useTheme((state) => state.theme);
-  const toggleTheme = useTheme((state) => state.toggleTheme);
+  const { theme } = useTheme();
+  const { toggle } = useTheme();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { features: apiFeatures, featuresLoading, featuresError, reloadFeatures } = useLandingFeatures();
@@ -166,7 +166,7 @@ export function AuthPage() {
         <div className="ui-container flex items-center justify-end gap-2">
           <button
             type="button"
-            onClick={toggleTheme}
+            onClick={toggle}
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
             aria-label={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}
             title={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}
@@ -279,7 +279,7 @@ export function AuthPage() {
                         value={values.name}
                         onChange={(e) => handleChange("name", e.target.value)}
                         onBlur={(e) => handleBlur("name")}
-                        error={touched.name && errors.name}
+                        error={touched.name ? errors.name : undefined}
                         placeholder={t('auth.namePlaceholder')}
                         required
                       />
@@ -291,7 +291,7 @@ export function AuthPage() {
                       value={values.email}
                       onChange={(e) => handleChange("email", e.target.value)}
                       onBlur={(e) => handleBlur("email")}
-                      error={touched.email && errors.email}
+                      error={touched.email ? errors.email : undefined}
                       placeholder={t('auth.emailPlaceholder')}
                       required
                     />
@@ -302,7 +302,7 @@ export function AuthPage() {
                       value={values.password}
                       onChange={(e) => handleChange("password", e.target.value)}
                       onBlur={(e) => handleBlur("password")}
-                      error={touched.password && errors.password}
+                      error={touched.password ? errors.password : undefined}
                       placeholder={t('auth.passwordPlaceholder')}
                       required
                     />

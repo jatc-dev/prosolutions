@@ -3,18 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppHeader } from "../components/AppHeader";
 import { Footer } from "../components/Footer";
-import { Button } from "../components/ui/button";
-import { useTheme } from "../stores/themeStore";
+import { Button } from "@prosolutions/ui";
+import { useTheme } from "@prosolutions/ui";
 import { LanguageSelector } from "../components/ui/LanguageSelector";
 
 export function SettingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggle } = useTheme();
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleThemeToggle = () => {
-    toggleTheme();
+    toggle();
     setSuccessMessage(t('settings.themeUpdated', 'Theme preference updated'));
     setTimeout(() => setSuccessMessage(""), 3000);
   };
