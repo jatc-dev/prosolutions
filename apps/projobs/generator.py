@@ -439,65 +439,65 @@ def render_job_card(job: dict) -> str:
 
 def render_filters_html() -> str:
     sectors_options = "".join(
-        f'<option value="{k}">{v}</option>'
+        f'<option value="{k}" data-i18n-sector="{k}">{v}</option>'
         for k, v in SECTOR_TAXONOMY.items()
     )
     return f'''
     <div class="filters-panel">
         <div class="filters-header">
-            <h3>🔍 Filtros de búsqueda</h3>
+            <h3 data-i18n="filtersTitle">🔍 Filtros de búsqueda</h3>
             <button type="button" id="resetFilters" class="btn-reset">
-                Limpiar filtros
+                <span data-i18n="resetFilters">Limpiar filtros</span>
             </button>
             <span class="active-filters" id="activeFiltersCount">0 activos</span>
         </div>
         <div class="filters-grid">
             <div class="filter-group">
-                <label for="countryFilter">País</label>
+                <label for="countryFilter" data-i18n="country">País</label>
                 <select id="countryFilter">
-                    <option value="">Todos los países</option>
+                    <option value="" data-i18n="allCountries">Todos los países</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="sectorFilter">Sector</label>
+                <label for="sectorFilter" data-i18n="sector">Sector</label>
                 <select id="sectorFilter">
-                    <option value="">Todos los sectores</option>
+                    <option value="" data-i18n="allSectors">Todos los sectores</option>
                     {sectors_options}
                 </select>
             </div>
             <div class="filter-group">
-                <label for="modalityFilter">Modalidad</label>
+                <label for="modalityFilter" data-i18n="modality">Modalidad</label>
                 <select id="modalityFilter">
-                    <option value="">Todas</option>
-                    <option value="remoto">Remoto</option>
-                    <option value="presencial">Presencial</option>
-                    <option value="híbrido">Híbrido</option>
+                    <option value="" data-i18n="all">Todas</option>
+                    <option value="remoto" data-i18n="remote">Remoto</option>
+                    <option value="presencial" data-i18n="onsite">Presencial</option>
+                    <option value="híbrido" data-i18n="hybrid">Híbrido</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="contractFilter">Tipo de contrato</label>
+                <label for="contractFilter" data-i18n="contractType">Tipo de contrato</label>
                 <select id="contractFilter">
-                    <option value="">Todos</option>
-                    <option value="indefinido">Indefinido</option>
-                    <option value="temporal">Temporal</option>
-                    <option value="prácticas">Prácticas</option>
-                    <option value="freelance">Freelance</option>
+                    <option value="" data-i18n="all">Todos</option>
+                    <option value="indefinido" data-i18n="permanent">Indefinido</option>
+                    <option value="temporal" data-i18n="temporary">Temporal</option>
+                    <option value="prácticas" data-i18n="internship">Prácticas</option>
+                    <option value="freelance" data-i18n="freelance">Freelance</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="jobTypeFilter">Jornada</label>
+                <label for="jobTypeFilter" data-i18n="schedule">Jornada</label>
                 <select id="jobTypeFilter">
-                    <option value="">Todas</option>
-                    <option value="completa">Completa</option>
-                    <option value="parcial">Parcial</option>
+                    <option value="" data-i18n="all">Todas</option>
+                    <option value="completa" data-i18n="fullTime">Completa</option>
+                    <option value="parcial" data-i18n="partTime">Parcial</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="experienceFilter">Experiencia</label>
+                <label for="experienceFilter" data-i18n="experience">Experiencia</label>
                 <select id="experienceFilter">
-                    <option value="">Cualquier nivel</option>
+                    <option value="" data-i18n="anyLevel">Cualquier nivel</option>
                     <option value="junior">Junior</option>
-                    <option value="medio">Medio</option>
+                    <option value="medio" data-i18n="mid">Medio</option>
                     <option value="senior">Senior</option>
                 </select>
             </div>
@@ -508,11 +508,7 @@ def render_filters_html() -> str:
 
 def render_jobs_html(jobs: list[dict]) -> str:
     if not jobs:
-        return '''
-        <div class="no-results">
-            <p>No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
-        </div>
-        '''
+        return '<main id="jobsList"></main>'
     cards = "".join(render_job_card(job) for job in jobs)
     return f'''
     <main id="jobsList">
@@ -645,6 +641,13 @@ CSS_STYLES = """
         }
         .pro-footer-bottom strong { color: #334155; }
         .pro-footer-bottom a { color: #334155; font-weight: 700; }
+        .language-toggle {
+            border: 1px solid #dbe2ea; border-radius: 8px; background: #fff;
+            color: #334155; padding: 9px 13px; font: inherit; font-weight: 700;
+            cursor: pointer; transition: background .2s, border-color .2s;
+        }
+        .language-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .language-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
     """
 
 
@@ -658,9 +661,9 @@ def render_page(jobs: list[dict]) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{SITE_TITLE}</title>
+    <title id="pageTitle">{SITE_TITLE}</title>
     <meta name="google-site-verification" content="UYX4wV17YfoO-ToIoXuD-0JfDpUnVROQAfYOmNfyyWk" />
-    <meta name="description" content="{SITE_DESC}">
+    <meta name="description" id="metaDescription" content="{SITE_DESC}">
     <meta name="keywords" content="empleo, trabajo, ofertas, empleos tech, trabajo remoto, ofertas de empleo">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{SITE_URL}">
@@ -668,13 +671,13 @@ def render_page(jobs: list[dict]) -> str:
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="{SITE_URL}">
-    <meta property="og:title" content="{SITE_TITLE}">
-    <meta property="og:description" content="{SITE_DESC}">
+    <meta property="og:title" id="ogTitle" content="{SITE_TITLE}">
+    <meta property="og:description" id="ogDescription" content="{SITE_DESC}">
 
     {CSS_STYLES}
 </head>
 <body>
-    <nav class="pro-nav" aria-label="Navegación del ecosistema ProSolutions">
+    <nav class="pro-nav" aria-label="Navegación del ecosistema ProSolutions" data-i18n-aria="ecosystemNav">
         <div class="pro-nav-inner">
             <a class="pro-brand" href="{CORE_URL}">
                 <span class="pro-mark" aria-hidden="true">PS</span>
@@ -684,29 +687,30 @@ def render_page(jobs: list[dict]) -> str:
                 </span>
             </a>
             <div class="pro-links">
-                <a href="{CORE_URL}">Inicio</a>
+                <a href="{CORE_URL}" data-i18n="home">Inicio</a>
                 <a href="{PROCV_URL}" target="_blank" rel="noopener">ProCV</a>
                 <a href="{SITE_URL}" class="active" aria-current="page">ProJobs
-                    <span class="pro-pill pro-pill-active">Activo</span>
+                    <span class="pro-pill pro-pill-active" data-i18n="active">Activo</span>
                     <span class="pro-pill pro-pill-beta">Beta</span></a>
-                <a href="{CORE_URL}#planes">Planes Premium</a>
+                <a href="{CORE_URL}#planes" data-i18n="plans">Planes Premium</a>
             </div>
-            <a class="pro-cta" href="{PROCV_URL}" target="_blank" rel="noopener">
+            <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
+            <a class="pro-cta" href="{PROCV_URL}" target="_blank" rel="noopener" data-i18n="createCv">
                 Crear mi CV Gratis
             </a>
         </div>
     </nav>
 
     <header>
-        <h1>{SITE_TITLE}</h1>
-        <p class="subtitle">{SITE_DESC}</p>
-        <p class="subtitle"><strong>Última actualización:</strong>
+        <h1 data-i18n="title">{SITE_TITLE}</h1>
+        <p class="subtitle" data-i18n="description">{SITE_DESC}</p>
+        <p class="subtitle"><strong data-i18n="lastUpdated">Última actualización:</strong>
             {datetime.now().strftime('%d/%m/%Y a las %H:%M UTC')}</p>
     </header>
 
     <div class="search-container">
         <input type="text" id="searchInput" class="search-input"
-               placeholder="🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+               data-i18n-placeholder="searchPlaceholder" placeholder="🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
     </div>
 
     {filters_html}
@@ -716,8 +720,8 @@ def render_page(jobs: list[dict]) -> str:
     {jobs_json}
 
     <div id="noResults" class="no-results">
-        <p>No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
-        <p>Intenta ajustar los filtros o prueba con otras palabras clave.</p>
+        <p data-i18n="noMatches">No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
+        <p data-i18n="adjustFilters">Intenta ajustar los filtros o prueba con otras palabras clave.</p>
     </div>
 
     <footer class="pro-footer" id="terminos">
@@ -731,32 +735,32 @@ def render_page(jobs: list[dict]) -> str:
                             <span class="pro-eyebrow">Ecosystem</span>
                         </span>
                     </a>
-                    <p class="pro-footer-about">
+                    <p class="pro-footer-about" data-i18n="footerAbout">
                         El ecosistema de herramientas profesionales tech.
                         Crea tu hoja de vida optimizada para ATS con ProCV y
                         encuentra tu próximo empleo con ProJobs.
                     </p>
                 </div>
                 <div>
-                    <h4>Ecosistema</h4>
+                    <h4 data-i18n="ecosystem">Ecosistema</h4>
                     <ul>
-                        <li><a href="{CORE_URL}">Inicio</a></li>
+                        <li><a href="{CORE_URL}" data-i18n="home">Inicio</a></li>
                         <li><a href="{PROCV_URL}" target="_blank" rel="noopener">ProCV</a></li>
                         <li><a href="{SITE_URL}">ProJobs</a></li>
-                        <li><a href="{CORE_URL}#planes">Planes Premium</a></li>
+                        <li><a href="{CORE_URL}#planes" data-i18n="plans">Planes Premium</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4>Legal</h4>
+                    <h4 data-i18n="legal">Legal</h4>
                     <ul>
-                        <li><a href="privacidad.html">Privacidad</a></li>
-                        <li><a href="#terminos">Términos</a></li>
+                        <li><a href="privacidad.html" data-i18n="privacy">Privacidad</a></li>
+                        <li><a href="#terminos" data-i18n="terms">Términos</a></li>
                     </ul>
                 </div>
             </div>
             <div class="pro-footer-bottom">
-                <p>Total de ofertas cargadas hoy: <strong id="totalJobs">{len(jobs)}</strong></p>
-                <p>&copy; {datetime.now().year} ProSolutions. Un producto desarrollado por
+                <p><span data-i18n="jobsToday">Total de ofertas cargadas hoy:</span> <strong id="totalJobs">{len(jobs)}</strong></p>
+                <p>&copy; {datetime.now().year} ProSolutions. <span data-i18n="developedBy">Un producto desarrollado por</span>
                     <a href="{JATC_URL}" target="_blank" rel="noopener">JATC.DEV</a></p>
             </div>
         </div>
@@ -766,10 +770,42 @@ def render_page(jobs: list[dict]) -> str:
 </body>
 </html>'''
 
-    return page
+    return "\n".join(line.rstrip() for line in page.splitlines())
 
 
 JS_CODE = f'''<script>
+const COPY = {{
+  es: {{ title: 'ProJobs - Empleos Tech y Más', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
+  en: {{ title: 'ProJobs - Tech Jobs and More', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
+}};
+let locale = localStorage.getItem('projobs-locale');
+if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
+const copy = () => COPY[locale];
+function applyLocale() {{
+  const text = copy();
+  document.documentElement.lang = locale;
+  document.querySelectorAll('[data-i18n]').forEach(el => {{ el.textContent = text[el.dataset.i18n]; }});
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', text[el.dataset.i18nAria]));
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = text[el.dataset.i18nPlaceholder]);
+  document.querySelectorAll('[data-i18n-sector]').forEach(el => el.textContent = text.sectors[el.dataset.i18nSector]);
+  document.getElementById('pageTitle').textContent = text.title;
+  document.getElementById('metaDescription').content = text.description;
+  document.getElementById('ogTitle').content = text.title;
+  document.getElementById('ogDescription').content = text.description;
+  const button = document.getElementById('languageToggle');
+  button.textContent = locale === 'es' ? 'EN' : 'ES';
+  button.setAttribute('aria-label', locale === 'es' ? 'Switch language to English' : 'Cambiar idioma a español');
+  button.title = button.getAttribute('aria-label');
+  populateCountries();
+  renderJobs();
+  updateActiveFiltersCount();
+}}
+function labelFor(value) {{
+  const aliases = {{ remoto: 'remote', presencial: 'onsite', 'híbrido': 'hybrid', indefinido: 'permanent', temporal: 'temporary', 'prácticas': 'internship', completa: 'fullTime', parcial: 'partTime', junior: 'junior', medio: 'mid', senior: 'senior', 'no-especificado': 'unspecified' }};
+  const key = aliases[value] || value;
+  return copy()[key] || value.charAt(0).toUpperCase() + value.slice(1);
+}}
+
 function escapeHtml(text) {{
     if (text == null) return '';
     return String(text)
@@ -806,9 +842,11 @@ function escapeHtml(text) {{
         const totalJobsEl = document.getElementById('totalJobs');
 
         function populateCountries() {{
+            const selected = countryFilter.value;
             const countries = [...new Set(allJobs.map(j => j.country))].sort();
-            countryFilter.innerHTML = '<option value="">Todos los países</option>' +
+            countryFilter.innerHTML = `<option value="">${{copy().allCountries}}</option>` +
                 countries.map(c => `<option value="${{c}}">${{c}}</option>`).join('');
+            countryFilter.value = selected;
         }}
         populateCountries();
 
@@ -832,7 +870,7 @@ function escapeHtml(text) {{
                 card.dataset.experience = job.experience;
                 card.dataset.date = job.date_published;
                 card.innerHTML = `
-                    <span class="badge">Fuente: ${{escapeHtml(job.source)}}</span>
+                    <span class="badge">${{copy().source}}: ${{escapeHtml(job.source)}}</span>
                     <h2 class="job-title">${{escapeHtml(job.title)}}</h2>
                     <div class="job-info">
                         🏢 <strong>${{escapeHtml(job.company)}}</strong>
@@ -840,16 +878,16 @@ function escapeHtml(text) {{
                         ${{job.country !== job.location ? `· ${{escapeHtml(job.country)}}` : ''}}
                         ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
                         ${{job.experience && job.experience !== 'no-especificado'
-                          ? `· ${{job.experience.charAt(0).toUpperCase() + job.experience.slice(1)}}`
+                          ? `· ${{labelFor(job.experience)}}`
                           : ''}}
                     </div>
                     <div class="job-tags">
-                        <span class="badge">${{job.modality.charAt(0).toUpperCase() + job.modality.slice(1)}}</span>
-                        <span class="badge">${{job.contract_type.charAt(0).toUpperCase() + job.contract_type.slice(1)}}</span>
-                        <span class="badge">${{job.sector.charAt(0).toUpperCase() + job.sector.slice(1)}}</span>
+                        <span class="badge">${{labelFor(job.modality)}}</span>
+                        <span class="badge">${{labelFor(job.contract_type)}}</span>
+                        <span class="badge">${{copy().sectors[job.sector] || job.sector}}</span>
                     </div>
                     <a href="${{escapeHtml(job.url)}}" class="btn" target="_blank"
-                       rel="noopener sponsored">Ver Oferta Completa</a>
+                       rel="noopener sponsored">${{copy().viewJob}}</a>
                 `;
                 jobsList.appendChild(card);
             }});
@@ -896,7 +934,7 @@ function escapeHtml(text) {{
 
         function updateActiveFiltersCount() {{
             const count = Object.values(activeFilters).filter(v => v).length;
-            activeFiltersCount.textContent = count === 0 ? '0 activos' : `${{count}} activo${{count > 1 ? 's' : ''}}`;
+            activeFiltersCount.textContent = copy().activeCount(count);
         }}
 
         function resetFilters() {{
@@ -919,13 +957,27 @@ function escapeHtml(text) {{
         searchInput.addEventListener('input', applyFilters);
         resetFiltersBtn.addEventListener('click', resetFilters);
 
-        renderJobs();
-        updateActiveFiltersCount();
+        document.getElementById('languageToggle').addEventListener('click', () => {{
+            locale = locale === 'es' ? 'en' : 'es';
+            localStorage.setItem('projobs-locale', locale);
+            applyLocale();
+        }});
+        applyLocale();
     </script>
     '''
 
 
-all_jobs = fetch_all_jobs()
+if os.environ.get("PROJOBS_SKIP_FETCH") == "1":
+    try:
+        with open("jobs.json", encoding="utf-8") as jobs_file:
+            all_jobs = json.load(jobs_file)
+        if not isinstance(all_jobs, list):
+            raise ValueError("jobs.json must contain an array")
+        print(f"Using {len(all_jobs)} cached jobs (PROJOBS_SKIP_FETCH=1).")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"Could not load cached jobs.json: {exc}")
+else:
+    all_jobs = fetch_all_jobs()
 
 print(f"🚀 ¡Archivos actualizados con éxito! Total de ofertas: {len(all_jobs)}")
 
