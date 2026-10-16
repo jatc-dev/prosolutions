@@ -648,6 +648,22 @@ CSS_STYLES = """
         }
         .language-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
         .language-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
+        .theme-toggle { border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; color: #334155; padding: 9px 11px; font: inherit; font-size: 16px; cursor: pointer; }
+        .theme-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .theme-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
+        html.dark body { background: #0b1220; color: #e2e8f0; }
+        html.dark .pro-nav { background: rgba(15,23,42,.94); border-color: #334155; }
+        html.dark .pro-wordmark { color: #f8fafc; }
+        html.dark .pro-links a { color: #cbd5e1; }
+        html.dark .pro-links a:hover, html.dark .pro-links a.active { background: #1e293b; color: #f8fafc; }
+        html.dark .search-input, html.dark .filters-panel, html.dark .filter-group select, html.dark .job-card, html.dark .pro-footer { background: #111827; border-color: #334155; color: #e2e8f0; }
+        html.dark .search-input::placeholder { color: #94a3b8; }
+        html.dark .job-title { color: #93c5fd; }
+        html.dark .job-info, html.dark .no-results, html.dark .filter-group label, html.dark .filters-header h3 { color: #cbd5e1; }
+        html.dark .btn-reset, html.dark .language-toggle, html.dark .theme-toggle { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+        html.dark .btn-reset:hover, html.dark .language-toggle:hover, html.dark .theme-toggle:hover { background: #334155; }
+        html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
+        html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #cbd5e1; }
     """
 
 
@@ -695,6 +711,7 @@ def render_page(jobs: list[dict]) -> str:
                 <a href="{CORE_URL}#planes" data-i18n="plans">Planes Premium</a>
             </div>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
             <a class="pro-cta" href="{PROCV_URL}" target="_blank" rel="noopener" data-i18n="createCv">
                 Crear mi CV Gratis
             </a>
@@ -799,6 +816,7 @@ function applyLocale() {{
   populateCountries();
   renderJobs();
   updateActiveFiltersCount();
+  if (typeof isDark !== 'undefined') applyTheme(isDark);
 }}
 function labelFor(value) {{
   const aliases = {{ remoto: 'remote', presencial: 'onsite', 'híbrido': 'hybrid', indefinido: 'permanent', temporal: 'temporary', 'prácticas': 'internship', completa: 'fullTime', parcial: 'partTime', junior: 'junior', medio: 'mid', senior: 'senior', 'no-especificado': 'unspecified' }};
@@ -961,6 +979,30 @@ function escapeHtml(text) {{
             locale = locale === 'es' ? 'en' : 'es';
             localStorage.setItem('projobs-locale', locale);
             applyLocale();
+        }});
+        function applyTheme(isDark) {{
+            document.documentElement.classList.toggle('dark', isDark);
+            document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+            const button = document.getElementById('themeToggle');
+            const label = isDark
+                ? (locale === 'es' ? 'Activar modo claro' : 'Switch to light mode')
+                : (locale === 'es' ? 'Activar modo oscuro' : 'Switch to dark mode');
+            button.textContent = isDark ? '☀️' : '🌙';
+            button.setAttribute('aria-label', label);
+            button.title = label;
+        }}
+        let isDark = false;
+        try {{
+            const savedTheme = JSON.parse(localStorage.getItem('theme-storage') || 'null')?.state?.preference;
+            isDark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }} catch {{
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }}
+        applyTheme(isDark);
+        document.getElementById('themeToggle').addEventListener('click', () => {{
+            isDark = !isDark;
+            try {{ localStorage.setItem('theme-storage', JSON.stringify({{ state: {{ preference: isDark ? 'dark' : 'light' }} }})); }} catch {{ /* storage unavailable */ }}
+            applyTheme(isDark);
         }});
         applyLocale();
     </script>
