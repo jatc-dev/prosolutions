@@ -4,6 +4,13 @@ export type Locale = "es" | "en";
 
 export const messages = {
   es: {
+    seo: {
+      title: "ProSolutions — Ecosistema de herramientas profesionales tech",
+      description: "ProSolutions es el ecosistema de herramientas profesionales tech: crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs.",
+      socialDescription: "Crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs. Un solo ecosistema para tu carrera.",
+      locale: "es_ES",
+      structuredDescription: "Ecosistema de herramientas profesionales tech: ProCV (hojas de vida) y ProJobs (empleos tech remotos).",
+    },
     navigation: {
       home: "Inicio",
       procv: "ProCV",
@@ -80,6 +87,13 @@ export const messages = {
     ads: { label: "Espacios publicitarios" },
   },
   en: {
+    seo: {
+      title: "ProSolutions — Professional tech tools ecosystem",
+      description: "ProSolutions is the professional tech tools ecosystem: build an ATS-optimized resume with ProCV and find remote tech jobs with ProJobs.",
+      socialDescription: "Build an ATS-optimized resume with ProCV and find remote tech jobs with ProJobs. One ecosystem for your career.",
+      locale: "en_US",
+      structuredDescription: "Professional tech tools ecosystem: ProCV (resumes) and ProJobs (remote tech jobs).",
+    },
     navigation: {
       home: "Home",
       procv: "ProCV",
@@ -182,6 +196,30 @@ export function CoreLocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    document.title = messages[locale].seo.title;
+
+    const updateMeta = (selector: string, content: string) => {
+      document.querySelector<HTMLMetaElement>(selector)?.setAttribute("content", content);
+    };
+    updateMeta('meta[name="description"]', messages[locale].seo.description);
+    updateMeta('meta[property="og:locale"]', messages[locale].seo.locale);
+    updateMeta('meta[property="og:title"]', messages[locale].seo.title);
+    updateMeta('meta[property="og:description"]', messages[locale].seo.socialDescription);
+    updateMeta('meta[name="twitter:title"]', messages[locale].seo.title);
+    updateMeta('meta[name="twitter:description"]', messages[locale].seo.socialDescription);
+
+    const structuredData = document.querySelector<HTMLScriptElement>('script[type="application/ld+json"]');
+    if (structuredData?.textContent) {
+      try {
+        const data = JSON.parse(structuredData.textContent);
+        data.description = messages[locale].seo.structuredDescription;
+        data.inLanguage = locale;
+        structuredData.textContent = JSON.stringify(data);
+      } catch {
+        // Keep the static structured data if its markup cannot be parsed.
+      }
+    }
+
     try {
       window.localStorage.setItem("prosolutions-core-locale", locale);
     } catch {
