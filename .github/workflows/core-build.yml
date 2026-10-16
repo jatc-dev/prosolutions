@@ -1,4 +1,4 @@
-name: Core Build Validation
+name: Core and ProJobs Build Validation
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - fix/procv-navigation-clean
     paths:
       - "apps/core/**"
+      - "apps/projobs/**"
       - "packages/ui/**"
       - "package.json"
       - "package-lock.json"
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - "apps/core/**"
+      - "apps/projobs/**"
       - "packages/ui/**"
       - "package.json"
       - "package-lock.json"
@@ -39,3 +41,40 @@ jobs:
         run: npm ci
       - name: Build Core and shared UI
         run: npm run build:core
+
+  projobs-build:
+    name: ProJobs (generator + static build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Compile ProJobs generator
+        run: python -m py_compile apps/projobs/generator.py
+      - name: Build ProJobs from cached job data
+        run: npm run build --workspace=@prosolutions/projobs
+        env:
+          PROJOBS_SKIP_FETCH: "1"
+      - name: Validate embedded localization scripts
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+
+          for (const file of ["apps/projobs/dist/index.html", "apps/projobs/dist/privacidad.html"]) {
+            const html = readFileSync(file, "utf8");
+            const marker = html.indexOf("const COPY");
+            if (marker < 0) throw new Error(`Localization script missing in ${file}`);
+            const start = html.lastIndexOf("<script>", marker);
+            const end = html.indexOf("</script>", start);
+            if (start < 0 || end < 0) throw new Error(`Invalid inline script in ${file}`);
+            new Function(html.slice(start + "<script>".length, end));
+            console.log(`${file}: localization script syntax OK`);
+          }
+          NODE
