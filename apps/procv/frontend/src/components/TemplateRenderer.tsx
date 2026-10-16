@@ -566,8 +566,71 @@ function hexToRgb(hexColor: string) {
 function getContrastMode(hexColor: string): "light" | "dark" {
   const rgb = hexToRgb(hexColor);
   if (!rgb) return "light";
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-  return luminance > 0.62 ? "dark" : "light";
+  const toLinear = (channel: number) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance =
+    0.2126 * toLinear(rgb.r) +
+    0.7152 * toLinear(rgb.g) +
+    0.0722 * toLinear(rgb.b);
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  const blackContrast = (luminance + 0.05) / 0.05;
+  return blackContrast >= whiteContrast ? "dark" : "light";
+}
+
+function getCreativeOverlayOpacity(gradient: string, minimumOpacity: number): number {
+  const stops = [...String(gradient).matchAll(/#([0-9a-fA-F]{6})\b/g)]
+    .map((match) => hexToRgb(match[1]))
+    .filter((rgb): rgb is NonNullable<typeof rgb> => Boolean(rgb));
+  if (stops.length === 0) return minimumOpacity;
+
+  // Use the brightest channel from all stops as a conservative bound for
+  // intermediate gradient colors, then account for the template's white/10
+  // contact chips and its slate-200 secondary text.
+  const brightest = {
+    r: Math.max(...stops.map((color) => color.r)),
+    g: Math.max(...stops.map((color) => color.g)),
+    b: Math.max(...stops.map((color) => color.b)),
+  };
+  const text = hexToRgb("#e2e8f0");
+  if (!text) return minimumOpacity;
+  const luminance = (color: { r: number; g: number; b: number }) => {
+    const toLinear = (channel: number) => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045
+        ? normalized / 12.92
+        : ((normalized + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * toLinear(color.r) + 0.7152 * toLinear(color.g) + 0.0722 * toLinear(color.b);
+  };
+  const textLuminance = luminance(text);
+  const hasAaContrast = (opacity: number) => {
+    const darkened = {
+      r: brightest.r * (1 - opacity),
+      g: brightest.g * (1 - opacity),
+      b: brightest.b * (1 - opacity),
+    };
+    const onContactChip = {
+      r: darkened.r * 0.9 + 255 * 0.1,
+      g: darkened.g * 0.9 + 255 * 0.1,
+      b: darkened.b * 0.9 + 255 * 0.1,
+    };
+    const backgroundLuminance = luminance(onContactChip);
+    return (textLuminance + 0.05) / (backgroundLuminance + 0.05) >= 4.5;
+  };
+
+  if (hasAaContrast(minimumOpacity)) return minimumOpacity;
+  let lower = minimumOpacity;
+  let upper = 1;
+  for (let iteration = 0; iteration < 24; iteration += 1) {
+    const middle = (lower + upper) / 2;
+    if (hasAaContrast(middle)) upper = middle;
+    else lower = middle;
+  }
+  return upper;
 }
 
 function rgbaFromHex(hexColor: string, alpha: number): string {
@@ -1283,7 +1346,8 @@ function TemplateCreative({ data }: { data: CVData }) {
     medium: 0.18,
     strong: 0.30,
   };
-  const overlay = intensityOverlay[creativeIntensity] ?? intensityOverlay.medium;
+  const requestedOverlay = intensityOverlay[creativeIntensity] ?? intensityOverlay.medium;
+  const overlay = getCreativeOverlayOpacity(creativeGradient, requestedOverlay);
   const certificates = normalizeCertificates(data.certificates);
 
   return (
