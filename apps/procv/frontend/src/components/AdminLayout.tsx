@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../stores/authStore";
 import { BrandLogo } from "./BrandLogo";
 import { LanguageSelector } from "./ui/LanguageSelector";
-import { useTheme } from "../stores/themeStore";
+import { useTheme } from '@prosolutions/ui';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,8 +14,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const theme = useTheme((state) => state.theme);
-  const toggleTheme = useTheme((state) => state.toggleTheme);
+  const { theme, toggle } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -100,7 +99,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </div>
 
               <button
-                onClick={toggleTheme}
+                onClick={toggle}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
                 title={theme === 'dark' ? t('theme.light', 'Light Mode') : t('theme.dark', 'Dark Mode')}
               >

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { BrandLogo } from "./BrandLogo";
 import { LanguageSelector } from "./ui/LanguageSelector";
 import { useAuthStore } from "../stores/authStore";
-import { useTheme } from "../stores/themeStore";
+import { useTheme } from '@prosolutions/ui';
 
 interface AppHeaderProps {
   cvId?: string;
@@ -23,8 +23,7 @@ export function AppHeader({
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const theme = useTheme((state) => state.theme);
-  const toggleTheme = useTheme((state) => state.toggleTheme);
+  const { theme, toggle } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -145,7 +144,7 @@ export function AppHeader({
 
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={toggle}
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
               aria-label={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}
               title={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}

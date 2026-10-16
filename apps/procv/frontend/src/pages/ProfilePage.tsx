@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../stores/authStore";
 import { AppHeader } from "../components/AppHeader";
 import { Footer } from "../components/Footer";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Input, Button } from "@prosolutions/ui";
 import { useApi } from "../hooks/useApi";
 import { api } from "../services/api";
 
@@ -162,7 +161,7 @@ export function ProfilePage() {
                 type="submit"
                 variant="primary"
                 size="md"
-                block
+                isFullWidth
                 disabled={loading}
               >
                 {loading ? t('common.saving', 'Saving...') : t('common.save', 'Save Changes')}
@@ -171,7 +170,7 @@ export function ProfilePage() {
                 type="button"
                 variant="outline"
                 size="md"
-                block
+                isFullWidth
                 onClick={handleCancel}
                 disabled={loading}
               >

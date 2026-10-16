@@ -11,39 +11,20 @@ export function useSessionTimeout() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const logout = useAuthStore((state) => state.logout);
-  const toastIdRef = useRef<string | null>(null);
-
+  const refreshInFlightRef = useRef(false);
   const checkSession = useCallback(async () => {
     if (!accessToken) return;
 
-    if (isTokenExpiringSoon(accessToken, WARNING_THRESHOLD)) {
-      const timeLeft = Math.ceil(getTimeUntilExpiry(accessToken) / 1000);
-
-      if (!toastIdRef.current) {
-        toastIdRef.current = toast.loading(
-          t("session.expiringSoon", {
-            seconds: timeLeft,
-            defaultValue: `Your session expires in ${timeLeft} seconds. Refreshing...`,
-          }),
-          { duration: Infinity }
-        );
-      }
-
+    if (isTokenExpiringSoon(accessToken, WARNING_THRESHOLD) && !refreshInFlightRef.current) {
+      refreshInFlightRef.current = true;
       try {
         await refreshToken();
-        if (toastIdRef.current) {
-          toast.success(t("session.refreshed", { defaultValue: "Session renewed successfully" }), { id: toastIdRef.current });
-          toastIdRef.current = null;
+        if (!useAuthStore.getState().isAuthenticated) {
+          toast.error(t("session.expired", { defaultValue: "Your session has expired. Please sign in again." }));
+          logout();
         }
-      } catch {
-        if (toastIdRef.current) {
-          toast.error(
-            t("session.expired", { defaultValue: "Your session has expired. Please sign in again." }),
-            { id: toastIdRef.current }
-          );
-          toastIdRef.current = null;
-        }
-        logout();
+      } finally {
+        refreshInFlightRef.current = false;
       }
     }
   }, [accessToken, refreshToken, logout, t]);

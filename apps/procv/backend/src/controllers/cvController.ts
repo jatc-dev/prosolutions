@@ -323,11 +323,6 @@ export async function restoreVersion(req: AuthRequest, res: Response) {
 }
 
 export async function parseCVUpload(req: AuthRequest, res: Response) {
-  const userId = req.userId;
-  if (!userId) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'File is required' });

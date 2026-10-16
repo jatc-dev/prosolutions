@@ -38,6 +38,9 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
     showProfileImage?: boolean;
+    website?: string;
+    linkedin?: string;
+    github?: string;
     birthDate?: string;
     showBirthDate?: boolean;
     showAge?: boolean;

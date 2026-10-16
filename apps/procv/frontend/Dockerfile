@@ -1,5 +1,5 @@
-# Node.js 18 frontend image; build context is the monorepo root.
-FROM node:18-alpine
+# Node.js 20 frontend image; build context is the monorepo root.
+FROM node:20-alpine
 
 WORKDIR /app
 

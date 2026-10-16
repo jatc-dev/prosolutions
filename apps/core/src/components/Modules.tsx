@@ -1,6 +1,6 @@
 import { ArrowRight, Briefcase, Check, FileText, Layers } from "lucide-react";
-import { LINKS } from "../config/links";
-import { cn } from "../lib/utils";
+import { APP_URLS } from "@prosolutions/ui";
+import { cn } from "@prosolutions/ui";
 
 interface ModuleCard {
   id: string;
@@ -28,7 +28,7 @@ const MODULES: ModuleCard[] = [
       "Crea, edita y descarga tu hoja vida con plantillas disenadas para superar filtros ATS.",
     features: ["Plantillas optimizadas para ATS", "Exportacion a PDF, JSON y XML", "Edicion en tiempo real"],
     ctaLabel: "Ir a ProCV",
-    ctaHref: LINKS.procvLogin,
+    ctaHref: APP_URLS.procvLogin,
     icon: FileText,
     iconWrapClass: "bg-brand-100 text-brand-600 ring-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:ring-brand-800",
     haloClass: "bg-brand-400/20 group-hover:bg-brand-400/30",
@@ -44,7 +44,7 @@ const MODULES: ModuleCard[] = [
       "Vacantes tech remotas curadas, con filtros por stack y busqueda en vivo para encontrar tu proximimo rol.",
     features: ["Vacantes tech remotas", "Filtros por stack y busqueda", "Listado actualizado a diario"],
     ctaLabel: "Explorar Vacantes",
-    ctaHref: LINKS.projobs,
+    ctaHref: APP_URLS.projobs,
     icon: Briefcase,
     iconWrapClass: "bg-emerald-100 text-emerald-600 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:ring-emerald-800",
     haloClass: "bg-emerald-400/20 group-hover:bg-emerald-400/30",

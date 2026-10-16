@@ -26,3 +26,10 @@ pnpm-debug.log*
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+
+# Artefactos generados por ProJobs (se regeneran con generator.py, no se versionan)
+/jobs.json
+apps/projobs/jobs.json
+
+# Caché de Python
+__pycache__/

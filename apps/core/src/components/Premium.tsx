@@ -1,6 +1,5 @@
 import { ArrowRight, Check, Crown, Sparkles } from "lucide-react";
-import { LINKS } from "../config/links";
-import { cn } from "../lib/utils";
+import { APP_URLS, cn, JATC_URL } from "@prosolutions/ui";
 
 const PLANS = [
   {
@@ -11,7 +10,7 @@ const PLANS = [
     description: "Para crear tu primer CV profesional y explorar el ecosistema.",
     features: ["Editor completo de ProCV", "Plantillas base optimizadas para ATS", "Exportacion en PDF estandar"],
     ctaLabel: "Empezar gratis",
-    ctaHref: LINKS.procvLogin,
+    ctaHref: APP_URLS.procvLogin,
     highlight: false,
   },
   {
@@ -27,7 +26,7 @@ const PLANS = [
       "Exportacion PDF, JSON y XML",
     ],
     ctaLabel: "Hazte Pro",
-    ctaHref: LINKS.procvLogin,
+    ctaHref: APP_URLS.procvLogin,
     highlight: true,
   },
   {
@@ -38,7 +37,7 @@ const PLANS = [
     description: "Para reclutadores y equipos que evaluan talento tech.",
     features: ["Todo lo incluido en Pro", "Gestion de multiples miembros", "Plantillas corporativas", "Soporte prioritario"],
     ctaLabel: "Contactar",
-    ctaHref: LINKS.jatcDev,
+    ctaHref: JATC_URL,
     highlight: false,
   },
 ];

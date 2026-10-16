@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './button';
+import { Button } from '@prosolutions/ui';
 
 export const LanguageSelector: React.FC = () => {
   const { i18n, t } = useTranslation();

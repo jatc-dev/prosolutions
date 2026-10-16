@@ -3,17 +3,17 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
 import { LanguageSelector } from "../components/ui/LanguageSelector";
-import { Button } from "../components/ui/button";
+import { Button } from "@prosolutions/ui";
 import { authApi } from "../services/api";
-import { useTheme } from "../stores/themeStore";
+import { useTheme } from "@prosolutions/ui";
 import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
 
 export function ResetPasswordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const theme = useTheme((state) => state.theme);
-  const toggleTheme = useTheme((state) => state.toggleTheme);
+  const { theme } = useTheme();
+  const { toggle } = useTheme();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,7 +65,7 @@ export function ResetPasswordPage() {
         <div className="ui-container flex items-center justify-end gap-2">
           <button
             type="button"
-            onClick={toggleTheme}
+            onClick={toggle}
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
             aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}
             title={theme === "dark" ? t("theme.light") : t("theme.dark")}
