@@ -17,12 +17,16 @@ interface NavItem {
 interface ProHeaderProps {
   /** App actual: resalta su enlace con un badge "Activo". */
   activeApp: ActiveApp;
+  /** Idioma de la interfaz compartida. */
+  locale?: "es" | "en";
+  /** Acción para cambiar el idioma, cuando la aplicación ofrece traducciones. */
+  onLocaleChange?: () => void;
   /** Acciones extra a la derecha del header (p. ej. "Abrir editor"). */
   actions?: React.ReactNode;
   className?: string;
 }
 
-function ThemeToggle() {
+function ThemeToggle({ locale }: { locale: "es" | "en" }) {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
 
@@ -31,37 +35,40 @@ function ThemeToggle() {
       type="button"
       onClick={toggle}
       className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
-      aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
-      title={isDark ? "Modo claro" : "Modo oscuro"}
+      aria-label={isDark ? (locale === "en" ? "Switch to light mode" : "Activar modo claro") : (locale === "en" ? "Switch to dark mode" : "Activar modo oscuro")}
+      title={isDark ? (locale === "en" ? "Light mode" : "Modo claro") : (locale === "en" ? "Dark mode" : "Modo oscuro")}
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
     </button>
   );
 }
 
-function navItems(): NavItem[] {
+function navItems(locale: "es" | "en"): NavItem[] {
+  const labels = locale === "en"
+    ? { home: "Home", plans: "Premium plans", beta: "Beta" }
+    : { home: "Inicio", plans: "Planes Premium", beta: "Beta" };
   return [
-    { label: "Inicio", href: APP_URLS.core, app: "core" },
+    { label: labels.home, href: APP_URLS.core, app: "core" },
     { label: "ProCV", href: APP_URLS.procvLogin, app: "procv" },
-    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", badge: "Beta" },
-    { label: "Planes Premium", href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
+    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", badge: labels.beta },
+    { label: labels.plans, href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
   ];
 }
 
-function CTA_BY_APP(activeApp: ActiveApp): { label: string; href: string } {
-  if (activeApp === "procv") return { label: "Explorar Empleos", href: APP_URLS.projobs };
-  if (activeApp === "projobs") return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
-  return { label: "Crear mi CV Gratis", href: APP_URLS.procvLogin };
+function CTA_BY_APP(activeApp: ActiveApp, locale: "es" | "en"): { label: string; href: string } {
+  if (activeApp === "procv") return { label: locale === "en" ? "Explore jobs" : "Explorar Empleos", href: APP_URLS.projobs };
+  if (activeApp === "projobs") return { label: locale === "en" ? "Create my free CV" : "Crear mi CV Gratis", href: APP_URLS.procvLogin };
+  return { label: locale === "en" ? "Create my free CV" : "Crear mi CV Gratis", href: APP_URLS.procvLogin };
 }
 
 /**
  * Header unificado del ecosistema ProSolutions.
  * Uso: <ProHeader activeApp="core" /> en apps/core, "procv" en apps/procv, etc.
  */
-export function ProHeader({ activeApp, actions, className }: ProHeaderProps) {
+export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = navItems();
-  const cta = CTA_BY_APP(activeApp);
+  const items = navItems(locale);
+  const cta = CTA_BY_APP(activeApp, locale);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -93,10 +100,10 @@ export function ProHeader({ activeApp, actions, className }: ProHeaderProps) {
         aria-current={isActive ? "page" : undefined}
         className={linkClasses(isActive)}
       >
-        {item.label}
+            {item.label}
         {isActive ? (
           <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
-            Activo
+            {locale === "en" ? "Active" : "Activo"}
           </span>
         ) : null}
         {item.badge ? (
@@ -126,15 +133,27 @@ export function ProHeader({ activeApp, actions, className }: ProHeaderProps) {
             <ProSolutionsLogo />
           </a>
 
-          <nav aria-label="Navegacion del ecosistema ProSolutions" className="hidden items-center gap-1 md:flex">
+      <nav aria-label={locale === "en" ? "ProSolutions ecosystem navigation" : "Navegación del ecosistema ProSolutions"} className="hidden items-center gap-1 md:flex">
             {items.map((item) => renderLink(item))}
           </nav>
 
           <div className="flex items-center gap-2">
             {actions ? <div className="hidden items-center gap-2 lg:flex">{actions}</div> : null}
 
+            {onLocaleChange ? (
+              <button
+                type="button"
+                onClick={onLocaleChange}
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                aria-label={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
+                title={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
+              >
+                {locale === "es" ? "EN" : "ES"}
+              </button>
+            ) : null}
+
             <div className="hidden lg:block">
-              <ThemeToggle />
+              <ThemeToggle locale={locale} />
             </div>
 
             <a
@@ -151,7 +170,7 @@ export function ProHeader({ activeApp, actions, className }: ProHeaderProps) {
               type="button"
               onClick={() => setMobileOpen((prev) => !prev)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 md:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
-              aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+              aria-label={mobileOpen ? (locale === "en" ? "Close menu" : "Cerrar menú") : (locale === "en" ? "Open menu" : "Abrir menú")}
               aria-expanded={mobileOpen}
               aria-controls="pro-header-mobile-menu"
             >
@@ -168,8 +187,8 @@ export function ProHeader({ activeApp, actions, className }: ProHeaderProps) {
               {actions ? <div className="flex flex-col gap-2 pt-1">{actions}</div> : null}
 
               <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tema</span>
-                <ThemeToggle />
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{locale === "en" ? "Theme" : "Tema"}</span>
+                <ThemeToggle locale={locale} />
               </div>
 
               <a

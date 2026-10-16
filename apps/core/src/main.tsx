@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { useTheme } from "@prosolutions/ui";
+import { CoreLocaleProvider } from "./i18n";
 import "./index.css";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,9 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <App />
+      <CoreLocaleProvider>
+        <App />
+      </CoreLocaleProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

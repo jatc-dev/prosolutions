@@ -1,9 +1,11 @@
 import { AdSlot } from "@prosolutions/ui";
+import { useCoreLocale } from "../i18n";
 
 /** Contenedores de anuncios (Google AdSense) integrados en el diseno del landing. */
 export function AdsSection() {
+  const { copy } = useCoreLocale();
   return (
-    <section id="anuncios" aria-label="Espacios publicitarios" className="pb-4">
+    <section id="anuncios" aria-label={copy.ads.label} className="pb-4">
       <div className="ui-container space-y-6">
         <AdSlot placement="core-after-modules" format="leaderboard" className="min-h-[110px]" />
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">

@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Crown, Sparkles } from "lucide-react";
 import { APP_URLS, cn, JATC_URL } from "@prosolutions/ui";
+import { useCoreLocale } from "../i18n";
 
 const PLANS = [
   {
@@ -43,20 +44,25 @@ const PLANS = [
 ];
 
 export function Premium() {
+  const { copy } = useCoreLocale();
+  const plans = PLANS.map((plan) => {
+    const localized = plan.id === "free" ? copy.plans.free : plan.id === "pro" ? copy.plans.pro : copy.plans.teams;
+    return { ...plan, ...localized, ctaLabel: localized.cta, features: [...localized.features] };
+  });
+
   return (
     <section id="planes" className="py-20 md:py-24">
       <div className="ui-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">Planes Premium</span>
-          <h2 className="mt-3">Potencia tu carrera con ProSolutions Pro</h2>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">{copy.plans.eyebrow}</span>
+          <h2 className="mt-3">{copy.plans.title}</h2>
           <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
-            Empieza gratis y escala cuando lo necesites. Todos los planes incluyen acceso al ecosistema
-            completo de herramientas.
+            {copy.plans.description}
           </p>
         </div>
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <article
               key={plan.id}
               className={cn(
@@ -69,7 +75,7 @@ export function Premium() {
               {plan.highlight ? (
                 <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-gradient-to-r from-brand-600 to-cyan-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
                   <Crown className="h-3 w-3" />
-                  Mas popular
+                  {copy.plans.popular}
                 </span>
               ) : null}
 
