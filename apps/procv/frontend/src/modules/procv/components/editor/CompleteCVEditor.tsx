@@ -353,7 +353,11 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     setIsGuest,
   } = useCVEditorStore();
 
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(() =>
+    typeof window === "undefined" || !window.matchMedia
+      ? true
+      : window.matchMedia("(min-width: 769px)").matches,
+  );
   const [panelSizes, setPanelSizes] = useState({ editor: 50, preview: 50 });
   const [isImporting, setIsImporting] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
@@ -826,7 +830,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         sensors={sensors}
         collisionDetection={closestCenter}
       >
-        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-gradient-to-br from-brand-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 ${className}`}>
+        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-gradient-to-br from-brand-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 ${showPreview ? "cv-editor-preview-open" : ""} ${className}`}>
           <ImportReviewModal
             isOpen={importReviewOpen}
             fileName={pendingImportFileName}
@@ -838,9 +842,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           {isGuest && <GuestBanner />}
 
           {/* Header */}
-          <div className="border-b border-brand-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
               {/* Left: platform brand + module switcher (shared ProSolutions nav) */}
               <Link to="/" className="shrink-0" aria-label={t("brand.platformAria", "ProSolutions home")}>
                 <div className="flex items-center space-x-3">
@@ -888,7 +892,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -899,19 +903,23 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className="inline-flex items-center rounded-md border border-brand-300 bg-white px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
+                aria-label={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
+                title={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                {showPreview ? t('editor.actions.hide') : t('editor.actions.show')} {t('editor.actions.preview')}
+                <span className="hidden sm:inline">{showPreview ? t('editor.actions.hide') : t('editor.actions.show')} {t('editor.actions.preview')}</span>
               </button>
 
               <button
                 onClick={handleImportClick}
                 disabled={isImporting}
-                className="inline-flex items-center rounded-md border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
+                aria-label={t('editor.importer.button')}
+                title={t('editor.importer.button')}
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
               >
                 {isImporting ? (
                   <>
@@ -923,10 +931,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                     </svg>
-                    {t('editor.importer.button')}
+                    <span className="hidden sm:inline">{t('editor.importer.button')}</span>
                   </>
                 )}
               </button>
@@ -934,7 +942,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={t('editor.actions.save')}
+                title={t('editor.actions.save')}
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-transparent bg-brand-600 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
               >
                 {isSaving ? (
                   <>
@@ -946,28 +956,32 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    {t('editor.actions.save')}
+                    <span className="hidden sm:inline">{t('editor.actions.save')}</span>
                   </>
                 )}
               </button>
 
               <button
                 onClick={handleReset}
-                className="inline-flex items-center rounded-md border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
+                aria-label={t('editor.actions.reset')}
+                title={t('editor.actions.reset')}
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {t('editor.actions.reset')}
+                <span className="hidden sm:inline">{t('editor.actions.reset')}</span>
               </button>
 
               <button
                 onClick={handleExportPdf}
                 disabled={isExportingPdf}
-                className="inline-flex items-center rounded-md border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2"
+                aria-label={`${t('editor.actions.export', 'Export')} PDF`}
+                title={`${t('editor.actions.export', 'Export')} PDF`}
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-transparent bg-emerald-600 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
               >
                 {isExportingPdf ? (
                   <>
@@ -979,10 +993,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                      PDF
+                    <span className="hidden sm:inline">PDF</span>
                     </>
                   )}
                 </button>
@@ -1013,20 +1027,22 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <EditorTabs
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-          completionStatus={completionStatus}
-        />
+        <div className="cv-editor-tabs">
+          <EditorTabs
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
+            completionStatus={completionStatus}
+          />
+        </div>
 
         {/* Main Content */}
-        <div className="flex" style={{ height: 'calc(100vh - 140px)' }}>
+        <div className="cv-editor-workspace flex" style={{ height: 'calc(100vh - 140px)' }}>
           {/* Editor Panel */}
           <div
-            className="overflow-y-auto border-r border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+            className="cv-editor-panel min-w-0 overflow-y-auto border-r border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900"
             style={{ width: showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <ATSOptimizationPanel
                 jobDescription={jobDescription}
                 onJobDescriptionChange={setJobDescription}
@@ -1151,7 +1167,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           {/* Resize Handle */}
           {showPreview && (
             <div
-              className="w-1 cursor-col-resize bg-gray-300 transition-colors hover:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-600"
+              className="cv-editor-resize-handle w-1 cursor-col-resize bg-gray-300 transition-colors hover:bg-gray-400 dark:bg-slate-700 dark:hover:bg-slate-600"
               onMouseDown={(e) => {
                 e.preventDefault();
                 document.addEventListener('mousemove', handleResize);
@@ -1165,10 +1181,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           {/* Preview Panel */}
           {showPreview && (
             <div
-              className="overflow-y-auto bg-gray-50 dark:bg-slate-950"
+              className="cv-editor-preview min-w-0 overflow-y-auto bg-gray-50 dark:bg-slate-950"
               style={{ width: `${panelSizes.preview}%` }}
             >
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
                   <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-slate-100">
                     {t('editor.cvPreview')}
