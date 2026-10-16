@@ -182,6 +182,61 @@
   .cv-editor .cv-editor-card {
     margin-bottom: 1rem;
   }
+
+  /* Stack the editor and preview on phones instead of squeezing both columns. */
+  .cv-editor .cv-editor-workspace {
+    height: auto !important;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .cv-editor .cv-editor-header-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .cv-editor .cv-editor-panel,
+  .cv-editor .cv-editor-preview {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .cv-editor .cv-editor-panel {
+    border-right: 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .cv-editor .cv-editor-resize-handle {
+    display: none;
+  }
+
+  .cv-editor .cv-editor-preview {
+    min-height: 50vh;
+    overflow-x: auto;
+  }
+
+  /* The preview toggle becomes a view switch on narrow screens. */
+  .cv-editor.cv-editor-preview-open .cv-editor-panel {
+    display: none;
+  }
+
+  .cv-editor.cv-editor-preview-open .cv-editor-tabs {
+    display: none;
+  }
+
+  .cv-editor-panel .grid[class*="grid-cols-"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cv-editor-panel input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .cv-editor-panel select,
+  .cv-editor-panel textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
 }
 
 /* Dark mode support (future enhancement) */
