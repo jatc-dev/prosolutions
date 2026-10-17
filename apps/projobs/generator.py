@@ -689,18 +689,8 @@ CSS_STYLES = """
             transition: background .18s ease, color .18s ease;
         }
         .pro-links a:hover, .pro-links a.active { background: #eef2ff; color: #3730a3; }
-        .pro-pill { display: inline-block; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; line-height: 1.4; text-transform: uppercase; }
-        .pro-pill-active { background: #dbeafe; color: #1d4ed8; }
-        .pro-pill-beta { background: #fef3c7; color: #92400e; }
-        .pro-cta {
-            display: inline-flex; align-items: center; justify-content: center;
-            flex: 0 0 auto; padding: 10px 14px; border-radius: 10px;
-            background: #3f6ff5; color: #fff; font-size: 13px;
-            font-weight: 750; text-decoration: none; white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(63,111,245,.2);
-            transition: background .18s ease, transform .18s ease;
-        }
-        .pro-cta:hover { background: #244bd9; color: #fff; transform: translateY(-1px); }
+        .pro-nav-icon { width: 17px; height: 17px; flex: 0 0 17px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .pro-active-dot { width: 6px; height: 6px; border-radius: 999px; background: #16a34a; box-shadow: 0 0 0 3px #dcfce7; }
         .pro-links a:focus-visible, .pro-brand:focus-visible, .pro-cta:focus-visible,
         .language-toggle:focus-visible, .theme-toggle:focus-visible {
             outline: 3px solid rgba(63,111,245,.4); outline-offset: 3px;
@@ -717,8 +707,7 @@ CSS_STYLES = """
             .pro-wordmark { font-size: 15px; }
             .pro-links { gap: 2px; }
             .pro-links a { padding: 8px 7px; font-size: 12px; }
-            .pro-pill { font-size: 8px; }
-            .pro-cta { padding: 9px 11px; font-size: 12px; }
+            .pro-nav-icon { width: 15px; height: 15px; flex-basis: 15px; }
         }
         html.dark .pro-nav { background: rgba(15,23,42,.94); border-color: #334155; }
         html.dark .pro-wordmark { color: #f8fafc; }
@@ -772,18 +761,13 @@ def render_page(jobs: list[dict]) -> str:
                 </span>
             </a>
             <div class="pro-links">
-                <a href="{CORE_URL}" data-i18n="home">Inicio</a>
-                <a href="{PROCV_URL}" target="_blank" rel="noopener">ProCV</a>
-                <a href="{SITE_URL}" class="active" aria-current="page">ProJobs
-                    <span class="pro-pill pro-pill-active" data-i18n="active">Activo</span>
-                    <span class="pro-pill pro-pill-beta">Beta</span></a>
-                <a href="{CORE_URL}#planes" data-i18n="plans">Planes Premium</a>
+                <a href="{CORE_URL}" data-i18n="home"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg><span data-i18n="home">Inicio</span></a>
+                <a href="{PROCV_URL}" target="_blank" rel="noopener"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="10" cy="13" r="2"/><path d="M7 18a3 3 0 0 1 6 0"/></svg><span>ProCV</span></a>
+                <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-dot" aria-hidden="true"></span></a>
+                <a href="{CORE_URL}#planes" data-i18n="plans"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
-            <a class="pro-cta" href="{PROCV_URL}" target="_blank" rel="noopener" data-i18n="createCv">
-                Crear mi CV Gratis
-            </a>
         </div>
     </nav>
 
