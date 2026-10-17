@@ -114,6 +114,7 @@ export const createInitialCVData = (): CVData => ({
     address: '',
     city: '',
     country: '',
+    nationality: '',
     showAddress: true,
     showCity: true,
     showCountry: true,
