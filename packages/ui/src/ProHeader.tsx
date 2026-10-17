@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, Menu, Moon, Sun, X } from "lucide-react";
+import { BriefcaseBusiness, FileUser, Gem, House, Menu, Moon, Sun, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -11,7 +11,7 @@ interface NavItem {
   label: string;
   href: string;
   app?: ActiveApp;
-  badge?: string;
+  icon: LucideIcon;
 }
 
 interface ProHeaderProps {
@@ -45,20 +45,14 @@ function ThemeToggle({ locale }: { locale: "es" | "en" }) {
 
 function navItems(locale: "es" | "en"): NavItem[] {
   const labels = locale === "en"
-    ? { home: "Home", plans: "Premium plans", beta: "Beta" }
-    : { home: "Inicio", plans: "Planes Premium", beta: "Beta" };
+    ? { home: "Home", plans: "Premium plans" }
+    : { home: "Inicio", plans: "Planes Premium" };
   return [
-    { label: labels.home, href: APP_URLS.core, app: "core" },
-    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", badge: labels.beta },
-    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", badge: labels.beta },
-    { label: labels.plans, href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
+    { label: labels.home, href: APP_URLS.core, app: "core", icon: House },
+    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileUser },
+    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: BriefcaseBusiness },
+    { label: labels.plans, href: APP_URLS.core.replace(/\\/$/, "") + "/#planes", icon: Gem },
   ];
-}
-
-function CTA_BY_APP(activeApp: ActiveApp, locale: "es" | "en"): { label: string; href: string } {
-  if (activeApp === "procv") return { label: locale === "en" ? "Explore jobs" : "Explorar Empleos", href: APP_URLS.projobs };
-  if (activeApp === "projobs") return { label: locale === "en" ? "Create my free CV" : "Crear mi CV Gratis", href: APP_URLS.procvLogin };
-  return { label: locale === "en" ? "Create my free CV" : "Crear mi CV Gratis", href: APP_URLS.procvLogin };
 }
 
 /**
@@ -68,7 +62,6 @@ function CTA_BY_APP(activeApp: ActiveApp, locale: "es" | "en"): { label: string;
 export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = navItems(locale);
-  const cta = CTA_BY_APP(activeApp, locale);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -100,15 +93,11 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
         aria-current={isActive ? "page" : undefined}
         className={linkClasses(isActive)}
       >
-            {item.label}
+            <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{item.label}</span>
         {isActive ? (
           <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
             {locale === "en" ? "Active" : "Activo"}
-          </span>
-        ) : null}
-        {item.badge ? (
-          <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-            {item.badge}
           </span>
         ) : null}
       </a>
@@ -156,16 +145,6 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               <ThemeToggle locale={locale} />
             </div>
 
-            <a
-              href={cta.href}
-              target={isExternalUrl(cta.href) ? "_blank" : undefined}
-              rel={isExternalUrl(cta.href) ? "noreferrer" : undefined}
-              className="hidden h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition-all hover:bg-brand-700 active:scale-[0.99] sm:inline-flex dark:bg-brand-500 dark:hover:bg-brand-400"
-            >
-              {cta.label}
-              <ArrowRight className="h-4 w-4" />
-            </a>
-
             <button
               type="button"
               onClick={() => setMobileOpen((prev) => !prev)}
@@ -191,16 +170,6 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
                 <ThemeToggle locale={locale} />
               </div>
 
-              <a
-                href={cta.href}
-                target={isExternalUrl(cta.href) ? "_blank" : undefined}
-                rel={isExternalUrl(cta.href) ? "noreferrer" : undefined}
-                onClick={() => setMobileOpen(false)}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400"
-              >
-                {cta.label}
-                <ArrowRight className="h-4 w-4" />
-              </a>
             </div>
           </div>
         ) : null}
