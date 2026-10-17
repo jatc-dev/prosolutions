@@ -354,6 +354,24 @@ function formatPersonalLocation(personal: CVData["personal"]) {
   return parts.join(", ");
 }
 
+function renderNationality(personal: CVData["personal"], className = "text-xs opacity-80") {
+  const code = String(personal?.nationality || "").trim();
+  if (!code) return null;
+
+  let countryName = code;
+  try {
+    countryName = new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(code) || code;
+  } catch {
+    // Preserve the stored value if the runtime cannot format this region code.
+  }
+
+  return (
+    <p className={className}>
+      {i18n.t("editor.personal.fields.nationality", "Nationality")}: {countryName}
+    </p>
+  );
+}
+
 function formatBirthDate(value?: string) {
   if (!value) return "";
   const raw = String(value).trim();
@@ -705,12 +723,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
         >
           {personal.role || "Tu título profesional"}
         </p>
-        {personal.nationality && (
-          <p className="text-sm text-slate-600 ats-nationality">
-            {i18n.t("editor.personal.fields.nationality", "Nationality")}:{" "}
-            {new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(personal.nationality) || personal.nationality}
-          </p>
-        )}
+        {renderNationality(personal, "text-sm text-slate-600 ats-nationality")}
         {personalLocation && (
           <p
             className="text-sm text-slate-600 ats-location"
@@ -1033,6 +1046,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         <div className="flex-1">
           <h1 className="text-3xl font-bold">{personal.name || "Tu Nombre"}</h1>
           <p className="text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+          {renderNationality(personal)}
         </div>
         {shouldRenderProfileImage(personal) && (
           <div className="flex-shrink-0">
@@ -1216,6 +1230,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           )}
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || "Tu Nombre"}</h1>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || "Desarrollador"}</p>
+          {renderNationality(personal)}
         </div>
         <div className="space-y-1 text-xs" style={{ color: textMuted }}>
           {emails.map((email, idx) => (
@@ -1372,6 +1387,7 @@ function TemplateCreative({ data }: { data: CVData }) {
         )}
         <h1 className="text-4xl font-extrabold tracking-tight">{personal.name || "Tu Nombre"}</h1>
         <p className="text-sm text-slate-200">{personal.role || "Profesional Creativo"}</p>
+        {renderNationality(personal, "text-xs text-slate-200")}
         <div className="flex flex-wrap gap-2 text-xs text-slate-200">
           {emails.map((email, idx) => (
             <span key={`email-${idx}`} className="px-2 py-1 bg-white/10 rounded-full">
@@ -1507,6 +1523,7 @@ function TemplateClassic({ data }: { data: CVData }) {
         )}
         <h1 className="text-4xl font-bold tracking-tight">{personal.name || "Tu Nombre"}</h1>
         <p className="mt-2 text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="mt-3 text-xs text-slate-500">
           {contacts.map((contact, idx) => (
             <span key={idx}>
@@ -1654,6 +1671,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             ) : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
+            {renderNationality(personal, "text-xs")}
             {personalLocation ? (
               <p className="text-sm" style={{ color: mutedColor }}>{personalLocation}</p>
             ) : null}
@@ -1847,6 +1865,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal, "text-xs")}
         <div className="mt-4 flex flex-wrap gap-2 text-sm" style={{ color: metaColor }}>
           {personalLocation ? <span>{personalLocation}</span> : null}
           {emails[0]?.value ? <span>{emails[0].value}</span> : null}
@@ -1997,6 +2016,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
       <header className="pb-6 border-b border-slate-200">
         <h1 className="text-3xl font-bold text-slate-900">{personal.name || "Tu Nombre"}</h1>
         <p className="text-slate-600 mt-1">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="text-sm text-slate-500 mt-2">
           {personalLocation}
           {emails[0]?.value ? ` • ${emails[0].value}` : ""}
@@ -2134,6 +2154,7 @@ function TemplateCompact({ data }: { data: CVData }) {
       <header className="text-center pb-4 border-b border-slate-200">
         <h1 className="text-2xl font-bold">{personal.name || "Tu Nombre"}</h1>
         <p className="text-sm text-slate-600">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="text-xs text-slate-500 mt-1">
           {personalLocation}
           {emails[0]?.value ? ` • ${emails[0].value}` : ""}
@@ -2279,6 +2300,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           <div className="flex-1 min-w-0">
             <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+            {renderNationality(personal, "text-xs")}
             {formatPersonalLocation(personal) ? (
               <p className={`${dense ? "mt-1" : "mt-2"} text-sm`} style={{ color: subtitleColor }}>{formatPersonalLocation(personal)}</p>
             ) : null}
