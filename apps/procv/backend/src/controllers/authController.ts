@@ -33,7 +33,9 @@ function signToken(userId: string) {
 }
 
 function signRefreshToken(userId: string) {
-  return jwt.sign({ sub: userId }, config.jwtSecret, {
+  // JWTs with the same subject and second-level iat can otherwise be identical.
+  // Sessions require a unique refreshToken, so add a cryptographically random jti.
+  return jwt.sign({ sub: userId, jti: crypto.randomUUID() }, config.jwtSecret, {
     expiresIn: config.jwtRefreshExpiresIn,
   } as jwt.SignOptions);
 }
