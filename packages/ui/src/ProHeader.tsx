@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BriefcaseBusiness, FileUser, Gem, House, Menu, Moon, Sun, X, type LucideIcon } from "lucide-react";
+import { Briefcase, FileText, Gem, House, Menu, Moon, Sun, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -49,9 +49,9 @@ function navItems(locale: "es" | "en"): NavItem[] {
     : { home: "Inicio", plans: "Planes Premium" };
   return [
     { label: labels.home, href: APP_URLS.core, app: "core", icon: House },
-    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileUser },
-    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: BriefcaseBusiness },
-    { label: labels.plans, href: APP_URLS.core.replace(/\\/$/, "") + "/#planes", icon: Gem },
+    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
+    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
+    { label: labels.plans, href: APP_URLS.core.replace(/\/$/, "") + "/#planes", icon: Gem },
   ];
 }
 
