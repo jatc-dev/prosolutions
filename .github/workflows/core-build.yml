@@ -3,7 +3,7 @@ name: Core and ProJobs Build Validation
 on:
   push:
     branches:
-      - fix/procv-navigation-clean
+      - main
     paths:
       - "apps/core/**"
       - "apps/projobs/**"
