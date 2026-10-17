@@ -557,7 +557,8 @@
         "github": "GitHub",
         "twitter": "Twitter",
         "valueProposition": "Propuesta de valor",
-        "summary": "Resumen Profesional"
+        "summary": "Resumen Profesional",
+        "nationality": "Nacionalidad (país)"
       },
       "help": {
         "professionalTitle": "Ej: Desarrollador Full Stack, Diseñador UX/UI",
@@ -566,7 +567,8 @@
         "address": "Opcional - Direccion de residencia",
         "website": "Tu portfolio, blog o sitio web personal",
         "valueProposition": "Resume en 2 o 3 líneas el beneficio principal que aportas a la empresa. No listes funciones; destaca tu diferencial, el problema específico que resuelves y un logro cuantificable que respalde tu capacidad de generar resultados inmediatos.",
-        "summary": "Una breve descripción de tu experiencia, habilidades y objetivos profesionales"
+        "summary": "Una breve descripción de tu experiencia, habilidades y objetivos profesionales",
+        "nationality": "Selecciona el país que corresponde a tu nacionalidad."
       },
       "placeholders": {
         "fullName": "Ej: Juan Pérez García",
@@ -581,7 +583,8 @@
         "github": "https://github.com/tu-usuario",
         "twitter": "https://twitter.com/tu-usuario",
         "valueProposition": "Ej: Acelero el time-to-hire en equipos tech reduciendo hasta un 30% el ciclo de selección mediante automatización y analítica de talento.",
-        "summary": "Ej: Desarrollador Full Stack con 5 años de experiencia en tecnologías web modernas..."
+        "summary": "Ej: Desarrollador Full Stack con 5 años de experiencia en tecnologías web modernas...",
+        "nationality": "Selecciona una nacionalidad"
       },
       "alerts": {
         "invalidImage": "Por favor selecciona un archivo de imagen válido.",
