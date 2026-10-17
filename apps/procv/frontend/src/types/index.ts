@@ -61,6 +61,7 @@ export interface PersonalData {
   address?: string;
   city?: string;
   country?: string;
+  nationality?: string;
   showAddress?: boolean;
   showCity?: boolean;
   showCountry?: boolean;
