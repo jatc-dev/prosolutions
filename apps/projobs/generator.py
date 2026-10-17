@@ -518,6 +518,7 @@ def render_jobs_html(jobs: list[dict]) -> str:
 
 
 CSS_STYLES = """
+        <style>
         /* Reset y base */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -664,6 +665,7 @@ CSS_STYLES = """
         html.dark .btn-reset:hover, html.dark .language-toggle:hover, html.dark .theme-toggle:hover { background: #334155; }
         html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
         html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #cbd5e1; }
+        </style>
     """
 
 
