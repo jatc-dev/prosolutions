@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { PersonalData, ContactItem, PhoneItem, ProfileImageStyle, ValidationErrors } from '../../../types';
@@ -101,11 +101,23 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   errors = {},
   isLoading = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(data.profileImage || null);
   const [birthDateValue, setBirthDateValue] = useState<string>(normalizeDateInputValue(data.birthDate));
   const ageValue = calculateAge(birthDateValue);
+  const nationalityOptions = useMemo(() => {
+    const displayNames = new Intl.DisplayNames([i18n.language || 'es'], { type: 'region' });
+    const options: Array<{ code: string; label: string }> = [];
+    for (let first = 65; first <= 90; first += 1) {
+      for (let second = 65; second <= 90; second += 1) {
+        const code = String.fromCharCode(first, second);
+        const label = displayNames.of(code);
+        if (label && label !== code) options.push({ code, label });
+      }
+    }
+    return options.sort((a, b) => a.label.localeCompare(b.label, i18n.language || 'es'));
+  }, [i18n.language]);
 
   const emailLabelsByType: Record<ContactItem['type'], string[]> = {
     personal: [
@@ -311,6 +323,22 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           />
         </FormField>
       </div>
+
+      <FormField
+        label={t('editor.personal.fields.nationality')}
+        help={t('editor.personal.help.nationality')}
+      >
+        <select
+          value={data.nationality || ''}
+          onChange={(e) => updateField('nationality', e.target.value)}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
+        >
+          <option value="">{t('editor.personal.placeholders.nationality')}</option>
+          {nationalityOptions.map(({ code, label }) => (
+            <option key={code} value={code}>{label}</option>
+          ))}
+        </select>
+      </FormField>
 
       {/* Profile Image */}
       <FormField
