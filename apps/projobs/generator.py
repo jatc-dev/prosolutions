@@ -653,6 +653,73 @@ CSS_STYLES = """
         .theme-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
         .theme-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
+        /* Navegación del ecosistema ProSolutions */
+        .pro-nav {
+            position: sticky; top: 12px; z-index: 100;
+            margin: 0 0 28px; padding: 12px 18px;
+            background: rgba(255,255,255,.96); border: 1px solid #e2e8f0;
+            border-radius: 16px; box-shadow: 0 8px 24px rgba(15,23,42,.08);
+            backdrop-filter: blur(12px);
+        }
+        .pro-nav-inner {
+            width: 100%; max-width: 80rem; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px;
+        }
+        .pro-brand {
+            display: inline-flex; align-items: center; gap: 10px;
+            flex: 0 0 auto; color: inherit; text-decoration: none;
+        }
+        .pro-mark {
+            display: grid; place-items: center; width: 42px; height: 42px;
+            flex: 0 0 42px; border-radius: 13px;
+            background: linear-gradient(135deg,#3f6ff5,#244bd9);
+            color: #fff; font-size: 15px; font-weight: 800;
+            letter-spacing: -.04em; box-shadow: 0 5px 12px rgba(63,111,245,.24);
+        }
+        .pro-wordmark { display: block; color: #0f172a; font-size: 17px; font-weight: 800; line-height: 1.15; }
+        .pro-wordmark em { color: #3f6ff5; font-style: normal; }
+        .pro-eyebrow { display: block; margin-top: 3px; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+        .pro-links { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
+        .pro-links a {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 11px; border-radius: 9px;
+            color: #475569; font-size: 13px; font-weight: 650;
+            line-height: 1.25; text-decoration: none; white-space: nowrap;
+            transition: background .18s ease, color .18s ease;
+        }
+        .pro-links a:hover, .pro-links a.active { background: #eef2ff; color: #3730a3; }
+        .pro-pill { display: inline-block; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; line-height: 1.4; text-transform: uppercase; }
+        .pro-pill-active { background: #dbeafe; color: #1d4ed8; }
+        .pro-pill-beta { background: #fef3c7; color: #92400e; }
+        .pro-cta {
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 auto; padding: 10px 14px; border-radius: 10px;
+            background: #3f6ff5; color: #fff; font-size: 13px;
+            font-weight: 750; text-decoration: none; white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(63,111,245,.2);
+            transition: background .18s ease, transform .18s ease;
+        }
+        .pro-cta:hover { background: #244bd9; color: #fff; transform: translateY(-1px); }
+        .pro-links a:focus-visible, .pro-brand:focus-visible, .pro-cta:focus-visible,
+        .language-toggle:focus-visible, .theme-toggle:focus-visible {
+            outline: 3px solid rgba(63,111,245,.4); outline-offset: 3px;
+        }
+        @media (max-width: 980px) {
+            .pro-nav-inner { flex-wrap: wrap; justify-content: center; }
+            .pro-brand { margin-right: auto; }
+            .pro-links { order: 3; width: 100%; }
+        }
+        @media (max-width: 560px) {
+            .pro-nav { top: 6px; padding: 10px; border-radius: 12px; }
+            .pro-nav-inner { gap: 10px; }
+            .pro-brand { margin-right: 0; }
+            .pro-wordmark { font-size: 15px; }
+            .pro-links { gap: 2px; }
+            .pro-links a { padding: 8px 7px; font-size: 12px; }
+            .pro-pill { font-size: 8px; }
+            .pro-cta { padding: 9px 11px; font-size: 12px; }
+        }
         html.dark .pro-nav { background: rgba(15,23,42,.94); border-color: #334155; }
         html.dark .pro-wordmark { color: #f8fafc; }
         html.dark .pro-links a { color: #cbd5e1; }
