@@ -542,7 +542,8 @@
         "github": "GitHub",
         "twitter": "Twitter",
         "valueProposition": "Value Proposition",
-        "summary": "Professional Summary"
+        "summary": "Professional Summary",
+        "nationality": "Nationality (country)"
       },
       "help": {
         "professionalTitle": "e.g. Full Stack Developer, UX/UI Designer",
@@ -551,7 +552,8 @@
         "address": "Optional - Street or full address",
         "website": "Your portfolio, blog, or personal website",
         "valueProposition": "Summarize in 2-3 lines the main benefit you bring to the company. Do not list duties; highlight your differentiator, the specific problem you solve, and a measurable achievement that proves your ability to deliver immediate results.",
-        "summary": "A brief description of your experience, skills, and professional goals"
+        "summary": "A brief description of your experience, skills, and professional goals",
+        "nationality": "Select the country that corresponds to your nationality."
       },
       "placeholders": {
         "fullName": "e.g. John Doe",
@@ -566,7 +568,8 @@
         "github": "https://github.com/your-username",
         "twitter": "https://twitter.com/your-username",
         "valueProposition": "e.g. I shorten tech hiring cycles by up to 30% through automation and talent analytics, enabling teams to deliver faster.",
-        "summary": "e.g. Full Stack Developer with 5 years of experience in modern web technologies..."
+        "summary": "e.g. Full Stack Developer with 5 years of experience in modern web technologies...",
+        "nationality": "Select a nationality"
       },
       "alerts": {
         "invalidImage": "Please select a valid image file.",
