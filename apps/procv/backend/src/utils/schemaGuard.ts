@@ -122,29 +122,6 @@ export async function ensureSchemaCompatibility(): Promise<void> {
       logger.info(`Applied additive schema fix: ${requirement.table}.${requirement.column}`);
     }
 
-    // Accounts created before email verification was introduced were allowed to sign in
-    // without verifying an email. Preserve access for those legacy accounts if the
-    // new column was added with its default false by a schema repair or migration.
-    // Newer accounts still require verification.
-    const legacyUnverifiedUsers = await prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT COUNT(*)::int AS count
-      FROM "User"
-      WHERE "emailVerified" = false
-        AND "createdAt" < TIMESTAMP '2026-10-11 00:00:00'
-    `;
-    const legacyCount = Number(legacyUnverifiedUsers[0]?.count ?? 0);
-    if (legacyCount > 0) {
-      const updatedCount = await prisma.$executeRawUnsafe(
-        `UPDATE "User"
-         SET "emailVerified" = true
-         WHERE "emailVerified" = false
-           AND "createdAt" < TIMESTAMP '2026-10-11 00:00:00'`,
-      );
-      logger.warn(
-        `Restored sign-in eligibility for ${updatedCount} legacy accounts created before email verification rollout.`,
-      );
-    }
-
     for (const requirement of REQUIRED_TABLES) {
       if (await tableExists(requirement.name)) {
         continue;
