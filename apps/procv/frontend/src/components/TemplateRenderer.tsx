@@ -29,6 +29,7 @@ export interface CVData {
     address?: string;
     city?: string;
     country?: string;
+    nationality?: string;
     showAddress?: boolean;
     showCity?: boolean;
     showCountry?: boolean;
@@ -704,6 +705,12 @@ function TemplateMinimal({ data }: { data: CVData }) {
         >
           {personal.role || "Tu título profesional"}
         </p>
+        {personal.nationality && (
+          <p className="text-sm text-slate-600 ats-nationality">
+            {i18n.t("editor.personal.fields.nationality", "Nationality")}:{" "}
+            {new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(personal.nationality) || personal.nationality}
+          </p>
+        )}
         {personalLocation && (
           <p
             className="text-sm text-slate-600 ats-location"
