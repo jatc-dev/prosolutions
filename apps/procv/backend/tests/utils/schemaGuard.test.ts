@@ -37,13 +37,7 @@ describe('schemaGuard', () => {
 
   describe('ensureSchemaCompatibility', () => {
     it('no aplica DDL cuando todas las columnas y tablas ya existen', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // User.emailVerified
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.revokedAt
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // No legacy users need backfill
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // EmailVerificationToken
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // PasswordResetToken
+      mockPrisma.$queryRaw.mockResolvedValue([{ count: 1 }] as QueryRawResult);
 
       await ensureSchemaCompatibility();
 
@@ -55,10 +49,7 @@ describe('schemaGuard', () => {
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // User.emailVerified falta
         .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.revokedAt existe
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // No legacy users need backfill
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // EmailVerificationToken
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // PasswordResetToken
+        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // Session.revokedAt existe
 
       await ensureSchemaCompatibility();
 
@@ -71,36 +62,11 @@ describe('schemaGuard', () => {
       expect(mockPrisma.$queryRaw.mock.calls[0][2]).toBe('emailVerified');
     });
 
-
-    it('restaura el acceso de cuentas anteriores al requisito de verificación', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // User.emailVerified existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.revokedAt existe
-        .mockResolvedValueOnce([{ count: 2 }] as QueryRawResult) // Dos cuentas legacy sin verificar
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // EmailVerificationToken existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // PasswordResetToken existe
-      mockPrisma.$executeRawUnsafe.mockResolvedValue(2);
-
-      await ensureSchemaCompatibility();
-
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE "User"'),
-      );
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining("TIMESTAMP '2026-10-11 00:00:00'"),
-      );
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Restored sign-in eligibility for 2 legacy accounts created before email verification rollout.',
-      );
-    });
-
     it('crea tablas cuando faltan', async () => {
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // User.emailVerified existe
         .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
         .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.revokedAt existe
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // No legacy users need backfill
         .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // EmailVerificationToken falta
         .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // PasswordResetToken existe
 
@@ -109,9 +75,9 @@ describe('schemaGuard', () => {
       expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining('CREATE TABLE IF NOT EXISTS "EmailVerificationToken"'),
       );
-      const tableSql = (mockPrisma.$queryRaw.mock.calls[4][0] as TemplateStringsArray).join('');
+      const tableSql = (mockPrisma.$queryRaw.mock.calls[3][0] as TemplateStringsArray).join('');
       expect(tableSql).toContain('information_schema.tables');
-      expect(mockPrisma.$queryRaw.mock.calls[4][1]).toBe('EmailVerificationToken');
+      expect(mockPrisma.$queryRaw.mock.calls[3][1]).toBe('EmailVerificationToken');
     });
 
     it('no falla ni propaga errores cuando $queryRaw falla', async () => {
