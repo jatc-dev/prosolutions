@@ -12,6 +12,7 @@ import { JobsToolbar } from "../components/JobsToolbar";
 import { JobsEmptyState, JobsErrorState, JobsSkeleton } from "../components/JobsStates";
 import { useJobs } from "../hooks/useJobs";
 import { collectTechnologies, filterJobs } from "../lib/derive";
+import { applyJobsQuery, clearJobsQuery, parseJobsQuery } from "../lib/searchParams.mjs";
 import type { JobsQuery } from "../types";
 
 /** Injects an in-feed ad unit every N results (keeps the board readable). */
@@ -30,12 +31,7 @@ export function JobsPage() {
   const { can } = useEntitlements();
   // Keep filters in the URL so a search can be bookmarked or shared.
   const [searchParams, setSearchParams] = useSearchParams();
-  const query = useMemo<JobsQuery>(() => ({
-    text: searchParams.get("q") ?? "",
-    technology: searchParams.get("tech") ?? "",
-    modality: searchParams.get("modality") ?? "",
-    seniority: searchParams.get("seniority") ?? "",
-  }), [searchParams]);
+  const query = useMemo<JobsQuery>(() => parseJobsQuery(searchParams), [searchParams]);
 
   // Keeps typing responsive on large boards by deferring the filtered list.
   const deferredQuery = useDeferredValue(query);
@@ -84,29 +80,11 @@ export function JobsPage() {
   useSeo(seo);
 
   const handleChange = useCallback((next: JobsQuery) => {
-    setSearchParams((current) => {
-      const params = new URLSearchParams(current);
-      const values: Array<[string, string]> = [
-        ["q", next.text],
-        ["tech", next.technology],
-        ["modality", next.modality],
-        ["seniority", next.seniority],
-      ];
-      for (const [key, value] of values) {
-        const normalized = value.trim();
-        if (normalized) params.set(key, normalized);
-        else params.delete(key);
-      }
-      return params;
-    }, { replace: true });
+    setSearchParams((current) => applyJobsQuery(current, next), { replace: true });
   }, [setSearchParams]);
 
   const handleReset = useCallback(() => {
-    setSearchParams((current) => {
-      const params = new URLSearchParams(current);
-      for (const key of ["q", "tech", "modality", "seniority"]) params.delete(key);
-      return params;
-    }, { replace: true });
+    setSearchParams((current) => clearJobsQuery(current), { replace: true });
   }, [setSearchParams]);
 
   const canReceiveAlerts = can("projobs_job_alerts");
