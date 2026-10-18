@@ -1,3 +1,4 @@
+/* global URLSearchParams */
 const FILTER_KEYS = ["q", "tech", "modality", "seniority"];
 
 export function parseJobsQuery(params) {
