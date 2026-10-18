@@ -2,26 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
-import { LanguageSelector } from "../components/ui/LanguageSelector";
 import { useAuth } from "../stores/authStore";
 import { useCVEditorStore } from "../stores/cvEditorStore";
 import { useFormValidation, validateLogin, validateRegister } from "../hooks/useFormValidation";
-import { Input } from "@prosolutions/ui";
+import { Input, ProHeader } from "@prosolutions/ui";
 import { Button } from "@prosolutions/ui";
 import { PasswordStrengthMeter } from "../components/PasswordStrengthMeter";
 import { useLandingFeatures } from "../hooks/useLandingFeatures";
 import { LandingFeaturesGrid } from "../components/LandingFeaturesGrid";
-import { useTheme } from "@prosolutions/ui";
 import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
 import { VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../services/api";
 
 export function AuthPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
   const { isAuthenticated, login, register } = useAuth();
   const { setIsGuest } = useCVEditorStore();
-  const { theme } = useTheme();
-  const { toggle } = useTheme();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { features: apiFeatures, featuresLoading, featuresError, reloadFeatures } = useLandingFeatures();
@@ -162,31 +159,11 @@ export function AuthPage() {
   return (
     <div className="ui-page min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Header */}
-      <header className="relative z-10 px-6 py-2">
-        <div className="ui-container flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={toggle}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-            aria-label={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}
-            title={theme === "dark" ? t("theme.light", "Light Mode") : t("theme.dark", "Dark Mode")}
-          >
-            {theme === "dark" ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-            <span className="hidden text-sm font-medium sm:inline">
-              {theme === "dark" ? t("theme.light", "Light") : t("theme.dark", "Dark")}
-            </span>
-          </button>
-          <LanguageSelector />
-        </div>
-      </header>
+      <ProHeader
+        activeApp="procv"
+        locale={language === "es" ? "es" : "en"}
+        onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")}
+      />
 
       {/* Main Content */}
       <main className="relative">
