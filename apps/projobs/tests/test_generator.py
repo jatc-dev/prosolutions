@@ -40,7 +40,7 @@ assert result is not None, "register: authController falló"
 assert result["title"] == "Senior Python Developer"
 assert result["company"] == "Tech Solutions S.A."
 assert job["location"] == "Madrid, España"
-assert job["country"] == "España"
+assert job["country"] == "ES"
 assert job["url"] == "https://www.arbeitnow.com/job/python-dev-123"
 assert job["source"] == "Arbeitnow"
 assert job["sector"] == "tecnologia"
@@ -52,11 +52,11 @@ assert job["salary"]["raw"] == "60000 €"
 print("  ✓ normalize_job_arbeitnow OK")
 
 # Prueba 2: normalize_country
-assert normalize_country("Madrid, España") == "España"
-assert normalize_country("Barcelona, Spain") == "Spain"
-assert normalize_country("México") == "México"
-assert normalize_country("") == "desconocido"
-assert normalize_country(None) == "desconocido"
+assert normalize_country("Madrid, España") == "ES"
+assert normalize_country("Barcelona, Spain") == "ES"
+assert normalize_country("México") == "MX"
+assert normalize_country("") == "UNKNOWN"
+assert normalize_country(None) == "UNKNOWN"
 print("  ✓ normalize_country OK")
 
 # Prueba 3: normalize_modality
