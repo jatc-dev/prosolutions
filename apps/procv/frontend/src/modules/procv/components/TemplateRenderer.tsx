@@ -661,8 +661,8 @@ function TemplateMinimal({ data }: { data: CVData }) {
           itemProp="jobTitle"
         >
           {personal.role || "Tu título profesional"}
-          {renderNationality(personal)}
         </p>
+        {renderNationality(personal)}
         {personalLocation && (
           <p
             className="text-sm text-slate-600 ats-location"
