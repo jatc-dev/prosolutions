@@ -45,7 +45,7 @@ for (const required of [
   'class="pro-nav"',
   'https://prosolutions.page',
   'https://procv.prosolutions.page',
-  'data-i18n="ecosystemNav"',
+  'data-i18n-aria="ecosystemNav"',
 ]) {
   if (!html.includes(required)) {
     throw new Error(`[projobs] HTML generado sin elemento requerido: ${required}. Build cancelado.`);
