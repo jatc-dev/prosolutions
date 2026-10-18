@@ -12,7 +12,6 @@ import { JobsToolbar } from "../components/JobsToolbar";
 import { JobsEmptyState, JobsErrorState, JobsSkeleton } from "../components/JobsStates";
 import { useJobs } from "../hooks/useJobs";
 import { collectTechnologies, filterJobs } from "../lib/derive";
-import { EMPTY_QUERY } from "../types";
 import type { JobsQuery } from "../types";
 
 /** Injects an in-feed ad unit every N results (keeps the board readable). */
