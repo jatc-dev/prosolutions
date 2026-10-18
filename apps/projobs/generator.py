@@ -1102,7 +1102,12 @@ function escapeHtml(text) {{
         }}
 
         function applyFilters() {{
-            const country = countryFilter.value;
+            const countryInput = countryFilter.value.trim().toLocaleLowerCase();
+            const matchedCountry = allJobs.find(job =>
+                String(job.country || '') === countryFilter.value
+                || countryLabel(job.country).toLocaleLowerCase() === countryInput
+            );
+            const country = matchedCountry ? matchedCountry.country : countryFilter.value;
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
@@ -1131,7 +1136,7 @@ function escapeHtml(text) {{
                     job.title.toLowerCase().includes(search) ||
                     job.company.toLowerCase().includes(search) ||
                     job.location.toLowerCase().includes(search) ||
-                    job.country.toLowerCase().includes(search)
+                    countryLabel(job.country).toLowerCase().includes(search)
                 )) return false;
                 return true;
             }});
@@ -1156,6 +1161,7 @@ function escapeHtml(text) {{
             applyFilters();
         }}
 
+        countryFilter.addEventListener('input', applyFilters);
         countryFilter.addEventListener('change', applyFilters);
         sectorFilter.addEventListener('change', applyFilters);
         modalityFilter.addEventListener('change', applyFilters);
