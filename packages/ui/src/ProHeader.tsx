@@ -122,12 +122,12 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
             <ProSolutionsLogo />
           </a>
 
-      <nav aria-label={locale === "en" ? "ProSolutions ecosystem navigation" : "Navegación del ecosistema ProSolutions"} className="hidden items-center gap-1 lg:flex">
+      <nav aria-label={locale === "en" ? "ProSolutions ecosystem navigation" : "Navegación del ecosistema ProSolutions"} className="hidden items-center gap-1 xl:flex">
             {items.map((item) => renderLink(item))}
           </nav>
 
           <div className="flex items-center gap-2">
-            {actions ? <div className="hidden items-center gap-2 lg:flex">{actions}</div> : null}
+            {actions ? <div className="hidden items-center gap-2 xl:flex">{actions}</div> : null}
 
             {onLocaleChange ? (
               <button
@@ -141,14 +141,14 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               </button>
             ) : null}
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               <ThemeToggle locale={locale} />
             </div>
 
             <button
               type="button"
               onClick={() => setMobileOpen((prev) => !prev)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 xl:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
               aria-label={mobileOpen ? (locale === "en" ? "Close menu" : "Cerrar menú") : (locale === "en" ? "Open menu" : "Abrir menú")}
               aria-expanded={mobileOpen}
               aria-controls="pro-header-mobile-menu"
@@ -159,7 +159,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
         </div>
 
         {mobileOpen ? (
-          <div id="pro-header-mobile-menu" className="border-t border-slate-200 pb-4 pt-3 dark:border-slate-700 lg:hidden">
+          <div id="pro-header-mobile-menu" className="border-t border-slate-200 pb-4 pt-3 dark:border-slate-700 xl:hidden">
             <div className="flex flex-col gap-2">
               {items.map((item) => renderLink(item, () => setMobileOpen(false)))}
 
