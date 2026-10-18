@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import os
 import sys
@@ -217,6 +217,24 @@ def normalize_salary(salary: str | None) -> dict | None:
     return {"raw": salary.strip()}
 
 
+def normalize_published_date(job: dict) -> str:
+    """Devuelve una fecha comparable como texto, incluso si la fuente entrega epoch."""
+    value = job.get("date_published") or job.get("publication_date") or job.get("created_at") or ""
+    if isinstance(value, (int, float)) or (
+        isinstance(value, str) and value.strip().isdigit()
+    ):
+        try:
+            timestamp = float(value)
+            if timestamp > 10_000_000_000:
+                timestamp /= 1000
+            return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat(
+                timespec="seconds"
+            ).replace("+00:00", "Z")
+        except (OverflowError, OSError, ValueError):
+            return ""
+    return str(value).strip()
+
+
 def normalize_sector(category: str | None, *extra_fields) -> str:
     for value in (category, *extra_fields):
         if not value:
@@ -266,7 +284,7 @@ def normalize_job(job: dict, source: str) -> dict | None:
         "job_type": job_type,
         "experience": experience,
         "salary": salary,
-        "date_published": job.get("date_published") or job.get("publication_date") or job.get("created_at") or "",
+        "date_published": normalize_published_date(job),
         "description": job.get("description", "") or "",
     }
 
