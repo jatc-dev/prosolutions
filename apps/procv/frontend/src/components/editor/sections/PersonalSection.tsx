@@ -670,10 +670,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             label={t('editor.personal.fields.country')}
             error={errors.country?.[0]}
           >
-            <InputField
+            <CountrySelect
               value={data.country || ''}
-              onChange={(value) => updateField('country', value)}
+              onChange={(countryCode) => updateField('country', countryCode)}
+              locale={i18n.language || 'es'}
               placeholder={t('editor.personal.placeholders.country')}
+              aria-label={t('editor.personal.fields.country')}
             />
           </FormField>
         </div>
