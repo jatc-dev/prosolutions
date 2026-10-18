@@ -141,3 +141,17 @@ Commands and results:
 | compact | PASS | 5 | 0 | 0 | 0 | PASS |
 
 Visual review covered all pages across all nine PDFs, including expanded checks of the affected templates and page transitions. No clipped text, broken experience blocks, isolated section headings, or double content margins remain in the smoke scenarios. This closes the PDF visual QA gate for the current long-content fixtures.
+
+## Compact page margins regression guard (2026-10-18)
+
+PDF export uses one margin source only:
+- CSS `@page` sets a compact 5 mm safe margin.
+- Puppeteer `page.pdf()` margins are zero to prevent a second 15 mm margin from being added.
+- The generated document's default HTML/body margin and padding are reset to zero.
+
+Validation:
+- Confirm the exported PDF has visibly wider usable content area than the previous double-margin output.
+- Review all nine templates for text clipping at the left/right edges and footer/page-end clipping.
+- Keep the 5 mm safe area unless a template-specific background or printer-safe requirement calls for more.
+- Automated build/smoke tests do not replace visual PDF inspection.
+
