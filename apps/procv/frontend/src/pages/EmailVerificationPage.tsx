@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
-import { LanguageSelector } from "../components/ui/LanguageSelector";
-import { Input, Button } from "@prosolutions/ui";
-import { useTheme } from "@prosolutions/ui";
+import { Input, Button, ProHeader } from "@prosolutions/ui";
 import { authApi, VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 
@@ -33,8 +31,6 @@ export function EmailVerificationPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme } = useTheme();
-  const { toggle } = useTheme();
   const signInWithToken = useAuthStore((state) => state.signInWithToken);
 
   const language = i18n.language?.split("-")[0] || "en";
@@ -146,31 +142,11 @@ export function EmailVerificationPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
-      <header className="relative z-10 px-6 py-2">
-        <div className="ui-container flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={toggle}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-            aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}
-            title={theme === "dark" ? t("theme.light") : t("theme.dark")}
-          >
-            {theme === "dark" ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-            <span className="hidden text-sm font-medium sm:inline">
-              {theme === "dark" ? t("theme.light") : t("theme.dark")}
-            </span>
-          </button>
-          <LanguageSelector />
-        </div>
-      </header>
+      <ProHeader
+        activeApp="procv"
+        locale={language === "es" ? "es" : "en"}
+        onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")}
+      />
 
       <main className="relative flex-1">
         <section className="px-6 pt-8 pb-16">
