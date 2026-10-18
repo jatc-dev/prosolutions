@@ -61,6 +61,8 @@ jobs:
       - name: Run ProJobs generator tests
         working-directory: apps/projobs
         run: python tests/test_generator.py && python tests/test_catalog_quality.py
+        env:
+          PROJOBS_SKIP_FETCH: "1"
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
