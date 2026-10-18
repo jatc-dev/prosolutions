@@ -60,7 +60,7 @@ jobs:
         run: python -m py_compile apps/projobs/generator.py
       - name: Run ProJobs generator tests
         working-directory: apps/projobs
-        run: python tests/test_generator.py
+        run: python tests/test_generator.py && python tests/test_catalog_quality.py
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
