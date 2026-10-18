@@ -153,7 +153,7 @@ COUNTRY_ALIASES = {
     # ISO 3166-1 alpha-2 codes are the canonical values for known countries.
     "ar": "AR", "argentina": "AR",
     "au": "AU", "australia": "AU",
-    "at": "AT", "austria": "AT", "austria": "AT",
+    "at": "AT", "austria": "AT",
     "be": "BE", "belgium": "BE", "belgica": "BE",
     "br": "BR", "brazil": "BR", "brasil": "BR",
     "ca": "CA", "canada": "CA",
@@ -723,7 +723,7 @@ CSS_STYLES = """
             display: block; font-size: 0.85rem; font-weight: 600;
             color: #475569; margin-bottom: 6px;
         }
-        .filter-group select {
+        .filter-group select, .filter-group input {
             width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1;
             border-radius: 6px; background: white; font-size: 0.9rem;
             color: #1e293b;
