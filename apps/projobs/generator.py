@@ -228,10 +228,10 @@ def normalize_sector(category: str | None, *extra_fields) -> str:
 
 
 def normalize_job(job: dict, source: str) -> dict | None:
-    title = job.get("title") or job.get("title_raw") or ""
-    company = job.get("company_name") or job.get("company") or ""
-    location = job.get("location") or job.get("candidate_required_location") or ""
-    url = job.get("url") or ""
+    title = str(job.get("title") or job.get("title_raw") or "").strip()
+    company = str(job.get("company_name") or job.get("company") or "").strip()
+    location = str(job.get("location") or job.get("candidate_required_location") or "").strip()
+    url = str(job.get("url") or "").strip()
 
     if not title or not url:
         return None
@@ -266,7 +266,7 @@ def normalize_job(job: dict, source: str) -> dict | None:
         "job_type": job_type,
         "experience": experience,
         "salary": salary,
-        "date_published": job.get("date_published") or "",
+        "date_published": job.get("date_published") or job.get("publication_date") or job.get("created_at") or "",
         "description": job.get("description", "") or "",
     }
 
@@ -295,38 +295,56 @@ def is_valid_url(url: str) -> bool:
 
 
 def canonical_url(url: str) -> str:
+    """Normaliza URLs para deduplicar ofertas sin alterar rutas sensibles a mayúsculas."""
     try:
-        parsed = urllib.parse.urlparse(url.lower())
-        query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
-        clean_query = {
-            k: v for k, v in query.items()
-            if k.lower() not in ("utm_source", "utm_medium", "utm_campaign",
-                                 "utm_term", "utm_content", "fbclid",
-                                 "igshid", "ref", "source")
+        parsed = urllib.parse.urlparse(str(url or "").strip())
+        tracking_params = {
+            "utm_source", "utm_medium", "utm_campaign", "utm_term",
+            "utm_content", "fbclid", "igshid", "ref", "source",
         }
+        query_items = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+        clean_query = [
+            (key, value) for key, value in query_items
+            if key.casefold() not in tracking_params
+        ]
         new_query = urllib.parse.urlencode(clean_query, doseq=True)
-        return urllib.parse.urlunparse(
-            (parsed.scheme, parsed.netloc, parsed.path,
-             parsed.params, new_query, ""))
-    except Exception:
-        return url.lower()
+        path = parsed.path.rstrip("/") or "/"
+        return urllib.parse.urlunparse((
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            path,
+            parsed.params,
+            new_query,
+            "",
+        ))
+    except (TypeError, ValueError):
+        return str(url or "").strip()
+
+
+def _normalized_identity(value: object) -> str:
+    return " ".join(str(value or "").casefold().split())
 
 
 def deduplicate_jobs(jobs: list[dict]) -> list[dict]:
+    """Deduplica por URL canónica y, si hay datos suficientes, por identidad laboral."""
     seen_urls = set()
     seen_keys = set()
     result = []
     for job in jobs:
-        canon = canonical_url(job["url"])
-        key = (
-            job["company"].lower(),
-            job["title"].lower(),
-            job["location"].lower(),
-        )
-        if canon in seen_urls or key in seen_keys:
+        url = str(job.get("url") or "").strip()
+        canon = canonical_url(url) if url else ""
+        company = _normalized_identity(job.get("company") or job.get("company_name"))
+        title = _normalized_identity(job.get("title") or job.get("title_raw"))
+        location = _normalized_identity(job.get("location") or job.get("candidate_required_location"))
+        # Sin empresa/ubicación no hay suficiente evidencia para descartar otra oferta
+        # legítima con el mismo título.
+        key = (company, title, location) if company and title and location else None
+        if (canon and canon in seen_urls) or (key is not None and key in seen_keys):
             continue
-        seen_urls.add(canon)
-        seen_keys.add(key)
+        if canon:
+            seen_urls.add(canon)
+        if key is not None:
+            seen_keys.add(key)
         result.append(job)
     return result
 
