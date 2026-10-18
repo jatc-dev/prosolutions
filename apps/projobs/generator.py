@@ -17,7 +17,7 @@ SITE_TITLE = "ProJobs - Empleos Tech y Más"
 SITE_DESC = "Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente."
 
 PROCV_URL = "https://procv.prosolutions.page"
-CORE_URL = "/"
+CORE_URL = "https://prosolutions.page"
 JATC_URL = "https://github.com/jatc-dev"
 
 ADSENSE_CLIENT = os.environ.get("VITE_ADSENSE_CLIENT", "").strip() or "ca-pub-3956322934366702"
