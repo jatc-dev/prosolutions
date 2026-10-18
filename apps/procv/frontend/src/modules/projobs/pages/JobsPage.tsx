@@ -1,5 +1,5 @@
-import React, { useCallback, useDeferredValue, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useDeferredValue, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BellRing, FileText, RefreshCw, Sparkles } from "lucide-react";
 import { PlatformLayout } from "../../../shared/components/PlatformLayout";
@@ -29,7 +29,14 @@ export function JobsPage() {
   const { t, i18n } = useTranslation();
   const { jobs, source, updatedAt, loading, error, reload } = useJobs();
   const { can } = useEntitlements();
-  const [query, setQuery] = useState<JobsQuery>(EMPTY_QUERY);
+  // Keep filters in the URL so a search can be bookmarked or shared.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = useMemo<JobsQuery>(() => ({
+    text: searchParams.get("q") ?? "",
+    technology: searchParams.get("tech") ?? "",
+    modality: searchParams.get("modality") ?? "",
+    seniority: searchParams.get("seniority") ?? "",
+  }), [searchParams]);
 
   // Keeps typing responsive on large boards by deferring the filtered list.
   const deferredQuery = useDeferredValue(query);
@@ -77,8 +84,31 @@ export function JobsPage() {
 
   useSeo(seo);
 
-  const handleChange = useCallback((next: JobsQuery) => setQuery(next), []);
-  const handleReset = useCallback(() => setQuery(EMPTY_QUERY), []);
+  const handleChange = useCallback((next: JobsQuery) => {
+    setSearchParams((current) => {
+      const params = new URLSearchParams(current);
+      const values: Array<[string, string]> = [
+        ["q", next.text],
+        ["tech", next.technology],
+        ["modality", next.modality],
+        ["seniority", next.seniority],
+      ];
+      for (const [key, value] of values) {
+        const normalized = value.trim();
+        if (normalized) params.set(key, normalized);
+        else params.delete(key);
+      }
+      return params;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const handleReset = useCallback(() => {
+    setSearchParams((current) => {
+      const params = new URLSearchParams(current);
+      for (const key of ["q", "tech", "modality", "seniority"]) params.delete(key);
+      return params;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const canReceiveAlerts = can("projobs_job_alerts");
 
