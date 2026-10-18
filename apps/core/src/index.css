@@ -3,14 +3,21 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --ui-bg: #f8fafc;
   --ui-surface: #ffffff;
-  --ui-surface-soft: #f8fafc;
-  --ui-border: #e2e8f0;
-  --ui-border-strong: #cbd5e1;
+  --ui-surface-soft: #f1f5f9;
+  --ui-border: #dbe3ef;
+  --ui-border-strong: #94a3b8;
   --ui-text: #0f172a;
   --ui-text-muted: #475569;
-  --ui-focus: #4f46e5;
+  --ui-accent: #4338ca;
+  --ui-accent-hover: #3730a3;
+  --ui-accent-soft: #eef2ff;
+  --ui-focus: #4338ca;
+  --ui-success: #047857;
+  --ui-warning: #92400e;
+  --ui-danger: #b91c1c;
   --ui-radius-sm: 0.625rem;
   --ui-radius-md: 0.875rem;
   --ui-radius-lg: 1rem;
@@ -19,14 +26,21 @@
 }
 
 .dark {
-  --ui-bg: #020617;
-  --ui-surface: #0f172a;
-  --ui-surface-soft: #111827;
+  color-scheme: dark;
+  --ui-bg: #080d1a;
+  --ui-surface: #111827;
+  --ui-surface-soft: #172033;
   --ui-border: #334155;
-  --ui-border-strong: #475569;
-  --ui-text: #e2e8f0;
-  --ui-text-muted: #94a3b8;
-  --ui-focus: #818cf8;
+  --ui-border-strong: #64748b;
+  --ui-text: #f1f5f9;
+  --ui-text-muted: #c0ccdc;
+  --ui-accent: #a5b4fc;
+  --ui-accent-hover: #c7d2fe;
+  --ui-accent-soft: #252b50;
+  --ui-focus: #a5b4fc;
+  --ui-success: #6ee7b7;
+  --ui-warning: #fcd34d;
+  --ui-danger: #fca5a5;
   --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
   --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
 }
