@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
-
 const FILES = ["index.html", "privacidad.html", "sitemap.xml", "ads.txt"];
 
 function resolvePython() {
@@ -15,23 +14,42 @@ function resolvePython() {
       execFileSync(cmd, ["--version"], { stdio: "ignore", timeout: 15000 });
       return cmd;
     } catch {
-      /* probar siguiente */
+      // Probar el siguiente ejecutable disponible.
     }
   }
   return null;
 }
 
 const python = resolvePython();
+if (!python) {
+  throw new Error(
+    "[projobs] Python 3 es obligatorio para generar el sitio. Se cancela el build para evitar publicar HTML desactualizado."
+  );
+}
 
-if (python) {
-  try {
-    console.log(`[projobs] Regenerando contenido con generator.py (${python})...`);
-    execFileSync(python, ["generator.py"], { cwd: root, stdio: "inherit", timeout: 120000 });
-  } catch {
-    console.warn("[projobs] Aviso: generator.py fallo o tardo demasiado. Se usaran los ficheros existentes.");
+console.log(`[projobs] Generando el sitio desde generator.py (${python})...`);
+execFileSync(python, ["generator.py"], {
+  cwd: root,
+  stdio: "inherit",
+  timeout: 120000,
+});
+
+const generatedIndex = path.join(root, "index.html");
+if (!existsSync(generatedIndex)) {
+  throw new Error("[projobs] generator.py no produjo index.html; build cancelado.");
+}
+
+const { readFile } = await import("node:fs/promises");
+const html = await readFile(generatedIndex, "utf8");
+for (const required of [
+  'class="pro-nav"',
+  'https://prosolutions.page',
+  'https://procv.prosolutions.page',
+  'data-i18n-aria="ecosystemNav"',
+]) {
+  if (!html.includes(required)) {
+    throw new Error(`[projobs] HTML generado sin elemento requerido: ${required}. Build cancelado.`);
   }
-} else {
-  console.log("[projobs] Aviso: python no disponible. Se usaran los ficheros HTML existentes.");
 }
 
 await rm(dist, { recursive: true, force: true });
@@ -46,9 +64,8 @@ for (const file of FILES) {
   }
 }
 
-if (copied === 0) {
-  console.error("[projobs] Error: no se encontro ningun fichero para publicar en dist/.");
-  process.exit(1);
+if (copied !== FILES.length) {
+  throw new Error(`[projobs] Se esperaban ${FILES.length} archivos publicables y se copiaron ${copied}; build cancelado.`);
 }
 
-console.log(`[projobs] Build OK -> dist/ (${copied} ficheros)`);
+console.log(`[projobs] Build verificado -> dist/ (${copied} archivos)`);
