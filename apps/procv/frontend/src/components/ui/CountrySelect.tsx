@@ -67,7 +67,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   const selected = options.find((option) => option.code === value.toUpperCase())
     || options.find((option) => normalize(option.label) === normalize(value))
     || options.find((option) => normalize(option.englishLabel) === normalize(value));
-  const visibleValue = open ? query : (selected?.label || value || "");
+  const visibleValue = open && query ? query : (selected?.label || value || "");
 
   const filtered = useMemo(() => {
     const term = normalize(query);
@@ -131,7 +131,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
         placeholder={placeholder || (locale.startsWith("es") ? "Buscar país…" : "Search country…")}
         disabled={disabled}
         required={required}
-        onFocus={(event) => { setQuery(selected?.label || ""); event.currentTarget.select(); setOpen(true); setActiveIndex(0); }}
+        onFocus={(event) => { setQuery(""); event.currentTarget.select(); setOpen(true); setActiveIndex(0); }}
         onChange={(event) => { setQuery(event.target.value); setOpen(true); setActiveIndex(0); }}
         onKeyDown={handleKeyDown}
         className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-9 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
