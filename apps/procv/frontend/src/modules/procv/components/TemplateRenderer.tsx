@@ -29,6 +29,7 @@ export interface CVData {
     address?: string;
     city?: string;
     country?: string;
+    nationality?: string;
     showAddress?: boolean;
     showCity?: boolean;
     showCountry?: boolean;
@@ -333,8 +334,21 @@ function formatRange(from?: string, to?: string) {
   return `${formatMonthYear(from)} – ${formatMonthYear(to)}`;
 }
 
+function formatCountry(value?: string) {
+  const country = String(value || "").trim();
+  if (!country) return "";
+  if (/^[A-Z]{2}$/.test(country)) {
+    try {
+      return new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(country) || country;
+    } catch {
+      // Keep the stored value if the runtime cannot format the region code.
+    }
+  }
+  return country;
+}
+
 function formatLocation(city?: string, country?: string) {
-  const parts = [city?.trim(), country?.trim()].filter(Boolean);
+  const parts = [city?.trim(), formatCountry(country)].filter(Boolean);
   return parts.join(", ");
 }
 
@@ -342,12 +356,22 @@ function formatPersonalLocation(personal: CVData["personal"]) {
   const parts = [
     personal?.showAddress === false ? "" : personal?.address,
     personal?.showCity === false ? "" : personal?.city,
-    personal?.showCountry === false ? "" : personal?.country,
+    personal?.showCountry === false ? "" : formatCountry(personal?.country),
   ]
     .map((part) => String(part || "").trim())
     .filter(Boolean);
 
   return parts.join(", ");
+}
+
+function renderNationality(personal: CVData["personal"]) {
+  const nationality = formatCountry(personal?.nationality);
+  if (!nationality) return null;
+  return (
+    <p className="mt-1 text-xs text-slate-500">
+      {i18n.t("editor.personal.fields.nationality", "Nationality")}: {nationality}
+    </p>
+  );
 }
 
 function formatBirthDate(value?: string) {
@@ -638,6 +662,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
         >
           {personal.role || "Tu título profesional"}
         </p>
+        {renderNationality(personal)}
         {personalLocation && (
           <p
             className="text-sm text-slate-600 ats-location"
@@ -649,7 +674,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
             {personal.showAddress !== false && personal.address && (personal.showCity !== false && personal.city || personal.showCountry !== false && personal.country) ? ", " : null}
             {personal.showCity !== false && personal.city ? <span itemProp="addressLocality">{personal.city}</span> : null}
             {personal.showCity !== false && personal.city && personal.showCountry !== false && personal.country ? ", " : null}
-            {personal.showCountry !== false && personal.country ? <span itemProp="addressCountry">{personal.country}</span> : null}
+            {personal.showCountry !== false && personal.country ? <span itemProp="addressCountry">{formatCountry(personal.country)}</span> : null}
           </p>
         )}
 
@@ -752,7 +777,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                         <span className="ats-location">
                           {" • "}{item.city}
                           {item.city && item.country && ", "}
-                          {item.country}
+                          {formatCountry(item.country)}
                         </span>
                       )}
                     </p>
@@ -960,6 +985,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         <div className="flex-1">
           <h1 className="text-3xl font-bold">{personal.name || "Tu Nombre"}</h1>
           <p className="text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+          {renderNationality(personal)}
         </div>
         {shouldRenderProfileImage(personal) && (
           <div className="flex-shrink-0">
@@ -1433,6 +1459,7 @@ function TemplateClassic({ data }: { data: CVData }) {
         )}
         <h1 className="text-4xl font-bold tracking-tight">{personal.name || "Tu Nombre"}</h1>
         <p className="mt-2 text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="mt-3 text-xs text-slate-500">
           {contacts.map((contact, idx) => (
             <span key={idx}>
@@ -1580,6 +1607,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             ) : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
+            {renderNationality(personal)}
             {personalLocation ? (
               <p className="text-sm" style={{ color: mutedColor }}>{personalLocation}</p>
             ) : null}
@@ -1773,6 +1801,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <div className="mt-4 flex flex-wrap gap-2 text-sm" style={{ color: metaColor }}>
           {personalLocation ? <span>{personalLocation}</span> : null}
           {emails[0]?.value ? <span>{emails[0].value}</span> : null}
@@ -1923,6 +1952,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
       <header className="pb-6 border-b border-slate-200">
         <h1 className="text-3xl font-bold text-slate-900">{personal.name || "Tu Nombre"}</h1>
         <p className="text-slate-600 mt-1">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="text-sm text-slate-500 mt-2">
           {personalLocation}
           {emails[0]?.value ? ` • ${emails[0].value}` : ""}
@@ -2060,6 +2090,7 @@ function TemplateCompact({ data }: { data: CVData }) {
       <header className="text-center pb-4 border-b border-slate-200">
         <h1 className="text-2xl font-bold">{personal.name || "Tu Nombre"}</h1>
         <p className="text-sm text-slate-600">{personal.role || "Tu título profesional"}</p>
+        {renderNationality(personal)}
         <p className="text-xs text-slate-500 mt-1">
           {personalLocation}
           {emails[0]?.value ? ` • ${emails[0].value}` : ""}
@@ -2205,6 +2236,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           <div className="flex-1 min-w-0">
             <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+            {renderNationality(personal)}
             {formatPersonalLocation(personal) ? (
               <p className={`${dense ? "mt-1" : "mt-2"} text-sm`} style={{ color: subtitleColor }}>{formatPersonalLocation(personal)}</p>
             ) : null}

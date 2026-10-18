@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import json
 import os
 import sys
+import unicodedata
 import urllib.request
 import urllib.parse
 from html import escape
@@ -148,15 +149,100 @@ SKILL_HINTS = [
 ]
 
 
+COUNTRY_ALIASES = {
+    # ISO 3166-1 alpha-2 codes are the canonical values for known countries.
+    "ar": "AR", "argentina": "AR",
+    "au": "AU", "australia": "AU",
+    "at": "AT", "austria": "AT",
+    "be": "BE", "belgium": "BE", "belgica": "BE",
+    "br": "BR", "brazil": "BR", "brasil": "BR",
+    "ca": "CA", "canada": "CA",
+    "cl": "CL", "chile": "CL",
+    "cn": "CN", "china": "CN",
+    "co": "CO", "colombia": "CO", "bogota": "CO",
+    "cr": "CR", "costa rica": "CR",
+    "cz": "CZ", "czechia": "CZ", "czech republic": "CZ",
+    "de": "DE", "germany": "DE", "alemania": "DE",
+    "dk": "DK", "denmark": "DK",
+    "ec": "EC", "ecuador": "EC",
+    "es": "ES", "spain": "ES", "espana": "ES",
+    "fi": "FI", "finland": "FI",
+    "fr": "FR", "france": "FR", "francia": "FR",
+    "gb": "GB", "uk": "GB", "u.k.": "GB", "united kingdom": "GB",
+    "great britain": "GB", "reino unido": "GB",
+    "gr": "GR", "greece": "GR",
+    "hk": "HK", "hong kong": "HK",
+    "hu": "HU", "hungary": "HU",
+    "id": "ID", "indonesia": "ID",
+    "ie": "IE", "ireland": "IE",
+    "il": "IL", "israel": "IL",
+    "in": "IN", "india": "IN",
+    "is": "IS", "iceland": "IS",
+    "it": "IT", "italy": "IT", "italia": "IT",
+    "jp": "JP", "japan": "JP",
+    "kr": "KR", "south korea": "KR", "korea": "KR",
+    "mx": "MX", "mexico": "MX",
+    "my": "MY", "malaysia": "MY",
+    "ng": "NG", "nigeria": "NG",
+    "nl": "NL", "netherlands": "NL", "the netherlands": "NL",
+    "no": "NO", "norway": "NO",
+    "nz": "NZ", "new zealand": "NZ",
+    "pa": "PA", "panama": "PA",
+    "pe": "PE", "peru": "PE",
+    "ph": "PH", "philippines": "PH",
+    "pk": "PK", "pakistan": "PK",
+    "pl": "PL", "poland": "PL",
+    "pt": "PT", "portugal": "PT",
+    "ro": "RO", "romania": "RO",
+    "sa": "SA", "saudi arabia": "SA",
+    "se": "SE", "sweden": "SE",
+    "sg": "SG", "singapore": "SG",
+    "th": "TH", "thailand": "TH",
+    "tr": "TR", "turkey": "TR", "turkiye": "TR",
+    "tw": "TW", "taiwan": "TW",
+    "ua": "UA", "ukraine": "UA",
+    "us": "US", "usa": "US", "u.s.": "US",
+    "united states": "US", "united states of america": "US",
+    "estados unidos": "US", "america": "US",
+    "uy": "UY", "uruguay": "UY",
+    "ve": "VE", "venezuela": "VE",
+    "vn": "VN", "vietnam": "VN",
+    "za": "ZA", "south africa": "ZA",
+    "remote": "REMOTE", "remoto": "REMOTE", "worldwide": "REMOTE",
+    "anywhere": "REMOTE", "global": "REMOTE", "remote worldwide": "REMOTE",
+    "latin america": "REMOTE", "latam": "REMOTE", "multiple locations": "REMOTE",
+}
+
+
+def _country_key(value: str) -> str:
+    return " ".join(
+        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").casefold().replace(".", "").split()
+    )
+
+
 def normalize_country(location: str | None) -> str:
-    if not location:
-        return "desconocido"
-    location = location.strip()
-    if "," in location:
-        parts = [p.strip() for p in location.split(",")]
-        if len(parts) >= 2:
-            return parts[-1]
-    return location
+    """Devuelve un código ISO estable para países reconocidos y un fallback limpio."""
+    if not location or not str(location).strip():
+        return "UNKNOWN"
+
+    raw = str(location).strip()
+    parts = [part.strip() for part in raw.split(",") if part.strip()]
+    # Prefer a recognized country at the end of a city/country location.
+    for candidate in reversed(parts or [raw]):
+        key = _country_key(candidate)
+        if key in COUNTRY_ALIASES:
+            return COUNTRY_ALIASES[key]
+        # Handles values such as "Remote - US" and "Remote (UK)".
+        suffix = candidate.rsplit("-", 1)[-1].strip(" ()")
+        suffix_key = _country_key(suffix)
+        if suffix_key in COUNTRY_ALIASES and COUNTRY_ALIASES[suffix_key] != "REMOTE":
+            return COUNTRY_ALIASES[suffix_key]
+
+    key = _country_key(raw)
+    if key in COUNTRY_ALIASES:
+        return COUNTRY_ALIASES[key]
+    # Keep unfamiliar locations useful, but normalize whitespace and casing.
+    return " ".join(parts[-1].split()).title() if parts else raw.title()
 
 
 def normalize_modality(remote_value: any) -> str:
@@ -490,9 +576,10 @@ def render_filters_html() -> str:
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="countryFilter" data-i18n="country">País</label>
-                <select id="countryFilter">
-                    <option value="" data-i18n="allCountries">Todos los países</option>
-                </select>
+                <input id="countryFilter" type="search" list="countryOptions" autocomplete="off"
+                       data-i18n-placeholder="allCountries" placeholder="Todos los países"
+                       aria-label="País" />
+                <datalist id="countryOptions"></datalist>
             </div>
             <div class="filter-group">
                 <label for="sectorFilter" data-i18n="sector">Sector</label>
@@ -636,7 +723,7 @@ CSS_STYLES = """
             display: block; font-size: 0.85rem; font-weight: 600;
             color: #475569; margin-bottom: 6px;
         }
-        .filter-group select {
+        .filter-group select, .filter-group input {
             width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1;
             border-radius: 6px; background: white; font-size: 0.9rem;
             color: #1e293b;
@@ -948,11 +1035,25 @@ function escapeHtml(text) {{
         const noResults = document.getElementById('noResults');
         const totalJobsEl = document.getElementById('totalJobs');
 
+        function countryLabel(value) {{
+            const country = String(value || '').trim();
+            if (country === 'REMOTE') return locale === 'es' ? 'Remoto / Global' : 'Remote / Global';
+            if (country === 'UNKNOWN') return locale === 'es' ? 'No especificado' : 'Unspecified';
+            if (/^[A-Z]{{2}}$/.test(country)) {{
+                try {{
+                    return new Intl.DisplayNames([locale || 'es'], {{ type: 'region' }}).of(country) || country;
+                }} catch {{ /* Keep the stable stored code if Intl is unavailable. */ }}
+            }}
+            return country;
+        }}
+
         function populateCountries() {{
             const selected = countryFilter.value;
-            const countries = [...new Set(allJobs.map(j => j.country))].sort();
-            countryFilter.innerHTML = `<option value="">${{copy().allCountries}}</option>` +
-                countries.map(c => `<option value="${{c}}">${{c}}</option>`).join('');
+            const countries = [...new Set(allJobs.map(j => j.country).filter(Boolean))]
+                .sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
+            document.getElementById('countryOptions').innerHTML = countries
+                .map(country => `<option value="${{escapeHtml(country)}}" label="${{escapeHtml(countryLabel(country))}}"></option>`)
+                .join('');
             countryFilter.value = selected;
         }}
         populateCountries();
@@ -982,7 +1083,7 @@ function escapeHtml(text) {{
                     <div class="job-info">
                         🏢 <strong>${{escapeHtml(job.company)}}</strong>
                         &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location)}}
-                        ${{job.country !== job.location ? `· ${{escapeHtml(job.country)}}` : ''}}
+                        ${{job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
                         ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
                         ${{job.experience && job.experience !== 'no-especificado'
                           ? `· ${{labelFor(job.experience)}}`
@@ -1001,7 +1102,12 @@ function escapeHtml(text) {{
         }}
 
         function applyFilters() {{
-            const country = countryFilter.value;
+            const countryInput = countryFilter.value.trim().toLocaleLowerCase();
+            const matchedCountry = allJobs.find(job =>
+                String(job.country || '') === countryFilter.value
+                || countryLabel(job.country).toLocaleLowerCase() === countryInput
+            );
+            const country = matchedCountry ? matchedCountry.country : countryFilter.value;
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
@@ -1030,7 +1136,7 @@ function escapeHtml(text) {{
                     job.title.toLowerCase().includes(search) ||
                     job.company.toLowerCase().includes(search) ||
                     job.location.toLowerCase().includes(search) ||
-                    job.country.toLowerCase().includes(search)
+                    countryLabel(job.country).toLowerCase().includes(search)
                 )) return false;
                 return true;
             }});
@@ -1055,6 +1161,7 @@ function escapeHtml(text) {{
             applyFilters();
         }}
 
+        countryFilter.addEventListener('input', applyFilters);
         countryFilter.addEventListener('change', applyFilters);
         sectorFilter.addEventListener('change', applyFilters);
         modalityFilter.addEventListener('change', applyFilters);

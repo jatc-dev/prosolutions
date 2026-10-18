@@ -637,7 +637,7 @@ export const useCVEditorStore = create<CVEditorState>()(
           try {
             const response = await api.get(`/cvs/${cvId}`);
             const result = response.data;
-            const cvData = normalizeLoadedCVData(result.cv);
+            const cvData = normalizeLoadedCVData(result.cv?.data ?? result.cv);
 
             set({
               cvData,
@@ -688,7 +688,7 @@ export const useCVEditorStore = create<CVEditorState>()(
             if (saved) {
               try {
                 const parsed = JSON.parse(saved);
-                const normalized = normalizeLoadedCVData(parsed);
+                const normalized = normalizeLoadedCVData(parsed?.data ?? parsed);
                 set({
                   cvData: normalized,
                   originalCvData: { ...normalized },

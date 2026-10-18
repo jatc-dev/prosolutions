@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CountrySelect } from "../../../../../components/ui/CountrySelect";
 import toast from 'react-hot-toast';
 import { PersonalData, ContactItem, PhoneItem, ProfileImageStyle, ValidationErrors } from "../../../../../shared/types";
 import {
@@ -101,7 +102,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   errors = {},
   isLoading = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(data.profileImage || null);
   const [birthDateValue, setBirthDateValue] = useState<string>(normalizeDateInputValue(data.birthDate));
@@ -311,6 +312,19 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           />
         </FormField>
       </div>
+
+      <FormField
+        label={t('editor.personal.fields.nationality')}
+        help={t('editor.personal.help.nationality')}
+      >
+        <CountrySelect
+          value={data.nationality || ''}
+          onChange={(countryCode) => updateField('nationality', countryCode)}
+          locale={i18n.language || 'es'}
+          placeholder={t('editor.personal.placeholders.nationality')}
+          aria-label={t('editor.personal.fields.nationality')}
+        />
+      </FormField>
 
       {/* Profile Image */}
       <FormField
@@ -655,10 +669,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             label={t('editor.personal.fields.country')}
             error={errors.country?.[0]}
           >
-            <InputField
+            <CountrySelect
               value={data.country || ''}
-              onChange={(value) => updateField('country', value)}
+              onChange={(countryCode) => updateField('country', countryCode)}
+              locale={i18n.language || 'es'}
               placeholder={t('editor.personal.placeholders.country')}
+              aria-label={t('editor.personal.fields.country')}
             />
           </FormField>
         </div>

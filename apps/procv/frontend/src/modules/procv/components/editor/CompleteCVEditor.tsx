@@ -255,6 +255,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
       address: cvData.personal?.address || '',
       city: cvData.personal?.city || '',
       country: cvData.personal?.country || '',
+      nationality: cvData.personal?.nationality || '',
       valueProposition: cvData.personal?.valueProposition,
       showValuePropositionTitle: cvData.personal?.showValuePropositionTitle !== false,
       summary: cvData.personal?.summary || '',

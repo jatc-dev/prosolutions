@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generator import canonical_url, deduplicate_jobs, normalize_job, normalize_published_date
+from generator import canonical_url, deduplicate_jobs, normalize_country, normalize_job, normalize_published_date
 
 
 def test_canonical_url_removes_tracking_case_insensitively():
@@ -58,6 +58,14 @@ def test_normalize_job_accepts_common_publication_date_fields_and_trims_values()
     assert result["company"] == "Example Co"
     assert result["url"] == "https://jobs.example/backend"
     assert result["date_published"] == "2026-10-17T12:00:00Z"
+
+
+def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
+    assert normalize_country("Bogotá, CO") == "CO"
+    assert normalize_country("New York, United States") == "US"
+    assert normalize_country("España") == "ES"
+    assert normalize_country("Remote - UK") == "GB"
+    assert normalize_country("Worldwide") == "REMOTE"
 
 
 def test_normalize_job_rejects_non_http_urls_after_trimming():
