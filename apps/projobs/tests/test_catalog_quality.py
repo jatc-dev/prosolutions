@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generator import canonical_url, deduplicate_jobs, normalize_job
+from generator import canonical_url, deduplicate_jobs, normalize_job, normalize_published_date
 
 
 def test_canonical_url_removes_tracking_case_insensitively():
@@ -63,6 +63,13 @@ def test_normalize_job_accepts_common_publication_date_fields_and_trims_values()
 def test_normalize_job_rejects_non_http_urls_after_trimming():
     job = {"title": "Engineer", "url": " javascript:alert(1) "}
     assert normalize_job(job, "TestSource") is None
+
+
+def test_numeric_publication_timestamp_is_normalized_to_iso_utc():
+    value = normalize_published_date({"created_at": 1792238400})
+    assert value.endswith("Z")
+    assert "T" in value
+    assert value != "1792238400"
 
 
 if __name__ == "__main__":
