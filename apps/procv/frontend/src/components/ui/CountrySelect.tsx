@@ -1,12 +1,13 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 
-type CountryOption = { code: string; label: string; englishLabel: string };
+type CountryOption = { code: string; label: string; englishLabel: string; spanishLabel: string };
 
 const NON_COUNTRY_REGIONS = new Set(["AC", "CP", "DG", "EA", "EU", "EZ", "IC", "QO", "UN", "XA", "XB"]);
 
 function getCountryOptions(locale: string): CountryOption[] {
   const localized = new Intl.DisplayNames([locale], { type: "region" });
   const english = new Intl.DisplayNames(["en"], { type: "region" });
+  const spanish = new Intl.DisplayNames(["es"], { type: "region" });
   const options: CountryOption[] = [];
 
   for (let first = 65; first <= 90; first += 1) {
@@ -15,8 +16,9 @@ function getCountryOptions(locale: string): CountryOption[] {
       if (NON_COUNTRY_REGIONS.has(code)) continue;
       const label = localized.of(code);
       const englishLabel = english.of(code);
-      if (!label || !englishLabel || label === code || englishLabel === code) continue;
-      options.push({ code, label, englishLabel });
+      const spanishLabel = spanish.of(code);
+      if (!label || !englishLabel || !spanishLabel || label === code || englishLabel === code || spanishLabel === code) continue;
+      options.push({ code, label, englishLabel, spanishLabel });
     }
   }
 
@@ -66,7 +68,8 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   const options = useMemo(() => getCountryOptions(locale), [locale]);
   const selected = options.find((option) => option.code === value.toUpperCase())
     || options.find((option) => normalize(option.label) === normalize(value))
-    || options.find((option) => normalize(option.englishLabel) === normalize(value));
+    || options.find((option) => normalize(option.englishLabel) === normalize(value))
+    || options.find((option) => normalize(option.spanishLabel) === normalize(value));
   const visibleValue = open && query ? query : (selected?.label || value || "");
 
   const filtered = useMemo(() => {
@@ -75,6 +78,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
     return options.filter((option) =>
       normalize(option.label).includes(term)
       || normalize(option.englishLabel).includes(term)
+      || normalize(option.spanishLabel).includes(term)
       || option.code.toLowerCase().includes(term)
     );
   }, [options, query]);
