@@ -8,7 +8,8 @@
     "build": "npm run build:ui && tsc && vite build",
     "build:ui": "npm --prefix ../../../packages/ui install --no-package-lock && npm --prefix ../../../packages/ui run build",
     "lint": "eslint src --ext ts,tsx",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:projobs-search": "node --test src/modules/projobs/lib/searchParams.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
