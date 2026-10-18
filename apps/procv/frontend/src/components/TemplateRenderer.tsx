@@ -337,8 +337,21 @@ function formatRange(from?: string, to?: string) {
   return `${formatMonthYear(from)} – ${formatMonthYear(to)}`;
 }
 
+function formatCountry(value?: string) {
+  const country = String(value || "").trim();
+  if (!country) return "";
+  if (/^[A-Z]{2}$/.test(country)) {
+    try {
+      return new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(country) || country;
+    } catch {
+      // Keep the stored value if the runtime cannot format the region code.
+    }
+  }
+  return country;
+}
+
 function formatLocation(city?: string, country?: string) {
-  const parts = [city?.trim(), country?.trim()].filter(Boolean);
+  const parts = [city?.trim(), formatCountry(country)].filter(Boolean);
   return parts.join(", ");
 }
 
@@ -346,7 +359,7 @@ function formatPersonalLocation(personal: CVData["personal"]) {
   const parts = [
     personal?.showAddress === false ? "" : personal?.address,
     personal?.showCity === false ? "" : personal?.city,
-    personal?.showCountry === false ? "" : personal?.country,
+    personal?.showCountry === false ? "" : formatCountry(personal?.country),
   ]
     .map((part) => String(part || "").trim())
     .filter(Boolean);
@@ -358,12 +371,7 @@ function renderNationality(personal: CVData["personal"], className = "text-xs op
   const code = String(personal?.nationality || "").trim();
   if (!code) return null;
 
-  let countryName = code;
-  try {
-    countryName = new Intl.DisplayNames([i18n.language || "es"], { type: "region" }).of(code) || code;
-  } catch {
-    // Preserve the stored value if the runtime cannot format this region code.
-  }
+  const countryName = formatCountry(code) || code;
 
   return (
     <p className={className}>
@@ -735,7 +743,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
             {personal.showAddress !== false && personal.address && (personal.showCity !== false && personal.city || personal.showCountry !== false && personal.country) ? ", " : null}
             {personal.showCity !== false && personal.city ? <span itemProp="addressLocality">{personal.city}</span> : null}
             {personal.showCity !== false && personal.city && personal.showCountry !== false && personal.country ? ", " : null}
-            {personal.showCountry !== false && personal.country ? <span itemProp="addressCountry">{personal.country}</span> : null}
+            {personal.showCountry !== false && personal.country ? <span itemProp="addressCountry">{formatCountry(personal.country)}</span> : null}
           </p>
         )}
 
@@ -838,7 +846,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                         <span className="ats-location">
                           {" • "}{item.city}
                           {item.city && item.country && ", "}
-                          {item.country}
+                          {formatCountry(item.country)}
                         </span>
                       )}
                     </p>
