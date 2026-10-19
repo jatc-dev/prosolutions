@@ -3,10 +3,7 @@ services:
     name: prosolutions-identity
     env: docker
     region: oregon
-    plan: starter
-    disk:
-      name: identity-data
-      size: 1GB
+    plan: free
     healthCheckPath: /health
     autoDeploy: true
     envVars:
