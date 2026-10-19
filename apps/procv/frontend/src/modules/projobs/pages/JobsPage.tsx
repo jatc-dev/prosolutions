@@ -1,5 +1,5 @@
-import React, { useCallback, useDeferredValue, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useDeferredValue, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BellRing, FileText, RefreshCw, Sparkles } from "lucide-react";
 import { PlatformLayout } from "../../../shared/components/PlatformLayout";
@@ -12,7 +12,7 @@ import { JobsToolbar } from "../components/JobsToolbar";
 import { JobsEmptyState, JobsErrorState, JobsSkeleton } from "../components/JobsStates";
 import { useJobs } from "../hooks/useJobs";
 import { collectTechnologies, filterJobs } from "../lib/derive";
-import { EMPTY_QUERY } from "../types";
+import { applyJobsQuery, clearJobsQuery, parseJobsQuery } from "../lib/searchParams.mjs";
 import type { JobsQuery } from "../types";
 
 /** Injects an in-feed ad unit every N results (keeps the board readable). */
@@ -29,7 +29,9 @@ export function JobsPage() {
   const { t, i18n } = useTranslation();
   const { jobs, source, updatedAt, loading, error, reload } = useJobs();
   const { can } = useEntitlements();
-  const [query, setQuery] = useState<JobsQuery>(EMPTY_QUERY);
+  // Keep filters in the URL so a search can be bookmarked or shared.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = useMemo<JobsQuery>(() => parseJobsQuery(searchParams), [searchParams]);
 
   // Keeps typing responsive on large boards by deferring the filtered list.
   const deferredQuery = useDeferredValue(query);
@@ -77,8 +79,13 @@ export function JobsPage() {
 
   useSeo(seo);
 
-  const handleChange = useCallback((next: JobsQuery) => setQuery(next), []);
-  const handleReset = useCallback(() => setQuery(EMPTY_QUERY), []);
+  const handleChange = useCallback((next: JobsQuery) => {
+    setSearchParams((current) => applyJobsQuery(current, next), { replace: true });
+  }, [setSearchParams]);
+
+  const handleReset = useCallback(() => {
+    setSearchParams((current) => clearJobsQuery(current), { replace: true });
+  }, [setSearchParams]);
 
   const canReceiveAlerts = can("projobs_job_alerts");
 
