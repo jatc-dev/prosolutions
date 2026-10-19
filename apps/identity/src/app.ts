@@ -16,6 +16,46 @@ import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://procv-platform.onrender.com',
+  'https://procv.prosolutions.page',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
+function parseAllowedOrigins(envValue: string[] | undefined): string[] {
+  if (!envValue || envValue.length === 0) {
+    return DEFAULT_ALLOWED_ORIGINS;
+  }
+  return envValue;
+}
+
+export function corsMiddleware(config: {
+  isProduction: boolean;
+  allowedOrigins: string[];
+}) {
+  const allowedOrigins = parseAllowedOrigins(config.allowedOrigins);
+
+  return cors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+      // In development, allow all origins; in production, restrict to allowed list
+      if (!config.isProduction || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+    maxAge: 86400, // 24 hours
+  });
+}
+
 export function createApp() {
   const app = express();
 
@@ -46,12 +86,7 @@ export function createApp() {
   );
   app.use(compression());
   app.use(cookieParser());
-  app.use(
-    cors({
-      origin: config.isProduction ? config.frontendUrl : true,
-      credentials: true,
-    }),
-  );
+  app.use(corsMiddleware(config));
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
 

@@ -49,6 +49,13 @@ function getDatabaseUrl(isProduction: boolean): string {
   return dbUrl;
 }
 
+const DEFAULT_ALLOWED_ORIGINS: string[] = [
+  'https://procv-platform.onrender.com',
+  'https://procv.prosolutions.page',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
 function getJwtSecret(): string {
   const secret = process.env.IDENTITY_JWT_SECRET;
   const isProduction = getEnvironment() === 'production';
@@ -85,4 +92,7 @@ export const config = {
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
   cookieSameSite: (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
+  allowedOrigins: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : DEFAULT_ALLOWED_ORIGINS,
 };
