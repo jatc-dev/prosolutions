@@ -33,8 +33,11 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
-ENV PORT=4001
-EXPOSE 4001
 
-# Ejecutar migraciones en segundo plano (no bloqueante) e iniciar el servidor inmediatamente
+# Render asigna el puerto dinámicamente vía variable de entorno PORT.
+# No establecer PORT aquí para permitir que Render lo asigne.
+EXPOSE 10000
+
+# Ejecutar migraciones en segundo plano (no bloqueante) e iniciar el servidor inmediatamente.
+# El servidor debe arrancar sin esperar a que la migración termine.
 CMD ["sh", "-c", "(npx prisma migrate deploy 2>&1 || true) & exec node dist/index.js"]
