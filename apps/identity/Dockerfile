@@ -1,28 +1,28 @@
-# --- ETAPA DE BUILD ---
+# --- ETAPA DE COMPILACIÓN ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copiar manifiestos e instalar todas las dependencias (incluyendo devDependencies)
+# Copiar manifiestos e instalar todas las dependencias
 COPY package*.json ./
 RUN npm ci
 
-# Copiar el esquema de Prisma, código fuente y configuración de TypeScript
+# Copiar archivos fuente del módulo
 COPY prisma ./prisma
 COPY src ./src
 COPY tsconfig.json ./
 
-# Generar cliente de Prisma y compilar TypeScript
+# Generar cliente Prisma y compilar TypeScript
 RUN npx prisma generate
 RUN npm run build
 
-# --- ETAPA DE PRODUCCIÓN ---
+# --- ETAPA DE EJECUCIÓN ---
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copiar Prisma y el código compilado desde la etapa builder
+# Copiar Prisma y dist compilado desde la etapa builder
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
@@ -30,7 +30,6 @@ COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
 ENV PORT=4001
-
 EXPOSE 4001
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
