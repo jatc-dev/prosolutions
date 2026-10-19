@@ -70,29 +70,16 @@ export function HomePage() {
       />
 
       <main className="relative py-12 px-4 md:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-16 lg:mb-20">
-            <BrandLogo variant="platform" className="mx-auto mb-6" />
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-800 dark:text-slate-100 mb-6 leading-tight">
-              {t("home.title")}
-            </h1>
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8">
-              {t("home.subtitle")}
-            </p>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Column: Platform Presentation & Modules */}
             <div className="space-y-8">
-              {/* Value Proposition */}
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                  {t("home.platformTitle")}
-                </h2>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {t("home.platformDescription")}
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 leading-tight">
+                  {t("home.title")}
+                </h1>
+                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {t("home.subtitle")}
                 </p>
               </div>
 
@@ -147,20 +134,6 @@ export function HomePage() {
                 <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
                   {t("home.moduleProjobs.description")}
                 </p>
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
-                    {t("home.moduleProjobs.feature1")}
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
-                    {t("home.moduleProjobs.feature2")}
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
-                    {t("home.moduleProjobs.feature3")}
-                  </li>
-                </ul>
                 <a
                   href="https://projobs.prosolutions.page"
                   target="_blank"
@@ -214,6 +187,15 @@ export function HomePage() {
                     required
                     error={loginError ? true : undefined}
                   />
+
+                  <div className="flex justify-end mb-2">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                    >
+                      {t("auth.forgotPassword")}
+                    </Link>
+                  </div>
 
                   <Button
                     type="submit"
