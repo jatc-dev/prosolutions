@@ -176,6 +176,27 @@
       "successMessage": "La contraseña se restableció correctamente."
     }
   },
+  "home": {
+    "title": "ProSolutions — Plataforma técnica para tu carrera profesional",
+    "subtitle": "Crea CVs optimizados para ATS, encuentra empleos tech remotos y gestiona tu perfil profesional en un solo ecosistema.",
+    "platformTitle": "Todo lo que necesitas para tu carrera tech",
+    "platformDescription": "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
+    "moduleProcv": {
+      "title": "ProCV Platform",
+      "badge": "Creador de CVs · Optimización ATS",
+      "description": "Creador y optimizador de currículums técnicos adaptados a filtros ATS, con exportación en PDF, JSON y XML. Diseña tu CV profesional en minutos.",
+      "action": "Crear CV sin registro"
+    },
+    "moduleProjobs": {
+      "title": "ProJobs Platform",
+      "badge": "Búsqueda de empleo tech · Remoto",
+      "description": "Buscador especializado en ofertas de empleo tecnológico remoto con filtros avanzados por stack técnico, seniority y modalidad.",
+      "feature1": "Búsqueda rápida por stack técnico",
+      "feature2": "Tarjetas con coincidencia ATS",
+      "feature3": "Filtros de búsqueda compartibles",
+      "action": "Ver empleos tech"
+    }
+  },
   "cv": {
     "title": "Título del CV",
     "template": "Plantilla",
