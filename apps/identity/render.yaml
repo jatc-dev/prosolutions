@@ -4,6 +4,8 @@ services:
     env: docker
     region: oregon
     plan: free
+    dockerfilePath: apps/identity/Dockerfile
+    dockerContext: .
     healthCheckPath: /health
     autoDeploy: true
     envVars:
