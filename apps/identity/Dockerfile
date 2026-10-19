@@ -10,6 +10,7 @@ RUN npm install
 COPY prisma ./prisma
 COPY src ./src
 COPY tsconfig.json ./
+COPY tsconfig.build.json ./
 
 # Generar cliente Prisma y compilar TypeScript
 RUN npx prisma generate
