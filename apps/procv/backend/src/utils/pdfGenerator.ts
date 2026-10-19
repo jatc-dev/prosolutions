@@ -45,8 +45,8 @@ export async function renderToPdf(html: string): Promise<Buffer> {
     // Force predictable print behavior across templates to reduce broken blocks and orphaned headings.
     await page.addStyleTag({
       content: `
-        @page { size: A4; margin: 12mm; }
-        html, body { width: 100%; }
+        @page { size: A4; margin: 5mm; }
+        html, body { width: 100%; margin: 0 !important; padding: 0 !important; }
         *, *::before, *::after {
           box-sizing: border-box;
           -webkit-print-color-adjust: exact;
@@ -169,7 +169,7 @@ export async function renderToPdf(html: string): Promise<Buffer> {
       format: 'A4',
       printBackground: true,
       preferCSSPageSize: true,
-      margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
+      margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
     });
     return pdfBuffer as Buffer;
   } finally {
