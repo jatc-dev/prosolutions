@@ -85,6 +85,38 @@ export const messages = {
       tagline: "Hecho para profesionales tech",
     },
     ads: { label: "Espacios publicitarios" },
+    auth: {
+      loginTitle: "Iniciar sesión",
+      loginSubtitle: "Accede a tu cuenta de ProSolutions",
+      email: "Correo electrónico",
+      password: "Contraseña",
+      emailPlaceholder: "Ingresa tu correo",
+      passwordPlaceholder: "Ingresa tu contraseña",
+      forgotPassword: "¿Olvidaste tu contraseña?",
+      signingIn: "Iniciando sesión...",
+      signIn: "Iniciar sesión",
+      noAccount: "¿No tienes cuenta?",
+      createAccount: "Regístrate",
+      loginError: "No se pudo iniciar sesión.",
+    },
+    home: {
+      title: "Tu carrera profesional, potenciada por un solo ecosistema",
+      subtitle: "Crea CVs optimizados para ATS, encuentra empleos tech remotos y gestiona tu perfil profesional en un solo ecosistema.",
+      platformTitle: "Todo lo que necesitas para tu carrera tech",
+      platformDescription: "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
+      moduleProcv: {
+        title: "ProCV Platform",
+        badge: "Creador de CVs · Optimización ATS",
+        description: "Crea y gestiona tu currículum optimizado para filtros ATS en minutos. Exporta en PDF, JSON y XML.",
+        action: "Crear CV sin registro"
+      },
+      moduleProjobs: {
+        title: "ProJobs Platform",
+        badge: "Búsqueda de empleo tech · Remoto",
+        description: "Encuentra empleo remoto en tecnología según tu stack técnico, seniority y preferencias.",
+        action: "Explorar vacantes"
+      }
+    }
   },
   en: {
     seo: {
@@ -168,6 +200,38 @@ export const messages = {
       tagline: "Made for tech professionals",
     },
     ads: { label: "Advertising spaces" },
+    auth: {
+      loginTitle: "Welcome back!",
+      loginSubtitle: "Sign in to your ProSolutions account",
+      email: "Email",
+      password: "Password",
+      emailPlaceholder: "Enter your email",
+      passwordPlaceholder: "Enter your password",
+      forgotPassword: "Forgot Password?",
+      signingIn: "Signing in...",
+      signIn: "Sign In",
+      noAccount: "Don't have an account?",
+      createAccount: "Register",
+      loginError: "Login failed.",
+    },
+    home: {
+      title: "Your professional career, powered by one ecosystem",
+      subtitle: "Create ATS-optimized CVs, find remote tech jobs, and manage your professional profile in one ecosystem.",
+      platformTitle: "Everything you need for your tech career",
+      platformDescription: "Access specialized tools to create CVs, find jobs, and manage your professional identity with a single login.",
+      moduleProcv: {
+        title: "ProCV Platform",
+        badge: "CV Builder · ATS Optimization",
+        description: "Create and manage your ATS-optimized CV in minutes. Export in PDF, JSON, and XML.",
+        action: "Create CV without registration"
+      },
+      moduleProjobs: {
+        title: "ProJobs Platform",
+        badge: "Remote Tech Jobs · Search",
+        description: "Find remote tech jobs based on your technical stack, seniority, and preferences.",
+        action: "Explore vacancies"
+      }
+    }
   },
 } as const;
 
