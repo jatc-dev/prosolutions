@@ -123,6 +123,15 @@
       "resendCooldown": "Resend in {{seconds}}s"
     },
     "redirecting": "Redirecting to dashboard...",
+    "authenticating": "Authenticating...",
+    "syncingProfile": "Syncing your professional profile...",
+    "identityTitle": "Sign in with your ProSolutions account",
+    "identitySubtitle": "Secure access to your CV, job applications, and professional profile",
+    "signInWithProIdentity": "Sign in with ProIdentity",
+    "loginFailed": "Login Failed",    "identityError": "Could not authenticate with ProIdentity. Please try again.",
+    "noToken": "No authentication token received.",
+    "tokenExchangeFailed": "Failed to exchange token. Please try logging in again.",
+    "retryLogin": "Try Logging In Again",
     "registerFeatures": {
       "quick": {
         "title": "Quick Registration",

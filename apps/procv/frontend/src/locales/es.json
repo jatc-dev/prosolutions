@@ -123,6 +123,15 @@
       "resendCooldown": "Reenviar en {{seconds}}s"
     },
     "redirecting": "Redirigiendo al panel...",
+    "authenticating": "Autenticando...",
+    "syncingProfile": "Sincronizando tu perfil profesional...",
+    "identityTitle": "Inicia sesión con tu cuenta de ProSolutions",
+    "identitySubtitle": "Acceso seguro a tu CV, postulaciones y perfil profesional",
+    "signInWithProIdentity": "Iniciar sesión con ProIdentity",
+    "loginFailed": "Inicio de Sesión Fallido",    "identityError": "No se pudo autenticar con ProIdentity. Por favor, intenta de nuevo.",
+    "noToken": "No se recibió ningún token de autenticación.",
+    "tokenExchangeFailed": "No se pudo intercambiar el token. Por favor, intenta iniciar sesión de nuevo.",
+    "retryLogin": "Intentar Iniciar Sesión de Nuevo",
     "registerFeatures": {
       "quick": {
         "title": "Registro rápido",
