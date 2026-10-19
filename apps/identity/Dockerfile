@@ -36,5 +36,5 @@ ENV NODE_ENV=production
 ENV PORT=4001
 EXPOSE 4001
 
-# Ejecutar migraciones (no bloqueante) y iniciar el servidor
-CMD ["sh", "-c", "npx prisma migrate deploy || true && node dist/index.js"]
+# Ejecutar migraciones (no bloqueante) e iniciar el servidor
+CMD ["sh", "-c", "npx prisma migrate deploy 2>&1 || true; exec node dist/index.js"]
