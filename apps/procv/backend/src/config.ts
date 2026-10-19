@@ -88,6 +88,7 @@ export const config = {
   jwtSecret: getJwtSecret(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  identityUrl: process.env.IDENTITY_URL || 'http://localhost:4001',
   frontendUrl: getFrontendUrl(getEnvironment() === 'production'),
   databaseUrl: getDatabaseUrl(getEnvironment() === 'production'),
   isProduction: getEnvironment() === 'production',

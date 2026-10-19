@@ -1,0 +1,54 @@
+services:
+  - type: web
+    name: prosolutions-identity
+    env: docker
+    region: oregon
+    plan: starter
+    disk:
+      name: identity-data
+      size: 1GB
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4001
+      - key: DATABASE_URL
+        sync: false
+      - key: IDENTITY_JWT_SECRET
+        sync: false
+      - key: IDENTITY_JWT_EXPIRES_IN
+        value: 15m
+      - key: IDENTITY_JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: IDENTITY_ISSUER
+        value: https://identity.prosolutions.page
+      - key: IDENTITY_AUDIENCE
+        value: prosolutions-api
+      - key: FRONTEND_URL
+        value: https://procv.prosolutions.page
+      - key: COOKIE_SECURE
+        value: true
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: COOKIE_DOMAIN
+        value: .prosolutions.page
+      - key: CORS_ORIGIN
+        value: https://procv.prosolutions.page,https://projobs.prosolutions.page
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: noreply@prosolutions.page
+      - key: DISABLE_RATE_LIMIT
+        value: false
+      - key: SESSION_IDLE_TIMEOUT_MINUTES
+        value: 30

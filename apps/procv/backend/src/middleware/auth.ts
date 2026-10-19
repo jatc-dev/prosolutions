@@ -6,6 +6,9 @@ import { REFRESH_TOKEN_COOKIE_NAME, clearRefreshTokenCookie } from '../utils/coo
 
 export interface AuthRequest extends Request {
   userId?: string;
+  email?: string;
+  role?: string;
+  modules?: string[];
 }
 
 const SESSION_IDLE_TIMEOUT =
@@ -24,8 +27,20 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    const payload = jwt.verify(token, config.jwtSecret) as { sub: string };
+    const payload = jwt.verify(token, config.jwtSecret, {
+      issuer: config.identityUrl,
+      audience: 'procv-api',
+    }) as {
+      sub: string;
+      email?: string;
+      role?: string;
+      modules?: string[];
+    };
+
     req.userId = payload.sub;
+    req.email = payload.email;
+    req.role = payload.role;
+    req.modules = payload.modules;
 
     const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
     if (refreshToken) {

@@ -960,6 +960,7 @@ def render_page(jobs: list[dict]) -> str:
     </footer>
 
     {JS_CODE}
+    <script src="auth.js"></script>
 </body>
 </html>'''
 

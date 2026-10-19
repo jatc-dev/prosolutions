@@ -7,6 +7,12 @@
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
-    "start": "node scripts/serve.mjs"
-  }
+    "start": "node scripts/serve.mjs",
+    "dev:server": "npm run dev --prefix server",
+    "build:server": "npm run build --prefix server",
+    "start:server": "npm run start --prefix server"
+  },
+  "workspaces": [
+    "server"
+  ]
 }

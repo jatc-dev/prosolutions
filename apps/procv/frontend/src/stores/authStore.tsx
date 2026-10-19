@@ -9,6 +9,7 @@ interface UserProfile {
   name?: string;
   role?: string;
   emailVerified?: boolean;
+  modules?: string[];
 }
 
 interface AuthState {
@@ -46,7 +47,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw error;
     }
   },
-
   register: async (email, password, name) => {
     // Registration never issues credentials anymore: the account must verify
     // its email first (login enforces it). Any tokens in the response are
@@ -61,7 +61,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = meResponse.data?.user ?? null;
     set({ user, accessToken, isAuthenticated: true });
   },
-
   logout: async () => {
     try {
       await api.post("/auth/logout");

@@ -26,6 +26,19 @@ const MIME = {
 createServer(async (req, res) => {
   try {
     const urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
+
+    // Rutas de API se delegan al servidor Express de autenticación (puerto 5176)
+    if (urlPath.startsWith("/api/")) {
+      res.writeHead(502, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          message:
+            "ProJobs auth server not running. Start with: npm run dev:server",
+        }),
+      );
+      return;
+    }
+
     let filePath = path.join(baseDir, urlPath === "/" ? "index.html" : urlPath);
 
     if (!filePath.startsWith(baseDir)) {
@@ -45,4 +58,5 @@ createServer(async (req, res) => {
   }
 }).listen(port, () => {
   console.log(`[projobs] Sirviendo ${path.relative(root, baseDir)} en http://localhost:${port}`);
+  console.log(`[projobs] API de autenticación en http://localhost:${Number(process.env.PORT ?? 5175) + 1}`);
 });

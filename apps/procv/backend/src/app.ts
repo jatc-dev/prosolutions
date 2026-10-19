@@ -9,7 +9,6 @@ import path from 'path';
 import { apiLimiter, cvLimiter, adminLimiter } from './middleware/rateLimiter';
 import { generateCSRFMid, validateCSRF, getCSRFToken } from './middleware/csrf';
 import { errorHandler } from './middleware/errorHandler';
-import { getVerificationCooldown } from './controllers/authController';
 import { monitorRequests, healthCheck } from './utils/monitoring';
 import { config } from './config';
 import authRoutes from './routes/auth';
@@ -99,6 +98,10 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
 
+  // Auth proxy routes to Identity (mounted BEFORE CSRF middleware so that
+  // ProCV's CSRF validation does not interfere with Identity's own CSRF flow).
+  app.use('/api/auth', authRoutes);
+
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);
   app.use(validateCSRF);
@@ -139,16 +142,10 @@ export function createApp() {
     }
   });
 
-  // Auth routes have per-route rate limiters defined in routes/auth.ts
-  app.use('/api/auth', authRoutes);
+  // Auth routes are proxied to Identity (mounted above CSRF middleware).
   app.use('/api/admin', adminLimiter, adminRoutes);
   app.use('/api/cvs', cvLimiter, cvRoutes);
   app.use(apiLimiter); // General API limiter for all remaining routes
-
-  // Remaining resend cooldown (seconds) for a verification email. Server-side
-  // source of truth so the verification screen can start the countdown for any
-  // client, not only the one that triggered the send.
-  app.get('/api/auth/verification-cooldown', getVerificationCooldown);
 
   // JSON 404 for unmatched API routes (never leak the HTML fallback).
   app.use('/api', (_req, res) => {

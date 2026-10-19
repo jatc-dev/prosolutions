@@ -1,11 +1,15 @@
-# Levanta backend y frontend en ventanas separadas (Windows PowerShell)
+# Levanta backend y frontend de ProCV en ventanas separadas (Windows PowerShell)
 # Ejecútalo desde la raíz del proyecto:
 #   .\start-all.ps1
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$backendEnvPath = Join-Path $root "backend\.env"
-$frontendEnvPath = Join-Path $root "frontend\.env.local"
+# Rutas actualizadas según la estructura del monorepo (apps/procv)
+$backendDir = Join-Path $root "apps\procv\backend"
+$frontendDir = Join-Path $root "apps\procv\frontend"
+
+$backendEnvPath = Join-Path $backendDir ".env"
+$frontendEnvPath = Join-Path $frontendDir ".env.local"
 
 function Test-PostgresPort {
 	$dbCheck = Test-NetConnection -ComputerName localhost -Port 5432 -WarningAction SilentlyContinue
@@ -43,7 +47,8 @@ function Start-PostgresDockerCompose {
 
 	try {
 		Write-Host "[INFO] Intentando iniciar PostgreSQL con Docker Compose..." -ForegroundColor Yellow
-		docker compose -f (Join-Path $root 'docker-compose.yml') up -d db | Out-Null
+		# El docker-compose.yml está en apps/procv según tu árbol de archivos
+		docker compose -f (Join-Path $root 'apps\procv\docker-compose.yml') up -d db | Out-Null
 		Start-Sleep -Seconds 4
 		return (Test-PostgresPort)
 	} catch {
@@ -58,12 +63,12 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 }
 
 if (-not (Test-Path $backendEnvPath)) {
-	Write-Host "[ERROR] Falta backend/.env. Crea el archivo antes de iniciar servicios." -ForegroundColor Red
+	Write-Host "[ERROR] Falta el archivo .env en: $backendEnvPath" -ForegroundColor Red
 	exit 1
 }
 
 if (-not (Test-Path $frontendEnvPath)) {
-	Write-Host "[ERROR] Falta frontend/.env.local. Crea el archivo antes de iniciar servicios." -ForegroundColor Red
+	Write-Host "[ERROR] Falta el archivo .env.local en: $frontendEnvPath" -ForegroundColor Red
 	exit 1
 }
 
@@ -94,6 +99,6 @@ if ($usesLocalPostgres) {
 	}
 }
 
-Write-Host "[OK] Iniciando backend y frontend en ventanas separadas..." -ForegroundColor Green
-Start-Process -WorkingDirectory "$root\backend" -FilePath "powershell" -ArgumentList "-NoExit","-Command","npm run dev"
-Start-Process -WorkingDirectory "$root\frontend" -FilePath "powershell" -ArgumentList "-NoExit","-Command","npm run dev"
+Write-Host "[OK] Iniciando backend y frontend de ProCV en ventanas separadas..." -ForegroundColor Green
+Start-Process -WorkingDirectory $backendDir -FilePath "powershell" -ArgumentList "-NoExit","-Command","npm run dev"
+Start-Process -WorkingDirectory $frontendDir -FilePath "powershell" -ArgumentList "-NoExit","-Command","npm run dev"

@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Module {
+  PROCV
+  PROJOBS
+  PROSKILLS
+  PROCAREER
+  PROINTERVIEW
+  PRORECRUIT
+}
+
+model User {
+  id                        String              @id @default(cuid())
+  email                     String              @unique
+  name                      String?
+  passwordHash              String
+  role                      String              @default("user")
+  lastLoginAt               DateTime?
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  emailVerified             Boolean             @default(false)
+  isActive                  Boolean             @default(true)
+
+  sessions                  Session[]
+  passwordResetTokens       PasswordResetToken[]
+  emailVerificationTokens   EmailVerificationToken[]
+  professionalProfile       ProfessionalProfile?
+  moduleAccess              ModuleAccess[]
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  refreshToken     String   @unique
+  jti              String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  revokedAt        DateTime?
+  lastAccessedAt   DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+  @@index([jti])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ProfessionalProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  headline        String?
+  summary         String?
+  location        String?
+  avatarUrl       String?
+  skills          Json     @default("[]")
+  experience      Json     @default("[]")
+  education       Json     @default("[]")
+  links           Json     @default("{}")
+  phone           String?
+  birthDate       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ModuleAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  module    Module
+  grantedAt DateTime @default(now())
+  expiresAt DateTime?
+  active    Boolean  @default(true)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([module])
+  @@unique([userId, module])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  adminId    String?
+  adminEmail String?
+  action     String
+  resource   String
+  resourceId String?
+  details    Json?    @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+}

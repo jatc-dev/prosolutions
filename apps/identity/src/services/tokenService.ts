@@ -1,0 +1,176 @@
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { config } from '../config';
+import prisma from '../prismaClient';
+import { logger } from '../utils/logger';
+
+export interface IdentityTokenPayload {  sub: string;
+  email?: string;
+  role?: string;
+  modules?: string[];
+  iss?: string;
+  aud?: string;
+  iat?: number;
+  exp?: number;
+  jti?: string;
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+const ACCESS_TOKEN_OPTIONS: jwt.SignOptions = {
+  issuer: config.issuer,
+  audience: config.audience,
+  expiresIn: config.jwtExpiresIn as any,
+};
+
+const REFRESH_TOKEN_OPTIONS: jwt.SignOptions = {
+  issuer: config.issuer,
+  audience: config.audience,
+  expiresIn: config.jwtRefreshExpiresIn as any,
+};
+
+export function signAccessToken(payload: {
+  sub: string;
+  email?: string;
+  role?: string;
+  modules?: string[];
+}): string {
+  return jwt.sign(
+    {
+      sub: payload.sub,
+      email: payload.email,
+      role: payload.role,
+      modules: payload.modules,
+    },
+    config.jwtSecret,
+    { ...ACCESS_TOKEN_OPTIONS, subject: payload.sub },
+  );
+}
+
+export function signRefreshToken(payload: { sub: string; jti: string }): string {
+  return jwt.sign(
+    { sub: payload.sub, jti: payload.jti },
+    config.jwtSecret,
+    { ...REFRESH_TOKEN_OPTIONS, subject: payload.sub, jwtid: payload.jti },
+  );
+}
+
+export function verifyAccessToken(token: string): IdentityTokenPayload {
+  return jwt.verify(token, config.jwtSecret, {
+    issuer: config.issuer,
+    audience: config.audience,
+  }) as IdentityTokenPayload;
+}
+
+export function verifyRefreshToken(token: string): { sub: string; jti: string } {
+  return jwt.verify(token, config.jwtSecret, {
+    issuer: config.issuer,
+    audience: config.audience,
+  }) as { sub: string; jti: string };
+}
+
+export async function createTokenPair(user: {
+  id: string;
+  email: string;
+  role: string;
+  modules?: string[];
+}): Promise<TokenPair> {
+  const accessToken = signAccessToken({
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+    modules: user.modules,
+  });
+
+  const jti = crypto.randomUUID();
+  const refreshToken = signRefreshToken({ sub: user.id, jti });
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken,
+      jti,
+      expiresAt,
+      lastAccessedAt: new Date(),
+    },
+  });
+
+  return { accessToken, refreshToken };
+}
+
+export async function revokeSession(refreshToken: string): Promise<void> {
+  await prisma.session.updateMany({
+    where: { refreshToken, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+}
+
+export async function rotateSession(
+  oldRefreshToken: string,
+  userId: string,
+): Promise<{ accessToken: string; refreshToken: string }> {
+  await prisma.session.update({
+    where: { id: oldRefreshToken },
+    data: { revokedAt: new Date() },
+  });
+
+  const jti = crypto.randomUUID();
+  const refreshToken = signRefreshToken({ sub: userId, jti });
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await prisma.session.create({
+    data: {
+      userId,
+      refreshToken,
+      jti,
+      expiresAt,
+      lastAccessedAt: new Date(),
+    },
+  });
+
+  const accessToken = signAccessToken({ sub: userId });
+
+  return { accessToken, refreshToken };
+}
+
+export async function validateSession(
+  refreshToken: string,
+): Promise<{ valid: boolean; userId?: string; reason?: string }> {
+  try {
+    const session = await prisma.session.findUnique({ where: { refreshToken } });
+
+    if (!session) {
+      return { valid: false, reason: 'session_not_found' };
+    }
+
+    if (session.revokedAt) {
+      return { valid: false, reason: 'session_revoked' };
+    }
+
+    if (session.expiresAt < new Date()) {
+      return { valid: false, reason: 'session_expired' };
+    }
+
+    return { valid: true, userId: session.userId };
+  } catch (error) {
+    logger.error('Session validation failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { valid: false, reason: 'validation_error' };
+  }
+}
+
+export async function updateLastAccessed(sessionId: string): Promise<void> {
+  await prisma.session.update({
+    where: { id: sessionId },
+    data: { lastAccessedAt: new Date() },
+  });
+}
+
+export async function deleteAllSessions(userId: string): Promise<void> {
+  await prisma.session.deleteMany({ where: { userId } });
+}
