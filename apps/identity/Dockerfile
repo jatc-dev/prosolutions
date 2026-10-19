@@ -2,9 +2,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copiar manifiestos e instalar todas las dependencias
+# Copiar manifiestos e instalar dependencias
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copiar archivos fuente del módulo
 COPY prisma ./prisma
@@ -20,7 +20,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copiar Prisma y dist compilado desde la etapa builder
 COPY --from=builder /app/prisma ./prisma
