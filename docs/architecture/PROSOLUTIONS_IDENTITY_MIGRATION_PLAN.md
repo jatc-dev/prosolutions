@@ -146,3 +146,24 @@ New modules must use the identity contract from day one and must not create loca
 - No global sharing of CV or application data by default.
 - No recruiter/admin permissions granted merely because a user is authenticated.
 - No implementation of every future module before the identity foundation is stable.
+
+## Phase 0 read-only audit — verified repository findings (2026-10-18)
+
+The following findings were verified against the current `main` source and are recorded here as implementation inputs, not as proof of production configuration:
+
+- **Core is not an identity provider.** Its current role is portal/navigation. The repository does not yet implement a shared OIDC issuer or a Core-to-ProCV authorization-code + PKCE flow.
+- **ProCV owns the current credential flow.** The backend exposes registration, login, refresh, logout, profile, email verification, and password-recovery routes. It verifies passwords with bcrypt and signs access/refresh JWTs using the existing JWT configuration.
+- **Browser access-token persistence is legacy local storage.** `apps/procv/frontend/src/stores/authStore.tsx` stores the access token under `procv_auth` in localStorage and sets it on the API client. The backend also uses a refresh-token cookie. Do not copy these tokens between apps or put them in redirect URLs.
+- **Session enforcement needs an explicit security test before migration.** In `apps/procv/backend/src/middleware/auth.ts`, the database-session lookup and idle-timeout/revocation checks run only when the refresh-token cookie is present; a valid bearer access token without that cookie proceeds past JWT verification. Confirm whether this is intentional for supported clients, then add tests for missing, expired, revoked, and idle sessions before changing the behavior.
+- **Session bootstrap is coupled to local storage.** The frontend's `AuthProvider` only attempts refresh when a `procv_auth` value exists. Test a browser with a valid refresh cookie but no local-storage entry before deciding whether the flow should change.
+- **The public login navigation is not SSO.** The shared URL helper points to ProCV's own `/login` route. Sending Core buttons there improves navigation but does not establish a shared session, central account lifecycle, or cross-module logout.
+- **Email delivery remains an independent onboarding blocker.** Repository code sends verification email asynchronously; operational sender-domain alignment must be verified separately and must not be “fixed” by bypassing email verification.
+
+### Phase 0 exit criteria still outstanding
+
+1. Add automated security tests for the session cases above and document the intended bearer-client contract.
+2. Inspect cookie attributes, CORS/CSRF behavior, JWT issuer/audience claims, redirect handling, and every token consumer across apps.
+3. Compare a managed OIDC provider with evolving the existing service using a non-production proof of concept; document account/password migration feasibility and rollback.
+4. Only after those gates pass, implement a provider-backed OIDC flow behind a feature flag. Preserve existing ProCV login until parity and rollback are proven.
+
+**No authentication code, production secrets, database records, or deployment configuration were changed by this audit note.**
