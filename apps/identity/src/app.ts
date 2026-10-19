@@ -60,10 +60,10 @@ export function createApp() {
   app.use(validateCSRF);
 
   app.get('/', (_req, res) =>
-    res.json({ status: 'ok', service: 'prosolutions-identity' }),
+    res.json({ status: 'ok', service: 'proidentity' }),
   );
   app.get('/health', (_req, res) =>
-    res.json({ status: 'ok', service: 'prosolutions-identity', timestamp: new Date().toISOString() }),
+    res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
   );
 
   app.use('/api/auth', authRoutes);

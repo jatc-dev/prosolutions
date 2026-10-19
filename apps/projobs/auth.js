@@ -1,5 +1,5 @@
 /**
- * ProSolutions Identity — ProJobs client auth
+ * ProIdentity — ProJobs client auth
  * Valida el access token JWT emitido por apps/identity y gestiona
  * el acceso a secciones personales (postulaciones, empleos guardados).
  */

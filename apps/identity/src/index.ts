@@ -11,7 +11,7 @@ let server: import('http').Server;
 
 async function bootstrap() {
   server = app.listen(port, () => {
-    logger.info(`🚀 ProSolutions Identity listening on http://localhost:${port}`);
+    logger.info(`🚀 ProIdentity listening on http://localhost:${port}`);
     logger.info(`   Issuer: ${config.issuer}`);
     logger.info(`   Audience: ${config.audience}`);
     logger.info(`   Environment: ${config.isProduction ? 'production' : 'development'}`);

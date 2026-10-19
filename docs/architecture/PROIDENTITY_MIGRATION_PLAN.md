@@ -1,4 +1,4 @@
-# ProSolutions Identity — Architecture and Migration Plan
+# ProIdentity — Architecture and Migration Plan
 
 **Status:** implementation RFC / staged migration plan  
 **Owner:** ProSolutions platform  
@@ -13,7 +13,7 @@ The current implementation is a useful starting point: ProCV already has a `User
 
 ## Target architecture
 
-1. **ProSolutions Identity** — the authoritative account, credential, email-verification, recovery, session, and token issuer.
+1. **ProIdentity** — the authoritative account, credential, email-verification, recovery, session, and token issuer.
 2. **Account/Profile** — stable user identifier, display name, locale and account preferences. Only store shared profile attributes that genuinely need to be common.
 3. **Module APIs** — each API validates issuer, audience, expiry, and scopes/roles; it authorizes access to its own records. No module trusts a user ID supplied only by the browser.
 4. **Module data** — CVs, applications, learning progress, interview sessions, and company/recruitment records remain logically separated with ownership checks and least-privilege access.
@@ -35,7 +35,7 @@ These points must be revalidated against the branch and live configuration befor
 
 Compare two options in a short proof of concept before selecting one:
 
-### A. Evolve the existing ProCV auth service into ProSolutions Identity
+### A. Evolve the existing ProCV auth service into ProIdentity
 - Advantages: retain current account records and credential/session semantics; fewer moving parts initially.
 - Risks: the team must implement and maintain secure OIDC/OAuth behavior, key rotation, discovery/JWKS, client registration, consent/redirect validation, and protocol security correctly. Do not treat a home-grown JWT endpoint as OIDC.
 

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 /**
- * Migra usuarios de la base de datos de ProCV a ProSolutions Identity.
+ * Migra usuarios de la base de datos de ProCV a ProIdentity.
  *
  * Requisitos de entorno:
  *   DATABASE_URL            -> base de datos de Identity (destino)

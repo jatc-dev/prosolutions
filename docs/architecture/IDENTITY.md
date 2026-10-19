@@ -1,4 +1,4 @@
-# ProSolutions Identity — Guía de Integración y Escalabilidad
+# ProIdentity — Guía de Integración y Escalabilidad
 
 **Estado:** activo  
 **Propietario:** plataforma ProSolutions  
@@ -10,7 +10,7 @@
 
 ## 1. Visión general
 
-**ProSolutions Identity** es el servicio centralizado de autenticación, perfil profesional y control de accesos para todo el ecosistema ProSolutions. Cada módulo (`procv`, `projobs`, y futuros módulos) delega la emisión y validación de tokens a Identity, manteniendo sus datos de negocio aislados.
+**ProIdentity** es el servicio centralizado de autenticación, perfil profesional y control de accesos para todo el ecosistema ProSolutions. Cada módulo (`procv`, `projobs`, y futuros módulos) delega la emisión y validación de tokens a Identity, manteniendo sus datos de negocio aislados.
 
 Principios clave:
 
@@ -303,4 +303,4 @@ document.querySelectorAll('[data-auth-required]').forEach(el => {
 });
 ```
 
-Con esta guía, cualquier nuevo módulo del ecosistema ProSolutions puede integrarse de forma segura y consistente con ProSolutions Identity.
+Con esta guía, cualquier nuevo módulo del ecosistema ProSolutions puede integrarse de forma segura y consistente con ProIdentity.

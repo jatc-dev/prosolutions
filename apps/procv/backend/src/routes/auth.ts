@@ -4,7 +4,7 @@ import { config } from '../config';
 const router = Router();
 
 /**
- * Proxy temporal hacia ProSolutions Identity.
+ * Proxy temporal hacia ProIdentity.
  * Todas las peticiones a /api/auth/* se reenvían al servicio de Identity.
  * Esto permite una transición progresiva sin romper el frontend de ProCV.
  */
