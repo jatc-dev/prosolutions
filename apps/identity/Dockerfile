@@ -20,6 +20,9 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Instalar OpenSSL requerido por Prisma Client engine
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
 RUN npm install --omit=dev
 
@@ -33,4 +36,5 @@ ENV NODE_ENV=production
 ENV PORT=4001
 EXPOSE 4001
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Ejecutar migraciones (no bloqueante) y iniciar el servidor
+CMD ["sh", "-c", "npx prisma migrate deploy || true && node dist/index.js"]
