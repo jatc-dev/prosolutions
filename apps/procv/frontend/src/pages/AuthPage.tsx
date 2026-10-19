@@ -1,26 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
 import { useAuth } from "../stores/authStore";
 import { useCVEditorStore } from "../stores/cvEditorStore";
-import { useFormValidation, validateLogin, validateRegister } from "../hooks/useFormValidation";
-import { Input, ProHeader } from "@prosolutions/ui";
+import { ProHeader } from "@prosolutions/ui";
 import { Button } from "@prosolutions/ui";
-import { PasswordStrengthMeter } from "../components/PasswordStrengthMeter";
 import { useLandingFeatures } from "../hooks/useLandingFeatures";
 import { LandingFeaturesGrid } from "../components/LandingFeaturesGrid";
 import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
-import { VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../services/api";
+
+const IDENTITY_URL =
+  import.meta.env.VITE_IDENTITY_URL ||
+  "https://proidentity.onrender.com/login";
 
 export function AuthPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
-  const { isAuthenticated, login, register } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { setIsGuest } = useCVEditorStore();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const { features: apiFeatures, featuresLoading, featuresError, reloadFeatures } = useLandingFeatures();
 
   const fallbackFeatures = [
@@ -43,93 +42,9 @@ export function AuthPage() {
     navigate("/editor");
   };
 
-  const switchAuthMode = (mode: "login" | "register") => {
-    setIsLoginMode(mode === "login");
-    setSubmitError(null);
-    if (mode === "register") {
-      trackLandingFunnelEvent("auth_mode_switch", { mode: "register" });
-    }
-  };
-
-  // Login form validation
-  const loginForm = useFormValidation(
-    { email: "", password: "" },
-    validateLogin
-  );
-
-  // Register form validation
-  const registerForm = useFormValidation(
-    { email: "", password: "", name: "" },
-    validateRegister
-  );
-
-  const currentForm = isLoginMode ? loginForm : registerForm;
-  const {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    validateForm,
-    isSubmitting: formIsSubmitting
-  } = currentForm;
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setSubmitError(null);
-
-    if (validateForm()) {
-      const mode = isLoginMode ? "login" : "register";
-      trackLandingFunnelEvent("auth_submit_attempt", { mode });
-      try {
-        if (isLoginMode) {
-          const result = await login(values.email, values.password);
-          if (result?.requiresVerification) {
-            navigate(`/verify-email?email=${encodeURIComponent(values.email)}`);
-            return;
-          }
-          trackLandingFunnelEvent("auth_submit_success", { mode: "login" });
-          navigate("/dashboard");
-        } else {
-          await register(values.email, values.password, values.name);
-          trackLandingFunnelEvent("auth_submit_success", { mode: "register" });
-          // Registration just sent a verification email: seed the resend
-          // cooldown so the verification screen shows the countdown on arrival.
-          try {
-            localStorage.setItem(
-              "procv_verification_resend_until",
-              String(Date.now() + VERIFICATION_RESEND_COOLDOWN_SECONDS * 1000)
-            );
-          } catch {
-            // Storage unavailable: the server still enforces the cooldown.
-          }
-          navigate(`/verify-email?email=${encodeURIComponent(values.email)}`);
-        }
-      } catch (err: any) {
-        if (err?.response?.status === 429) {
-          // Show the real remaining wait instead of a fixed message.
-          const retryAfter = Number(err?.response?.data?.retryAfterSeconds);
-          const minutes =
-            Number.isFinite(retryAfter) && retryAfter > 0 ? Math.ceil(retryAfter / 60) : 15;
-          setSubmitError(t('auth.rateLimited', { minutes }));
-        } else {
-          const apiError = err?.response?.data?.message ||
-            (isLoginMode ? t('auth.loginError') : t('auth.registerError'));
-          setSubmitError(apiError);
-        }
-      }
-    }
-  };
-
-  const switchMode = () => {
-    setIsLoginMode(!isLoginMode);
-    if (isLoginMode) {
-      trackLandingFunnelEvent("auth_mode_switch", { mode: "register" });
-    }
-    setSubmitError(null);
-    // Reset forms when switching
-    loginForm.resetForm();
-    registerForm.resetForm();
+  const handleIdentityLogin = () => {
+    const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
+    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
   };
 
   if (isAuthenticated) {
@@ -178,7 +93,7 @@ export function AuthPage() {
               </p>
             </div>
 
-            {/* Two Column Layout: Features Left, Form Right */}
+            {/* Two Column Layout: Features Left, Identity Login Right */}
             <div className="grid lg:grid-cols-[1fr,400px] gap-12 items-start">
               {/* Features - Left Side */}
               <div className="space-y-8">
@@ -198,135 +113,34 @@ export function AuthPage() {
                 />
               </div>
 
-              {/* Auth Form - Right Side */}
-              <div id="auth-form" className="lg:sticky lg:top-8">
+              {/* Identity Login - Right Side */}
+              <div id="identity-login" className="lg:sticky lg:top-8">
                 <div className="rounded-3xl border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-black/30">
-                  {/* Mode Toggle */}
-                  <div className="mb-6 flex rounded-full bg-slate-100 p-1 dark:bg-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => switchAuthMode("login")}
-                      aria-pressed={isLoginMode}
-                      aria-controls="auth-mode-panel"
-                      className={`flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-all duration-200 ${
-                        isLoginMode
-                          ? 'bg-white text-brand-600 shadow-md dark:bg-slate-700 dark:text-brand-300'
-                          : 'text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100'
-                      }`}
-                    >
-                      {t('auth.login')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => switchAuthMode("register")}
-                      aria-pressed={!isLoginMode}
-                      aria-controls="auth-mode-panel"
-                      className={`flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-all duration-200 ${
-                        !isLoginMode
-                          ? 'bg-white text-brand-600 shadow-md dark:bg-slate-700 dark:text-brand-300'
-                          : 'text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100'
-                      }`}
-                    >
-                      {t('auth.register')}
-                    </button>
-                  </div>
-
-                  {/* Form Title */}
-                  <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                      {isLoginMode ? t('auth.welcomeBack') : t('auth.createAccount')}
+                  {/* Identity Login Card */}
+                  <div className="text-center mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4 dark:bg-brand-500">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                      {t('auth.identityTitle')}
                     </h2>
-                    <p className="mt-1 text-slate-600 dark:text-slate-300">
-                      {isLoginMode ? t('auth.loginSubtitle') : t('auth.registerSubtitle')}
+                    <p className="text-slate-600 dark:text-slate-300">
+                      {t('auth.identitySubtitle')}
                     </p>
                   </div>
 
-                  {submitError && (
-                    <div className="ui-error-state mb-4" role="alert" aria-live="assertive">
-                      <p>{submitError}</p>
-                    </div>
-                  )}
+                  <Button
+                    type="button"
+                    onClick={handleIdentityLogin}
+                    size="lg"
+                    className="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    {t('auth.signInWithProIdentity')}
+                  </Button>
 
-                  {/* Form */}
-                  <form id="auth-mode-panel" onSubmit={handleSubmit} className="space-y-4">
-                    {!isLoginMode && (
-                      <Input
-                        label={t('auth.name')}
-                        type="text"
-                        value={values.name}
-                        onChange={(e) => handleChange("name", e.target.value)}
-                        onBlur={(e) => handleBlur("name")}
-                        error={touched.name ? errors.name : undefined}
-                        placeholder={t('auth.namePlaceholder')}
-                        required
-                      />
-                    )}
-
-                    <Input
-                      label={t('auth.email')}
-                      type="email"
-                      value={values.email}
-                      onChange={(e) => handleChange("email", e.target.value)}
-                      onBlur={(e) => handleBlur("email")}
-                      error={touched.email ? errors.email : undefined}
-                      placeholder={t('auth.emailPlaceholder')}
-                      required
-                    />
-
-                    <Input
-                      label={t('auth.password')}
-                      type="password"
-                      value={values.password}
-                      onChange={(e) => handleChange("password", e.target.value)}
-                      onBlur={(e) => handleBlur("password")}
-                      error={touched.password ? errors.password : undefined}
-                      placeholder={t('auth.passwordPlaceholder')}
-                      required
-                    />
-
-                    {!isLoginMode && (
-                      <PasswordStrengthMeter password={values.password} />
-                    )}
-
-                    {isLoginMode && (
-                      <div className="text-right">
-                        <Link
-                          to="/forgot-password"
-                          className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300"
-                        >
-                          {t('auth.forgotPassword')}
-                        </Link>
-                      </div>
-                    )}
-
-                    <Button
-                      type="submit"
-                      size="lg"
-                      disabled={formIsSubmitting}
-                      className="w-full mt-6"
-                    >
-                      {formIsSubmitting
-                        ? (isLoginMode ? t('auth.signingIn') : t('auth.creatingAccount'))
-                        : (isLoginMode ? t('auth.signIn') : t('auth.signUp'))
-                      }
-                    </Button>
-                  </form>
-
-{/* Mode Switch Link */}
-                  <div className="text-center mt-6">
-                    <button
-                      type="button"
-                      onClick={switchMode}
-                      className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200"
-                    >
-                      {isLoginMode ? t('auth.noAccount') : t('auth.hasAccount')}{' '}
-                      <span className="underline">
-                        {isLoginMode ? t('auth.signUp') : t('auth.signIn')}
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="mt-6">
+                  <div className="mt-8">
                     <div className="relative">
                       <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
