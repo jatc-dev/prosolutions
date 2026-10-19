@@ -1,24 +1,36 @@
-FROM node:20-alpine
+# --- ETAPA DE BUILD ---
+FROM node:20-alpine AS builder
+WORKDIR /app
 
-WORKDIR /app/apps/identity
+# Copiar manifiestos e instalar todas las dependencias (incluyendo devDependencies)
+COPY apps/identity/package*.json ./
+RUN npm ci
 
-# Dependencias de producción
+# Copiar el esquema de Prisma, código fuente y configuración de TypeScript
+COPY apps/identity/prisma ./prisma
+COPY apps/identity/src ./src
+COPY apps/identity/tsconfig.json ./
+
+# Generar cliente de Prisma y compilar TypeScript
+RUN npx prisma generate
+RUN npm run build
+
+# --- ETAPA DE PRODUCCIÓN ---
+FROM node:20-alpine AS runner
+WORKDIR /app
+
 COPY apps/identity/package*.json ./
 RUN npm ci --only=production
 
-# Generar cliente Prisma (requerido en tiempo de ejecución)
-COPY apps/identity/prisma ./prisma
-RUN npx prisma generate
-
-# Código compilado del backend
-COPY apps/identity/dist ./dist
+# Copiar Prisma y el código compilado desde la etapa builder
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
-
-# Render asigna el puerto dinámicamente vía variable de entorno PORT.
 ENV PORT=4001
 
 EXPOSE 4001
 
-# Ejecutar migraciones de base de datos antes de iniciar el servidor.
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
