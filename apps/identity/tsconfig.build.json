@@ -4,7 +4,9 @@
     "declaration": true,
     "declarationMap": false,
     "sourceMap": false,
-    "noEmitOnError": true
+    "noEmitOnError": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests", "scripts", "prisma"]
