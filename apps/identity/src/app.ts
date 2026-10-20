@@ -91,6 +91,10 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
 
+  // Auth routes are mounted BEFORE CSRF middleware so that login/register
+  // and other public auth endpoints do not require a CSRF token.
+  app.use('/api/auth', authRoutes);
+
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);
   app.use(validateCSRF);
@@ -102,7 +106,6 @@ export function createApp() {
     res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
   );
 
-  app.use('/api/auth', authRoutes);
   app.use('/api/profile', profileRoutes);
   app.use('/api/modules', moduleRoutes);
 
