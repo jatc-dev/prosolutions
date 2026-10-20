@@ -26,14 +26,17 @@ export interface AuthState {
   2. Configuración de entorno
 ──────────────────────────────────────────────────────────────*/
 
-function readEnv(): Record<string, string | undefined> {
-  if (typeof import.meta === "undefined" || !import.meta.env) {
-    return {};
+declare global {
+  interface ImportMetaEnv {
+    VITE_IDENTITY_URL?: string;
+    VITE_IDENTITY_API_URL?: string;
   }
-  return import.meta.env as Record<string, string | undefined>;
+  interface ImportMeta {
+    env: ImportMetaEnv;
+  }
 }
 
-const env = readEnv();
+const env = (import.meta as ImportMeta).env;
 
 export const IDENTITY_URL =
   env.VITE_IDENTITY_URL ?? "https://identity.prosolutions.page";
