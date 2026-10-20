@@ -1,13 +1,18 @@
 /**
  * ProIdentity — ProJobs client auth
- * Valida el access token JWT emitido por apps/identity y gestiona
+ * Valida el access token JWT emitido por ProIdentity y gestiona
  * el acceso a secciones personales (postulaciones, empleos guardados).
  */
 
 (function () {
-  const IDENTITY_URL = window.__PROJOBS_IDENTITY_URL__ || 'http://localhost:4001';
-  const ACCESS_TOKEN_KEY = 'projobs_access_token';
-  const MODULE_REQUIRED = 'PROJOBS';
+  const IDENTITY_URL =
+    window.__PROJOBS_IDENTITY_URL__ ||
+    "https://identity.prosolutions.page";
+  const PROJOBS_API_URL =
+    window.__PROJOBS_API_URL__ ||
+    window.location.origin;
+  const ACCESS_TOKEN_KEY = "projobs_access_token";
+  const MODULE_REQUIRED = "PROJOBS";
 
   let accessToken = null;
   let userProfile = null;
@@ -40,12 +45,12 @@
 
   async function validateToken(token) {
     try {
-      const response = await fetch(`${IDENTITY_URL}/api/identity/me`, {
-        method: 'GET',
+      const response = await fetch(`${IDENTITY_URL}/api/auth/me`, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (response.status === 401 || response.status === 403) {
@@ -84,8 +89,8 @@
       getUser: () => userProfile,
       getToken: () => accessToken,
       login: () => {
-        const redirectUrl = encodeURIComponent(window.location.origin + window.location.pathname);
-        window.location.href = `${IDENTITY_URL}/api/auth/login?redirect=${redirectUrl}`;
+        const redirectUri = encodeURIComponent(window.location.href);
+        window.location.href = `${IDENTITY_URL}/login?redirect_uri=${redirectUri}`;
       },
       logout: () => {
         clearStoredToken();
@@ -101,27 +106,32 @@
     const authed = !!userProfile;
 
     // Mostrar/ocultar botones de postular y guardar empleo
-    document.querySelectorAll('[data-auth-required]').forEach((el) => {
-      el.style.display = authed ? '' : 'none';
+    document.querySelectorAll("[data-auth-required]").forEach((el) => {
+      el.style.display = authed ? "" : "none";
     });
 
-    document.querySelectorAll('[data-auth-anonymous]').forEach((el) => {
-      el.style.display = authed ? 'none' : '';
+    document.querySelectorAll("[data-auth-anonymous]").forEach((el) => {
+      el.style.display = authed ? "none" : "";
     });
 
     // Actualizar enlaces de login/perfil en la navegación
-    const navLinks = document.querySelectorAll('.pro-links a');
+    const navLinks = document.querySelectorAll(".pro-links a");
     navLinks.forEach((link) => {
-      const href = link.getAttribute('href') || '';
-      if (href.includes('procv.prosolutions.page') || href.includes('/login')) {
+      const href = link.getAttribute("href") || "";
+      if (
+        href.includes("procv.prosolutions.page") ||
+        href.includes("/login")
+      ) {
         if (authed) {
-          link.textContent = link.dataset.authedLabel || 'Mi Perfil';
+          link.textContent = link.dataset.authedLabel || "Mi Perfil";
           link.onclick = (e) => {
             e.preventDefault();
-            window.location.href = `/profile.html?user=${encodeURIComponent(userProfile?.email || '')}`;
+            window.location.href = `/profile.html?user=${encodeURIComponent(
+              userProfile?.email || "",
+            )}`;
           };
         } else {
-          link.textContent = link.dataset.anonLabel || 'Iniciar sesión';
+          link.textContent = link.dataset.anonLabel || "Iniciar sesión";
           link.onclick = (e) => {
             e.preventDefault();
             window.proJobsAuth.login();
@@ -131,21 +141,21 @@
     });
 
     // Manejar botones de postular (apply)
-    document.querySelectorAll('[data-action="apply"]').forEach((btn) => {
+    document.querySelectorAll("[data-action='apply']").forEach((btn) => {
       btn.onclick = (e) => {
         e.preventDefault();
         if (!authed) {
           window.proJobsAuth.login();
           return;
         }
-        const jobId = btn.dataset.jobId || '';
-        const jobUrl = btn.dataset.jobUrl || '';
-        const jobTitle = btn.dataset.jobTitle || '';
-        const company = btn.dataset.company || '';
-        fetch(`${IDENTITY_URL.replace('http://', 'http://')}/api/applications`, {
-          method: 'POST',
+        const jobId = btn.dataset.jobId || "";
+        const jobUrl = btn.dataset.jobUrl || "";
+        const jobTitle = btn.dataset.jobTitle || "";
+        const company = btn.dataset.company || "";
+        fetch(`${PROJOBS_API_URL}/api/applications`, {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ jobId, jobUrl, jobTitle, company }),
@@ -164,27 +174,27 @@
             }
           })
           .catch(() => {
-            alert('No se pudo crear la postulación. Intenta de nuevo.');
+            alert("No se pudo crear la postulación. Intenta de nuevo.");
           });
       };
     });
 
     // Manejar botones de guardar empleo (save)
-    document.querySelectorAll('[data-action="save-job"]').forEach((btn) => {
+    document.querySelectorAll("[data-action='save-job']").forEach((btn) => {
       btn.onclick = (e) => {
         e.preventDefault();
         if (!authed) {
           window.proJobsAuth.login();
           return;
         }
-        const jobId = btn.dataset.jobId || '';
-        const jobUrl = btn.dataset.jobUrl || '';
-        const jobTitle = btn.dataset.jobTitle || '';
-        const company = btn.dataset.company || '';
-        fetch(`${IDENTITY_URL.replace('http://', 'http://')}/api/saved-jobs`, {
-          method: 'POST',
+        const jobId = btn.dataset.jobId || "";
+        const jobUrl = btn.dataset.jobUrl || "";
+        const jobTitle = btn.dataset.jobTitle || "";
+        const company = btn.dataset.company || "";
+        fetch(`${PROJOBS_API_URL}/api/saved-jobs`, {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ jobId, jobUrl, jobTitle, company }),
@@ -203,15 +213,15 @@
             }
           })
           .catch(() => {
-            alert('No se pudo guardar el empleo. Intenta de nuevo.');
+            alert("No se pudo guardar el empleo. Intenta de nuevo.");
           });
       };
     });
   }
 
   // Inicializar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAuth);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAuth);
   } else {
     initAuth();
   }

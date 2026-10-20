@@ -8,6 +8,10 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { fetchCSRFToken } from "./services/api";
 
+const IDENTITY_URL =
+  import.meta.env.VITE_IDENTITY_URL ||
+  "https://identity.prosolutions.page/login";
+
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
 const AuthPage = lazy(() => import("./pages/AuthPage").then((m) => ({ default: m.AuthPage })));
@@ -41,13 +45,34 @@ function RouteFallback() {
 }
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/" replace />;
+  const { isAuthenticated, loading } = useAuth();
+
+  // While session is being validated, don't redirect yet
+  if (loading) {
+    return <RouteFallback />;
+  }
+
+  if (!isAuthenticated) {
+    const redirectUri = encodeURIComponent(window.location.href);
+    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
+    return null;
+  }
+
+  return children;
 }
 
 function AdminRoute({ children }: { children: JSX.Element }) {
-  const { isAuthenticated, user } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return <RouteFallback />;
+  }
+
+  if (!isAuthenticated) {
+    const redirectUri = encodeURIComponent(window.location.href);
+    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
+    return null;
+  }
   if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -116,7 +141,5 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
-
 
 

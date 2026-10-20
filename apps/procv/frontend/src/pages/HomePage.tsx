@@ -3,62 +3,39 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
 import { ProHeader } from "@prosolutions/ui";
-import { Input, Button } from "@prosolutions/ui";
+import { Button } from "@prosolutions/ui";
 import { useAuth } from "../stores/authStore";
 
-const IDENTITY_API_URL =
-  import.meta.env.VITE_IDENTITY_API_URL ||
-  "https://identity.prosolutions.page/api/auth/login";
+const IDENTITY_URL =
+  import.meta.env.VITE_IDENTITY_URL ||
+  "https://identity.prosolutions.page/login";
 
 export function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
 
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleLoginSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoginError(null);
-    setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    try {
-      const response = await fetch(IDENTITY_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        setLoginError(errorData.message || t("auth.loginError"));
-        return;
-      }
-
-      const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem(
-          "procv_auth",
-          JSON.stringify({ accessToken: data.accessToken }),
-        );
-        setIsSubmitting(false);
-        navigate("/dashboard");
-      } else {
-        setLoginError(t("auth.loginError"));
-      }
-    } catch {
-      setLoginError(t("auth.loginError"));
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleIdentityLogin = () => {
+    const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
+    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
   };
+
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+        <div className="text-center">
+          <BrandLogo variant="large" className="mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            {t("auth.welcomeBack")}
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300">
+            {t("auth.redirecting")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
@@ -148,7 +125,7 @@ export function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: Login Form */}
+            {/* Right Column: SSO Login Delegate */}
             <div className="lg:sticky lg:top-24">
               <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-8 dark:bg-slate-900 shadow-lg dark:shadow-black/30 max-w-md w-full">
                 <div className="text-center mb-8">
@@ -161,51 +138,14 @@ export function HomePage() {
                   </p>
                 </div>
 
-                {loginError && (
-                  <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50">
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      {loginError}
-                    </p>
-                  </div>
-                )}
-
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  <Input
-                    label={t("auth.email")}
-                    type="email"
-                    name="email"
-                    placeholder={t("auth.emailPlaceholder")}
-                    required
-                    error={loginError ? true : undefined}
-                  />
-
-                  <Input
-                    label={t("auth.password")}
-                    type="password"
-                    name="password"
-                    placeholder={t("auth.passwordPlaceholder")}
-                    required
-                    error={loginError ? true : undefined}
-                  />
-
-                  <div className="flex justify-end mb-2">
-                    <Link
-                      to="/forgot-password"
-                      className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
-                    >
-                      {t("auth.forgotPassword")}
-                    </Link>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={isSubmitting}
-                    className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors"
-                  >
-                    {isSubmitting ? t("auth.signingIn") : t("auth.signIn")}
-                  </Button>
-                </form>
+                <Button
+                  type="button"
+                  onClick={handleIdentityLogin}
+                  size="lg"
+                  className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  {t("auth.signInWithProIdentity")}
+                </Button>
 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">

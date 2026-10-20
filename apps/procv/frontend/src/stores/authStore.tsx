@@ -23,9 +23,13 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   setAccessToken: (token: string | null) => void;
+  validateSession: () => Promise<void>;
 }
 
 const LOCAL_STORAGE_KEY = "procv_auth";
+const IDENTITY_ME_URL =
+  import.meta.env.VITE_IDENTITY_API_URL ||
+  "https://identity.prosolutions.page/api/auth/me";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -107,10 +111,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     api.setToken(token);
     set({ accessToken: token, isAuthenticated: Boolean(token) });
   },
+
+  validateSession: async () => {
+    try {
+      const response = await api.get(IDENTITY_ME_URL, { credentials: "include" });
+      const data = response.data;
+      const user = data?.user ?? null;
+      const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY)
+        ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!).accessToken
+        : null;
+      set({ user, accessToken, isAuthenticated: true });
+    } catch {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      api.setToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false });
+    }
+  },
 }));
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { refreshToken, setAccessToken } = useAuthStore();
+  const { validateSession, refreshToken, setAccessToken } = useAuthStore();
 
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -122,7 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { accessToken } = JSON.parse(stored);
       if (accessToken) {
         setAccessToken(accessToken);
-        refreshToken().catch(() => {}).finally(() => useAuthStore.setState({ loading: false }));
+        // Validate session with identity service before considering authenticated
+        validateSession()
+          .catch(() => refreshToken().catch(() => {}))
+          .finally(() => useAuthStore.setState({ loading: false }));
       } else {
         useAuthStore.setState({ loading: false });
       }
@@ -130,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       useAuthStore.setState({ loading: false });
     }
-  }, [refreshToken, setAccessToken]);
+  }, [validateSession, refreshToken, setAccessToken]);
 
   return children;
 }
