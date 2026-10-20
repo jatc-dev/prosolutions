@@ -13,7 +13,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
  * Soporta variantes (primary, secondary, outline, ghost, danger), tamaños
  * (sm, md, lg) y estados de carga y deshabilitado.
  */
-export declare function Button({ variant, size, isLoading, isDisabled, isFullWidth, children, className, ...props }: ButtonProps): React.JSX.Element;
+export declare function Button({ variant, size, type, disabled, isLoading, isDisabled, isFullWidth, children, className, ...props }: ButtonProps): React.JSX.Element;
 export declare namespace Button {
     var displayName: string;
 }

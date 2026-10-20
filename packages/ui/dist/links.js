@@ -24,8 +24,12 @@ const env = readEnv();
  * con fallbacks seguros a URLs relativas o por defecto.
  */
 const procvUrl = env.VITE_PROCV_URL ?? "https://procv.prosolutions.page";
+const configuredCoreUrl = env.VITE_CORE_URL;
+const coreUrl = configuredCoreUrl && /^https?:\/\//i.test(configuredCoreUrl)
+    ? configuredCoreUrl.replace(/\/+$/, "")
+    : "https://prosolutions.page";
 export const APP_URLS = {
-    core: env.VITE_CORE_URL ?? "/",
+    core: coreUrl,
     procv: procvUrl,
     procvLogin: `${procvUrl.replace(/\/+$/, "")}/login`,
     projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",

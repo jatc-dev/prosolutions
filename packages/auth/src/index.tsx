@@ -139,16 +139,21 @@ export const useAuthStore = create<AuthState & {
   5. React Context (AuthProvider)
 ──────────────────────────────────────────────────────────────*/
 
-const AuthContext = createContext<ReturnType<typeof useAuthStore> | null>(
-  null,
-);
+export interface AuthContextType {
+  user: UserProfile | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const { accessToken, validateSession, setAccessToken } =
+  const { user, accessToken, isAuthenticated, loading, validateSession, setAccessToken } =
     useAuthStore();
 
   useEffect(() => {
@@ -170,23 +175,25 @@ export function AuthProvider({
   }, [validateSession, setAccessToken]);
 
   return (
-    <AuthContext.Provider value={useAuthStore()}>
+    <AuthContext.Provider
+      value={{
+        user,
+        accessToken,
+        isAuthenticated,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth(): AuthState {
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return {
-    user: ctx.user,
-    accessToken: ctx.accessToken,
-    isAuthenticated: ctx.isAuthenticated,
-    loading: ctx.loading,
-  };
+  return ctx;
 }
 
 /*──────────────────────────────────────────────────────────────
