@@ -38,11 +38,9 @@ export function HomePage() {
       }
 
       const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem(
-          "procv_auth",
-          JSON.stringify({ accessToken: data.accessToken }),
-        );
+      if (data.accessToken || data.message === "Login successful" || response.ok) {
+        // Sesión activa mediante cookie HTTP-only (.prosolutions.page)
+        // Redirigir al dashboard principal o a la página de destino
         setIsSubmitting(false);
         window.location.href = `${window.location.origin}/dashboard`;
       } else {
