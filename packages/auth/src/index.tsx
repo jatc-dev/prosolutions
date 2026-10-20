@@ -214,19 +214,3 @@ export function ProtectedRoute({
 
   return <>{children}</>;
 }
-
-/*──────────────────────────────────────────────────────────────
-  7. Index exports
-──────────────────────────────────────────────────────────────*/
-
-export {
-  authHttp,
-  setAuthToken,
-  IDENTITY_URL,
-  IDENTITY_API_URL,
-  useAuthStore,
-  AuthProvider,
-  useAuth,
-  ProtectedRoute,
-};
-export type { UserProfile, AuthState };
