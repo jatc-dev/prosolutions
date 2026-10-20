@@ -93,6 +93,7 @@ export const config = {
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
   cookieSameSite: (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
+  cookieDomain: process.env.COOKIE_DOMAIN || '.prosolutions.page',
   allowedOrigins: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
     : DEFAULT_ALLOWED_ORIGINS,

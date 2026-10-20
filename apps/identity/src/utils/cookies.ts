@@ -8,6 +8,7 @@ export function setRefreshTokenCookie(res: Response, refreshToken: string): void
     httpOnly: true,
     secure: config.isProduction,
     sameSite: config.isProduction ? 'none' : 'lax',
+    domain: config.cookieDomain,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
   });
@@ -18,6 +19,7 @@ export function clearRefreshTokenCookie(res: Response): void {
     httpOnly: true,
     secure: config.isProduction,
     sameSite: config.isProduction ? 'none' : 'lax',
+    domain: config.cookieDomain,
     path: '/',
   });
 }
