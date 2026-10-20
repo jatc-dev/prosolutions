@@ -17,6 +17,7 @@ import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  'https://prosolutions.page',
   'https://procv-platform.onrender.com',
   'https://procv.prosolutions.page',
   'http://localhost:3000',

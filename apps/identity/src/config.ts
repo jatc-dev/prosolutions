@@ -50,6 +50,7 @@ function getDatabaseUrl(isProduction: boolean): string {
 }
 
 const DEFAULT_ALLOWED_ORIGINS: string[] = [
+  'https://prosolutions.page',
   'https://procv-platform.onrender.com',
   'https://procv.prosolutions.page',
   'http://localhost:3000',
