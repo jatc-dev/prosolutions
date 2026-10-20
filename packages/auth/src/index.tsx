@@ -176,12 +176,17 @@ export function AuthProvider({
   );
 }
 
-export function useAuth() {
+export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return ctx;
+  return {
+    user: ctx.user,
+    accessToken: ctx.accessToken,
+    isAuthenticated: ctx.isAuthenticated,
+    loading: ctx.loading,
+  };
 }
 
 /*──────────────────────────────────────────────────────────────
