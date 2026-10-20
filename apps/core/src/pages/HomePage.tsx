@@ -171,7 +171,6 @@ export function HomePage() {
                     name="email"
                     placeholder={copy.auth.emailPlaceholder}
                     required
-                    error={loginError || undefined}
                   />
 
                   <Input
@@ -180,7 +179,6 @@ export function HomePage() {
                     name="password"
                     placeholder={copy.auth.passwordPlaceholder}
                     required
-                    error={loginError || undefined}
                   />
 
                   <div className="flex justify-end mb-2">
