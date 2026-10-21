@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
  * PROCV_DATABASE_URL -> base de datos de ProCV (origen)
  *
  * Usa --dry-run para validar el origen y detectar conflictos sin escribir.
+ * Usa --overwrite para actualizar usuarios existentes con el mismo id.
  */
 
 interface ProCvUser {
@@ -22,6 +23,7 @@ interface ProCvUser {
 }
 
 const dryRun = process.argv.includes('--dry-run');
+const overwrite = process.argv.includes('--overwrite');
 const identityPrisma = new PrismaClient();
 const procvPrisma = new PrismaClient({
   datasourceUrl: process.env.PROCV_DATABASE_URL,
@@ -32,7 +34,9 @@ async function main() {
     throw new Error('PROCV_DATABASE_URL no está definido. Abortando migración.');
   }
 
-  console.log(`[migración] Modo: ${dryRun ? 'dry-run (sin escrituras)' : 'escritura'}`);
+  console.log(
+    `[migración] Modo: ${dryRun ? 'dry-run (sin escrituras)' : 'escritura'}${overwrite ? ', sobrescritura activada' : ''}`,
+  );
   console.log('[migración] Leyendo usuarios de ProCV...');
 
   const users = await procvPrisma.$queryRawUnsafe<ProCvUser[]>(
@@ -43,7 +47,7 @@ async function main() {
 
   let migrated = 0;
   let skipped = 0;
-  let repaired = 0;
+  let overwritten = 0;
   let errors = 0;
   const errorDetails: string[] = [];
 
@@ -54,54 +58,71 @@ async function main() {
         throw new Error('el usuario no tiene un email válido');
       }
 
-      const existing = await identityPrisma.user.findUnique({
-        where: { email },
+      const existingById = await identityPrisma.user.findUnique({
+        where: { id: user.id },
         select: {
           id: true,
-          professionalProfile: { select: { id: true } },
-          moduleAccess: {
-            where: { module: 'PROCV' },
-            select: { id: true },
-          },
+          email: true,
         },
       });
+      const existingByEmail = existingById
+        ? null
+        : await identityPrisma.user.findUnique({
+            where: { email },
+            select: {
+              id: true,
+              email: true,
+            },
+          });
+      const existing = existingById ?? existingByEmail;
 
       if (existing) {
-        if (existing.id !== user.id) {
-          throw new Error(
-            `conflicto de ID: Identity=${existing.id}, ProCV=${user.id}`,
+        if (dryRun) {
+          console.log(
+            `[migración] ${
+              overwrite ? 'Listo para sobrescribir' : 'Ya existe'
+            }: ${email} (Identity id: ${existing.id})`,
           );
+          skipped++;
+          continue;
         }
 
-        if (dryRun) {
-          console.log(`[migración] Validado (ya existe): ${email}`);
+        if (!overwrite) {
+          console.log(`[migración] Saltado (ya existe): ${email}`);
           skipped++;
           continue;
         }
 
         await identityPrisma.$transaction(async (tx) => {
-          if (!existing.professionalProfile) {
-            await tx.professionalProfile.create({
-              data: {
-                userId: existing.id,
-                skills: [],
-                experience: [],
-                education: [],
-                links: {},
-              },
-            });
-          }
-
-          if (existing.moduleAccess.length === 0) {
-            await tx.moduleAccess.create({
-              data: { userId: existing.id, module: 'PROCV', active: true },
-            });
-          }
+          await tx.user.update({
+            where: { id: existing.id },
+            data: {
+              email,
+              name: user.name,
+              passwordHash: user.passwordHash,
+              role: user.role,
+              emailVerified: user.emailVerified,
+              lastLoginAt: user.lastLoginAt,
+              createdAt: user.createdAt,
+              updatedAt: user.updatedAt,
+              isActive: true,
+            },
+          });
         });
 
-        console.log(`[migración] Verificado/reparado: ${email}`);
-        repaired++;
+        console.log(`[migración] Sobrescrito: ${email} (Identity id: ${existing.id})`);
+        overwritten++;
         continue;
+      }
+
+      const emailConflict = await identityPrisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (emailConflict) {
+        throw new Error(
+          `conflicto de email: Identity=${emailConflict.id}, ProCV=${user.id}`,
+        );
       }
 
       if (dryRun) {
@@ -155,7 +176,7 @@ async function main() {
   console.log(`Total en ProCV:   ${users.length}`);
   console.log(`Migrados/listos:  ${migrated}`);
   console.log(`Saltados:         ${skipped}`);
-  console.log(`Reparados:        ${repaired}`);
+  console.log(`Sobrescritos:     ${overwritten}`);
   console.log(`Errores:          ${errors}`);
 
   if (errorDetails.length > 0) {
