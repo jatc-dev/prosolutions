@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../prismaClient';
+import type { Prisma } from '@prisma/client';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 import {
@@ -551,7 +552,7 @@ export async function resendVerification(req: Request, res: Response) {
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.emailVerificationToken.deleteMany({
           where: { userId: user.id },
         });

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { Request, NextFunction, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -12,6 +12,8 @@ import {
   getCSRFToken,
 } from './middleware/csrf';
 import { config } from './config';
+import { logger } from './utils/logger';
+import prisma from './prismaClient';
 import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
@@ -23,6 +25,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:5173',
 ];
+
+const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
 function parseAllowedOrigins(envValue: string[] | undefined): string[] {
   if (!envValue || envValue.length === 0) {
@@ -106,6 +110,35 @@ export function createApp() {
     res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
   );
 
+  app.get('/health/db', async (_req, res) => {
+    try {
+      await prisma.$queryRawUnsafe('SELECT 1 as connected');
+      const tables = await prisma.$queryRawUnsafe<Array<{ tablename: string }>>(
+        `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`,
+      );
+      return res.json({
+        status: 'ok',
+        service: 'proidentity',
+        database: 'connected',
+        tables: tables.map((t: { tablename: string }) => t.tablename),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Database health check failed', {
+        error: err.message,
+        stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+      });
+      return res.status(503).json({
+        status: 'error',
+        service: 'proidentity',
+        database: 'disconnected',
+        error: err.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   app.use('/api/profile', profileRoutes);
   app.use('/api/modules', moduleRoutes);
 
@@ -113,6 +146,15 @@ export function createApp() {
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Resource not found' });
+  });
+
+  // Global error handler — captures unhandled errors and logs them
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    logger.error('Unhandled request error', {
+      error: err.message,
+      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+    });
+    res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   });
 
   return app;

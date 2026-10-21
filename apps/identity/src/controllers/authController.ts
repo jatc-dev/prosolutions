@@ -175,16 +175,23 @@ export async function login(req: Request, res: Response) {
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: user.id },
-        data: { lastLoginAt: new Date() },
-      }),
-      prisma.session.update({
-        where: { refreshToken },
-        data: { expiresAt, lastAccessedAt: new Date() },
-      }),
-    ]);
+    try {
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        }),
+        prisma.session.update({
+          where: { refreshToken },
+          data: { expiresAt, lastAccessedAt: new Date() },
+        }),
+      ]);
+    } catch (txError: unknown) {
+      logger.warn('Session update after login failed, token still valid', {
+        userId: user.id,
+        error: txError instanceof Error ? txError.message : String(txError),
+      });
+    }
 
     setRefreshTokenCookie(res, refreshToken);
 
@@ -206,9 +213,12 @@ export async function login(req: Request, res: Response) {
       },
     });
   } catch (error: unknown) {
-    logger.error('Login failed due to internal error');
-    logger.debug('Login error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const bodyEmail = (req.body as { email?: string })?.email;
+    logger.error('Login failed due to internal error', {
+      error: err.message,
+      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+      email: bodyEmail,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }

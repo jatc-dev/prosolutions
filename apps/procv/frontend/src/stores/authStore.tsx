@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   validateSession: async () => {
     try {
-      const response = await api.get(IDENTITY_ME_URL, { credentials: "include" });
+      const response = await api.get(IDENTITY_ME_URL, { withCredentials: true });
       const data = response.data;
       const user = data?.user ?? null;
       const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY)

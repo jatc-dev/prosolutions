@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import path from 'path';
 import fs from 'fs';
 import prisma from '../prismaClient';
+import type { Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { AuditLogger } from '../utils/auditLogger';
 import { registerSchema } from '../validation/authValidation';
@@ -127,12 +128,12 @@ export async function deleteUser(req: Request, res: Response) {
     // removed explicitly, deepest-first, inside a transaction. Email/reset
     // tokens already cascade at the database level but are cleaned here too so
     // the behavior does not depend on constraint definitions.
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const cvs = await tx.cV.findMany({
         where: { userId: id },
         select: { id: true },
       });
-      const cvIds = cvs.map(cv => cv.id);
+      const cvIds = cvs.map((cv: { id: string }) => cv.id);
 
       if (cvIds.length > 0) {
         await tx.cVAtsAnalysis.deleteMany({ where: { cvId: { in: cvIds } } });
@@ -592,12 +593,12 @@ export async function getChartData(req: Request, res: Response) {
     const userCounts: { [key: string]: number } = {};
     const cvCounts: { [key: string]: number } = {};
 
-    users.forEach(user => {
+    users.forEach((user: { createdAt: Date }) => {
       const date = user.createdAt.toISOString().split('T')[0];
       userCounts[date] = (userCounts[date] || 0) + 1;
     });
 
-    cvs.forEach(cv => {
+    cvs.forEach((cv: { createdAt: Date }) => {
       const date = cv.createdAt.toISOString().split('T')[0];
       cvCounts[date] = (cvCounts[date] || 0) + 1;
     });

@@ -97,7 +97,7 @@ export class CVAtsService {
 
     const generatedId = randomUUID();
 
-    const rows = await prisma.$queryRawUnsafe<Array<{ id: string; createdAt: Date }>>(
+    const rows = await (prisma.$queryRawUnsafe as any)(
       `
       INSERT INTO "CVAtsAnalysis" ("id", "cvId", "jobDescription", "analysis", "tailoring", "cvSnapshot", "createdAt")
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -109,7 +109,7 @@ export class CVAtsService {
       JSON.stringify(analysis),
       JSON.stringify(tailoring),
       JSON.stringify(sourceData || {}),
-    );
+    ) as Array<{ id: string; createdAt: Date }>;
     const saved = rows[0];
 
     if (!saved) {
@@ -134,16 +134,7 @@ export class CVAtsService {
       throw new Error('CV not found');
     }
 
-    const rows = await prisma.$queryRawUnsafe<
-      Array<{
-        id: string;
-        cvId: string;
-        jobDescription: string;
-        analysis: string;
-        tailoring: string;
-        createdAt: Date;
-      }>
-    >(
+    const rows = await (prisma.$queryRawUnsafe as any)(
       `
       SELECT "id", "cvId", "jobDescription", "analysis", "tailoring", "createdAt"
       FROM "CVAtsAnalysis"
@@ -153,7 +144,14 @@ export class CVAtsService {
       `,
       cvId,
       Math.max(1, Math.min(limit, 30)),
-    );
+    ) as Array<{
+      id: string;
+      cvId: string;
+      jobDescription: string;
+      analysis: string;
+      tailoring: string;
+      createdAt: Date;
+    }>;
 
     const history = rows.map((row: any, index: number) => mapHistoryItem(row, rows[index + 1]));
 

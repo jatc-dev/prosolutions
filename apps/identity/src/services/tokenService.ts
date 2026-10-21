@@ -89,15 +89,23 @@ export async function createTokenPair(user: {
   const refreshToken = signRefreshToken({ sub: user.id, jti });
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  await prisma.session.create({
-    data: {
+  try {
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshToken,
+        jti,
+        expiresAt,
+        lastAccessedAt: new Date(),
+      },
+    });
+  } catch (error: unknown) {
+    logger.error('Failed to persist session during token pair creation', {
       userId: user.id,
-      refreshToken,
-      jti,
-      expiresAt,
-      lastAccessedAt: new Date(),
-    },
-  });
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 
   return { accessToken, refreshToken };
 }
