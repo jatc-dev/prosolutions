@@ -12,6 +12,7 @@
     "start": "prisma migrate deploy && node scripts/ensure-build.mjs && node dist/index.js",
     "start:migrate": "DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy && node dist/index.js",
     "migrate:users": "tsx scripts/migrate-procv-users.ts",
+    "migrate:users:dry-run": "tsx scripts/migrate-procv-users.ts --dry-run",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
     "format": "prettier --write src/**/*.ts tests/**/*.ts",
@@ -59,9 +60,9 @@
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.6",
+    "tsx": "^4.19.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.2",
     "typescript-eslint": "^8.71.2"
   }
 }
-

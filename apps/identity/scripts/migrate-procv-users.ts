@@ -1,14 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
 /**
- * Migra usuarios de la base de datos de ProCV a ProIdentity.
+ * Migra usuarios de ProCV a ProIdentity.
  *
- * Requisitos de entorno:
- *   DATABASE_URL            -> base de datos de Identity (destino)
- *   PROCV_DATABASE_URL      -> base de datos de ProCV (origen)
+ * DATABASE_URL       -> base de datos de Identity (destino)
+ * PROCV_DATABASE_URL -> base de datos de ProCV (origen)
  *
- * El script es idempotente: si un email ya existe en Identity, se salta.
- * Cada usuario se migra dentro de una transacción (User + ProfessionalProfile + ModuleAccess PROCV).
+ * Usa --dry-run para validar el origen y detectar conflictos sin escribir.
  */
 
 interface ProCvUser {
@@ -23,8 +21,8 @@ interface ProCvUser {
   updatedAt: Date;
 }
 
+const dryRun = process.argv.includes('--dry-run');
 const identityPrisma = new PrismaClient();
-// Segunda instancia de PrismaClient apuntando al esquema de ProCV (origen).
 const procvPrisma = new PrismaClient({
   datasourceUrl: process.env.PROCV_DATABASE_URL,
 });
@@ -34,39 +32,89 @@ async function main() {
     throw new Error('PROCV_DATABASE_URL no está definido. Abortando migración.');
   }
 
+  console.log(`[migración] Modo: ${dryRun ? 'dry-run (sin escrituras)' : 'escritura'}`);
   console.log('[migración] Leyendo usuarios de ProCV...');
 
   const users = await procvPrisma.$queryRawUnsafe<ProCvUser[]>(
-    `SELECT id, email, name, passwordHash, role, emailVerified, lastLoginAt, createdAt, updatedAt FROM "User"`
+    `SELECT id, email, name, "passwordHash", role, "emailVerified", "lastLoginAt", "createdAt", "updatedAt" FROM "User"`,
   );
 
   console.log(`[migración] ${users.length} usuarios encontrados en ProCV.`);
 
   let migrated = 0;
   let skipped = 0;
+  let repaired = 0;
   let errors = 0;
   const errorDetails: string[] = [];
 
   for (const user of users) {
     try {
-      // Idempotencia: saltar si el email ya existe en Identity.
+      const email = user.email.toLowerCase().trim();
+      if (!email) {
+        throw new Error('el usuario no tiene un email válido');
+      }
+
       const existing = await identityPrisma.user.findUnique({
-        where: { email: user.email },
-        select: { id: true },
+        where: { email },
+        select: {
+          id: true,
+          professionalProfile: { select: { id: true } },
+          moduleAccess: {
+            where: { module: 'PROCV' },
+            select: { id: true },
+          },
+        },
       });
 
       if (existing) {
-        console.log(`[migración] Saltado (ya existe): ${user.email}`);
-        skipped++;
+        if (existing.id !== user.id) {
+          throw new Error(
+            `conflicto de ID: Identity=${existing.id}, ProCV=${user.id}`,
+          );
+        }
+
+        if (dryRun) {
+          console.log(`[migración] Validado (ya existe): ${email}`);
+          skipped++;
+          continue;
+        }
+
+        await identityPrisma.$transaction(async (tx) => {
+          if (!existing.professionalProfile) {
+            await tx.professionalProfile.create({
+              data: {
+                userId: existing.id,
+                skills: [],
+                experience: [],
+                education: [],
+                links: {},
+              },
+            });
+          }
+
+          if (existing.moduleAccess.length === 0) {
+            await tx.moduleAccess.create({
+              data: { userId: existing.id, module: 'PROCV', active: true },
+            });
+          }
+        });
+
+        console.log(`[migración] Verificado/reparado: ${email}`);
+        repaired++;
         continue;
       }
 
-      // Transacción atómica: usuario + perfil profesional + acceso al módulo PROCV.
+      if (dryRun) {
+        console.log(`[migración] Listo para migrar: ${email} (id: ${user.id})`);
+        migrated++;
+        continue;
+      }
+
       await identityPrisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: {
             id: user.id,
-            email: user.email,
+            email,
             name: user.name,
             passwordHash: user.passwordHash,
             role: user.role,
@@ -81,56 +129,50 @@ async function main() {
         await tx.professionalProfile.create({
           data: {
             userId: created.id,
-            headline: null,
-            summary: null,
-            location: null,
-            avatarUrl: null,
-            skills: '[]',
-            experience: '[]',
-            education: '[]',
-            links: '{}',
-            phone: null,
-            birthDate: null,
+            skills: [],
+            experience: [],
+            education: [],
+            links: {},
           },
         });
 
         await tx.moduleAccess.create({
-          data: {
-            userId: created.id,
-            module: 'PROCV',
-            active: true,
-            expiresAt: null,
-          },
+          data: { userId: created.id, module: 'PROCV', active: true },
         });
       });
 
-      console.log(`[migración] Migrado: ${user.email} (id: ${user.id})`);
+      console.log(`[migración] Migrado: ${email} (id: ${user.id})`);
       migrated++;
     } catch (error: unknown) {
       errors++;
-      const msg = error instanceof Error ? error.message : String(error);
-      errorDetails.push(`${user.email}: ${msg}`);
-      console.error(`[migración] Error migrando ${user.email}:`, msg);
+      const message = error instanceof Error ? error.message : String(error);
+      errorDetails.push(`${user.email}: ${message}`);
+      console.error(`[migración] Error migrando ${user.email}: ${message}`);
     }
   }
 
-  await procvPrisma.$disconnect();
-  await identityPrisma.$disconnect();
-
   console.log('\n=== Resumen de migración ===');
   console.log(`Total en ProCV:   ${users.length}`);
-  console.log(`Migrados:         ${migrated}`);
+  console.log(`Migrados/listos:  ${migrated}`);
   console.log(`Saltados:         ${skipped}`);
+  console.log(`Reparados:        ${repaired}`);
   console.log(`Errores:          ${errors}`);
 
   if (errorDetails.length > 0) {
     console.log('\nDetalles de errores:');
-    errorDetails.forEach((d) => console.log(` - ${d}`));
+    errorDetails.forEach((detail) => console.log(` - ${detail}`));
     process.exitCode = 1;
   }
 }
 
-main().catch((error) => {
-  console.error('[migración] Error fatal:', error);
-  process.exitCode = 1;
-});
+main()
+  .catch((error: unknown) => {
+    console.error('[migración] Error fatal:', error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await Promise.all([
+      procvPrisma.$disconnect(),
+      identityPrisma.$disconnect(),
+    ]);
+  });
