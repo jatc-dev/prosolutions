@@ -2,6 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 # Copiar manifiestos e instalar dependencias
 COPY package*.json ./
 RUN npm install
@@ -38,6 +40,5 @@ ENV NODE_ENV=production
 # No establecer PORT aquí para permitir que Render lo asigne.
 EXPOSE 10000
 
-# Ejecutar migraciones en segundo plano (no bloqueante) e iniciar el servidor inmediatamente.
-# El servidor debe arrancar sin esperar a que la migración termine.
-CMD ["sh", "-c", "(npx prisma migrate deploy 2>&1 || true) & exec node dist/index.js"]
+# Ejecutar migraciones antes de iniciar el servidor para no servir un esquema incompleto.
+CMD ["sh", "-c", "if [ -n \"$DIRECT_DATABASE_URL\" ]; then DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate deploy; else npx prisma migrate deploy; fi && exec node dist/index.js"]

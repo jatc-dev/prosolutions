@@ -54,6 +54,7 @@ En la dashboard de Render, añadir/actualizar estas variables:
 NODE_ENV=production
 PORT=4001
 DATABASE_URL=<supabase-identity-url>
+DIRECT_DATABASE_URL=<supabase-identity-direct-url>
 IDENTITY_JWT_SECRET=<openssl-rand-base64-32>
 IDENTITY_JWT_EXPIRES_IN=15m
 IDENTITY_JWT_REFRESH_EXPIRES_IN=7d
@@ -127,9 +128,18 @@ DISABLE_RATE_LIMIT=false
 #### 2.1 Base de datos de Identity
 
 ```
-npx prisma migrate deploy
+DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
 ```
 Desde `apps/identity/` con `DATABASE_URL` apuntando a Supabase Identity. Esto crea las tablas `User`, `Session`, `ProfessionalProfile`, `ModuleAccess`, `AuditLog`.
+
+Las migraciones de producción deben usar la conexión directa de Supabase, no el pooler de runtime. Si Prisma informa `P3009` porque `add_jti_column` quedó registrada como fallida, resolverla una sola vez después de verificar que la operación no dejó cambios incompletos:
+
+```
+DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate resolve --rolled-back add_jti_column
+DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
+```
+
+La aplicación no debe iniciar si las migraciones fallan; así se evita servir login con un esquema incompleto.
 
 #### 2.2 Base de datos de ProCV
 

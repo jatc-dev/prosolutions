@@ -2,6 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 # Copiar manifiestos e instalar todas las dependencias (incluyendo devDependencies)
 COPY apps/identity/package*.json ./
 RUN npm ci
@@ -10,6 +12,7 @@ RUN npm ci
 COPY apps/identity/prisma ./prisma
 COPY apps/identity/src ./src
 COPY apps/identity/tsconfig.json ./
+COPY apps/identity/tsconfig.build.json ./
 
 # Generar cliente de Prisma y compilar TypeScript
 RUN npx prisma generate
@@ -33,4 +36,4 @@ ENV PORT=4001
 
 EXPOSE 4001
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "if [ -n \"$DIRECT_DATABASE_URL\" ]; then DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate deploy; else npx prisma migrate deploy; fi && exec node dist/index.js"]
