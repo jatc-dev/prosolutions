@@ -10,14 +10,9 @@ import { useLandingFeatures } from "../hooks/useLandingFeatures";
 import { LandingFeaturesGrid } from "../components/LandingFeaturesGrid";
 import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
 
-const IDENTITY_URL_FULL =
+const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
   "https://proidentity.onrender.com/login";
-
-// Base URL de ProIdentity (sin ruta de login) para redireccionar a registro y
-// restablecimiento de contraseña. Todo el flujo de autenticación vive en
-// ProIdentity; ProCV solo delega.
-const IDENTITY_BASE = IDENTITY_URL_FULL.replace(/\/login\/?$/, "");
 
 export function AuthPage() {
   const { t, i18n } = useTranslation();
@@ -49,7 +44,7 @@ export function AuthPage() {
 
   const handleIdentityLogin = () => {
     const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
-    window.location.href = `${IDENTITY_URL_FULL}?redirect_uri=${redirectUri}`;
+    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
   };
 
   if (isAuthenticated) {
@@ -148,19 +143,14 @@ export function AuthPage() {
                   <div className="mt-6 space-y-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
-                        window.location.href = `${IDENTITY_BASE}/register?redirect_uri=${redirectUri}`;
-                      }}
+                      onClick={() => navigate("/register")}
                       className="w-full text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
                     >
                       {t('auth.noAccount')} {t('auth.signUp')}
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        window.location.href = `${IDENTITY_BASE}/forgot-password`;
-                      }}
+                      onClick={() => navigate("/forgot-password")}
                       className="w-full text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
                     >
                       {t('auth.forgotPassword')}

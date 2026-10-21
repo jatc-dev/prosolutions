@@ -77,6 +77,8 @@ export const publicApi = axios.create({
 export const VERIFICATION_RESEND_COOLDOWN_SECONDS = 60;
 
 export const authApi = {
+  register: (email: string, password: string, name?: string) =>
+    publicApi.post("/auth/register", { email, password, name }),
   forgotPassword: (email: string) => publicApi.post("/auth/forgot-password", { email }),
   resetPassword: (token: string, password: string) => publicApi.post("/auth/reset-password", { token, password }),
   verifyEmail: (token: string) => publicApi.post("/auth/verify-email", { token }),
