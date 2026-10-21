@@ -13,6 +13,7 @@ COPY apps/identity/prisma ./prisma
 COPY apps/identity/src ./src
 COPY apps/identity/tsconfig.json ./
 COPY apps/identity/tsconfig.build.json ./
+COPY apps/identity/scripts ./scripts
 
 # Generar cliente de Prisma y compilar TypeScript
 RUN npx prisma generate
@@ -30,10 +31,11 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/scripts ./scripts
 
 ENV NODE_ENV=production
 ENV PORT=4001
 
 EXPOSE 4001
 
-CMD ["sh", "-c", "if [ -n \"$DIRECT_DATABASE_URL\" ]; then DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate deploy; else npx prisma migrate deploy; fi && exec node dist/index.js"]
+CMD ["sh", "-c", "node scripts/migrate-production.mjs && exec node dist/index.js"]

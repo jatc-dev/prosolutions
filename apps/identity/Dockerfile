@@ -11,6 +11,7 @@ RUN npm install
 # Copiar archivos fuente del módulo
 COPY prisma ./prisma
 COPY src ./src
+COPY scripts ./scripts
 COPY tsconfig.json ./
 COPY tsconfig.build.json ./
 
@@ -33,6 +34,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/scripts ./scripts
 
 ENV NODE_ENV=production
 
@@ -41,4 +43,4 @@ ENV NODE_ENV=production
 EXPOSE 10000
 
 # Ejecutar migraciones antes de iniciar el servidor para no servir un esquema incompleto.
-CMD ["sh", "-c", "if [ -n \"$DIRECT_DATABASE_URL\" ]; then DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate deploy; else npx prisma migrate deploy; fi && exec node dist/index.js"]
+CMD ["sh", "-c", "node scripts/migrate-production.mjs && exec node dist/index.js"]
