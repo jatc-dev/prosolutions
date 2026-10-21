@@ -28,9 +28,13 @@ try {
   ].join('\n');
   migrationStatus = output;
 
-  if (!/failed migrations?/i.test(output) || !output.includes(migrationName)) {
+  const hasFailedMigration =
+    /failed migrations?/i.test(output) && output.includes(migrationName);
+  const hasPendingMigrations = /not yet been applied/i.test(output);
+
+  if (!hasFailedMigration && !hasPendingMigrations) {
     process.stderr.write(output);
-    throw new Error('Unable to determine whether a recoverable migration is pending');
+    throw new Error('Unable to determine whether Prisma migrations can proceed');
   }
 }
 
