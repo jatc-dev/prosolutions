@@ -53,3 +53,53 @@ services:
         value: false
       - key: SESSION_IDLE_TIMEOUT_MINUTES
         value: 30
+
+  - type: web
+    name: prosolutions
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: npm run build --workspace=apps/core
+    publishPath: apps/core/dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_IDENTITY_API_URL
+        value: https://identity.prosolutions.page/api/auth
+      - key: VITE_PROCV_URL
+        value: https://procv.prosolutions.page
+
+  - type: web
+    name: procv-frontend
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./apps/procv/frontend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_IDENTITY_API_URL
+        value: https://identity.prosolutions.page/api/auth
+      - key: VITE_PROCV_URL
+        value: https://procv.prosolutions.page
+
+  - type: web
+    name: procv-backend
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./apps/procv/backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_DATABASE_URL
+        sync: false

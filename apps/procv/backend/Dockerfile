@@ -49,7 +49,7 @@ RUN rm -rf /app/node_modules/.prisma
 RUN npx prisma generate
 RUN npm run build
 
-# Puerto de Render
+# Puerto de Render (inyectado dinámicamente vía variable de entorno PORT)
 EXPOSE 10000
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "node dist/index.js"]

@@ -25,6 +25,6 @@ RUN npm run build
 
 # Install a simple static server.
 RUN npm install -g serve
+EXPOSE 10000
 
-EXPOSE 3000
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
