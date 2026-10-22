@@ -18,37 +18,27 @@ import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  'https://prosolutions.page',
-  'https://procv-platform.onrender.com',
-  'https://procv.prosolutions.page',
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
-
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
-function parseAllowedOrigins(envValue: string[] | undefined): string[] {
-  if (!envValue || envValue.length === 0) {
-    return DEFAULT_ALLOWED_ORIGINS;
-  }
-  return envValue;
-}
-
-export function corsMiddleware(config: {
+export function corsMiddleware(options: {
   isProduction: boolean;
   allowedOrigins: string[];
 }) {
-  const allowedOrigins = parseAllowedOrigins(config.allowedOrigins);
+  const allowedOrigins = options.allowedOrigins.length > 0
+    ? options.allowedOrigins
+    : [
+        'https://prosolutions.page',
+        'https://procv.prosolutions.page',
+        'http://localhost:5173',
+        'http://localhost:5174',
+      ];
 
   return cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, etc.)
       if (!origin) {
         return callback(null, true);
       }
-      // In development, allow all origins; in production, restrict to allowed list
-      if (!config.isProduction || allowedOrigins.includes(origin)) {
+      if (!options.isProduction || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error('Not allowed by CORS'));
@@ -57,7 +47,7 @@ export function corsMiddleware(config: {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Cookie'],
     exposedHeaders: ['Set-Cookie'],
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
   });
 }
 
@@ -92,13 +82,13 @@ export function createApp() {
   app.use(compression());
   app.use(cookieParser());
   app.use(corsMiddleware(config));
-app.use(express.json({ limit: '10mb' }));
-app.use(morgan('tiny'));
-app.use(apiLimiter);
+  app.use(express.json({ limit: '10mb' }));
+  app.use(morgan('tiny'));
+  app.use(apiLimiter);
 
-// Auth routes are mounted BEFORE CSRF middleware so that login/register
-// and other public auth endpoints do not require a CSRF token.
-app.use('/api/auth', authRoutes);
+  // Auth routes are mounted BEFORE CSRF middleware so that login/register
+  // and other public auth endpoints do not require a CSRF token.
+  app.use('/api/auth', authRoutes);
 
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);
@@ -136,13 +126,12 @@ app.use('/api/auth', authRoutes);
   });
 
   app.use('/api/profile', profileRoutes);
-app.use('/api/modules', moduleRoutes);
+  app.use('/api/modules', moduleRoutes);
 
-app.use('/api', (_req, res) => {
+  app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Resource not found' });
   });
 
-  // Global error handler — captures unhandled errors and logs them
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     logger.error('Unhandled request error', {
       error: err.message,

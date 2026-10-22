@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
+import { identityAuthApiUrl } from "../identityApi";
 
-const IDENTITY_API_URL =
-  import.meta.env.VITE_IDENTITY_API_URL ||
-  "https://identity.prosolutions.page/api/auth";
+const IDENTITY_API_URL = identityAuthApiUrl();
 
 export function ResetPasswordPage() {
-  const { copy, locale } = useCoreLocale();
+  const { copy, locale, setLocale } = useCoreLocale();
   const language = locale === "es" ? "es" : "en";
 
   const [searchParams] = useSearchParams();
@@ -68,7 +67,11 @@ export function ResetPasswordPage() {
   if (!token) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
-        <ProHeader activeApp="core" locale={language} onLocaleChange={() => {}} />
+        <ProHeader
+          activeApp="core"
+          locale={language}
+          onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
+        />
         <div className="text-center px-6">
           <div className="w-12 h-12 rounded-xl bg-rose-600 flex items-center justify-center mx-auto mb-4 dark:bg-rose-500">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +96,11 @@ export function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
-      <ProHeader activeApp="core" locale={language} onLocaleChange={() => {}} />
+      <ProHeader
+        activeApp="core"
+        locale={language}
+        onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
+      />
 
       <main className="relative flex-1">
         <section className="px-6 pt-8 pb-16">

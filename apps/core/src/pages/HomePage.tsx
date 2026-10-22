@@ -1,17 +1,34 @@
 import { ProHeader, ProFooter, Input, Button } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { useState } from "react";
+import { identityAuthApiUrl } from "../identityApi";
 
-const IDENTITY_API_URL =
-  import.meta.env.VITE_IDENTITY_API_URL ||
-  "https://identity.prosolutions.page/api/auth/login";
+const IDENTITY_API_URL = identityAuthApiUrl();
 
 export function HomePage() {
-  const { copy, locale } = useCoreLocale();
+  const { copy, locale, setLocale } = useCoreLocale();
   const language = locale === "es" ? "es" : "en";
 
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Si llegamos por callback de auth (redirect_uri o /auth/callback),
+  // leer token guardado en sessionStorage y continuar al dashboard.
+  const searchParams = new URLSearchParams(window.location.search);
+  const isAuthCallback = searchParams.get("auth_callback") === "1" || window.location.pathname === "/auth/callback";
+  const storedToken = sessionStorage.getItem("pro_identity_token");
+  const hashToken = window.location.hash.replace(/^#access_token=/, "");
+  const tokenFromCallback = hashToken !== window.location.hash ? hashToken : null;
+  const callbackToken = tokenFromCallback || storedToken;
+
+  if (isAuthCallback && callbackToken) {
+    sessionStorage.removeItem("pro_identity_token");
+    const procvUrl =
+      import.meta.env.VITE_PROCV_URL ||
+      "https://procv.prosolutions.page";
+    window.location.href = `${procvUrl}/dashboard?access_token=${encodeURIComponent(callbackToken)}`;
+    return null;
+  }
 
   const handleLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -24,7 +41,7 @@ export function HomePage() {
     const password = formData.get("password") as string;
 
     try {
-      const response = await fetch(IDENTITY_API_URL, {
+      const response = await fetch(`${IDENTITY_API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -38,19 +55,27 @@ export function HomePage() {
       }
 
       const data = await response.json();
-      if (data.accessToken || data.message === "Login successful" || response.ok) {
-        // Sesión activa mediante cookie HTTP-only (.prosolutions.page)
-        setIsSubmitting(false);
+      // Sesión activa mediante cookie HTTP-only (.prosolutions.page)
+      setIsSubmitting(false);
 
         // Si se especificó un redirect_uri (por ejemplo desde ProCV o ProJobs), redirigir allí pasando el token
         const searchParams = new URLSearchParams(window.location.search);
         const redirectUri = searchParams.get("redirect_uri") || searchParams.get("redirect");
 
         if (redirectUri) {
-          sessionStorage.setItem('pro_identity_token', data.accessToken ?? '');
-          const separator = redirectUri.includes('?') ? '&' : '?';
-          window.location.href = `${redirectUri}${separator}auth_callback=1`;
-          return;
+          try {
+            const target = new URL(redirectUri, window.location.origin);
+            if (target.protocol === "http:" || target.protocol === "https:") {
+              target.searchParams.set("auth_callback", "1");
+              if (data.accessToken) {
+                target.hash = `access_token=${encodeURIComponent(data.accessToken)}`;
+              }
+              window.location.href = target.toString();
+              return;
+            }
+          } catch {
+            // Fall through to the default ProCV redirect.
+          }
         }
 
         // Redirigir a ProCV Dashboard con el token de acceso
@@ -61,14 +86,10 @@ export function HomePage() {
             : "https://procv.prosolutions.page");
 
         if (data.accessToken) {
-          sessionStorage.setItem('pro_identity_token', data.accessToken);
-          window.location.href = `${procvUrl}/auth/callback`;
+          window.location.href = `${procvUrl}/auth/callback#access_token=${encodeURIComponent(data.accessToken)}`;
         } else {
           window.location.href = `${procvUrl}/dashboard`;
         }
-      } else {
-        setLoginError(copy.auth.loginError);
-      }
     } catch {
       setLoginError(copy.auth.loginError);
     } finally {
@@ -81,7 +102,7 @@ export function HomePage() {
       <ProHeader
         activeApp="core"
         locale={language === "es" ? "es" : "en"}
-        onLocaleChange={() => {}}
+        onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
       />
 
       <main className="relative py-12 px-4 md:px-8 lg:px-12">

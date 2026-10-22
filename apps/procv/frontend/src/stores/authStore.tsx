@@ -2,6 +2,7 @@ import create from "zustand";
 import { useEffect } from "react";
 import { api } from "../services/api";
 import React from "react";
+import { identityAuthApiUrl } from "../lib/identityUrl";
 
 interface UserProfile {
   id: string;
@@ -27,9 +28,7 @@ interface AuthState {
 }
 
 const LOCAL_STORAGE_KEY = "procv_auth";
-const IDENTITY_ME_URL =
-  import.meta.env.VITE_IDENTITY_API_URL ||
-  "https://identity.prosolutions.page/api/auth/me";
+const IDENTITY_ME_URL = `${identityAuthApiUrl()}/me`;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

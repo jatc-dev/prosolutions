@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Button, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
+import { identityAuthApiUrl } from "../identityApi";
 
-const IDENTITY_API_URL =
-  import.meta.env.VITE_IDENTITY_API_URL ||
-  "https://identity.prosolutions.page/api/auth";
+const IDENTITY_API_URL = identityAuthApiUrl();
 
 export function ForgotPasswordPage() {
-  const { copy, locale } = useCoreLocale();
+  const { copy, locale, setLocale } = useCoreLocale();
   const language = locale === "es" ? "es" : "en";
 
   const [email, setEmail] = useState("");
@@ -44,7 +43,11 @@ export function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
-      <ProHeader activeApp="core" locale={language} onLocaleChange={() => {}} />
+      <ProHeader
+        activeApp="core"
+        locale={language}
+        onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
+      />
 
       <main className="relative flex-1">
         <section className="px-6 pt-8 pb-16">

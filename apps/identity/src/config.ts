@@ -51,11 +51,23 @@ function getDatabaseUrl(isProduction: boolean): string {
 
 const DEFAULT_ALLOWED_ORIGINS: string[] = [
   'https://prosolutions.page',
+  'https://www.prosolutions.page',
   'https://procv-platform.onrender.com',
   'https://procv.prosolutions.page',
+  'https://projobs.prosolutions.page',
   'http://localhost:3000',
   'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
 ];
+
+function getCookieSameSite(): 'lax' | 'strict' | 'none' {
+  const raw = (process.env.COOKIE_SAME_SITE || '').toLowerCase();
+  if (raw === 'lax' || raw === 'strict' || raw === 'none') {
+    return raw;
+  }
+  return getEnvironment() === 'production' ? 'none' : 'lax';
+}
 
 function getJwtSecret(): string {
   const secret = process.env.IDENTITY_JWT_SECRET;
@@ -86,13 +98,13 @@ export const config = {
   jwtSecret: getJwtSecret(),
   jwtExpiresIn: process.env.IDENTITY_JWT_EXPIRES_IN || '15m',
   jwtRefreshExpiresIn: process.env.IDENTITY_JWT_REFRESH_EXPIRES_IN || '7d',
-  issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.dev',
+  issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
   audience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
   frontendUrl: getFrontendUrl(getEnvironment() === 'production'),
   databaseUrl: getDatabaseUrl(getEnvironment() === 'production'),
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
-  cookieSameSite: (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
+  cookieSameSite: getCookieSameSite(),
   cookieDomain: process.env.COOKIE_DOMAIN || '.prosolutions.page',
   allowedOrigins: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
