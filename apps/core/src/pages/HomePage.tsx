@@ -40,9 +40,31 @@ export function HomePage() {
       const data = await response.json();
       if (data.accessToken || data.message === "Login successful" || response.ok) {
         // Sesión activa mediante cookie HTTP-only (.prosolutions.page)
-        // Redirigir al dashboard principal o a la página de destino
         setIsSubmitting(false);
-        window.location.href = `${window.location.origin}/dashboard`;
+
+        // Si se especificó un redirect_uri (por ejemplo desde ProCV o ProJobs), redirigir allí pasando el token
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectUri = searchParams.get("redirect_uri") || searchParams.get("redirect");
+
+        if (redirectUri) {
+          const separator = redirectUri.includes("?") ? "&" : "?";
+          const tokenParam = data.accessToken ? `token=${encodeURIComponent(data.accessToken)}` : "";
+          window.location.href = tokenParam ? `${redirectUri}${separator}${tokenParam}` : redirectUri;
+          return;
+        }
+
+        // Redirigir a ProCV Dashboard con el token de acceso
+        const procvUrl =
+          import.meta.env.VITE_PROCV_URL ||
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "http://localhost:5173"
+            : "https://procv.prosolutions.page");
+
+        if (data.accessToken) {
+          window.location.href = `${procvUrl}/auth/callback?token=${encodeURIComponent(data.accessToken)}`;
+        } else {
+          window.location.href = `${procvUrl}/dashboard`;
+        }
       } else {
         setLoginError(copy.auth.loginError);
       }

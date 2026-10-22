@@ -10,7 +10,7 @@ import { fetchCSRFToken } from "./services/api";
 
 const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
-  "https://identity.prosolutions.page/login";
+  "https://prosolutions.page/login";
 
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));

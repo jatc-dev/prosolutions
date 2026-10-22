@@ -12,7 +12,7 @@ import { trackLandingFunnelEvent } from "../utils/funnelAnalytics";
 
 const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
-  "https://proidentity.onrender.com/login";
+  "https://prosolutions.page/login";
 
 export function AuthPage() {
   const { t, i18n } = useTranslation();

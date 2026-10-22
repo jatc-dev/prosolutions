@@ -90,7 +90,8 @@
       getToken: () => accessToken,
       login: () => {
         const redirectUri = encodeURIComponent(window.location.href);
-        window.location.href = `${IDENTITY_URL}/login?redirect_uri=${redirectUri}`;
+        const loginUrl = window.__PROJOBS_LOGIN_URL__ || "https://prosolutions.page/login";
+        window.location.href = `${loginUrl}?redirect_uri=${redirectUri}`;
       },
       logout: () => {
         clearStoredToken();

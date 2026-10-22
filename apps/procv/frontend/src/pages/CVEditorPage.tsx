@@ -7,7 +7,7 @@ import { CompleteCVEditor } from "../components/editor/CompleteCVEditor";
 
 const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
-  "https://identity.prosolutions.page/login";
+  "https://prosolutions.page/login";
 
 export function CVEditorPage() {
   const { cvId } = useParams<{ cvId: string }>();

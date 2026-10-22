@@ -33,3 +33,6 @@ apps/projobs/jobs.json
 
 # Caché de Python
 __pycache__/
+
+# Supabase CLI
+supabase/.temp/

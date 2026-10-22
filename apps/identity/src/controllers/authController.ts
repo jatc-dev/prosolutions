@@ -37,7 +37,7 @@ function getDefaultModules(role: string): ProSolutionsModule[] {
   if (role === 'admin') {
     return Object.values(ProSolutionsModule);
   }
-  return [ProSolutionsModule.PROCV];
+  return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
 }
 
 export async function register(req: Request, res: Response) {
@@ -162,9 +162,21 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    const modules = user.moduleAccess
+    let modules = user.moduleAccess
       .filter((ma) => ma.active && (!ma.expiresAt || ma.expiresAt > new Date()))
       .map((ma) => ma.module);
+
+    if (modules.length === 0) {
+      const defaultModules = getDefaultModules(user.role);
+      for (const module of defaultModules) {
+        await prisma.moduleAccess.upsert({
+          where: { userId_module: { userId: user.id, module } },
+          update: { active: true },
+          create: { userId: user.id, module },
+        });
+      }
+      modules = defaultModules;
+    }
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: user.id,

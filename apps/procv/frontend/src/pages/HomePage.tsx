@@ -8,7 +8,7 @@ import { useAuth } from "../stores/authStore";
 
 const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
-  "https://identity.prosolutions.page/login";
+  "https://prosolutions.page/login";
 
 export function HomePage() {
   const { t, i18n } = useTranslation();
