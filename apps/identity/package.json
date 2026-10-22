@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "prisma migrate deploy && node scripts/ensure-build.mjs && node dist/index.js",
+    "start": "prisma migrate deploy && node dist/index.js",
     "start:migrate": "DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy && node dist/index.js",
     "migrate:users": "tsx scripts/migrate-procv-users.ts",
     "migrate:users:dry-run": "tsx scripts/migrate-procv-users.ts --dry-run",

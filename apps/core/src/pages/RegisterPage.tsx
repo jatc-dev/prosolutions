@@ -32,13 +32,13 @@ export function RegisterPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        setError(errorData.message || copy.auth.loginError);
+        setError(errorData.message || 'No se pudo crear la cuenta. Intenta de nuevo.');
         return;
       }
 
       setIsSuccess(true);
     } catch {
-      setError(copy.auth.loginError);
+      setError('No se pudo crear la cuenta. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }

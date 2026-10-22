@@ -19,7 +19,7 @@
 
   function getStoredToken() {
     try {
-      const raw = localStorage.getItem(ACCESS_TOKEN_KEY);
+      const raw = sessionStorage.getItem(ACCESS_TOKEN_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       return parsed.accessToken || null;
@@ -30,7 +30,7 @@
 
   function setStoredToken(token) {
     try {
-      localStorage.setItem(
+      sessionStorage.setItem(
         ACCESS_TOKEN_KEY,
         JSON.stringify({ accessToken: token, updatedAt: Date.now() }),
       );
@@ -39,7 +39,7 @@
 
   function clearStoredToken() {
     try {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
     } catch {}
   }
 

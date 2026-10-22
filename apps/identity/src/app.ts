@@ -92,12 +92,13 @@ export function createApp() {
   app.use(compression());
   app.use(cookieParser());
   app.use(corsMiddleware(config));
-  app.use(express.json({ limit: '10mb' }));
-  app.use(morgan('tiny'));
+app.use(express.json({ limit: '10mb' }));
+app.use(morgan('tiny'));
+app.use(apiLimiter);
 
-  // Auth routes are mounted BEFORE CSRF middleware so that login/register
-  // and other public auth endpoints do not require a CSRF token.
-  app.use('/api/auth', authRoutes);
+// Auth routes are mounted BEFORE CSRF middleware so that login/register
+// and other public auth endpoints do not require a CSRF token.
+app.use('/api/auth', authRoutes);
 
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);
@@ -113,14 +114,10 @@ export function createApp() {
   app.get('/health/db', async (_req, res) => {
     try {
       await prisma.$queryRawUnsafe('SELECT 1 as connected');
-      const tables = await prisma.$queryRawUnsafe<Array<{ tablename: string }>>(
-        `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`,
-      );
       return res.json({
         status: 'ok',
         service: 'proidentity',
         database: 'connected',
-        tables: tables.map((t: { tablename: string }) => t.tablename),
         timestamp: new Date().toISOString(),
       });
     } catch (error: unknown) {
@@ -133,18 +130,15 @@ export function createApp() {
         status: 'error',
         service: 'proidentity',
         database: 'disconnected',
-        error: err.message,
         timestamp: new Date().toISOString(),
       });
     }
   });
 
   app.use('/api/profile', profileRoutes);
-  app.use('/api/modules', moduleRoutes);
+app.use('/api/modules', moduleRoutes);
 
-  app.use(apiLimiter);
-
-  app.use('/api', (_req, res) => {
+app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Resource not found' });
   });
 

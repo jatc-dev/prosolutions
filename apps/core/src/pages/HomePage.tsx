@@ -47,9 +47,9 @@ export function HomePage() {
         const redirectUri = searchParams.get("redirect_uri") || searchParams.get("redirect");
 
         if (redirectUri) {
-          const separator = redirectUri.includes("?") ? "&" : "?";
-          const tokenParam = data.accessToken ? `token=${encodeURIComponent(data.accessToken)}` : "";
-          window.location.href = tokenParam ? `${redirectUri}${separator}${tokenParam}` : redirectUri;
+          sessionStorage.setItem('pro_identity_token', data.accessToken ?? '');
+          const separator = redirectUri.includes('?') ? '&' : '?';
+          window.location.href = `${redirectUri}${separator}auth_callback=1`;
           return;
         }
 
@@ -61,7 +61,8 @@ export function HomePage() {
             : "https://procv.prosolutions.page");
 
         if (data.accessToken) {
-          window.location.href = `${procvUrl}/auth/callback?token=${encodeURIComponent(data.accessToken)}`;
+          sessionStorage.setItem('pro_identity_token', data.accessToken);
+          window.location.href = `${procvUrl}/auth/callback`;
         } else {
           window.location.href = `${procvUrl}/dashboard`;
         }

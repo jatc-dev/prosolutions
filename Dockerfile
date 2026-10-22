@@ -34,7 +34,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/scripts ./scripts
 
 ENV NODE_ENV=production
-ENV PORT=4001
 
 EXPOSE 4001
 

@@ -13,23 +13,35 @@ out/
 # el build del workspace. Su dist se versiona a propósito.
 !packages/ui/dist/
 
-# Variables de entorno
+# Variables de entorno (todos los entornos)
 .env
 .env.local
 .env.*.local
+apps/identity/.env
+apps/identity/.env.local
+apps/identity/.env.*.local
+apps/procv/backend/.env
+apps/procv/backend/.env.local
+apps/procv/frontend/.env.local
+apps/projobs/.env
+apps/projobs/.env.local
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
+# Builds y compilados
+dist/
+build/
+.next/
+out/
 
-# Archivos del sistema
-.DS_Store
-Thumbs.db
+# Excepción: packages/ui se consume precompilado por apps/procv/frontend
+# en builds aislados (Render/Docker), donde el repo se clona sin ejecutar
+# el build del workspace. Su dist se versiona a propósito.
+!packages/ui/dist/
 
-# Artefactos generados por ProJobs (se regeneran con generator.py, no se versionan)
+# ProJobs generados (se regeneran con generator.py, no se versionan)
 /jobs.json
 apps/projobs/jobs.json
+apps/projobs/index.html
+apps/projobs/dist/
 
 # Caché de Python
 __pycache__/

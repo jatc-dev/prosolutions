@@ -1,38 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import { REFRESH_TOKEN_COOKIE_NAME } from '../utils/cookies';
 
-let csrfToken: string | null = null;
-
-export function generateCSRFMid(req: Request, res: Response, next: NextFunction) {
-  if (!csrfToken) {
-    csrfToken = crypto.randomBytes(32).toString('hex');
-  }
-  res.locals.csrfToken = csrfToken;
+export function generateCSRFMid(_req: Request, res: Response, next: NextFunction) {
+  res.locals.csrfToken = res.getHeader('X-CSRF-Token') || '';
   next();
 }
 
 export function getCSRFToken(req: Request, res: Response) {
-  res.json({ csrfToken: csrfToken || '' });
+  const token = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
+  res.json({ csrfToken: token || '' });
 }
 
 export function validateCSRF(req: Request, res: Response, next: NextFunction) {
   const method = (req.method || 'GET').toUpperCase();
-  const isSafe = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
-
-  if (isSafe) {
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
     return next();
   }
 
-  const tokenFromHeader = req.headers['x-csrf-token'] as string | undefined;
-  const tokenFromBody = (req.body as { _csrf?: string })?._csrf;
+  const clientToken = req.headers['x-csrf-token'] as string | undefined;
+  const cookieToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
 
-  const clientToken = tokenFromHeader || tokenFromBody;
-
-  if (!clientToken || clientToken !== csrfToken) {
+  if (!clientToken || !cookieToken || clientToken !== cookieToken) {
     return res.status(403).json({ message: 'CSRF token mismatch' });
   }
 
   next();
 }
-
-export { csrfToken };
