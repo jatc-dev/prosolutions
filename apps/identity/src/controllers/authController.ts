@@ -107,9 +107,14 @@ export async function register(req: Request, res: Response) {
       email: user.email,
     });
   } catch (error: unknown) {
-    logger.error('Registration failed due to internal error');
-    logger.debug('Registration error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
+    logger.error('Registration failed due to internal error', {
+      error: err.message,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }
@@ -133,7 +138,24 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
     }
 
-    const match = await bcrypt.compare(password, user.passwordHash);
+    let match: boolean;
+    try {
+      match = await bcrypt.compare(password, user.passwordHash);
+    } catch (bcryptError: unknown) {
+      const isBcryptError =
+        bcryptError instanceof Error &&
+        /hash/i.test(bcryptError.message);
+      logger.warn(
+        isBcryptError
+          ? 'Login failed: malformed password hash for user'
+          : 'Login failed: bcrypt comparison error',
+        {
+          userId: user.id,
+          error: bcryptError instanceof Error ? bcryptError.message : String(bcryptError),
+        },
+      );
+      return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
+    }
     if (!match) {
       logger.warn('Login failed: invalid credentials', { userId: user.id });
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
@@ -227,9 +249,13 @@ export async function login(req: Request, res: Response) {
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     const bodyEmail = (req.body as { email?: string })?.email;
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
     logger.error('Login failed due to internal error', {
       error: err.message,
-      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
       email: bodyEmail,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
@@ -430,9 +456,16 @@ export async function forgotPassword(req: Request, res: Response) {
       message: 'If an account with that email exists, a reset link has been sent.',
     });
   } catch (error: unknown) {
-    logger.error('Forgot password failed due to internal error');
-    logger.debug('Forgot password error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const bodyEmail = (req.body as { email?: string })?.email;
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
+    logger.error('Forgot password failed due to internal error', {
+      error: err.message,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
+      email: bodyEmail,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }
@@ -477,9 +510,14 @@ export async function resetPassword(req: Request, res: Response) {
     logger.info('Password reset successful', { userId: resetToken.userId });
     return res.json({ message: 'Password has been reset successfully' });
   } catch (error: unknown) {
-    logger.error('Reset password failed due to internal error');
-    logger.debug('Reset password error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
+    logger.error('Reset password failed due to internal error', {
+      error: err.message,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }
@@ -561,9 +599,14 @@ export async function verifyEmail(req: Request, res: Response) {
       },
     });
   } catch (error: unknown) {
-    logger.error('Email verification failed due to internal error');
-    logger.debug('Email verification error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
+    logger.error('Email verification failed due to internal error', {
+      error: err.message,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }
@@ -679,9 +722,16 @@ export async function resendVerification(req: Request, res: Response) {
       retryAfterSeconds: 60,
     });
   } catch (error: unknown) {
-    logger.error('Resend verification failed due to internal error');
-    logger.debug('Resend verification error details', {
-      error: error instanceof Error ? error.message : String(error),
+    const err = error instanceof Error ? error : new Error(String(error));
+    const bodyEmail = (req.body as { email?: string })?.email;
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
+    logger.error('Resend verification failed due to internal error', {
+      error: err.message,
+      errorName: err.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
+      stack: err.stack,
+      email: bodyEmail,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
   }

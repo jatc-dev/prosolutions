@@ -100,9 +100,13 @@ export async function createTokenPair(user: {
       },
     });
   } catch (error: unknown) {
+    const prismaError = error as { code?: string; meta?: unknown; name?: string };
     logger.error('Failed to persist session during token pair creation', {
       userId: user.id,
       error: error instanceof Error ? error.message : String(error),
+      errorName: prismaError.name,
+      errorCode: prismaError.code,
+      errorMeta: prismaError.meta,
     });
     throw error;
   }
