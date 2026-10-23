@@ -14,7 +14,6 @@ const PROSOLUTIONS_URL =
 
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
-const AuthPage = lazy(() => import("./pages/AuthPage").then((m) => ({ default: m.AuthPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AuthCallback = lazy(() => import("./pages/AuthCallback").then((m) => ({ default: m.AuthCallback })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
@@ -33,7 +32,20 @@ const JobsPage = lazy(() => import("./modules/projobs/pages/JobsPage").then((m) 
 
 function RedirectToProsolutions({ path }: { path: string }) {
   useEffect(() => {
-    window.location.href = `${PROSOLUTIONS_URL}${path}${window.location.search}${window.location.hash}`;
+    const target = new URL(path, PROSOLUTIONS_URL);
+    const incoming = new URLSearchParams(window.location.search);
+
+    // Legacy ProCV routes remain as compatibility aliases, but login,
+    // registration, verification and recovery all belong to ProIdentity.
+    incoming.forEach((value, key) => target.searchParams.set(key, value));
+    if (path === "/login" && !target.searchParams.has("redirect_uri")) {
+      target.searchParams.set(
+        "redirect_uri",
+        `${window.location.origin}/auth/callback`,
+      );
+    }
+    target.hash = window.location.hash;
+    window.location.replace(target.toString());
   }, [path]);
   return null;
 }
@@ -94,7 +106,7 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<AuthPage />} />
+            <Route path="/login" element={<RedirectToProsolutions path="/login" />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth" element={<Navigate to="/" replace />} />
             <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
