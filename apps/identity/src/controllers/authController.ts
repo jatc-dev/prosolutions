@@ -289,13 +289,12 @@ export async function refreshToken(req: Request, res: Response) {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      include: { moduleAccess: true },
     });
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'User not found or inactive' });
     }
 
-    const modules = await ensureDefaultModuleAccess(user.id, user.role);
+    const modules = await getActiveModules(user.id);
 
     const accessToken = signAccessToken({
       sub: user.id,
