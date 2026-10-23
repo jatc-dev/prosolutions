@@ -255,10 +255,10 @@
             return;
           }
           if (!response.ok) throw new Error(data.message || "Save failed");
-          btn.textContent = "✓ Guardado";
+          btn.textContent = document.documentElement.lang === "en" ? "✓ Saved" : "✓ Guardado";
           btn.setAttribute("aria-pressed", "true");
         } catch (error) {
-          alert(error?.message || "No se pudo guardar el empleo. Intenta de nuevo.");
+          alert(document.documentElement.lang === "en" ? "Could not save this job. Please try again." : "No se pudo guardar el empleo. Intenta de nuevo.");
           btn.textContent = originalLabel;
         } finally {
           btn.disabled = false;
