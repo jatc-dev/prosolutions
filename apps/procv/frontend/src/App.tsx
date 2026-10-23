@@ -33,7 +33,7 @@ const JobsPage = lazy(() => import("./modules/projobs/pages/JobsPage").then((m) 
 
 function RedirectToProsolutions({ path }: { path: string }) {
   useEffect(() => {
-    window.location.href = `${PROSOLUTIONS_URL}${path}`;
+    window.location.href = `${PROSOLUTIONS_URL}${path}${window.location.search}${window.location.hash}`;
   }, [path]);
   return null;
 }
