@@ -1,4 +1,3 @@
-export { JobsPage } from "./pages/JobsPage";
 export { JobDetailPage } from "./pages/JobDetailPage";
 export { JobCard } from "./components/JobCard";
 export { JobsToolbar } from "./components/JobsToolbar";
