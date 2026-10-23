@@ -37,23 +37,23 @@ function getDefaultModules(role: string): ProSolutionsModule[] {
   if (role === 'admin') {
     return Object.values(ProSolutionsModule);
   }
+  // Initial product policy: new accounts receive the currently available
+  // user-facing modules. Subsequent entitlement changes are explicit grants,
+  // never silently restored during login or token refresh.
   return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
 }
 
-async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
-  const defaults = getDefaultModules(role);
-  await Promise.all(
-    defaults.map((module) =>
-      prisma.moduleAccess.upsert({
-        where: { userId_module: { userId, module } },
-        update: { active: true, expiresAt: null },
-        create: { userId, module, active: true },
-      }),
-    ),
-  );
-  // The temporary self-service rollout exposes exactly the currently available
-  // modules to regular users. Admins keep the full enum returned by defaults.
-  return defaults;
+async function getActiveModules(userId: string): Promise<ProSolutionsModule[]> {
+  const grants = await prisma.moduleAccess.findMany({
+    where: {
+      userId,
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: { module: true },
+  });
+  const active = new Set(grants.map((grant) => grant.module));
+  return Object.values(ProSolutionsModule).filter((module) => active.has(module));
 }
 
 export async function register(req: Request, res: Response) {
@@ -148,8 +148,7 @@ export async function login(req: Request, res: Response) {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      include: { moduleAccess: true },
-    });
+      });
     if (!user) {
       logger.warn('Login failed: invalid credentials');
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
@@ -201,7 +200,7 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    const modules = await ensureDefaultModuleAccess(user.id, user.role);
+    const modules = await getActiveModules(user.id);
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: user.id,
@@ -575,7 +574,7 @@ export async function verifyEmail(req: Request, res: Response) {
       ...extractRequestInfo(req),
     });
 
-    const modules = await ensureDefaultModuleAccess(verificationToken.userId, verificationToken.user.role);
+    const modules = await getActiveModules(verificationToken.userId);
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: verificationToken.userId,
