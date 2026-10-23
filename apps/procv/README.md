@@ -1,5 +1,7 @@
 # ProCV Platform
 
+**Autenticación centralizada:** ProIdentity es la única fuente de cuentas, credenciales, sesiones, verificación de correo y permisos de módulo. La base de ProCV conserva datos de negocio (CV, versiones, análisis ATS, configuración y auditoría de ProCV). `CV.userId` es el identificador de sujeto de ProIdentity y no debe apuntar a una tabla local de usuarios. No recrear modelos/tablas `User`, `Session`, `PasswordResetToken` ni `EmailVerificationToken` en esta base.
+
 ProCV Platform es una aplicación web full-stack para **crear, editar y exportar hojas de vida profesionales**: editor visual en tiempo real, plantillas modernas, autoguardado con versiones, verificación de correo, análisis ATS y exportación a PDF de alta fidelidad (A4).
 
 - **Producción**: https://procv.prosolutions.page/
