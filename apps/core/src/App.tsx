@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { PortalPage } from "./pages/PortalPage";
+import { AdminAccessPage } from "./pages/AdminAccessPage";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/auth/callback" element={<HomePage />} />
         <Route path="/dashboard" element={<PortalPage />} />
         <Route path="/modules" element={<PortalPage />} />
+        <Route path="/admin/access" element={<AdminAccessPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -17,6 +17,7 @@ import prisma from './prismaClient';
 import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
+import adminRoutes from './routes/admin';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
@@ -128,6 +129,7 @@ export function createApp() {
   });
 
   app.use('/api/profile', profileRoutes);
+  app.use('/api/admin', adminRoutes);
   app.use('/api/modules', moduleRoutes);
 
   app.use('/api', (_req, res) => {

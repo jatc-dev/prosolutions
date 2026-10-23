@@ -1,9 +1,19 @@
 # ProIdentity — Architecture and Migration Plan
 
-**Status:** implementation RFC / staged migration plan  
+**Status:** historical migration RFC; the current data contract is documented in [PROCV_IDENTITY_DATA_MODEL.md](./PROCV_IDENTITY_DATA_MODEL.md)  
 **Owner:** ProSolutions platform  
 **Scope:** ProSolutions Core, ProCV, ProJobs, and future professional modules  
-**Safety rule:** do not disable the existing ProCV authentication flow or change production secrets/database state until migration gates pass.
+**Safety rule:** preserve migration history and reconcile CV ownership before removing legacy account tables. ProIdentity is now the sole account authority; the current rollout is implemented in a dedicated branch/PR.
+
+## Current implementation update — 2026-10-23
+
+- ProIdentity owns account credentials, verification, recovery, sessions, role and module entitlements.
+- ProCV's API validates Identity-issued JWTs against the central issuer and audience and requires the `PROCV` module claim. ProJobs requires `PROJOBS`.
+- The ProCV frontend no longer owns a login, verification, reset-password or token-callback page. It bootstraps an in-memory access token using the central HttpOnly refresh cookie.
+- The current ProCV data-model cleanup removes local credential/session/token tables and keeps CV ownership as the Identity subject. See the current contract document for migration and rollout requirements.
+- The browser flow is a shared-cookie/JWT integration, not a complete standards-based OIDC authorization-code + PKCE implementation. OIDC remains a separate future decision if the platform needs federated identity or third-party clients.
+
+The phases below describe the original migration plan and should be read as historical decision criteria, not as a statement that ProCV still owns authentication.
 
 ## Executive decision
 

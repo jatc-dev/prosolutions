@@ -1,13 +1,13 @@
 import create from "zustand";
 import { useEffect } from "react";
-import { api } from "../services/api";
 import React from "react";
+import { api } from "../services/api";
 import { identityAuthApiUrl } from "../lib/identityUrl";
 
 interface UserProfile {
   id: string;
   email: string;
-  name?: string;
+  name?: string | null;
   role?: string;
   emailVerified?: boolean;
   modules?: string[];
@@ -18,15 +18,10 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ requiresVerification?: boolean } | void>;
-  signInWithToken: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
-  setAccessToken: (token: string | null) => void;
-  validateSession: () => Promise<void>;
 }
 
-const LOCAL_STORAGE_KEY = "procv_auth";
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 const IDENTITY_ME_URL = `${IDENTITY_AUTH_URL}/me`;
 
@@ -44,172 +39,69 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   loading: true,
 
-  login: async (email, password) => {
-    const response = await fetchIdentity("/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 403) {
-        return { requiresVerification: true };
-      }
-      throw new Error(errorData.message || "Login failed");
-    }
-
-    const { accessToken, user } = await response.json();
-    if (!accessToken || !user) {
-      throw new Error("Login response did not include an access token and user");
-    }
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
-    api.setToken(accessToken);
-    set({ user, accessToken, isAuthenticated: true });
-  },
-
-  signInWithToken: async (accessToken) => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
-    api.setToken(accessToken);
-    try {
-      const response = await fetch(IDENTITY_ME_URL, {
-        method: "GET",
-        credentials: "include",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!response.ok) {
-        throw new Error("Unable to validate the supplied access token");
-      }
-      const data = await response.json();
-      const user = data?.user ?? null;
-      if (!user) {
-        throw new Error("Identity response did not include a user");
-      }
-      set({ user, accessToken, isAuthenticated: true });
-    } catch (error) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      api.setToken(null);
-      set({ user: null, accessToken: null, isAuthenticated: false });
-      throw error;
-    }
-  },
-
   logout: async () => {
+    const token = get().accessToken;
     try {
       await fetchIdentity("/logout", {
         method: "POST",
-        headers: { Authorization: `Bearer ${get().accessToken}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     } catch {
-      // Ignore errors during logout
+      // Clear the local view even if Identity is temporarily unreachable.
     }
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
     api.setToken(null);
     set({ user: null, accessToken: null, isAuthenticated: false });
   },
 
   refreshToken: async () => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (!parsed?.accessToken) throw new Error("Stored session does not contain an access token");
-      } catch {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        api.setToken(null);
-        set({ user: null, accessToken: null, isAuthenticated: false });
-      }
-    }
-
-    // Bootstrap this origin's token from the shared HttpOnly cookie instead of URL tokens.
     try {
       const response = await fetchIdentity("/refresh", { method: "POST" });
-      if (!response.ok) {
-        throw new Error("Session refresh failed");
-      }
+      if (!response.ok) throw new Error("Session refresh failed");
 
-      const { accessToken: newAccessToken } = await response.json();
-      if (!newAccessToken) {
-        throw new Error("Refresh response did not include an access token");
-      }
+      const { accessToken } = await response.json();
+      if (!accessToken) throw new Error("Identity did not return an access token");
 
       const meResponse = await fetch(IDENTITY_ME_URL, {
         method: "GET",
         credentials: "include",
-        headers: { Authorization: `Bearer ${newAccessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (!meResponse.ok) {
-        throw new Error("Unable to validate the refreshed access token");
-      }
+      if (!meResponse.ok) throw new Error("Identity session validation failed");
 
-      const meData = await meResponse.json();
-      const user = meData?.user ?? null;
-      if (!user) {
-        throw new Error("Identity response did not include a user");
-      }
+      const data = await meResponse.json();
+      const user = data?.user as UserProfile | null;
+      if (!user) throw new Error("Identity did not return a user profile");
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
-      api.setToken(newAccessToken);
-      set({ user, accessToken: newAccessToken, isAuthenticated: true });
+      api.setToken(accessToken);
+      set({ user, accessToken, isAuthenticated: true });
     } catch {
-      await get().logout();
+      api.setToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false });
     }
-  },
-
-  setAccessToken: (token) => {
-    api.setToken(token);
-    set({ accessToken: token, isAuthenticated: Boolean(token) });
-  },
-
-  validateSession: async () => {
-    const accessToken = get().accessToken;
-    if (!accessToken) {
-      throw new Error("No access token is available to validate");
-    }
-
-    const response = await fetch(IDENTITY_ME_URL, {
-      method: "GET",
-      credentials: "include",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!response.ok) {
-      throw new Error("Session validation failed");
-    }
-
-    const data = await response.json();
-    const user = data?.user ?? null;
-    if (!user) {
-      throw new Error("Identity response did not include a user");
-    }
-
-    set({ user, accessToken, isAuthenticated: true });
   },
 }));
 
+/**
+ * ProCV never stores credentials or bearer tokens in localStorage.
+ * On each fresh app load it exchanges the central HttpOnly refresh cookie
+ * for a short-lived access token held only in memory.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { validateSession, refreshToken, setAccessToken } = useAuthStore();
+  const refreshToken = useAuthStore((state) => state.refreshToken);
 
   useEffect(() => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!stored) {
-      refreshToken().catch(() => {}).finally(() => useAuthStore.setState({ loading: false }));
-      return;
-    }
+    let active = true;
     try {
-      const { accessToken } = JSON.parse(stored);
-      if (accessToken) {
-        setAccessToken(accessToken);
-        validateSession()
-          .catch(() => refreshToken().catch(() => {}))
-          .finally(() => useAuthStore.setState({ loading: false }));
-      } else {
-        useAuthStore.setState({ loading: false });
-      }
+      // Remove bearer tokens persisted by the retired ProCV login implementation.
+      window.localStorage.removeItem("procv_auth");
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      useAuthStore.setState({ loading: false });
+      // Storage may be unavailable in hardened browser contexts.
     }
-  }, [validateSession, refreshToken, setAccessToken]);
+    void refreshToken().finally(() => {
+      if (active) useAuthStore.setState({ loading: false });
+    });
+    return () => { active = false; };
+  }, [refreshToken]);
 
   return children;
 }

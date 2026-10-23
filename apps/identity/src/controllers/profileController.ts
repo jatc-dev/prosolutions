@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { Module } from '@prisma/client';
 import { IdentityRequest } from '../middleware/auth';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
@@ -102,43 +103,110 @@ export async function getModuleAccess(req: IdentityRequest, res: Response) {
   }
 }
 
-export async function grantModuleAccess(req: Request, res: Response) {
-  const { userId, module, expiresAt } = req.body;
+const isValidModule = (value: string): value is Module => Object.values(Module).includes(value as Module);
+
+export async function grantModuleAccess(req: IdentityRequest, res: Response) {
+  const { userId, module, expiresAt } = req.body as {
+    userId?: string;
+    module?: string;
+    expiresAt?: string | null;
+  };
 
   if (!userId || !module) {
     return res.status(400).json({ message: 'userId and module are required' });
   }
+  if (!isValidModule(module)) {
+    return res.status(400).json({ message: 'Unknown module' });
+  }
+
+  let parsedExpiry: Date | null = null;
+  if (expiresAt) {
+    parsedExpiry = new Date(expiresAt);
+    if (!Number.isFinite(parsedExpiry.getTime()) || parsedExpiry.getTime() <= Date.now()) {
+      return res.status(400).json({ message: 'expiresAt must be a valid future date' });
+    }
+  }
 
   try {
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isActive: true } });
+    if (!target) return res.status(404).json({ message: 'Identity user not found' });
+    if (!target.isActive) {
+      return res.status(409).json({ message: 'Cannot grant module access to an inactive account' });
+    }
+
     const access = await prisma.moduleAccess.upsert({
       where: { userId_module: { userId, module } },
-      update: { active: true, expiresAt: expiresAt ? new Date(expiresAt) : null },
-      create: { userId, module, expiresAt: expiresAt ? new Date(expiresAt) : null },
+      update: { active: true, expiresAt: parsedExpiry },
+      create: { userId, module, expiresAt: parsedExpiry },
+    });
+
+    auditLog('authorization.module_access_granted', {
+      userId: req.userId,
+      details: {
+        targetUserId: userId,
+        module,
+        expiresAt: parsedExpiry?.toISOString() ?? null,
+      },
+      ...extractRequestInfo(req),
     });
 
     return res.json({ access, message: 'Module access granted' });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return res.status(500).json({ message });
+    logger.error('Grant module access failed', {
+      actorId: req.userId,
+      targetUserId: userId,
+      module,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return res.status(500).json({ message: 'Unable to grant module access' });
   }
 }
 
-export async function revokeModuleAccess(req: Request, res: Response) {
-  const { userId, module } = req.body;
+export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
+  const { userId, module } = req.body as { userId?: string; module?: string };
 
   if (!userId || !module) {
     return res.status(400).json({ message: 'userId and module are required' });
   }
+  if (!isValidModule(module)) {
+    return res.status(400).json({ message: 'Unknown module' });
+  }
+  if (userId === req.userId) {
+    // Keep account administrators from accidentally removing their own module access.
+    const activeModules = await prisma.moduleAccess.findMany({
+      where: { userId, active: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+      select: { module: true },
+    });
+    const targetModuleIsActive = activeModules.some((access) => access.module === module);
+    if (targetModuleIsActive && activeModules.length <= 1) {
+      return res.status(400).json({ message: 'Cannot revoke the last active module from your own account' });
+    }
+  }
 
   try {
-    await prisma.moduleAccess.updateMany({
+    const result = await prisma.moduleAccess.updateMany({
       where: { userId, module },
       data: { active: false },
     });
 
-    return res.json({ message: 'Module access revoked' });
+    auditLog('authorization.module_access_revoked', {
+      userId: req.userId,
+      details: {
+        targetUserId: userId,
+        module,
+        affectedRows: result.count,
+      },
+      ...extractRequestInfo(req),
+    });
+
+    return res.json({ message: 'Module access revoked', affectedRows: result.count });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return res.status(500).json({ message });
+    logger.error('Revoke module access failed', {
+      actorId: req.userId,
+      targetUserId: userId,
+      module,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return res.status(500).json({ message: 'Unable to revoke module access' });
   }
 }

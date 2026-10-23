@@ -1,48 +1,12 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
-
+/**
+ * ProCV stores product data only. Account creation and administration belong
+ * to ProIdentity; this seed intentionally creates no local credentials.
+ */
 async function main() {
-  console.log('🌱 Seeding database...');
-
-  // Create admin user
-  const adminEmail = 'admin@procv.com';
-  const adminPassword = 'admin123';
-  const adminName = 'Administrator';
-
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail }
-  });
-
-  if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash(adminPassword, 10);
-
-    const admin = await prisma.user.create({
-      data: {
-        email: adminEmail,
-        passwordHash,
-        name: adminName,
-        role: 'admin'
-      }
-    });
-
-    console.log('✅ Admin user created:');
-    console.log(`   Email: ${admin.email}`);
-    console.log(`   Password: ${adminPassword}`);
-    console.log(`   Role: ${admin.role}`);
-  } else {
-    console.log('ℹ️  Admin user already exists');
-  }
-
-  console.log('🎉 Database seeded successfully!');
+  console.info('ProCV does not seed local users. Create accounts through ProIdentity.');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error seeding database:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((error: unknown) => {
+  console.error('ProCV seed check failed:', error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, LogOut, PanelsTopLeft, ScrollText, Settings, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelsTopLeft, ScrollText, Settings } from "lucide-react";
 import { ProHeader } from "@prosolutions/ui";
 import { useAuthStore } from "../stores/authStore";
 
@@ -17,7 +17,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
   const navItems = [
     { to: "/admin", label: t("admin.dashboardShort"), title: t("admin.dashboard"), icon: LayoutDashboard },
-    { to: "/admin/users", label: t("admin.usersShort"), title: t("admin.users"), icon: Users },
     { to: "/admin/settings", label: t("admin.settingsShort"), title: t("admin.settings"), icon: Settings },
     { to: "/admin/audit-logs", label: t("admin.auditLogsShort"), title: t("admin.auditLogs"), icon: ScrollText },
     { to: "/admin/landing", label: t("admin.landingPageShort"), title: t("admin.landingPage"), icon: PanelsTopLeft },
