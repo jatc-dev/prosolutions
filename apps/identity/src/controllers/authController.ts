@@ -47,15 +47,14 @@ async function getDefaultModules(role: string): Promise<string[]> {
 
 async function ensureDefaultModuleAccess(userId: string, role: string): Promise<string[]> {
   const defaults = await getDefaultModules(role);
-  await Promise.all(
-    defaults.map((moduleCode) =>
-      prisma.moduleAccess.upsert({
-        where: { userId_moduleCode: { userId, moduleCode } },
-        update: { active: true, expiresAt: null },
-        create: { userId, moduleCode, active: true },
-      }),
-    ),
-  );
+  // Grant defaults only when no row exists. Existing inactive/expired grants
+  // are intentional decisions and must never be silently reactivated at login.
+  if (defaults.length > 0) {
+    await prisma.moduleAccess.createMany({
+      data: defaults.map((moduleCode) => ({ userId, moduleCode, active: true })),
+      skipDuplicates: true,
+    });
+  }
 
   const now = new Date();
   const access = await prisma.moduleAccess.findMany({
