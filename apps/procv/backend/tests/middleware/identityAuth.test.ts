@@ -56,7 +56,10 @@ describe('ProCV Identity access middleware', () => {
     authMiddleware(req, res as unknown as Response, next as NextFunction);
 
     expect(res.state.statusCode).toBe(403);
-    expect(res.state.body).toEqual({ message: 'ProCV module access required', requiredModule: 'PROCV' });
+    expect(res.state.body).toEqual({
+      message: 'ProCV module access required',
+      requiredModule: 'PROCV',
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -99,7 +102,11 @@ describe('ProCV central administrator middleware', () => {
     const res = makeResponse();
     const next = jest.fn();
 
-    await requireAdmin(req as unknown as Request, res as unknown as Response, next as NextFunction);
+    await requireAdmin(
+      req as unknown as Request,
+      res as unknown as Response,
+      next as NextFunction,
+    );
 
     expect(res.state.statusCode).toBe(403);
     expect(res.state.body).toEqual({ message: 'Admin access required' });
@@ -131,7 +138,9 @@ describe('ProCV central administrator middleware', () => {
     await requireAdmin(req as unknown as Request, res as unknown as Response, next as NextFunction);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect((req as unknown as Request & { user: { id: string; email: string; role: string } }).user).toEqual({
+    expect(
+      (req as unknown as Request & { user: { id: string; email: string; role: string } }).user,
+    ).toEqual({
       id: 'central-admin-1',
       email: 'admin@example.com',
       role: 'admin',
