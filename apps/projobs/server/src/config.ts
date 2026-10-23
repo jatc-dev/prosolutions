@@ -43,7 +43,7 @@ export const config = {
   identityUrl: getIdentityUrl(),
   jwtSecret: getJwtSecret(),
   issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
-  audience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
+  audience: process.env.IDENTITY_AUDIENCE || 'projobs-api',
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
 };
