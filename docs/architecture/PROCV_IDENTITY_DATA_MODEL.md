@@ -10,7 +10,7 @@
 ## Request authorization contract
 
 1. ProIdentity authenticates the account and issues a short-lived access JWT with `sub`, `iss`, `aud`, `role` and the module entitlements active at issuance.
-2. Each module API validates the signature and exact issuer/audience, then requires its own module key (`PROCV`, `PROJOBS`, etc.).
+2. Each module API validates the signature and exact issuer/audience, then requires its own module key (`PROCV`, `PROJOBS`, etc.). All local validators must use the same `IDENTITY_JWT_SECRET` value as ProIdentity; the ProCV config temporarily accepts `JWT_SECRET` as a compatibility fallback. Never rotate the signing secret on only one service.
 3. Admin routes additionally require `role=admin`. Module access alone never implies administrator access.
 4. ProCV keeps its short-lived access token in memory; Core and ProJobs currently use tab-scoped `sessionStorage` while they complete their own navigation flow. All modules bootstrap/renew through the central HttpOnly refresh cookie. Do not put bearer or refresh tokens in `localStorage`, copy them between apps, or place them in URLs.
 5. Data queries always scope by the verified JWT subject. A user ID sent in request bodies or query strings is never an authorization source.
