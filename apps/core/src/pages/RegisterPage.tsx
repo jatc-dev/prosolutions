@@ -14,6 +14,9 @@ export function RegisterPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [verificationEmailSent, setVerificationEmailSent] = useState(true);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -35,11 +38,32 @@ export function RegisterPage() {
         return;
       }
 
+      const data = await response.json().catch(() => ({}));
+      setVerificationEmailSent(data.verificationEmailSent !== false);
       setIsSuccess(true);
     } catch {
       setError('No se pudo crear la cuenta. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    setResendMessage(null);
+    try {
+      const response = await fetch(`${IDENTITY_API_URL}/resend-verification`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json().catch(() => ({}));
+      setResendMessage(response.ok
+        ? "Solicitud procesada. Si la cuenta existe y no está verificada, revisa tu bandeja y el correo no deseado."
+        : data.message || "No se pudo enviar. Espera un minuto e inténtalo de nuevo.");
+    } catch {
+      setResendMessage("No se pudo conectar con el servicio de correo. Inténtalo de nuevo.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -83,8 +107,19 @@ export function RegisterPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
-                    Cuenta creada correctamente. Revisa tu correo y sigue el enlace de verificación antes de iniciar sesión.
+                    {verificationEmailSent
+                      ? "Cuenta creada correctamente. Revisa tu correo y sigue el enlace de verificación antes de iniciar sesión."
+                      : "Tu cuenta se creó, pero no pudimos entregar el correo de verificación. Puedes solicitar un nuevo enlace ahora."}
                   </p>
+                  {!verificationEmailSent && (
+                    <div className="space-y-3">
+                      <button type="button" onClick={handleResendVerification} disabled={isResending}
+                        className="rounded-lg border border-brand-600 px-5 py-2 font-medium text-brand-700 disabled:opacity-60 dark:text-brand-300">
+                        {isResending ? "Solicitando..." : "Reenviar verificación"}
+                      </button>
+                      {resendMessage && <p className="text-sm text-slate-600 dark:text-slate-300">{resendMessage}</p>}
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => (window.location.href = "/login")}
