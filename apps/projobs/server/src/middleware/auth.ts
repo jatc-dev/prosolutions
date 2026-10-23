@@ -34,6 +34,14 @@ export function proJobsAuthMiddleware(
       modules?: string[];
     };
 
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
     req.userId = payload.sub;
     req.email = payload.email;
     req.role = payload.role;
