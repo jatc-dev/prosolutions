@@ -15,6 +15,7 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 # Configuración básica
 # ---------------------------------------------------------------------------
 SITE_URL = "https://projobs.prosolutions.page/"
+PROJOBS_API_URL = os.environ.get("PROJOBS_API_URL", "").strip().rstrip("/")
 SITE_TITLE = "ProJobs - Empleos Tech y Más"
 SITE_DESC = "Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente."
 
@@ -1083,6 +1084,7 @@ def render_page(jobs: list[dict]) -> str:
     </footer>
 
     {JS_CODE}
+    <script>window.__PROJOBS_API_URL__ = {json.dumps(PROJOBS_API_URL)};</script>
     <script src="auth.js"></script>
 </body>
 </html>'''
