@@ -4,10 +4,10 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { config } from './config';
-import { proJobsAuthMiddleware } from './middleware/auth';
-import applicationsRoutes from './routes/applications';
-import savedJobsRoutes from './routes/saved-jobs';
+import { config } from './config.js';
+import { proJobsAuthMiddleware } from './middleware/auth.js';
+import applicationsRoutes from './routes/applications.js';
+import savedJobsRoutes from './routes/saved-jobs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,9 +23,7 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: config.isProduction
-        ? ['https://projobs.prosolutions.page', 'https://prosolutions.page']
-        : true,
+      origin: config.isProduction ? config.corsOrigins : true,
       credentials: true,
     }),
   );

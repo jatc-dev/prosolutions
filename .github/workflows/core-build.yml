@@ -67,8 +67,8 @@ jobs:
           PROJOBS_SKIP_FETCH: "1"
       - name: Install ProJobs API dependencies
         run: npm ci --prefix apps/projobs/server
-      - name: Build ProJobs API
-        run: npm run build --prefix apps/projobs/server
+      - name: Test ProJobs API authentication and persistence fallback
+        run: npm test --prefix apps/projobs/server
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:

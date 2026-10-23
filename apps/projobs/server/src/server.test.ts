@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import jwt from 'jsonwebtoken';import {createApp} from './index.js';import {config} from './config.js';
+test('ProJobs auth and safe persistence fallback',async t=>{const server=createApp().listen(0,'127.0.0.1');await new Promise<void>(r=>server.once('listening',r));const a=server.address();if(!a||typeof a==='string')throw Error('No test port');const base=`http://127.0.0.1:${a.port}`;const token=(modules:string[])=>jwt.sign({modules},config.jwtSecret,{subject:'synthetic-test-user',issuer:config.issuer,audience:config.audience,expiresIn:'5m'});t.after(()=>new Promise<void>((r,j)=>server.close(e=>e?j(e):r())));
+await t.test('health endpoint',async()=>{const x=await fetch(base+'/health');assert.equal(x.status,200)});
+await t.test('missing credentials are rejected',async()=>assert.equal((await fetch(base+'/api/saved-jobs')).status,401));
+await t.test('invalid token is rejected',async()=>assert.equal((await fetch(base+'/api/saved-jobs',{headers:{Authorization:'Bearer invalid'}})).status,401));
+await t.test('missing PROJOBS entitlement is rejected',async()=>assert.equal((await fetch(base+'/api/saved-jobs',{headers:{Authorization:'Bearer '+token(['PROCV'])}})).status,403));
+await t.test('unconfigured database returns safe 503',async()=>{if(config.databaseUrl)return;const x=await fetch(base+'/api/saved-jobs',{headers:{Authorization:'Bearer '+token(['PROJOBS'])}});assert.equal(x.status,503);assert.equal((await x.json()).code,'PROJOBS_PERSISTENCE_NOT_CONFIGURED')})});

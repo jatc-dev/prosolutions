@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { proJobsAuthMiddleware, ProJobsAuthRequest } from '../middleware/auth';
+import { proJobsAuthMiddleware, ProJobsAuthRequest } from '../middleware/auth.js';
 import {
   createApplication,
   listApplications,
   StoreNotConfiguredError,
-} from '../data/projobs-store';
+} from '../data/projobs-store.js';
 
 const router = Router();
 
