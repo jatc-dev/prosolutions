@@ -39,6 +39,8 @@ jobs:
           cache: npm
       - name: Install workspace dependencies
         run: npm ci
+      - name: Validate ProJobs auth client syntax
+        run: node --check apps/projobs/auth.js
       - name: Build Core and shared UI
         run: npm run build:core
 
