@@ -5,7 +5,6 @@ import { identityAuthApiUrl } from "../lib/identityUrl";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "/api";
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 
-const LOCAL_STORAGE_KEY = "procv_auth";
 const MAX_GET_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 300;
 const RETRYABLE_STATUSES = new Set([429]);
@@ -123,9 +122,9 @@ instance.interceptors.request.use(
 let refreshPromise: Promise<string | null> | null = null;
 
 function redirectToLogin() {
-  // Avoid hard-reload loops when already on the login page.
-  if (window.location.pathname !== "/") {
-    window.location.href = "/";
+  const centralLogin = `${import.meta.env.VITE_PROSOLUTIONS_URL || "https://prosolutions.page"}/login`;
+  if (window.location.href !== centralLogin) {
+    window.location.assign(centralLogin);
   }
 }
 
@@ -139,12 +138,6 @@ async function doRefresh(): Promise<string | null> {
     if (!response.ok) return null;
     const { accessToken } = await response.json();
     if (accessToken) {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        parsed.accessToken = accessToken;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
-      }
       instance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       return accessToken;
     }
@@ -196,7 +189,6 @@ instance.interceptors.response.use(
     }
 
     if (originalRequest._skipAuthRetry) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
       instance.defaults.headers.common.Authorization = "";
       redirectToLogin();
       return Promise.reject(error);
