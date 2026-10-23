@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { IdentityRequest } from '../middleware/auth';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
@@ -116,7 +117,7 @@ export async function listUsersForModuleAccess(req: IdentityRequest, res: Respon
     const limit = Math.min(100, Math.max(1, Number.parseInt(String(req.query.limit || '20'), 10) || 20));
     const search = String(req.query.search || '').trim().slice(0, 100);
     const role = String(req.query.role || '').trim();
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
