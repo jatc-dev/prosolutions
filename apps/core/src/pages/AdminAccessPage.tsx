@@ -56,8 +56,9 @@ async function getCsrfToken(forceRefresh = false): Promise<string> {
   if (!response.ok) throw new Error("No se pudo iniciar la protección CSRF.");
   const result = await response.json();
   if (!result?.csrfToken) throw new Error("Identity no devolvió el token CSRF.");
-  csrfToken = result.csrfToken;
-  return csrfToken;
+  const token = result.csrfToken as string;
+  csrfToken = token;
+  return token;
 }
 
 async function identityFetch(path: string, init: RequestInit = {}): Promise<Response> {
