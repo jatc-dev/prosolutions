@@ -5,6 +5,27 @@ import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
+function getSafeReturnUri(): string | null {
+  const candidate = new URLSearchParams(window.location.search).get("redirect_uri");
+  if (!candidate) return null;
+
+  try {
+    const destination = new URL(candidate);
+    const hostname = destination.hostname.toLowerCase();
+    const isPlatformHost = hostname === "prosolutions.page" || hostname.endsWith(".prosolutions.page");
+    const isLocalHost =
+      ["localhost", "127.0.0.1"].includes(hostname) &&
+      ["localhost", "127.0.0.1"].includes(window.location.hostname.toLowerCase());
+
+    if (destination.username || destination.password) return null;
+    if (isPlatformHost && destination.protocol === "https:") return destination.toString();
+    if (isLocalHost && ["http:", "https:"].includes(destination.protocol)) return destination.toString();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function HomePage() {
   const { copy, locale, setLocale } = useCoreLocale();
   const language = locale === "es" ? "es" : "en";
@@ -53,7 +74,7 @@ export function HomePage() {
       // Keep the short-lived access token in this origin's session only.
       // The refresh cookie is shared by the platform's first-party subdomains.
       sessionStorage.setItem("pro_identity_token", data.accessToken);
-      window.location.assign("/dashboard");
+      window.location.assign(getSafeReturnUri() || "/dashboard");
     } catch {
       setLoginError(copy.auth.loginError);
     } finally {
