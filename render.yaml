@@ -105,6 +105,8 @@ services:
         sync: false
       - key: IDENTITY_URL
         value: https://identity.prosolutions.page
+      - key: IDENTITY_AUDIENCE
+        value: procv-api
       - key: FRONTEND_URL
         value: https://procv.prosolutions.page
       - key: DATABASE_URL
