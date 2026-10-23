@@ -346,6 +346,92 @@ export async function listUsersForModuleAdmin(req: IdentityRequest, res: Respons
   }
 }
 
+export async function updateAdminUser(req: IdentityRequest, res: Response) {
+  const { id } = req.params;
+  const body = req.body ?? {};
+  const data: { name?: string | null; role?: string; isActive?: boolean } = {};
+
+  if (body.name !== undefined) {
+    if (body.name !== null && typeof body.name !== 'string') {
+      return res.status(400).json({ message: 'name must be a string or null' });
+    }
+    data.name = typeof body.name === 'string' ? body.name.trim() || null : null;
+  }
+  if (body.role !== undefined) {
+    if (body.role !== 'admin' && body.role !== 'user') {
+      return res.status(400).json({ message: 'role must be admin or user' });
+    }
+    if (id === req.userId && body.role !== 'admin') {
+      return res.status(400).json({ message: 'You cannot remove your own administrator role' });
+    }
+    data.role = body.role;
+  }
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== 'boolean') {
+      return res.status(400).json({ message: 'isActive must be boolean' });
+    }
+    if (id === req.userId && body.isActive === false) {
+      return res.status(400).json({ message: 'You cannot deactivate your own account' });
+    }
+    data.isActive = body.isActive;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ message: 'At least one supported field is required' });
+  }
+
+  try {
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, isActive: true },
+    });
+    if (!existing) return res.status(404).json({ message: 'User not found' });
+
+    const accountSecurityChanged =
+      (data.role !== undefined && data.role !== existing.role) ||
+      (data.isActive !== undefined && data.isActive !== existing.isActive);
+
+    const user = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isActive: true,
+          emailVerified: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+      });
+
+      if (accountSecurityChanged) {
+        await tx.session.updateMany({
+          where: { userId: id, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+      }
+      return updated;
+    });
+
+    auditLog('authorization.user_account_updated', {
+      userId: id,
+      actorId: req.userId,
+      changedFields: Object.keys(data),
+      sessionsRevoked: accountSecurityChanged,
+      ...extractRequestInfo(req),
+    });
+    return res.json({ user, message: 'Account updated successfully' });
+  } catch (error) {
+    logger.error('Update central user error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 export async function getModuleAdminMetrics(req: IdentityRequest, res: Response) {
   try {
     const days = Math.min(365, Math.max(7, Number.parseInt(String(req.query.days ?? '30'), 10) || 30));
