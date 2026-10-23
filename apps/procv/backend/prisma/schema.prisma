@@ -7,62 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                      String                   @id @default(cuid())
-  email                   String                   @unique
-  name                    String?
-  passwordHash            String
-  role                    String                   @default("user")
-  lastLoginAt             DateTime?
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-  emailVerified           Boolean                  @default(false)
-  cvs                     CV[]
-  emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens     PasswordResetToken[]
-  sessions                Session[]
-}
-
-model Session {
-  id               String    @id @default(cuid())
-  userId           String
-  refreshToken     String    @unique
-  expiresAt        DateTime
-  createdAt        DateTime  @default(now())
-  revokedAt        DateTime?
-  lastAccessedAt   DateTime  @default(now())
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([expiresAt])
-  @@index([userId])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  tokenHash String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
-model EmailVerificationToken {
-  id        String   @id @default(cuid())
-  userId    String
-  tokenHash String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
 model CVVersion {
   id        String   @id @default(cuid())
   cvId      String?
@@ -80,9 +24,10 @@ model CV {
   data        String          @default("{}")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // userId is the immutable ProIdentity subject, not a local User foreign key.
   atsAnalyses CVAtsAnalysis[]
-}
+
+  @@index([userId, updatedAt])
 
 model CVAtsAnalysis {
   id             String   @id @default(cuid())
