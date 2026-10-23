@@ -80,13 +80,13 @@ Solo después de que el backend y frontend nuevos estén saludables y se hayan v
 npm run procv:identity:finalize:dry-run --workspace=apps/identity
 ```
 
-Si la simulación confirma que no hay CV huérfanos, dependencias foráneas al usuario legacy ni filas en `_conn_test`, ejecutar:
+Si la simulación confirma que no hay CV huérfanos ni dependencias foráneas al usuario legacy, ejecutar:
 
 ```bash
 npm run procv:identity:finalize --workspace=apps/identity
 ```
 
-La finalización elimina exclusivamente las tablas locales de autenticación (`User`, `Session`, `EmailVerificationToken`, `PasswordResetToken`) y la tabla de prueba vacía `_conn_test`. **No elimina** `CV`, `CVVersion`, `CVAtsAnalysis`, `PlatformSetting` ni el historial de auditoría. Si cualquier precondición falla, no se debe forzar el borrado.
+La finalización elimina exclusivamente las tablas locales de autenticación (`User`, `Session`, `EmailVerificationToken`, `PasswordResetToken`). **Conserva** `_conn_test` y cualquier tabla de diagnóstico, además de `CV`, `CVVersion`, `CVAtsAnalysis`, `PlatformSetting` y el historial de auditoría. Si cualquier precondición falla, no se debe forzar el borrado.
 
 ## 3. Comprobación de permisos de módulos
 
