@@ -9,7 +9,7 @@ import { useApi } from "../hooks/useApi";
 import { identityAuthApiUrl } from "../lib/identityUrl";
 
 export function ProfilePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, accessToken } = useAuth();
   const { execute: updateProfile, loading, error } = useApi();
@@ -134,9 +134,11 @@ export function ProfilePage() {
                 label={t('profile.email', 'Email Address')}
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                disabled
                 placeholder={t('profile.emailPlaceholder', 'Enter your email address')}
-                helperText={t('profile.emailHelp', 'This email will be used for account notifications')}
+                helperText={i18n.language.toLowerCase().startsWith('es')
+                  ? 'El correo se administra en ProIdentity. Para cambiarlo se necesita un flujo de verificación independiente.'
+                  : 'Email is managed by ProIdentity. Changing it requires a separate verification flow.'}
                 error={error && error.includes('email') ? error : undefined}
               />
             </div>
