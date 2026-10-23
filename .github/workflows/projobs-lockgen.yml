@@ -7,20 +7,25 @@ on:
       - "apps/projobs/server/package.json"
       - ".github/workflows/projobs-lockgen.yml"
 permissions:
-  contents: read
+  contents: write
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: feat/projobs-persistence-foundation
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Generate lockfile from pinned server dependencies
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund --prefix apps/projobs/server
-      - uses: actions/upload-artifact@v4
-        with:
-          name: projobs-server-lockfile
-          path: apps/projobs/server/package-lock.json
-          if-no-files-found: error
-          retention-days: 3
+      - name: Generate and commit server lockfile
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --prefix apps/projobs/server
+          if ! git diff --quiet -- apps/projobs/server/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/projobs/server/package-lock.json
+            git commit -m "Update ProJobs server lockfile for PostgreSQL"
+            git push origin HEAD:feat/projobs-persistence-foundation
+          fi
