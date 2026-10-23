@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import json
+import hashlib
 import os
 import sys
 import unicodedata
@@ -533,7 +534,13 @@ def render_job_card(job: dict) -> str:
     if job.get("experience") and job["experience"] != "no-especificado":
         experience_text = " • " + job["experience"].title()
 
-    return ('        <article class="job-card" data-country="' + escape_html(job['country']) + '"\n'
+    stable_url = canonical_url(job.get("url", ""))
+    job_id = hashlib.sha256(stable_url.encode("utf-8")).hexdigest()[:24]
+    job_url = escape_html(job["url"])
+    job_title = escape_html(job["title"])
+    company = escape_html(job["company"])
+
+    return ('        <article class="job-card" data-job-id="' + job_id + '" data-country="' + escape_html(job['country']) + '"\n'
             '             data-sector="' + escape_html(job['sector']) + '"\n'
             '             data-modality="' + escape_html(job['modality']) + '"\n'
             '             data-contract="' + escape_html(job['contract_type']) + '"\n'
@@ -554,8 +561,10 @@ def render_job_card(job: dict) -> str:
             '                <span class="badge">' + escape_html(job['contract_type'].title()) + '</span>\n'
             '                <span class="badge">' + escape_html(job['sector'].title()) + '</span>\n'
             '            </div>\n'
-            '            <a href="' + escape_html(job['url']) + '" class="btn" target="_blank"\n'
-            '               rel="noopener sponsored">Ver Oferta Completa</a>\n'
+            '            <div class="job-actions">\n'
+            '                <a href="' + job_url + '" class="btn" data-action="apply" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" target="_blank" rel="noopener sponsored">Ver oferta</a>\n'
+            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo">♡ Guardar</button>\n'
+            '            </div>\n'
             '        </article>\n    ')
 
 
@@ -888,6 +897,15 @@ CSS_STYLES = """
         .job-card > .badge { border-radius: 999px; background: #eef2ff; color: #4338ca; }
         .btn { margin-top: auto; border-radius: 10px; background: #4f46e5; padding: 11px 16px; }
         .btn:hover { background: #4338ca; }
+        .job-actions { display: flex; width: 100%; align-items: center; gap: 10px; margin-top: auto; }
+        .job-actions .btn { display: inline-flex; align-items: center; justify-content: center; flex: 1; margin-top: 0; text-decoration: none; }
+        .btn-save { min-height: 42px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
+        .btn-save:hover { border-color: #818cf8; background: #eef2ff; color: #3730a3; }
+        .btn-save:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+        html.dark .btn-save { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+        html.dark .btn-save:hover { background: #312e81; border-color: #6366f1; color: #e0e7ff; }
+        @media (max-width: 420px) { .job-actions { flex-direction: column; align-items: stretch; } .job-actions .btn, .btn-save { width: 100%; } }
+
         .no-results { max-width: 80rem; margin: 0 auto 32px; padding: 44px 20px; border: 1px dashed #cbd5e1; border-radius: 18px; background: #fff; }
         .pro-footer { margin-top: 28px; background: #fff; border-top: 1px solid #e2e8f0; }
         .pro-footer-inner { max-width: 80rem; margin: 0 auto; padding: 56px 16px 24px; }
