@@ -42,18 +42,18 @@ function getDefaultModules(role: string): ProSolutionsModule[] {
 
 async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
   const defaults = getDefaultModules(role);
-  for (const module of defaults) {
-    await prisma.moduleAccess.upsert({
-      where: { userId_module: { userId, module } },
-      update: { active: true, expiresAt: null },
-      create: { userId, module, active: true },
-    });
-  }
-  const activeAccess = await prisma.moduleAccess.findMany({
-    where: { userId, active: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
-    select: { module: true },
-  });
-  return [...new Set([...activeAccess.map((item) => item.module), ...defaults])];
+  await Promise.all(
+    defaults.map((module) =>
+      prisma.moduleAccess.upsert({
+        where: { userId_module: { userId, module } },
+        update: { active: true, expiresAt: null },
+        create: { userId, module, active: true },
+      }),
+    ),
+  );
+  // The temporary self-service rollout exposes exactly the currently available
+  // modules to regular users. Admins keep the full enum returned by defaults.
+  return defaults;
 }
 
 export async function register(req: Request, res: Response) {
