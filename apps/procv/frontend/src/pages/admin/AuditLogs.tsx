@@ -4,10 +4,9 @@ import { api } from "../../services/api";
 
 interface AuditLog {
   id: string;
-  adminId: string;
-  adminEmail: string;
+  userId: string | null;
   action: string;
-  resource: string;
+  resourceType: string;
   resourceId: string | null;
   details: string | null;
   ipAddress: string | null;
@@ -150,8 +149,8 @@ export function AuditLogs() {
                 <tr key={log.id} className="transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/70">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="font-medium text-slate-900 dark:text-slate-100">{log.adminEmail}</div>
-                      <div className="text-sm text-slate-500 dark:text-slate-300">{t("admin.auditLogs.idPrefix")} {log.adminId.slice(0, 8)}...</div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{log.userId ? `Identity · ${log.userId.slice(0, 8)}…` : t('admin.auditLogs.systemActor', 'Sistema')}</div>
+                      <div className="text-sm text-slate-500 dark:text-slate-300">{t("admin.auditLogs.idPrefix")} {log.userId ? `${log.userId.slice(0, 8)}...` : "—"}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -161,7 +160,7 @@ export function AuditLogs() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="font-medium text-slate-900 capitalize dark:text-slate-100">{log.resource}</div>
+                      <div className="font-medium text-slate-900 capitalize dark:text-slate-100">{log.resourceType}</div>
                       {log.resourceId && (
                         <div className="text-sm text-slate-500 dark:text-slate-300">{t("admin.auditLogs.idPrefix")} {log.resourceId.slice(0, 8)}...</div>
                       )}
