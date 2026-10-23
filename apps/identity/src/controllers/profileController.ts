@@ -226,6 +226,12 @@ export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
     return res.status(400).json({ message: 'A valid userId and module are required' });
   }
 
+  if (normalizedModule === ProSolutionsModule.PROCV && userId === req.userId) {
+    return res.status(409).json({
+      message: 'Administrators cannot revoke their own ProCV access from the ProCV administration console',
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
