@@ -35,13 +35,14 @@ Use separate non-owner login roles per application, with only the required datab
 - Migration history currently contains `20261020000000_init` and `add_jti_column`.
 - Identity owns `User`, `Session`, password-reset and email-verification tokens, `ProfessionalProfile`, `ModuleAccess`, and `AuditLog`.
 - Preserve user IDs, session/revocation semantics, module grants and audit records during migration. Never generate a fresh production identity database without a controlled data copy.
+- Live Supabase metadata shows RLS enabled but not forced and zero policies on all Identity public tables, with `postgres` as table owner. A restricted non-owner runtime login would therefore be blocked by RLS unless the migration adds a deliberate runtime policy or changes the RLS design. Do not simply swap the connection string and assume it will work.
 
 ### ProCV
 - Prisma schema: `apps/procv/backend/prisma/schema.prisma`.
 - Migration history contains the original local-auth schema, ATS analysis, session/email-verification changes, RLS enabling, CV version alignment, and `zzzz_identity_only_data_model`.
 - The current model is product-data-only. The final historical migration drops legacy `User`, `Session`, `EmailVerificationToken`, and `PasswordResetToken` after ownership reconciliation and remaps two known legacy subjects.
 - **Do not delete or rewrite migration files.** For an empty Neon database, replaying history and applying the final migration is a distinct case from moving an existing populated database. Never blindly reuse the hard-coded legacy user IDs in the ownership backfill.
-- The current RLS migration enables RLS on public tables but does not force it or add owner policies; its comment assumes the existing application connects as a table owner. Before Neon cutover, explicitly design and test least-privilege runtime grants and the effective RLS behavior. Do not assume that current Supabase owner-role behavior transfers safely to a restricted Neon role.
+- Live Supabase metadata confirms RLS enabled, not forced, and zero policies on ProCV public tables, with `postgres` as table owner. The repository migration comment assumes an owner-role application connection. A non-owner runtime role will see no rows / be unable to modify them unless explicit policies are added. Before Neon cutover, either implement and test per-user RLS with transaction-local subject context, or explicitly document and test a different safe runtime access design; do not simply swap the connection string.
 
 ### ProJobs
 - `apps/projobs/server/sql/001_projobs_core.sql` is available on PR #53's branch `feat/projobs-persistence-foundation`, not yet part of `main`.
