@@ -24,7 +24,9 @@ export type AuditEventType =
   | 'authentication.profile_updated'
   | 'authentication.token_validated'
   | 'authorization.unauthorized_access'
-  | 'authorization.module_access_denied';
+  | 'authorization.module_access_denied'
+  | 'authorization.module_access_granted'
+  | 'authorization.module_access_revoked';
 
 export function auditLog(eventType: AuditEventType, data: AuditLogData = {}) {
   logger.info(`AUDIT: ${eventType}`, {
