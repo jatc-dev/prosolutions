@@ -992,7 +992,7 @@ def render_page(jobs: list[dict]) -> str:
         </div>
     </nav>
 
-    <header>
+    <header class="jobs-hero">
         <p class="hero-eyebrow" data-i18n="heroEyebrow">OPORTUNIDADES PARA TU SIGUIENTE PASO</p>
         <h1 data-i18n="title">Encuentra tu próxima oportunidad</h1>
         <p class="subtitle" data-i18n="description">{SITE_DESC}</p>
