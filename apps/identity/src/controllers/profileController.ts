@@ -3,6 +3,7 @@ import { IdentityRequest } from '../middleware/auth';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
 import { professionalProfileSchema } from '../validation/authValidation';
+import { ALL_MODULES, ProSolutionsModule } from '../types/modules';
 import { auditLog, extractRequestInfo } from '../utils/auditLog';
 
 export async function getProfile(req: IdentityRequest, res: Response) {
@@ -102,43 +103,151 @@ export async function getModuleAccess(req: IdentityRequest, res: Response) {
   }
 }
 
-export async function grantModuleAccess(req: Request, res: Response) {
-  const { userId, module, expiresAt } = req.body;
+function parseModule(value: unknown): ProSolutionsModule | null {
+  if (typeof value !== 'string') return null;
+  return ALL_MODULES.includes(value as ProSolutionsModule)
+    ? (value as ProSolutionsModule)
+    : null;
+}
 
-  if (!userId || !module) {
-    return res.status(400).json({ message: 'userId and module are required' });
-  }
-
+export async function listUsersForModuleAccess(req: IdentityRequest, res: Response) {
   try {
-    const access = await prisma.moduleAccess.upsert({
-      where: { userId_module: { userId, module } },
-      update: { active: true, expiresAt: expiresAt ? new Date(expiresAt) : null },
-      create: { userId, module, expiresAt: expiresAt ? new Date(expiresAt) : null },
-    });
+    const page = Math.max(1, Number.parseInt(String(req.query.page || '1'), 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(String(req.query.limit || '20'), 10) || 20));
+    const search = String(req.query.search || '').trim().slice(0, 100);
+    const role = String(req.query.role || '').trim();
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (role === 'user' || role === 'admin') where.role = role;
 
-    return res.json({ access, message: 'Module access granted' });
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          emailVerified: true,
+          isActive: true,
+          createdAt: true,
+          lastLoginAt: true,
+          moduleAccess: {
+            select: { module: true, active: true, expiresAt: true, grantedAt: true },
+          },
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    const now = new Date();
+    const projectedUsers = users.map(({ moduleAccess, ...user }) => ({
+      ...user,
+      modules: ALL_MODULES.map((module) => {
+        const grant = moduleAccess.find((item) => item.module === module);
+        const active = Boolean(grant?.active && (!grant.expiresAt || grant.expiresAt > now));
+        return {
+          module,
+          active,
+          expiresAt: grant?.expiresAt ?? null,
+          grantedAt: grant?.grantedAt ?? null,
+        };
+      }),
+    }));
+
+    return res.json({
+      users: projectedUsers,
+      availableModules: ALL_MODULES,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
-    return res.status(500).json({ message });
+    logger.error('List users for module access failed', { error: message });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
-export async function revokeModuleAccess(req: Request, res: Response) {
-  const { userId, module } = req.body;
+export async function grantModuleAccess(req: IdentityRequest, res: Response) {
+  const { userId, module, expiresAt } = req.body ?? {};
+  const normalizedModule = parseModule(module);
+  if (typeof userId !== 'string' || !userId.trim() || !normalizedModule) {
+    return res.status(400).json({ message: 'A valid userId and module are required' });
+  }
 
-  if (!userId || !module) {
-    return res.status(400).json({ message: 'userId and module are required' });
+  let normalizedExpiry: Date | null = null;
+  if (expiresAt !== undefined && expiresAt !== null && expiresAt !== '') {
+    normalizedExpiry = new Date(expiresAt);
+    if (Number.isNaN(normalizedExpiry.getTime()) || normalizedExpiry <= new Date()) {
+      return res.status(400).json({ message: 'expiresAt must be a valid future date' });
+    }
   }
 
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, isActive: true },
+    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user.isActive) return res.status(409).json({ message: 'Cannot grant access to an inactive account' });
+
+    const access = await prisma.moduleAccess.upsert({
+      where: { userId_module: { userId, module: normalizedModule } },
+      update: { active: true, expiresAt: normalizedExpiry },
+      create: { userId, module: normalizedModule, active: true, expiresAt: normalizedExpiry },
+    });
+
+    auditLog('authorization.module_access_granted', {
+      userId: req.userId,
+      targetUserId: userId,
+      module: normalizedModule,
+      expiresAt: normalizedExpiry?.toISOString() ?? null,
+      ...extractRequestInfo(req),
+    });
+    return res.json({ access, message: 'Module access granted' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    logger.error('Grant module access failed', { error: message });
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
+  const { userId, module } = req.body ?? {};
+  const normalizedModule = parseModule(module);
+  if (typeof userId !== 'string' || !userId.trim() || !normalizedModule) {
+    return res.status(400).json({ message: 'A valid userId and module are required' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     await prisma.moduleAccess.updateMany({
-      where: { userId, module },
+      where: { userId, module: normalizedModule },
       data: { active: false },
     });
 
+    auditLog('authorization.module_access_revoked', {
+      userId: req.userId,
+      targetUserId: userId,
+      module: normalizedModule,
+      ...extractRequestInfo(req),
+    });
     return res.json({ message: 'Module access revoked' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
-    return res.status(500).json({ message });
+    logger.error('Revoke module access failed', { error: message });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
