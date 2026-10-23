@@ -844,9 +844,97 @@ CSS_STYLES = """
         html.dark .btn-reset:hover, html.dark .language-toggle:hover, html.dark .theme-toggle:hover { background: #334155; }
         html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
         html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #cbd5e1; }
+        /* ProJobs refresh: shared ProSolutions shell + job-board UX */
+        body { max-width: none; margin: 0; padding: 0; background: #f8fafc; color: #0f172a; }
+        .pro-nav { position: sticky; top: 0; z-index: 40; margin: 0; padding: 0; border: 0; border-bottom: 1px solid rgba(226,232,240,.9); border-radius: 0; box-shadow: none; background: rgba(255,255,255,.92); backdrop-filter: blur(12px); }
+        .pro-nav-inner { max-width: 80rem; margin: 0 auto; padding: 12px 16px; min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .pro-mark { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 12px; background: linear-gradient(135deg,#6366f1,#06b6d4); box-shadow: none; font-size: 13px; }
+        .pro-wordmark { color: #0f172a; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+        .pro-wordmark em { background: linear-gradient(90deg,#4f46e5,#06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .pro-eyebrow { margin-top: 2px; color: #94a3b8; font-size: 9px; letter-spacing: .18em; }
+        .pro-links { gap: 4px; flex-wrap: nowrap; }
+        .pro-links a { min-height: 40px; padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; color: #475569; }
+        .pro-links a:hover, .pro-links a.active { background: #f1f5f9; color: #0f172a; }
+        .pro-active-dot { display: none; }
+        .pro-active-pill { border-radius: 999px; padding: 2px 6px; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+        .language-toggle, .theme-toggle { min-height: 40px; border-radius: 12px; }
+        .jobs-hero { margin: 0; padding: 56px max(24px, calc((100vw - 80rem) / 2)) 44px; text-align: left; background: linear-gradient(115deg,#f8fafc 0%,#eef2ff 55%,#ecfeff 100%); border-bottom: 1px solid #e2e8f0; }
+        .hero-eyebrow { margin: 0 0 12px; color: #4f46e5; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+        h1 { max-width: 850px; margin: 0 0 12px; color: #0f172a; font-size: clamp(2rem,4vw,3.25rem); font-weight: 800; letter-spacing: -.045em; line-height: 1.08; }
+        .jobs-hero .subtitle { max-width: 760px; margin-top: 0; color: #475569; font-size: 1.05rem; }
+        .jobs-hero .subtitle:last-child { margin-top: 14px; color: #64748b; font-size: .82rem; }
+        .search-container { position: relative; z-index: 1; max-width: 80rem; margin: -22px auto 24px; padding: 0 16px; text-align: left; }
+        .search-input { width: 100%; max-width: none; padding: 18px 20px; border: 1px solid #cbd5e1; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(15,23,42,.10); font-size: 1rem; }
+        .search-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.14),0 12px 32px rgba(15,23,42,.08); }
+        .filters-panel { max-width: 78rem; margin: 0 auto 28px; padding: 22px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 16px rgba(15,23,42,.035); }
+        .filters-header { gap: 12px; flex-wrap: wrap; }
+        .filters-header h3 { font-size: 1.05rem; letter-spacing: -.01em; }
+        .filter-group select, .filter-group input { min-height: 44px; border-color: #cbd5e1; border-radius: 10px; }
+        .filter-group select:focus, .filter-group input:focus { outline: 2px solid rgba(99,102,241,.25); border-color: #6366f1; }
+        .btn-reset { border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+        .results-heading { max-width: 80rem; margin: 0 auto 16px; padding: 0 16px; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+        .results-heading h2 { margin: 0; color: #0f172a; font-size: 1.35rem; letter-spacing: -.025em; }
+        .results-heading p { margin: 4px 0 0; color: #64748b; font-size: .9rem; }
+        .results-count { flex: 0 0 auto; color: #475569; font-size: .85rem; font-weight: 700; }
+        #jobsList { max-width: 80rem; margin: 0 auto; padding: 0 16px 32px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+        .job-card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; margin: 0; padding: 22px; border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 2px 8px rgba(15,23,42,.025); transition: border-color .18s ease,box-shadow .18s ease,transform .18s ease; }
+        .job-card:hover { transform: translateY(-2px); border-color: #c7d2fe; box-shadow: 0 12px 28px rgba(15,23,42,.07); }
+        .job-title { color: #1e293b; font-size: 1.12rem; line-height: 1.35; }
+        .job-info { margin-bottom: 10px; color: #64748b; line-height: 1.7; }
+        .job-tags { margin: 0 0 18px; }
+        .job-tags .badge { margin: 0; border-radius: 999px; background: #f1f5f9; color: #475569; font-weight: 650; }
+        .job-card > .badge { border-radius: 999px; background: #eef2ff; color: #4338ca; }
+        .btn { margin-top: auto; border-radius: 10px; background: #4f46e5; padding: 11px 16px; }
+        .btn:hover { background: #4338ca; }
+        .no-results { max-width: 80rem; margin: 0 auto 32px; padding: 44px 20px; border: 1px dashed #cbd5e1; border-radius: 18px; background: #fff; }
+        .pro-footer { margin-top: 28px; background: #fff; border-top: 1px solid #e2e8f0; }
+        .pro-footer-inner { max-width: 80rem; margin: 0 auto; padding: 56px 16px 24px; }
+        .pro-footer-grid { gap: 40px; }
+        .pro-footer h4 { color: #94a3b8; }
+        .pro-footer-about { color: #475569; }
+        .pro-footer a:hover { color: #4f46e5; }
+        .pro-footer-bottom { margin-top: 48px; }
+        html.dark body { background: #0b1220; color: #e2e8f0; }
+        html.dark .pro-nav { background: rgba(15,23,42,.92); border-color: #334155; }
+        html.dark .pro-wordmark { color: #f8fafc; }
+        html.dark .pro-links a:hover, html.dark .pro-links a.active { background: #1e293b; color: #f8fafc; }
+        html.dark .pro-active-pill { background: #312e81; color: #e0e7ff; }
+        html.dark .jobs-hero { background: linear-gradient(115deg,#0b1220 0%,#111827 55%,#102a35 100%); border-color: #334155; }
+        html.dark h1, html.dark .results-heading h2 { color: #f8fafc; }
+        html.dark .jobs-hero .subtitle { color: #cbd5e1; }
+        html.dark .search-input, html.dark .filters-panel, html.dark .filter-group select, html.dark .filter-group input, html.dark .job-card, html.dark .no-results { background: #111827; border-color: #334155; color: #e2e8f0; }
+        html.dark .results-heading p, html.dark .results-count { color: #94a3b8; }
+        html.dark .job-title { color: #f1f5f9; }
+        html.dark .job-tags .badge { background: #1e293b; color: #cbd5e1; }
+        html.dark .job-card > .badge { background: #1e1b4b; color: #c7d2fe; }
+        html.dark .pro-footer { background: #111827; border-color: #334155; }
+        html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
+        html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #cbd5e1; }
+        @media (max-width: 980px) {
+          .pro-nav-inner { flex-wrap: wrap; justify-content: center; }
+          .pro-brand { margin-right: auto; }
+          .pro-links { order: 3; width: 100%; justify-content: center; flex-wrap: wrap; }
+          .jobs-hero { padding: 44px 24px 36px; }
+          .filters-panel { margin-left: 16px; margin-right: 16px; }
+          #jobsList { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 560px) {
+          .pro-nav-inner { gap: 10px; }
+          .pro-brand { margin-right: 0; }
+          .pro-links { gap: 2px; }
+          .pro-links a { padding: 8px 9px; font-size: 12px; }
+          .jobs-hero { padding: 36px 18px 32px; }
+          .hero-eyebrow { font-size: 10px; }
+          .search-container { margin-top: -16px; padding: 0 12px; }
+          .filters-panel { margin: 0 12px 24px; padding: 16px; }
+          .filters-header { align-items: flex-start; }
+          .results-heading { align-items: flex-start; flex-direction: column; padding: 0 12px; }
+          #jobsList { padding: 0 12px 28px; gap: 12px; }
+          .job-card { padding: 18px; }
+          .pro-footer-inner { padding: 40px 16px 22px; }
+        }
         </style>
     """
-
 
 def render_page(jobs: list[dict]) -> str:
     jobs_json = jobs_to_json_script(jobs)
@@ -886,7 +974,7 @@ def render_page(jobs: list[dict]) -> str:
             <div class="pro-links">
                 <a href="{CORE_URL}"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg><span data-i18n="home">ProSolutions</span></a>
                 <a href="{PROCV_URL}" target="_blank" rel="noopener"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="10" cy="13" r="2"/><path d="M7 18a3 3 0 0 1 6 0"/></svg><span>ProCV</span></a>
-                <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-dot" aria-hidden="true"></span></a>
+                <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-pill" data-i18n="active">Activo</span></a>
                 <a href="{CORE_URL}#planes"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
@@ -895,7 +983,8 @@ def render_page(jobs: list[dict]) -> str:
     </nav>
 
     <header>
-        <h1 data-i18n="title">{SITE_TITLE}</h1>
+        <p class="hero-eyebrow" data-i18n="heroEyebrow">OPORTUNIDADES PARA TU SIGUIENTE PASO</p>
+        <h1 data-i18n="title">Encuentra tu próxima oportunidad</h1>
         <p class="subtitle" data-i18n="description">{SITE_DESC}</p>
         <p class="subtitle"><strong data-i18n="lastUpdated">Última actualización:</strong>
             {datetime.now().strftime('%d/%m/%Y a las %H:%M UTC')}</p>
@@ -907,6 +996,14 @@ def render_page(jobs: list[dict]) -> str:
     </div>
 
     {filters_html}
+
+    <section class="results-heading" aria-live="polite">
+        <div>
+            <h2 data-i18n="resultsTitle">Ofertas para explorar</h2>
+            <p data-i18n="resultsDescription">Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.</p>
+        </div>
+        <p class="results-count"><strong id="totalJobs">{len(jobs)}</strong> <span data-i18n="jobsAvailable">ofertas disponibles</span></p>
+    </section>
 
     {jobs_html}
 
@@ -929,9 +1026,7 @@ def render_page(jobs: list[dict]) -> str:
                         </span>
                     </a>
                     <p class="pro-footer-about" data-i18n="footerAbout">
-                        El ecosistema de herramientas profesionales tech.
-                        Crea tu hoja de vida optimizada para ATS con ProCV y
-                        encuentra tu próximo empleo con ProJobs.
+                        El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo remoto con ProJobs.
                     </p>
                 </div>
                 <div>
@@ -952,9 +1047,9 @@ def render_page(jobs: list[dict]) -> str:
                 </div>
             </div>
             <div class="pro-footer-bottom">
-                <p><span data-i18n="jobsToday">Total de ofertas cargadas hoy:</span> <strong id="totalJobs">{len(jobs)}</strong></p>
                 <p>&copy; {datetime.now().year} ProSolutions. <span data-i18n="developedBy">Un producto desarrollado por</span>
                     <a href="{JATC_URL}" target="_blank" rel="noopener">JATC.DEV</a></p>
+                <p data-i18n="madeForProfessionals">Hecho para profesionales tech</p>
             </div>
         </div>
     </footer>
@@ -969,8 +1064,8 @@ def render_page(jobs: list[dict]) -> str:
 
 JS_CODE = f'''<script>
 const COPY = {{
-  es: {{ title: 'ProJobs - Empleos Tech y Más', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
-  en: {{ title: 'ProJobs - Tech Jobs and More', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
+  es: {{ title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
+  en: {{ title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
 }};
 let locale = localStorage.getItem('projobs-locale');
 if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
