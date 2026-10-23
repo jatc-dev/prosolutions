@@ -137,10 +137,12 @@ export async function grantModuleAccess(req: IdentityRequest, res: Response) {
     });
 
     auditLog('authorization.module_access_granted', {
-      actorId: req.userId,
-      targetUserId: userId,
-      module,
-      expiresAt: parsedExpiry?.toISOString() ?? null,
+      userId: req.userId,
+      details: {
+        targetUserId: userId,
+        module,
+        expiresAt: parsedExpiry?.toISOString() ?? null,
+      },
       ...extractRequestInfo(req),
     });
 
@@ -184,10 +186,12 @@ export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
     });
 
     auditLog('authorization.module_access_revoked', {
-      actorId: req.userId,
-      targetUserId: userId,
-      module,
-      affectedRows: result.count,
+      userId: req.userId,
+      details: {
+        targetUserId: userId,
+        module,
+        affectedRows: result.count,
+      },
       ...extractRequestInfo(req),
     });
 
