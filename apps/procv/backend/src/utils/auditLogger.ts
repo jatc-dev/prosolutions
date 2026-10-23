@@ -17,10 +17,9 @@ export class AuditLogger {
     try {
       await prisma.auditLog.create({
         data: {
-          adminId: data.adminId,
-          adminEmail: data.adminEmail,
+          userId: data.adminId,
           action: data.action,
-          resource: data.resource,
+          resourceType: data.resource,
           resourceId: data.resourceId,
           details: data.details ? JSON.stringify(data.details) : undefined,
           ipAddress: data.ipAddress,
