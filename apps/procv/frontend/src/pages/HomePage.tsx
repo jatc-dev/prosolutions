@@ -6,8 +6,8 @@ import { ProHeader } from "@prosolutions/ui";
 import { Button } from "@prosolutions/ui";
 import { useAuth } from "../stores/authStore";
 
-const IDENTITY_URL =
-  import.meta.env.VITE_IDENTITY_URL ||
+const PROSOLUTIONS_LOGIN_URL =
+  import.meta.env.VITE_PROSOLUTIONS_LOGIN_URL ||
   "https://prosolutions.page/login";
 
 export function HomePage() {
@@ -17,8 +17,11 @@ export function HomePage() {
   const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
 
   const handleIdentityLogin = () => {
-    const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
-    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
+    // Always send users to the central login UI, never the Identity API root.
+    const redirectUri = new URL("/dashboard", window.location.origin).toString();
+    const loginUrl = new URL(PROSOLUTIONS_LOGIN_URL);
+    loginUrl.searchParams.set("redirect_uri", redirectUri);
+    window.location.assign(loginUrl.toString());
   };
 
   if (isAuthenticated) {
