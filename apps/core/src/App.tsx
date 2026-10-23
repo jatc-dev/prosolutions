@@ -4,7 +4,6 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
-import { LandingPage } from "./pages/LandingPage";
 import { PortalPage } from "./pages/PortalPage";
 
 export default function App() {
