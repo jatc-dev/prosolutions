@@ -1,0 +1,88 @@
+# Neon central database migration plan (2026-10)
+
+## Status and scope
+
+This document plans the move of ProSolutions' PostgreSQL data stores to the newly created Neon project. It is an implementation plan, not a statement that migration or production connectivity has happened.
+
+**Safety boundaries**
+- Keep the existing Supabase ProCV and ProIdentity projects intact until each cutover is verified and a rollback window has passed.
+- Do not run `neon deploy`, `neon init`, Prisma migrations, or schema SQL against a live database as part of onboarding. Neon-generated app wiring is not the deployment mechanism for this monorepo.
+- Never commit connection strings, passwords, JWT secrets, or production data.
+- Do not merge this plan or change Render services/environment variables until the corresponding test gates pass and the owner explicitly approves production cutover.
+
+## Target topology
+
+Use one Neon project as the central PostgreSQL platform, with **three separate databases** and independent runtime credentials:
+
+| Database | Owner / authority | Data boundary | Application runtime |
+| --- | --- | --- | --- |
+| `proidentity` | ProIdentity | Accounts, password hashes, verification/reset tokens, sessions, profiles, module entitlements and Identity audit events | ProIdentity API only |
+| `procv` | ProCV | CVs, versions, ATS analyses, ProCV settings and module audit events; `CV.userId` is the immutable ProIdentity JWT `sub` | ProCV API only |
+| `projobs` | ProJobs | Candidate saved jobs and application-tracking records; user ownership comes from verified Identity JWT `sub` | ProJobs API only |
+
+A shared Neon project is a platform/accounting boundary, **not** a reason to combine module data or reuse a privileged database role. The databases must not use cross-database foreign keys; module APIs validate ProIdentity JWTs and authorize each request locally.
+
+Use separate non-owner login roles per application, with only the required database/schema/table/function privileges. The login used by an app must not be a database owner, superuser, or have `BYPASSRLS`. Keep an administrative/migration role out of runtime configuration. Verify Neon role membership and actual effective privileges before use; do not rely on a role name alone.
+
+## Current repository findings
+
+### ProIdentity
+- Prisma schema: `apps/identity/prisma/schema.prisma`.
+- Migration history currently contains `20261020000000_init` and `add_jti_column`.
+- Identity owns `User`, `Session`, password-reset and email-verification tokens, `ProfessionalProfile`, `ModuleAccess`, and `AuditLog`.
+- Preserve user IDs, session/revocation semantics, module grants and audit records during migration. Never generate a fresh production identity database without a controlled data copy.
+
+### ProCV
+- Prisma schema: `apps/procv/backend/prisma/schema.prisma`.
+- Migration history contains the original local-auth schema, ATS analysis, session/email-verification changes, RLS enabling, CV version alignment, and `zzzz_identity_only_data_model`.
+- The current model is product-data-only. The final historical migration drops legacy `User`, `Session`, `EmailVerificationToken`, and `PasswordResetToken` after ownership reconciliation and remaps two known legacy subjects.
+- **Do not delete or rewrite migration files.** For an empty Neon database, replaying history and applying the final migration is a distinct case from moving an existing populated database. Never blindly reuse the hard-coded legacy user IDs in the ownership backfill.
+- The current RLS migration enables RLS on public tables but does not force it or add owner policies; its comment assumes the existing application connects as a table owner. Before Neon cutover, explicitly design and test least-privilege runtime grants and the effective RLS behavior. Do not assume that current Supabase owner-role behavior transfers safely to a restricted Neon role.
+
+### ProJobs
+- `apps/projobs/server/sql/001_projobs_core.sql` is available on PR #53's branch `feat/projobs-persistence-foundation`, not yet part of `main`.
+- It creates `projobs_saved_jobs` and `projobs_applications`, with forced RLS and a `projobs_api` NOLOGIN role. The runtime adapter uses transaction-local role and verified JWT subject context.
+- PR #53 is still open/draft; its PostgreSQL CI tests against ephemeral PostgreSQL are not evidence that a real Neon connection or deployed API works. Keep it unmerged until the Neon-specific integration and authenticated end-to-end tests pass.
+
+## Provisioning plan (manual Neon-console/SQL step will be requested later)
+
+1. Keep the existing Neon project and its default branch; do not install Neon app scaffolding or create a second project.
+2. Create databases `proidentity`, `procv`, and `projobs` within the project. Confirm exact database names and region.
+3. Create one migration/admin credential and separate least-privilege runtime logins for each module. Do not use the admin role in Render runtime services. Check membership/inherited privileges, especially any provider-created role memberships.
+4. Store the direct connection string for migrations separately from the pooled runtime connection string when Prisma/Neon pooling requires it. Use TLS and the connection endpoint intended for the deployed service.
+5. Never put database URLs in a browser bundle, static-site variables, repository files, CI logs, screenshots, or chat. Configure them only in the appropriate Render backend service's secret environment.
+6. Apply only the target module's reviewed migrations to that module's database. Do not apply ProJobs SQL to ProCV/Identity, or Prisma history from one module to another.
+
+The user should not need to paste secrets into ChatGPT. When a manual step is required, provide the exact SQL/console action and ask only for non-secret confirmation such as the database names created.
+
+## Migration strategy
+
+Use an expand/verify/cut-over/rollback sequence per module, not a big-bang move:
+
+1. **Inventory and baseline:** record table counts, row counts, important indexes/constraints, extension dependencies, Prisma migration status, and current service health. Take provider-supported backups/exports before copying production data.
+2. **Prepare schema:** replay or reconcile migrations on an empty disposable database first. Resolve RLS, role/grant, extensions, connection pooling, and Prisma direct-URL requirements.
+3. **Copy data:** use a controlled export/import or purpose-built migration script with a consistent source snapshot. Preserve Identity IDs and ProCV foreign/external owner references. Exclude expired/revoked ephemeral data only if an explicit retention policy authorizes it.
+4. **Reconcile:** compare row counts and key aggregates; verify no orphaned CV owners, ATS analyses, sessions, profiles, module grants, or audit entries. Verify unique constraints and timestamp semantics.
+5. **Security tests:** test invalid/wrong-audience JWTs, absent module entitlements, cross-user read/update/delete, absent subject, runtime role privileges, and attempts to bypass RLS.
+6. **Shadow verification:** run read-only comparisons against the Neon copy where practical. Do not dual-write without a defined consistency and rollback design.
+7. **Cut over one module at a time:** update only that backend's Render secret variables; deploy and run health plus authenticated smoke tests. Keep source Supabase unchanged and available for rollback.
+8. **Rollback:** revert the service connection to its prior Supabase URL if smoke tests fail. Avoid reverse-sync assumptions; if writes occurred in Neon, reconcile them before switching back.
+9. **Retire old storage only after explicit approval:** keep backups and old databases until data integrity, authentication, user ownership, and operational monitoring have been verified over an agreed period.
+
+Recommended order: **ProJobs isolated test database/API first**, then ProCV (after carefully validating its legacy ownership migration and RLS/grants), then ProIdentity last because it is the central authentication authority and its cutover affects all modules. The exact order can change after data volumes, dependencies, and downtime needs are measured.
+
+## Acceptance gates before production
+
+- [ ] Three databases exist in Neon and have been verified by name.
+- [ ] Each runtime login is distinct, non-owner, not superuser, and not `BYPASSRLS`; privileges have been inspected.
+- [ ] Module migrations pass on disposable databases without manual edits to historical migrations.
+- [ ] ProCV ownership backfill is verified against actual source data; no hard-coded IDs are assumed to be valid in another environment.
+- [ ] ProJobs RLS isolation tests pass against Neon, not only ephemeral local PostgreSQL.
+- [ ] Prisma migrations use the intended direct connection and application runtime uses the intended pooled connection, where applicable.
+- [ ] Data counts/reconciliation and authenticated end-to-end tests pass.
+- [ ] Render changes are scoped to the correct backend, secrets remain secret, and rollback instructions are ready.
+- [ ] Owner approves each production cutover.
+
+## Explicitly not done
+
+At the time of writing, this plan has not created databases or roles in Neon, copied data, applied SQL to any live database, changed Render configuration, or deployed a new API. The Neon project exists, but database provisioning and application wiring remain pending.
