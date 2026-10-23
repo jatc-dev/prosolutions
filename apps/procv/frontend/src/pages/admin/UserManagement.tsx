@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { identityAuthApiUrl } from "../../lib/identityUrl";
@@ -57,7 +57,7 @@ const MODULE_LABELS: Record<ModuleName, { es: string; en: string }> = {
 };
 
 export function UserManagement() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { accessToken, user: currentUser } = useAuth();
   const isSpanish = (i18n.resolvedLanguage || i18n.language || "en").toLowerCase().startsWith("es");
   const [users, setUsers] = useState<IdentityUser[]>([]);
