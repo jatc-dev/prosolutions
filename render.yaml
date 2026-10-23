@@ -28,7 +28,7 @@ services:
       - key: IDENTITY_AUDIENCE
         value: prosolutions-api
       - key: FRONTEND_URL
-        value: https://procv.prosolutions.page
+        value: https://prosolutions.page
       - key: COOKIE_SECURE
         value: true
       - key: COOKIE_SAME_SITE
