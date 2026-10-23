@@ -1,6 +1,6 @@
 # ProSolutions — Guía de Despliegue en Producción
 
-**Objetivo:** Desplegar el ecosistema ProSolutions (Identity + ProCV + ProJobs) sin downtime, migrando usuarios de ProCV a Identity y activando el proxy temporal de autenticación.
+**Objetivo:** Desplegar el ecosistema ProSolutions (Identity + ProCV + ProJobs) con autenticación centralizada en ProIdentity. ProCV mantiene únicamente datos de negocio y recibe los permisos desde el registro central de módulos.
 
 **Dominio oficial:** `prosolutions.page` con SSO entre subdominios mediante cookies `HttpOnly` con `Domain=.prosolutions.page`.
 
@@ -130,7 +130,7 @@ DISABLE_RATE_LIMIT=false
 ```
 DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
 ```
-Desde `apps/identity/` con `DATABASE_URL` apuntando a Supabase Identity. Esto crea las tablas `User`, `Session`, `ProfessionalProfile`, `ModuleAccess`, `AuditLog`.
+Desde `apps/identity/` con `DATABASE_URL` apuntando a Supabase Identity. Esto crea las tablas `User`, `Session`, `ProfessionalProfile`, `Module`, `ModuleAccess` y `AuditLog`. `Module` es el catálogo dinámico; no se deben añadir nuevos módulos a un enum.
 
 Las migraciones de producción deben usar la conexión directa de Supabase, no el pooler de runtime. Si Prisma informa `P3009` porque `add_jti_column` quedó registrada como fallida, resolverla una sola vez después de verificar que la operación no dejó cambios incompletos:
 
@@ -143,30 +143,44 @@ La aplicación no debe iniciar si las migraciones fallan; así se evita servir l
 
 #### 2.2 Base de datos de ProCV
 
-No se modifica el esquema de ProCV. Solo se lee para la migración de usuarios.
+ProCV ya no debe mantener cuentas, contraseñas, sesiones ni tokens de recuperación/verificación. Antes de eliminar las tablas antiguas, se debe reconciliar la propiedad de los CV con los IDs de sujeto que ya existen en ProIdentity. Este paso **preserva** `CV`, `CVVersion`, `CVAtsAnalysis`, `AuditLog` y `PlatformSetting`.
+
+**Orden obligatorio:** primero desplegar el backend ProCV que ya no consulta modelos locales de usuarios; luego ejecutar el dry-run, aplicar la reconciliación y finalmente aplicar la migración que elimina las tablas de autenticación local. No ejecutar la migración de retirada de tablas antes de la reconciliación.
 
 ---
 
-### Paso 3 — Correr el script de migración de usuarios (`migrate:users`)
+### Paso 3 — Reconciliar propietarios y retirar la autenticación local de ProCV
 
-Desde `apps/identity/`:
+Desde `apps/identity/`, con acceso directo de PostgreSQL (puerto 5432) a ambos proyectos:
 
 ```bash
-# Variables requeridas:
-export DATABASE_URL=<supabase-identity-url>
-export PROCV_DATABASE_URL=<supabase-procv-url>
+export DATABASE_URL=<supabase-identity-direct-url>
+export PROCV_DATABASE_URL=<supabase-procv-direct-url>
 
-npm run migrate:users
+# 1. Solo diagnóstico; no escribe datos.
+npm run reconcile:procv-cv-owners:dry-run
+
+# 2. Ejecutar únicamente cuando el resumen indique 0 propietarios sin correspondencia.
+npm run reconcile:procv-cv-owners
 ```
 
-El script:
-- Lee todos los usuarios de `ProCV.User`.
-- Los inserta en `Identity.User` (id, email, passwordHash, role, emailVerified, etc.).
-- Crea un `ProfessionalProfile` por cada usuario.
-- Asigna `ModuleAccess` con módulo `PROCV` activo.
-- Es **idempotente**: si se ejecuta dos veces, no duplica ni sobrescribe emails existentes.
+La reconciliación empareja usuarios por correo normalizado y utiliza el ID central cuando ya coincide. Primero comprueba todos los propietarios; si alguno no existe en ProIdentity, aborta sin cambios. La opción `--apply` quita la antigua FK `CV_userId_fkey` y cambia `CV.userId` dentro de una transacción, validando que todos los propietarios finales existan en ProIdentity. No imprime correos ni hashes.
 
-**Verificación:** Confirmar que el número de usuarios migrados coincide con el total en ProCV.
+Después de una reconciliación verificada, desde `apps/procv/backend/`:
+
+```bash
+DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
+```
+
+La migración `20261023051000_remove_legacy_auth_tables` elimina `User`, `Session`, `EmailVerificationToken` y `PasswordResetToken` de ProCV. También elimina la tabla vacía de prueba `_conn_test`. No elimina CV, versiones, análisis ATS, configuración ni auditoría. La migración es idempotente para que Prisma pueda registrar el cambio aunque se hubiera aplicado previamente desde el panel SQL.
+
+**Verificación posterior:**
+- El número de filas de `CV`, `CVVersion` y `CVAtsAnalysis` permanece sin cambios.
+- Ningún `CV.userId` queda sin un usuario correspondiente en ProIdentity.
+- Las cuatro tablas locales de autenticación ya no existen en ProCV.
+- El backend ProCV arranca correctamente y las rutas protegidas aceptan tokens emitidos para `procv-api`.
+
+No volver a ejecutar `migrate:users` en el despliegue normal: las cuentas centrales ya se administran exclusivamente en ProIdentity.
 
 ---
 
