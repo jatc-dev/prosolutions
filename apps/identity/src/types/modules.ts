@@ -1,13 +1,5 @@
-export enum ProSolutionsModule {
-  PROCV = 'PROCV',
-  PROJOBS = 'PROJOBS',
-  PROSKILLS = 'PROSKILLS',
-  PROCAREER = 'PROCAREER',
-  PROINTERVIEW = 'PROINTERVIEW',
-  PRORECRUIT = 'PRORECRUIT',
-}
-
-export const ALL_MODULES: string[] = Object.values(ProSolutionsModule);
+// Runtime module identifiers are stored in the central Module registry, not a code enum.
+export type ProSolutionsModule = string;
 
 export interface ModuleGrant {
   module: string;
