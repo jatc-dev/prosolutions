@@ -24,16 +24,20 @@ on:
     branches: [main]
     paths:
       - 'apps/procv/**'
+      - 'apps/identity/**'
       - 'packages/ui/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'render.yaml'
       - '.github/workflows/procv-ci.yml'
   pull_request:
     paths:
       - 'apps/procv/**'
+      - 'apps/identity/**'
       - 'packages/ui/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'render.yaml'
       - '.github/workflows/procv-ci.yml'
   workflow_dispatch:
 
@@ -184,6 +188,36 @@ jobs:
         with:
           name: frontend-build
           path: apps/procv/frontend/dist/
+
+  # Identity: lint and compile the authentication service on every Identity change.
+  identity-test:
+    name: Identity (build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/identity_test?schema=public
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install workspace dependencies (repo root)
+        run: npm ci --include=dev --workspaces --include-workspace-root
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace=apps/identity
+
+      # Identity currently has no flat ESLint config; validate its generated Prisma client and TypeScript build here.
+      - name: Build application
+        run: npm run build --workspace=apps/identity
 
   # Escaneo de vulnerabilidades del filesystem (dependencias incluidas).
   security-scan:
