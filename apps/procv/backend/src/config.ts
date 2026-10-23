@@ -50,20 +50,20 @@ function getDatabaseUrl(isProduction: boolean): string {
 }
 
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.IDENTITY_JWT_SECRET || process.env.JWT_SECRET;
   const isProduction = getEnvironment() === 'production';
 
   if (isProduction) {
     if (!secret) {
       throw new Error(
-        'JWT_SECRET must be set in production environment. ' +
+        'IDENTITY_JWT_SECRET (or legacy JWT_SECRET) must be set in production environment. ' +
           'Generate a strong secret using: openssl rand -base64 32',
       );
     }
 
     if (secret.length < 32) {
       throw new Error(
-        'JWT_SECRET must be at least 32 characters long in production. ' +
+        'IDENTITY_JWT_SECRET must be at least 32 characters long in production. ' +
           'Current length: ' +
           secret.length,
       );
@@ -74,7 +74,7 @@ function getJwtSecret(): string {
     const normalizedSecret = secret.toLowerCase();
     if (weakSecrets.some(weak => normalizedSecret.includes(weak))) {
       throw new Error(
-        'JWT_SECRET appears to be a weak/default value. ' +
+        'IDENTITY_JWT_SECRET appears to be a weak/default value. ' +
           'Please use a strong, randomly generated secret.',
       );
     }
