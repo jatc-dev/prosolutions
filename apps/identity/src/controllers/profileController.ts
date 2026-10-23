@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Module } from '@prisma/client';
 import { IdentityRequest } from '../middleware/auth';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
@@ -102,7 +103,7 @@ export async function getModuleAccess(req: IdentityRequest, res: Response) {
   }
 }
 
-const VALID_MODULES = ['PROCV', 'PROJOBS', 'PROSKILLS', 'PROCAREER', 'PROINTERVIEW', 'PRORECRUIT'] as const;
+const isValidModule = (value: string): value is Module => Object.values(Module).includes(value as Module);
 
 export async function grantModuleAccess(req: IdentityRequest, res: Response) {
   const { userId, module, expiresAt } = req.body as {
@@ -114,7 +115,7 @@ export async function grantModuleAccess(req: IdentityRequest, res: Response) {
   if (!userId || !module) {
     return res.status(400).json({ message: 'userId and module are required' });
   }
-  if (!VALID_MODULES.includes(module as (typeof VALID_MODULES)[number])) {
+  if (!isValidModule(module)) {
     return res.status(400).json({ message: 'Unknown module' });
   }
 
@@ -131,9 +132,9 @@ export async function grantModuleAccess(req: IdentityRequest, res: Response) {
     if (!target) return res.status(404).json({ message: 'Identity user not found' });
 
     const access = await prisma.moduleAccess.upsert({
-      where: { userId_module: { userId, module: module as (typeof VALID_MODULES)[number] } },
+      where: { userId_module: { userId, module } },
       update: { active: true, expiresAt: parsedExpiry },
-      create: { userId, module: module as (typeof VALID_MODULES)[number], expiresAt: parsedExpiry },
+      create: { userId, module, expiresAt: parsedExpiry },
     });
 
     auditLog('authorization.module_access_granted', {
