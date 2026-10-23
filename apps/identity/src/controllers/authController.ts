@@ -372,6 +372,7 @@ export async function me(req: Request, res: Response) {
         where: {
           active: true,
           OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          module: { enabled: true },
         },
         select: { moduleCode: true },
       },
