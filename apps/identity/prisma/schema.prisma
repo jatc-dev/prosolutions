@@ -21,6 +21,8 @@ model Module {
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   accesses           ModuleAccess[]
+
+  @@index([enabled, displayOrder])
 }
 
 model User {
