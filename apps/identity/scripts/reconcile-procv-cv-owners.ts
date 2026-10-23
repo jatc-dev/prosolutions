@@ -98,34 +98,34 @@ async function main() {
   }
 
   await procv.$transaction(async (tx) => {
+    // CV.userId becomes an external ProIdentity subject, so drop the old FK
+    // before replacing legacy ProCV IDs. The transaction restores the FK if
+    // anything below fails; the later Prisma migration repeats DROP IF EXISTS.
+    await tx.$executeRaw`ALTER TABLE public."CV" DROP CONSTRAINT IF EXISTS "CV_userId_fkey"`;
+
     for (const change of ownersToReassign) {
-      const updated = await tx.$executeRaw`
+      const updatedRows = await tx.$executeRaw`
         UPDATE public."CV"
         SET "userId" = ${change.newId}
         WHERE "userId" = ${change.oldId}
       `;
-      if (Number(updated) !== change.count) {
+      if (Number(updatedRows) !== change.count) {
         throw new Error('CV ownership count changed during reconciliation; transaction rolled back.');
       }
     }
+
+    // PostgreSQL cannot join two separate Supabase projects, so verify every
+    // CV owner against the Identity subject IDs read before the transaction.
+    const updatedOwners = await tx.$queryRaw<Array<{ userId: string }>>`
+      SELECT DISTINCT "userId" FROM public."CV"
+    `;
+    const unknownOwners = updatedOwners.filter((owner) => !identityById.has(owner.userId));
+    if (unknownOwners.length > 0) {
+      throw new Error('Some CV owners do not exist in ProIdentity; transaction rolled back.');
+    }
   });
 
-  const remainingLegacyOwners = await procv.$queryRaw<Array<{ count: number }>>`
-    SELECT COUNT(*)::int AS count
-    FROM public."CV" cv
-    WHERE EXISTS (
-      SELECT 1 FROM public."User" old_user WHERE old_user."id" = cv."userId"
-    )
-      AND NOT EXISTS (
-        SELECT 1 FROM public."User" identity_user WHERE identity_user."id" = cv."userId"
-      )
-  `;
-
-  if (Number(remainingLegacyOwners[0]?.count ?? 0) > 0) {
-    throw new Error('Post-update verification detected CV owners still linked to legacy-only IDs.');
-  }
-
-  console.log('CV ownership reconciliation completed and verified.');
+  console.log('CV ownership reconciliation completed and verified. The legacy CV foreign key is removed; apply the ProCV auth-table retirement migration next.');
 }
 
 main()
