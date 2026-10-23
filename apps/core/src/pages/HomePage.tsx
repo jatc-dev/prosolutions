@@ -5,6 +5,37 @@ import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
+const ALLOWED_POST_LOGIN_HOSTS = new Set([
+  "prosolutions.page",
+  "www.prosolutions.page",
+  "procv.prosolutions.page",
+  "projobs.prosolutions.page",
+]);
+
+function getPostLoginTarget(): string {
+  const fallback = window.location.origin + "/dashboard";
+  const requested = new URLSearchParams(window.location.search).get("redirect_uri");
+  if (!requested) return fallback;
+
+  try {
+    const target = new URL(requested, window.location.origin);
+    const sameOrigin = target.origin === window.location.origin;
+    const allowedModuleOrigin =
+      target.protocol === "https:" && ALLOWED_POST_LOGIN_HOSTS.has(target.hostname);
+    const allowedLocalOrigin =
+      target.protocol === "http:" &&
+      (target.hostname === "localhost" || target.hostname === "127.0.0.1") &&
+      window.location.hostname === target.hostname;
+
+    // Only same-origin or known first-party module destinations are allowed.
+    // Access tokens are never appended to the redirect URL.
+    if (sameOrigin || allowedModuleOrigin || allowedLocalOrigin) return target.toString();
+  } catch {
+    // Fall back to the central portal for malformed redirect_uri values.
+  }
+  return fallback;
+}
+
 export function HomePage() {
   const { copy, locale, setLocale } = useCoreLocale();
   const language = locale === "es" ? "es" : "en";
@@ -53,7 +84,7 @@ export function HomePage() {
       // Keep the short-lived access token in this origin's session only.
       // The refresh cookie is shared by the platform's first-party subdomains.
       sessionStorage.setItem("pro_identity_token", data.accessToken);
-      window.location.assign("/dashboard");
+      window.location.assign(getPostLoginTarget());
     } catch {
       setLoginError(copy.auth.loginError);
     } finally {
