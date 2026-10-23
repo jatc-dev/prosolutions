@@ -311,7 +311,6 @@ export async function refreshToken(req: Request, res: Response) {
       sub: user.id,
       email: user.email,
       role: user.role,
-      modules,
     });
 
     const jti = crypto.randomUUID();
