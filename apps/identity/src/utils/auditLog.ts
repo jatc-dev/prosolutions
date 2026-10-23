@@ -24,16 +24,29 @@ export type AuditEventType =
   | 'authentication.profile_updated'
   | 'authentication.token_validated'
   | 'authorization.unauthorized_access'
-  | 'authorization.module_access_denied';
+  | 'authorization.module_access_denied'
+  | 'authorization.module_registered'
+  | 'authorization.module_updated'
+  | 'authorization.module_access_granted'
+  | 'authorization.module_access_revoked'
+  | 'authorization.user_account_updated';
 
 export function auditLog(eventType: AuditEventType, data: AuditLogData = {}) {
+  const {
+    userId,
+    email,
+    ipAddress,
+    userAgent,
+    details,
+    ...eventDetails
+  } = data;
   logger.info(`AUDIT: ${eventType}`, {
     eventType,
-    userId: data.userId,
-    email: data.email,
-    ipAddress: data.ipAddress,
-    userAgent: data.userAgent,
-    details: data.details,
+    userId,
+    email,
+    ipAddress,
+    userAgent,
+    details: { ...eventDetails, ...(details ?? {}) },
   });
 }
 
