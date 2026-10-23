@@ -46,4 +46,6 @@ export const config = {
   audience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
+  supabaseUrl: (process.env.PROJOBS_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\\/$/, ''),
+  supabaseServiceRoleKey: process.env.PROJOBS_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 };
