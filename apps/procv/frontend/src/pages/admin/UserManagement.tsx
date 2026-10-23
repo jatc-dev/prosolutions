@@ -70,7 +70,7 @@ export function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
-  const text = (es: string, en: string) => (isSpanish ? es : en);
+  const text = useCallback((es: string, en: string) => (isSpanish ? es : en), [isSpanish]);
 
   const request = useCallback(async (
     path: string,
@@ -102,9 +102,9 @@ export function UserManagement() {
       headers,
       credentials: "include",
     });
-  }, [accessToken, isSpanish]);
+  }, [accessToken, text]);
 
-  const loadUsers = useCallback(async (targetPage = page, targetSearch = search) => {
+  const loadUsers = useCallback(async (targetPage: number, targetSearch: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -128,7 +128,7 @@ export function UserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, request, isSpanish]);
+  }, [request, text]);
 
   useEffect(() => {
     void loadUsers(1, "");
