@@ -138,12 +138,11 @@ export function AdminAccessPage() {
     }
   }, [activeQuery, navigate]);
 
-  useEffect(() => { void loadUsers(""); }, [loadUsers]);
+  useEffect(() => { void loadUsers(activeQuery); }, [loadUsers, activeQuery]);
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     setActiveQuery(query);
-    void loadUsers(query);
   };
 
   const toggleModule = async (user: IdentityUser, module: ModuleKey, enabled: boolean) => {
