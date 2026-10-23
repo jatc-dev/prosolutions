@@ -103,12 +103,14 @@ export function AdminAccessPage() {
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  const loadUsers = useCallback(async (search = activeQuery) => {
+  const loadUsers = useCallback(async (search = activeQuery, requestedPage = 1) => {
     setLoading(true);
     setError(null);
     try {
@@ -122,13 +124,15 @@ export function AdminAccessPage() {
         return;
       }
 
-      const params = new URLSearchParams({ page: "1", limit: "50" });
+      const params = new URLSearchParams({ page: String(requestedPage), limit: "50" });
       if (search.trim()) params.set("search", search.trim());
       const response = await identityFetch(`/api/admin/users?${params.toString()}`);
       if (!response.ok) throw await responseError(response);
       const result = (await response.json()) as UserListResponse;
       setUsers(result.users);
       setTotal(result.pagination.total);
+      setCurrentPage(result.pagination.page);
+      setPages(Math.max(1, result.pagination.pages));
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "No se pudieron cargar las cuentas.";
       setError(message);
@@ -141,11 +145,12 @@ export function AdminAccessPage() {
     }
   }, [activeQuery, navigate]);
 
-  useEffect(() => { void loadUsers(activeQuery); }, [loadUsers, activeQuery]);
+  useEffect(() => { void loadUsers(activeQuery, currentPage); }, [loadUsers, activeQuery, currentPage]);
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     setActiveQuery(query);
+    setCurrentPage(1);
   };
 
   const toggleModule = async (user: IdentityUser, module: ModuleKey, enabled: boolean) => {
@@ -160,7 +165,7 @@ export function AdminAccessPage() {
       });
       if (!response.ok) throw await responseError(response);
       setNotice(`${MODULES.find((item) => item.key === module)?.label}: permiso ${enabled ? "activado" : "revocado"} para ${user.email}.`);
-      await loadUsers(activeQuery);
+      await loadUsers(activeQuery, currentPage);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo actualizar el permiso.");
     } finally {
@@ -187,7 +192,7 @@ export function AdminAccessPage() {
             <button type="submit" disabled={loading} className="min-h-11 rounded-xl bg-brand-600 px-5 py-2 font-semibold text-white hover:bg-brand-700 disabled:opacity-60">Buscar cuentas</button>
           </form>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <span>{total} cuenta(s) encontradas · mostrando hasta 50</span>
+            <span>{total} cuenta(s) encontradas · página {currentPage} de {pages}</span>
             <span>Los cambios se aplican en ProIdentity.</span>
           </div>
         </section>
@@ -232,6 +237,13 @@ export function AdminAccessPage() {
               </div>
             </article>
           ))}
+          {!loading && pages > 1 && (
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+              <button type="button" disabled={currentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-40 dark:border-slate-700">Anterior</button>
+              <span className="text-sm text-slate-500 dark:text-slate-400">Página {currentPage} / {pages}</span>
+              <button type="button" disabled={currentPage >= pages} onClick={() => setCurrentPage((value) => Math.min(pages, value + 1))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-40 dark:border-slate-700">Siguiente</button>
+            </div>
+          )}
         </section>
       </div>
     </main>
