@@ -253,7 +253,7 @@ async function prepare() {
     }
 
     await tx.$executeRawUnsafe(
-      'ALTER TABLE public."CV" ADD CONSTRAINT "CV_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."IdentityAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE',
+      'ALTER TABLE public."CV" ADD CONSTRAINT "CV_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."IdentityAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE',
     );
     await tx.$executeRawUnsafe(
       'CREATE INDEX IF NOT EXISTS "CV_userId_idx" ON public."CV" ("userId")',
