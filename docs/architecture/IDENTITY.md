@@ -1,306 +1,96 @@
-# ProIdentity — Guía de Integración y Escalabilidad
-
-**Estado:** activo  
-**Propietario:** plataforma ProSolutions  
-**Módulos soportados:** `PROCV`, `PROJOBS`, `PROSKILLS`, `PROCAREER`, `PROINTERVIEW`, `PRORECRUIT`  
-**Servicio:** `apps/identity/` (Express + Prisma + PostgreSQL)  
-**Puerto por defecto:** `4001`
+# ProIdentity — Central Identity and Module Entitlements
 
----
-
-## 1. Visión general
-
-**ProIdentity** es el servicio centralizado de autenticación, perfil profesional y control de accesos para todo el ecosistema ProSolutions. Cada módulo (`procv`, `projobs`, y futuros módulos) delega la emisión y validación de tokens a Identity, manteniendo sus datos de negocio aislados.
-
-Principios clave:
-
-- Una cuenta, un inicio de sesión y un token único para todos los módulos.
-- Cada módulo valida el JWT de forma independiente (firma, `issuer`, `audience`, `expiry`).
-- La autorización se resuelve mediante el claim `modules[]` del token, no mediante credenciales locales.
-- No se duplican tiendas de contraseñas por módulo.
-
----
-
-## 2. Esquema del Token JWT
-
-El access token emitido por Identity contiene los siguientes claims:
-
-| Claim | Tipo | Descripción |
-|-------|------|-------------|
-| `iss` | string | Emisor del token. Valor: `https://identity.prosolutions.dev` (desarrollo: `http://localhost:4001`) |
-| `aud` | string | Audiencia. Cada módulo define la suya (ej: `projobs-api`, `procv-api`) |
-| `sub` | string | Identificador universal del usuario (`user_id`, UUID) |
-| `email` | string | Correo electrónico del usuario |
-| `role` | string | Rol de cuenta (`user`, `admin`) |
-| `modules` | string[] | Módulos a los que el usuario tiene acceso activo (ej: `["PROCV", "PROJOBS"]`) |
-| `iat` | number | Momento de emisión (unix timestamp) |
-| `exp` | number | Momento de expiración (unix timestamp) |
-
-Ejemplo de payload decodificado:
-
-```json
-{
-  "iss": "https://identity.prosolutions.dev",
-  "aud": "projobs-api",
-  "sub": "cuid_abc123",
-  "email": "usuario@ejemplo.com",
-  "role": "user",
-  "modules": ["PROCV", "PROJOBS"],
-  "iat": 1789920000,
-  "exp": 1789920900
-}
-```
-
-El refresh token se almacena únicamente en una cookie HttpOnly (`refreshToken`) y nunca se expone al JavaScript del navegador.
-
----
-
-## 3. Enum de Módulos (`ProSolutionsModule`)
-
-Definido en `apps/identity/src/types/modules.ts`:
-
-```typescript
-export enum ProSolutionsModule {
-  PROCV = 'PROCV',
-  PROJOBS = 'PROJOBS',
-  PROSKILLS = 'PROSKILLS',
-  PROCAREER = 'PROCAREER',
-  PROINTERVIEW = 'PROINTERVIEW',
-  PRORECRUIT = 'PRORECRUIT',
-}
-
-export const ALL_MODULES: ProSolutionsModule[] = [
-  ProSolutionsModule.PROCV,
-  ProSolutionsModule.PROJOBS,
-  ProSolutionsModule.PROSKILLS,
-  ProSolutionsModule.PROCAREER,
-  ProSolutionsModule.PROINTERVIEW,
-  ProSolutionsModule.PRORECRUIT,
-];
-```
-
-Cuando se crea una cuenta nueva, se le asigna por defecto el módulo `PROCV`. Los administradores pueden conceder acceso a otros módulos mediante los endpoints de administración.
-
----
-
-## 4. Validación de Tokens en Backend (Node.js/Express)
-
-Cada módulo debe validar el JWT de Identity en sus propias rutas protegidas. No se debe confiar en un `user_id` enviado solo por el cliente.
-
-### 4.1 Middleware de ejemplo (Express)
-
-```typescript
-// src/middleware/auth.ts
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-
-export interface ModuleAuthRequest extends Request {
-  userId?: string;
-  email?: string;
-  role?: string;
-  modules?: string[];
-}
-
-const REQUIRED_MODULE = 'TU_MODULO'; // ej: 'PROSKILLS'
+**Status:** authoritative architecture for the ProSolutions monorepo  
+**Service:** `apps/identity/` (Express, Prisma, PostgreSQL)  
+**Canonical issuer:** `https://identity.prosolutions.page`  
+**JWT audience:** `prosolutions-api`
 
-export function moduleAuthMiddleware(
-  req: ModuleAuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Authorization header missing' });
-  }
+## 1. Ownership boundaries
 
-  const token = authHeader.replace('Bearer ', '');
+ProIdentity is the single source of truth for platform accounts. No product module may register users locally, validate passwords locally, issue its own refresh sessions, or create verification/reset tokens.
 
-  try {
-    const payload = jwt.verify(token, process.env.IDENTITY_JWT_SECRET!, {
-      issuer: process.env.IDENTITY_ISSUER, // https://identity.prosolutions.dev
-      audience: process.env.IDENTITY_AUDIENCE, // ej: proskills-api
-    }) as {
-      sub: string;
-      email?: string;
-      role?: string;
-      modules?: string[];
-    };
+| Concern | Owner |
+|---|---|
+| Account ID, email, password hash, active state and role | ProIdentity `User` |
+| Email verification and password recovery | ProIdentity `EmailVerificationToken` / `PasswordResetToken` |
+| Login, refresh-token rotation, logout and revocable sessions | ProIdentity `Session` and auth controllers |
+| Product access grants and expiry | ProIdentity `ModuleAccess` |
+| Professional profile shared across products | ProIdentity `ProfessionalProfile` |
+| CVs, CV templates, CV versions and ATS analyses | ProCV database |
+| ProCV product configuration and product audit logs | ProCV database |
+| ProJobs public job discovery and future job-specific records | ProJobs, with account identity validated by ProIdentity tokens |
 
-    req.userId = payload.sub;
-    req.email = payload.email;
-    req.role = payload.role;
-    req.modules = payload.modules;
+ProCV's `IdentityAccount` table is deliberately minimal: it stores only the ProIdentity subject ID and timestamps so ProCV can enforce referential integrity for CV ownership. It does not mirror email, name, role, password hash, verification status, refresh tokens, or sessions. The IDs are joined across databases in application code by validating the signed token; PostgreSQL does not create cross-project foreign keys.
 
-    const hasAccess = Array.isArray(payload.modules)
-      ? payload.modules.includes(REQUIRED_MODULE)
-      : false;
+## 2. Access-token contract
 
-    if (!hasAccess) {
-      return res.status(403).json({
-        message: 'Module access required',
-        requiredModule: REQUIRED_MODULE,
-      });
-    }
+Every module validates the same JWT contract:
 
-    return next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
-}
-```
+| Claim | Meaning |
+|---|---|
+| `iss` | `https://identity.prosolutions.page` |
+| `aud` | `prosolutions-api` (the common platform API audience) |
+| `sub` | Stable ProIdentity user ID |
+| `email` | Current account email |
+| `role` | Platform account role, e.g. `user` or `admin` |
+| `modules` | The modules with an active, unexpired grant when this token was issued |
+| `iat`, `exp` | Token issue and expiration times |
 
-### 4.2 Variables de entorno requeridas por módulo
+Tokens are signed using the shared platform JWT secret, expire after 15 minutes, and are renewed through the rotating refresh token held in a Secure, HttpOnly cookie with `Domain=.prosolutions.page` and `SameSite=None`. The refresh token itself is never placed in a URL or browser local storage. Each subdomain bootstraps its own short-lived access token from the shared cookie.
 
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `IDENTITY_URL` | URL base del servicio Identity | `https://identity.prosolutions.dev` |
-| `IDENTITY_JWT_SECRET` | Secreto compartido para verificar la firma | igual al de Identity |
-| `IDENTITY_ISSUER` | Emisor esperado | `https://identity.prosolutions.dev` |
-| `IDENTITY_AUDIENCE` | Audiencia del módulo | `proskills-api` |
-| `PORT` | Puerto del módulo | `5177` |
+In ProCV's Render configuration, `JWT_SECRET` must equal Identity's `IDENTITY_JWT_SECRET`; code may use `IDENTITY_JWT_SECRET` as the explicit alias when present. `IDENTITY_ISSUER` and `IDENTITY_AUDIENCE` must use the canonical values above. CORS must include only the known first-party origins that need credentialed access.
 
----
+## 3. Module access is an entitlement, not a role side effect
 
-## 5. Rutas de Administración de Acceso a Módulos
+`ModuleAccess` is the durable authorization source. Login, refresh, and email verification read active grants; they must not silently re-enable a grant that an administrator revoked. New self-service accounts currently receive `PROCV` and `PROJOBS` once at registration. Future modules must be granted through the central module-access administration flow or an explicit onboarding policy.
 
-Identity expone endpoints para conceder y revocar acceso por módulo. Solo el rol `admin` puede usarlos.
+The admin endpoints are mounted at `/api/modules`:
 
-### 5.1 Conceder acceso a un módulo
+- `GET /api/modules/me` — current account's grants.
+- `GET /api/modules/users` — paginated account/grant list; requires an Identity token with admin role.
+- `POST /api/modules/grant` and `POST /api/modules/revoke` — validated, audited admin operations; mutating requests also require the platform CSRF token.
 
-```
-POST /api/modules/grant
-Headers: Authorization: Bearer <admin_token>, Content-Type: application/json
-Body: { "userId": "cuid_xyz", "module": "PROSKILLS", "expiresAt": "2027-01-01T00:00:00Z" }
-```
-
-### 5.2 Revocar acceso a un módulo
+A revoke does not rewrite a JWT that has already been issued. The changed access appears on the next token refresh, and an existing access token can remain valid until its short expiry (up to 15 minutes). Do not claim immediate revocation unless a protected high-risk operation also checks live entitlement/session state.
 
-```
-POST /api/modules/revoke
-Headers: Authorization: Bearer <admin_token>, Content-Type: application/json
-Body: { "userId": "cuid_xyz", "module": "PROSKILLS" }
-```
+## 4. Required module API checks
 
-### 5.3 Consultar módulos de un usuario
+Every product backend must:
 
-```
-GET /api/modules/me/modules
-Headers: Authorization: Bearer <token>
-Respuesta: { "moduleAccess": [ { "module": "PROCV", "active": true, ... } ] }
-```
+1. Verify JWT signature, `iss`, `aud`, expiry and subject using the shared platform secret.
+2. Require the corresponding signed module entitlement, e.g. `PROCV` or `PROJOBS`, before serving protected product routes.
+3. Derive the tenant/owner ID from the verified `sub`, never from a client-supplied owner ID.
+4. Require `role=admin` in addition to the module claim for module administration.
+5. Return `401` for missing/invalid tokens and `403` for a valid token without the required module grant.
+6. Keep refresh tokens, password hashes, email-verification tokens and reset tokens out of product databases and URL parameters.
 
----
+ProJobs can continue to show public job discovery anonymously. Any saved job, application, alert, candidate profile, recruiter function, or other personalized endpoint must require the appropriate Identity entitlement before it is enabled.
 
-## 6. Patrón de Cliente (Frontend)
+## 5. Adding another module safely
 
-Cada módulo frontend debe seguir este patrón para integrarse con Identity:
+For a new product:
 
-### 6.1 Almacenamiento del token
+1. Add its enum value in both Identity's Prisma `Module` enum and `apps/identity/src/types/modules.ts` (`ALL_MODULES` included).
+2. Create and deploy the Identity Prisma migration before granting the new entitlement.
+3. Define an explicit onboarding/grant policy; do not infer module access from `role` alone.
+4. Validate the common Identity JWT contract and enforce the new module claim in its backend middleware.
+5. Add the module's access control UI/route to the central entitlement administration endpoint.
+6. Add tests for a valid grant, missing grant, expired grant, revoked grant, incorrect issuer/audience, and expired token.
 
-- Guardar el access token en `localStorage` bajo una clave específica del módulo (ej: `projobs_access_token`).
-- Nunca almacenar el refresh token en localStorage (vive en cookie HttpOnly gestionada por Identity).
+## 6. ProCV legacy identity-table cutover
 
-### 6.2 Validación al iniciar
+The legacy ProCV database historically held `User`, `Session`, `EmailVerificationToken`, and `PasswordResetToken`. Those tables are not part of the active identity architecture and must be removed only after the CV owner IDs have been mapped to the matching ProIdentity user IDs.
 
-Al cargar la aplicación, enviar el token a `GET {IDENTITY_URL}/api/identity/me` con el header `Authorization: Bearer <token>`. Si responde 401/403, limpiar el token y tratar al usuario como anónimo.
+The cutover utility in `apps/identity/scripts/migrate-procv-identity-boundary.ts` uses normalized email in memory to match legacy users across the two databases. It never stores emails or credentials in ProCV's local identity reference. It has two phases:
 
-### 6.3 Redirección a login
+1. Back up both databases.
+2. Set `DATABASE_URL` to ProIdentity and `PROCV_DATABASE_URL` to ProCV's direct PostgreSQL connection (port 5432). Run `npm run procv:identity:dry-run --workspace=apps/identity` and reconcile any unmatched accounts before writing.
+3. Apply the ProCV Prisma migration through its direct database connection, then run `npm run procv:identity:prepare --workspace=apps/identity`. This creates the minimal reference table, remaps CV ownership and repairs the legacy AuditLog shape while keeping old auth tables as a rollback aid.
+4. Deploy the updated ProCV backend/frontend and verify health, CV ownership, ATS analyses and admin routes.
+5. Run `npm run procv:identity:finalize:dry-run --workspace=apps/identity`. Only after the new version is healthy, run `npm run procv:identity:finalize --workspace=apps/identity` to drop ProCV-local credentials, sessions and token tables.
+6. Recheck counts of CVs, CV versions and ATS analyses, and confirm no foreign keys still point at the old User table.
 
-Cuando el usuario intente acceder a una funcionalidad que requiera autenticación y no tenga token válido, redirigir al flujo central de Identity:
+The utility aborts rather than dropping local auth tables when it finds unmatched accounts, unrecognized CV owners, a non-empty connection-test table, or CVs without valid local identity references. It does not delete CV, version, ATS-analysis, platform-setting, or audit rows.
 
-```typescript
-window.location.href = `${IDENTITY_URL}/api/auth/login?redirect=${encodeURIComponent(window.location.origin + window.location.pathname)}`;
-```
+## 7. Data security in Supabase
 
-### 6.4 Ejemplo de cliente (ProJobs — `auth.js`)
-
-El archivo `apps/projobs/auth.js` implementa este patrón:
-
-- `window.proJobsAuth.isAuthenticated()` — devuelve boolean
-- `window.proJobsAuth.getUser()` — devuelve el perfil (`userId`, `email`, `role`, `modules`)
-- `window.proJobsAuth.login()` — redirige a Identity
-- `window.proJobsAuth.logout()` — limpia token y recarga
-- Botones con atributo `data-auth-required` se muestran solo si está autenticado
-
-### 6.5 Llamadas a API protegidas
-
-Enviar el token en el header `Authorization: Bearer <token>` a las rutas propias del módulo. El backend valida el token y extrae `sub` (`user_id`) para asociar la operación al usuario.
-
----
-
-## 7. Cómo Agregar un Nuevo Módulo (Checklist)
-
-1. **Definir el enum** — Agregar el módulo a `ProSolutionsModule` en `apps/identity/src/types/modules.ts` si no existe.
-2. **Crear el servicio backend** — Nuevo servicio Express que sirva el frontend estático y exponga rutas API propias.
-3. **Agregar middleware de auth** — Copiar el patrón de `apps/projobs/server/src/middleware/auth.ts`, ajustando `REQUIRED_MODULE` y `IDENTITY_AUDIENCE`.
-4. **Proteger rutas personales** — Aplicar el middleware solo a rutas que requieran sesión (postulaciones, guardados, perfil, etc.). Mantener la navegación pública anónima.
-5. **Agregar cliente auth** — Crear un archivo `auth.js` similar al de ProJobs que valide contra `Identity /api/identity/me` y maneje UI de login/logout.
-6. **Registrar en el navegador del ecosistema** — Agregar el enlace al módulo en la barra de navegación compartida (`pro-nav`).
-7. **Definir variables de entorno** — `IDENTITY_URL`, `IDENTITY_JWT_SECRET`, `IDENTITY_ISSUER`, `IDENTITY_AUDIENCE`, `PORT`.
-8. **No crear tienda de contraseñas local** — Todo módulo nuevo debe delegar auth a Identity. Prohibido crear tablas `users`/`passwords` propias.
-
----
-
-## 8. Seguridad y Límites No Negociables
-
-- Validar siempre `issuer`, `audience`, firma y `exp` del JWT en el servidor.
-- Nunca confiar en un `user_id` enviado únicamente por el cliente.
-- Los refresh tokens viven en cookies HttpOnly, Secure y SameSite.
-- Los tokens de acceso son de corta vida (15 min por defecto).
-- Cada módulo tiene su propia `audience`; no se aceptan tokens de otra audiencia.
-- El acceso a un módulo se concede explícitamente mediante `ModuleAccess`; no se hereda automáticamente.
-- El rol `admin` no otorga acceso automático a todos los módulos; se debe conceder por módulo.
-- Nunca enviar tokens en URLs ni copiar tokens entre almacenes de diferentes orígenes.
-
----
-
-## 9. Referencia Rápida de Endpoints Identity
-
-| Método | Ruta | Descripción | Auth requerida |
-|--------|------|-------------|----------------|
-| POST | `/api/auth/register` | Registro de cuenta | No |
-| POST | `/api/auth/login` | Inicio de sesión | No |
-| POST | `/api/auth/refresh` | Renovar access token | Cookie refresh |
-| POST | `/api/auth/logout` | Cerrar sesión | Cookie refresh |
-| GET | `/api/auth/me` | Perfil del usuario | Bearer token |
-| PUT | `/api/auth/profile` | Actualizar perfil | Bearer token |
-| POST | `/api/auth/verify-email` | Verificar correo | No |
-| POST | `/api/auth/resend-verification` | Reenviar verificación | No |
-| POST | `/api/auth/forgot-password` | Recuperar contraseña | No |
-| POST | `/api/auth/reset-password` | Restablecer contraseña | No |
-| GET | `/api/profile/me` | Perfil profesional central | Bearer token |
-| PUT | `/api/profile/me` | Actualizar perfil profesional | Bearer token |
-| GET | `/api/modules/me/modules` | Módulos activos del usuario | Bearer token |
-| POST | `/api/modules/grant` | Conceder acceso a módulo | Admin + Bearer |
-| POST | `/api/modules/revoke` | Revocar acceso a módulo | Admin + Bearer |
-
----
-
-## 10. Ejemplo Completo: Módulo `PROSKILLS`
-
-**Backend middleware:**
-
-```typescript
-const REQUIRED_MODULE = 'PROSKILLS';
-const IDENTITY_AUDIENCE = 'proskills-api';
-// ... mismo patrón que proJobsAuthMiddleware
-```
-
-**Frontend auth.js (resumido):**
-
-```typescript
-const IDENTITY_URL = 'http://localhost:4001';
-const TOKEN_KEY = 'proskills_access_token';
-
-// Validar al cargar
-const profile = await fetch(`${IDENTITY_URL}/api/identity/me`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
-
-// UI
-document.querySelectorAll('[data-auth-required]').forEach(el => {
-  el.style.display = isAuthenticated ? '' : 'none';
-});
-```
-
-Con esta guía, cualquier nuevo módulo del ecosistema ProSolutions puede integrarse de forma segura y consistente con ProIdentity.
+ProCV and ProIdentity use Prisma through server-side database connections; the browser does not need direct table access via Supabase Data API. The `anon` and `authenticated` roles therefore have no direct table/sequence privileges on these product tables. RLS remains enabled as defense in depth. Never add client-facing grants or broad RLS policies to make a backend query work; keep database credentials server-side and grant the minimum required access.
