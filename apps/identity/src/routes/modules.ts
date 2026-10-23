@@ -8,6 +8,7 @@ import {
   listUsersForModuleAdmin,
   revokeModuleAccess,
   updateModule,
+  updateAdminUser,
 } from '../controllers/profileController';
 import { identityMiddleware, requireRole } from '../middleware/auth';
 
@@ -20,6 +21,7 @@ router.patch('/catalog/:code', identityMiddleware, requireRole('admin'), updateM
 
 router.get('/me', identityMiddleware, getModuleAccess);
 router.get('/admin/users', identityMiddleware, requireRole('admin'), listUsersForModuleAdmin);
+router.patch('/admin/users/:id', identityMiddleware, requireRole('admin'), updateAdminUser);
 router.get('/admin/metrics', identityMiddleware, requireRole('admin'), getModuleAdminMetrics);
 router.post('/grant', identityMiddleware, requireRole('admin'), grantModuleAccess);
 router.post('/revoke', identityMiddleware, requireRole('admin'), revokeModuleAccess);
