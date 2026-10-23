@@ -1,5 +1,8 @@
 -- Replace the fixed Module enum with a registry so future ProSolutions modules
 -- can be registered and granted without an enum migration.
+-- Rename the enum first because PostgreSQL cannot create a table/composite type
+-- with the same schema name while the enum type still exists.
+ALTER TYPE "Module" RENAME TO "ModuleLegacy";
 CREATE TABLE "Module" (
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -29,13 +32,13 @@ VALUES
     ('PRORECRUIT', 'ProRecruit', 'Herramientas para selección y gestión de talento.', 'https://prorecruit.prosolutions.page', 'prorecruit-api', false, false, true, 60, NOW(), NOW());
 
 ALTER TABLE "ModuleAccess" ADD COLUMN "moduleCode" TEXT;
-UPDATE "ModuleAccess" SET "moduleCode" = "module"::text;
+UPDATE "ModuleAccess" SET "moduleCode" = "module"::"ModuleLegacy"::text;
 ALTER TABLE "ModuleAccess" ALTER COLUMN "moduleCode" SET NOT NULL;
 
 DROP INDEX IF EXISTS "ModuleAccess_module_idx";
 DROP INDEX IF EXISTS "ModuleAccess_userId_module_key";
 ALTER TABLE "ModuleAccess" DROP COLUMN "module";
-DROP TYPE IF EXISTS "Module";
+DROP TYPE IF EXISTS "ModuleLegacy";
 
 CREATE INDEX "ModuleAccess_moduleCode_idx" ON "ModuleAccess"("moduleCode");
 CREATE UNIQUE INDEX "ModuleAccess_userId_moduleCode_key" ON "ModuleAccess"("userId", "moduleCode");
