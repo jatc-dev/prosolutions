@@ -5,7 +5,18 @@ import { identityAuthApiUrl } from "../lib/identityUrl";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "/api";
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 
-const LOCAL_STORAGE_KEY = "procv_auth";
+const LEGACY_STORAGE_KEY = "procv_auth";
+const SESSION_STORAGE_KEY = "procv_access_token";
+
+function clearStoredAccessToken() {
+  sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+}
+
+function storeAccessToken(token: string) {
+  sessionStorage.setItem(SESSION_STORAGE_KEY, token);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+}
 const MAX_GET_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 300;
 const RETRYABLE_STATUSES = new Set([429]);
@@ -139,12 +150,7 @@ async function doRefresh(): Promise<string | null> {
     if (!response.ok) return null;
     const { accessToken } = await response.json();
     if (accessToken) {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        parsed.accessToken = accessToken;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
-      }
+      storeAccessToken(accessToken);
       instance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       return accessToken;
     }
@@ -184,8 +190,15 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle 403 CSRF errors - fetch new token and retry once
-    if (error.response?.status === 403 && !originalRequest._csrfRetried) {
+    // Retry only explicit CSRF failures. Module-entitlement 403 responses must
+    // never trigger token refresh or be misdiagnosed as CSRF problems.
+    const responseMessage =
+      (error.response?.data as { message?: string } | undefined)?.message || "";
+    if (
+      error.response?.status === 403 &&
+      /csrf/i.test(responseMessage) &&
+      !originalRequest._csrfRetried
+    ) {
       originalRequest._csrfRetried = true;
       await fetchCSRFToken();
       if (csrfToken) {
@@ -196,7 +209,7 @@ instance.interceptors.response.use(
     }
 
     if (originalRequest._skipAuthRetry) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      clearStoredAccessToken();
       instance.defaults.headers.common.Authorization = "";
       redirectToLogin();
       return Promise.reject(error);
@@ -215,7 +228,7 @@ instance.interceptors.response.use(
     refreshPromise = null;
 
     if (!newToken) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      clearStoredAccessToken();
       instance.defaults.headers.common.Authorization = "";
       redirectToLogin();
       return Promise.reject(error);
