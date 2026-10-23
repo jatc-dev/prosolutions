@@ -84,6 +84,12 @@ export function createApp() {
   app.use(corsMiddleware(config));
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
+
+  // Keep Render's health probe outside the global API rate limit.
+  app.get('/health', (_req, res) =>
+    res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
+  );
+
   app.use(apiLimiter);
 
   // Auth routes are mounted BEFORE CSRF middleware so that login/register
@@ -97,10 +103,6 @@ export function createApp() {
   app.get('/', (_req, res) =>
     res.json({ status: 'ok', service: 'proidentity' }),
   );
-  app.get('/health', (_req, res) =>
-    res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
-  );
-
   app.get('/health/db', async (_req, res) => {
     try {
       await prisma.$queryRawUnsafe('SELECT 1 as connected');
