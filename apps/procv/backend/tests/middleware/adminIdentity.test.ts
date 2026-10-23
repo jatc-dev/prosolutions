@@ -35,7 +35,9 @@ function makeRequest(authorization?: string) {
 }
 
 describe('requireAdmin with ProIdentity claims', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('rejects requests without a Bearer token', async () => {
     const res = makeResponse();

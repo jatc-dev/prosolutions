@@ -20,7 +20,9 @@ const mockPrisma = prismaClient as unknown as {
 };
 
 describe('schemaGuard', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('validates the IdentityAccount reference without changing the database', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ identity_account_exists: true }] as QueryResult);

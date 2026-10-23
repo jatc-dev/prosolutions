@@ -28,32 +28,46 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
-import { ProSolutionsModule } from '../types/modules';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
-function getDefaultModules(role: string): ProSolutionsModule[] {
-  if (role === 'admin') {
-    return Object.values(ProSolutionsModule);
-  }
-  // Initial product policy: new accounts receive the currently available
-  // user-facing modules. Subsequent entitlement changes are explicit grants,
-  // never silently restored during login or token refresh.
-  return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
+async function getDefaultModules(role: string): Promise<string[]> {
+  const roleDefaults = role === 'admin' ? [{ defaultForAdmins: true }] : [];
+  const modules = await prisma.module.findMany({
+    where: {
+      enabled: true,
+      OR: [{ defaultForNewUsers: true }, ...roleDefaults],
+    },
+    orderBy: { displayOrder: 'asc' },
+    select: { code: true },
+  });
+  return modules.map((module) => module.code);
 }
 
-async function getActiveModules(userId: string): Promise<ProSolutionsModule[]> {
-  const grants = await prisma.moduleAccess.findMany({
+async function ensureDefaultModuleAccess(userId: string, role: string): Promise<string[]> {
+  const defaults = await getDefaultModules(role);
+  // Grant defaults only when no row exists. Existing inactive/expired grants
+  // are intentional decisions and must never be silently reactivated at login.
+  if (defaults.length > 0) {
+    await prisma.moduleAccess.createMany({
+      data: defaults.map((moduleCode) => ({ userId, moduleCode, active: true })),
+      skipDuplicates: true,
+    });
+  }
+
+  const now = new Date();
+  const access = await prisma.moduleAccess.findMany({
     where: {
       userId,
       active: true,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      module: { enabled: true },
     },
-    select: { module: true },
+    select: { moduleCode: true },
+    orderBy: { grantedAt: 'asc' },
   });
-  const active = new Set(grants.map((grant) => grant.module));
-  return Object.values(ProSolutionsModule).filter((module) => active.has(module));
+  return access.map((entry) => entry.moduleCode);
 }
 
 export async function register(req: Request, res: Response) {
@@ -78,12 +92,7 @@ export async function register(req: Request, res: Response) {
       data: { email: normalizedEmail, passwordHash, name },
     });
 
-    const defaultModules = getDefaultModules(user.role);
-    for (const module of defaultModules) {
-      await prisma.moduleAccess.create({
-        data: { userId: user.id, module },
-      });
-    }
+    await ensureDefaultModuleAccess(user.id, user.role);
 
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -148,7 +157,8 @@ export async function login(req: Request, res: Response) {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      });
+      include: { moduleAccess: true },
+    });
     if (!user) {
       logger.warn('Login failed: invalid credentials');
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
@@ -200,7 +210,7 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    const modules = await getActiveModules(user.id);
+    const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: user.id,
@@ -289,18 +299,18 @@ export async function refreshToken(req: Request, res: Response) {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
+      include: { moduleAccess: true },
     });
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'User not found or inactive' });
     }
 
-    const modules = await getActiveModules(user.id);
+    const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
-    const accessToken = signAccessToken({
+    const accessToken = await signAccessToken({
       sub: user.id,
       email: user.email,
       role: user.role,
-      modules,
     });
 
     const jti = crypto.randomUUID();
@@ -361,8 +371,9 @@ export async function me(req: Request, res: Response) {
         where: {
           active: true,
           OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          module: { enabled: true },
         },
-        select: { module: true },
+        select: { moduleCode: true },
       },
       professionalProfile: true,
     },
@@ -371,7 +382,7 @@ export async function me(req: Request, res: Response) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const modules = user.moduleAccess.map((ma) => ma.module);
+  const modules = user.moduleAccess.map((ma) => ma.moduleCode);
 
   return res.json({
     user: {
@@ -396,15 +407,22 @@ export async function updateProfile(req: Request, res: Response) {
   const { name, email } = value;
   const updateData: Record<string, unknown> = {};
   if (name !== undefined) updateData.name = name;
+
   if (email !== undefined) {
     const normalizedEmail = email.toLowerCase().trim();
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
     });
-    if (existingUser && existingUser.id !== userId) {
-      return res.status(409).json({ message: 'Email already in use' });
+    if (!currentUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    updateData.email = normalizedEmail;
+    if (normalizedEmail !== currentUser.email.toLowerCase().trim()) {
+      return res.status(400).json({
+        message: 'Changing your email requires a dedicated verification flow. Your account email was not changed.',
+        code: 'EMAIL_CHANGE_REQUIRES_VERIFICATION',
+      });
+    }
   }
 
   const user = await prisma.user.update({
@@ -573,7 +591,7 @@ export async function verifyEmail(req: Request, res: Response) {
       ...extractRequestInfo(req),
     });
 
-    const modules = await getActiveModules(verificationToken.userId);
+    const modules = await ensureDefaultModuleAccess(verificationToken.userId, verificationToken.user.role);
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: verificationToken.userId,

@@ -1,22 +1,29 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-hot-toast";
-import { identityAuthApiUrl } from "../../lib/identityUrl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { useAuth } from "../../stores/authStore";
+import { identityAuthApiUrl } from "../../lib/identityUrl";
 
-type ModuleName =
-  | "PROCV"
-  | "PROJOBS"
-  | "PROSKILLS"
-  | "PROCAREER"
-  | "PROINTERVIEW"
-  | "PRORECRUIT";
+const IDENTITY_AUTH_URL = identityAuthApiUrl();
+const IDENTITY_BASE_URL = IDENTITY_AUTH_URL.replace(/\/api\/auth\/?$/, "");
+
+interface ModuleInfo {
+  code: string;
+  name: string;
+  description?: string | null;
+  baseUrl?: string | null;
+  apiAudience: string;
+  enabled: boolean;
+  defaultForNewUsers: boolean;
+  defaultForAdmins: boolean;
+  displayOrder: number;
+}
 
 interface ModuleGrant {
-  module: ModuleName;
+  moduleCode: string;
   active: boolean;
-  grantedAt: string | null;
+  grantedAt: string;
   expiresAt: string | null;
+  module: { code: string; name: string; enabled: boolean };
 }
 
 interface IdentityUser {
@@ -28,326 +35,368 @@ interface IdentityUser {
   isActive: boolean;
   createdAt: string;
   lastLoginAt: string | null;
-  modules: ModuleGrant[];
+  moduleAccess: ModuleGrant[];
 }
 
-interface UsersResponse {
+interface PaginatedUsers {
   users: IdentityUser[];
-  availableModules: ModuleName[];
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
-const IDENTITY_BASE_URL = identityAuthApiUrl().replace(/\/api\/auth\/?$/i, "");
-const FALLBACK_MODULES: ModuleName[] = [
-  "PROCV",
-  "PROJOBS",
-  "PROSKILLS",
-  "PROCAREER",
-  "PROINTERVIEW",
-  "PRORECRUIT",
-];
+type Tab = "users" | "catalog";
 
-const MODULE_LABELS: Record<ModuleName, { es: string; en: string }> = {
-  PROCV: { es: "ProCV · CV y perfil", en: "ProCV · CV and profile" },
-  PROJOBS: { es: "ProJobs · Empleo", en: "ProJobs · Jobs" },
-  PROSKILLS: { es: "ProSkills · Competencias", en: "ProSkills · Skills" },
-  PROCAREER: { es: "ProCareer · Carrera", en: "ProCareer · Career" },
-  PROINTERVIEW: { es: "ProInterview · Entrevistas", en: "ProInterview · Interviews" },
-  PRORECRUIT: { es: "ProRecruit · Selección", en: "ProRecruit · Recruiting" },
-};
+async function requestIdentity(path: string, token: string, init: RequestInit = {}) {
+  const method = (init.method || "GET").toUpperCase();
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  headers.set("Accept", "application/json");
+  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const csrfResponse = await fetch(`${IDENTITY_BASE_URL}/api/csrf-token`, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    if (!csrfResponse.ok) throw new Error("No se pudo preparar la validación de seguridad de la solicitud.");
+    const csrf = await csrfResponse.json();
+    if (typeof csrf.csrfToken !== "string" || !csrf.csrfToken) {
+      throw new Error("ProIdentity no devolvió un token CSRF válido.");
+    }
+    headers.set("X-CSRF-Token", csrf.csrfToken);
+  }
+
+  const response = await fetch(`${IDENTITY_BASE_URL}${path}`, {
+    ...init,
+    method,
+    headers,
+    credentials: "include",
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(typeof payload?.message === "string" ? payload.message : `ProIdentity respondió ${response.status}`);
+  }
+  return payload;
+}
+
+function hasActiveGrant(grant: ModuleGrant | undefined): boolean {
+  return Boolean(grant?.active && (!grant.expiresAt || new Date(grant.expiresAt).getTime() > Date.now()));
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return "Nunca";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+}
+
+const inputClass = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-brand-900";
+const labelClass = "mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300";
+const buttonClass = "inline-flex items-center justify-center rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function UserManagement() {
-  const { i18n } = useTranslation();
   const { accessToken, user: currentUser } = useAuth();
-  const isSpanish = (i18n.resolvedLanguage || i18n.language || "en").toLowerCase().startsWith("es");
+  const [tab, setTab] = useState<Tab>("users");
   const [users, setUsers] = useState<IdentityUser[]>([]);
-  const [modules, setModules] = useState<ModuleName[]>(FALLBACK_MODULES);
-  const [pagination, setPagination] = useState<UsersResponse["pagination"] | null>(null);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [catalog, setCatalog] = useState<ModuleInfo[]>([]);
+  const [pagination, setPagination] = useState<PaginatedUsers["pagination"]>({ page: 1, limit: 25, total: 0, pages: 0 });
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [newModule, setNewModule] = useState({
+    code: "",
+    name: "",
+    description: "",
+    baseUrl: "",
+    apiAudience: "",
+    displayOrder: "100",
+  });
 
-  const text = useCallback((es: string, en: string) => (isSpanish ? es : en), [isSpanish]);
+  const loadCatalog = useCallback(async () => {
+    if (!accessToken) throw new Error("Tu sesión no contiene un token válido. Inicia sesión de nuevo.");
+    const result = await requestIdentity("/api/modules/catalog", accessToken);
+    setCatalog(Array.isArray(result.modules) ? result.modules : []);
+  }, [accessToken]);
 
-  const request = useCallback(async (
-    path: string,
-    options: RequestInit = {},
-  ): Promise<Response> => {
-    if (!accessToken) throw new Error(text("No hay una sesión válida. Inicia sesión de nuevo.", "No active session. Please sign in again."));
+  const loadUsers = useCallback(async (requestedPage = page, requestedSearch = search) => {
+    if (!accessToken) throw new Error("Tu sesión no contiene un token válido. Inicia sesión de nuevo.");
+    const params = new URLSearchParams({ page: String(requestedPage), limit: "25" });
+    if (requestedSearch.trim()) params.set("search", requestedSearch.trim());
+    const result = await requestIdentity(`/api/modules/admin/users?${params.toString()}`, accessToken);
+    setUsers(Array.isArray(result.users) ? result.users : []);
+    if (result.pagination) setPagination(result.pagination);
+  }, [accessToken, page, search]);
 
-    const headers = new Headers(options.headers || {});
-    headers.set("Authorization", `Bearer ${accessToken}`);
-    if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-
-    if (options.method && !["GET", "HEAD", "OPTIONS"].includes(options.method.toUpperCase())) {
-      const csrfResponse = await fetch(`${IDENTITY_BASE_URL}/api/csrf-token`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!csrfResponse.ok) {
-        throw new Error(text("No se pudo preparar la solicitud segura.", "Unable to initialize a secure request."));
-      }
-      const csrfData = await csrfResponse.json().catch(() => ({}));
-      if (typeof csrfData.csrfToken !== "string" || !csrfData.csrfToken) {
-        throw new Error(text("Identity no devolvió el token CSRF.", "Identity did not return a CSRF token."));
-      }
-      headers.set("X-CSRF-Token", csrfData.csrfToken);
-    }
-
-    return fetch(`${IDENTITY_BASE_URL}${path}`, {
-      ...options,
-      headers,
-      credentials: "include",
-    });
-  }, [accessToken, text]);
-
-  const loadUsers = useCallback(async (targetPage: number, targetSearch: string) => {
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        page: String(targetPage),
-        limit: "20",
-      });
-      if (targetSearch.trim()) params.set("search", targetSearch.trim());
-      const response = await request(`/api/modules/users?${params.toString()}`);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || text("No se pudieron cargar los usuarios de ProIdentity.", "Could not load ProIdentity users."));
-      }
-      const result = data as UsersResponse;
-      setUsers(result.users || []);
-      setModules(result.availableModules || FALLBACK_MODULES);
-      setPagination(result.pagination || null);
-      setPage(result.pagination?.page || targetPage);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : text("Error desconocido.", "Unknown error."));
+      await Promise.all([loadCatalog(), loadUsers()]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "No se pudo consultar ProIdentity.");
     } finally {
       setLoading(false);
     }
-  }, [request, text]);
+  }, [loadCatalog, loadUsers]);
 
   useEffect(() => {
-    void loadUsers(1, "");
-  }, [loadUsers]);
+    const timer = window.setTimeout(() => {
+      const normalized = searchDraft.trim();
+      setPage(1);
+      setSearch(normalized);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchDraft]);
 
-  const submitSearch = (event: FormEvent) => {
-    event.preventDefault();
-    setSearch(searchInput);
-    setPage(1);
-    void loadUsers(1, searchInput);
+  useEffect(() => {
+    void loadAll();
+  }, [loadAll]);
+
+  const sortedCatalog = useMemo(
+    () => [...catalog].sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name)),
+    [catalog],
+  );
+
+  const withMutation = async (operation: () => Promise<unknown>, successMessage: string) => {
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await operation();
+      setNotice(successMessage);
+      await Promise.all([loadCatalog(), loadUsers()]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "La operación no se pudo completar.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleModule = async (targetUser: IdentityUser, module: ModuleName) => {
-    const grant = targetUser.modules.find((item) => item.module === module);
-    const currentlyActive = Boolean(grant?.active);
-    const operation = currentlyActive ? "revoke" : "grant";
-    const key = `${targetUser.id}:${module}`;
+  const updateUser = async (user: IdentityUser, values: { role?: string; isActive?: boolean }) => {
+    await withMutation(
+      () => requestIdentity(`/api/modules/admin/users/${encodeURIComponent(user.id)}`, accessToken!, {
+        method: "PATCH",
+        body: JSON.stringify(values),
+      }),
+      `Se actualizó la cuenta de ${user.email}.`,
+    );
+  };
 
-    if (targetUser.id === currentUser?.id && module === "PROCV" && currentlyActive) {
-      toast.error(text(
-        "No puedes revocarte ProCV desde el panel de administración que depende de ese módulo.",
-        "You cannot revoke your own ProCV access from the administration panel that depends on it.",
-      ));
+  const toggleAccess = async (user: IdentityUser, module: ModuleInfo) => {
+    const grant = user.moduleAccess.find((entry) => entry.moduleCode === module.code);
+    if (hasActiveGrant(grant)) {
+      await withMutation(
+        () => requestIdentity("/api/modules/revoke", accessToken!, {
+          method: "POST",
+          body: JSON.stringify({ userId: user.id, moduleCode: module.code }),
+        }),
+        `Se revocó ${module.name} para ${user.email}.`,
+      );
       return;
     }
-
-    try {
-      setSavingKey(key);
-      const response = await request(`/api/modules/${operation}`, {
+    if (!module.enabled) return;
+    await withMutation(
+      () => requestIdentity("/api/modules/grant", accessToken!, {
         method: "POST",
-        body: JSON.stringify({ userId: targetUser.id, module }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || text("No se pudo actualizar el permiso.", "Could not update module access."));
+        body: JSON.stringify({ userId: user.id, moduleCode: module.code }),
+      }),
+      `Se concedió ${module.name} a ${user.email}.`,
+    );
+  };
 
-      toast.success(text(
-        `${MODULE_LABELS[module].es.split(" · ")[0]}: ${currentlyActive ? "acceso revocado" : "acceso concedido"}.`,
-        `${module}: access ${currentlyActive ? "revoked" : "granted"}.`,
-      ));
-      await loadUsers(page, search);
-    } catch (saveError) {
-      toast.error(saveError instanceof Error ? saveError.message : text("Error al actualizar el permiso.", "Could not update access."));
-    } finally {
-      setSavingKey(null);
-    }
+  const createModule = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const payload = {
+      code: newModule.code.trim().toUpperCase(),
+      name: newModule.name.trim(),
+      description: newModule.description.trim() || null,
+      baseUrl: newModule.baseUrl.trim() || null,
+      apiAudience: newModule.apiAudience.trim(),
+      enabled: false,
+      defaultForNewUsers: false,
+      defaultForAdmins: false,
+      displayOrder: Number(newModule.displayOrder),
+    };
+    await withMutation(
+      () => requestIdentity("/api/modules/catalog", accessToken!, { method: "POST", body: JSON.stringify(payload) }),
+      "Módulo registrado y creado deshabilitado. Actívalo cuando su aplicación esté lista.",
+    );
+    setNewModule({ code: "", name: "", description: "", baseUrl: "", apiAudience: "", displayOrder: "100" });
+  };
+
+  const patchModule = async (module: ModuleInfo, values: Partial<ModuleInfo>) => {
+    await withMutation(
+      () => requestIdentity(`/api/modules/catalog/${encodeURIComponent(module.code)}`, accessToken!, {
+        method: "PATCH",
+        body: JSON.stringify(values),
+      }),
+      `Se actualizaron los ajustes de ${module.name}.`,
+    );
+  };
+
+  const changePage = (nextPage: number) => {
+    const safePage = Math.max(1, Math.min(pagination.pages || 1, nextPage));
+    setPage(safePage);
+    setLoading(true);
+    setError(null);
+    loadUsers(safePage, search)
+      .catch((reason) => setError(reason instanceof Error ? reason.message : "No se pudo cargar la página."))
+      .finally(() => setLoading(false));
   };
 
   return (
-    <section className="space-y-6">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-300">
-            ProIdentity · Access control
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
-            {text("Usuarios y acceso a módulos", "Users and module access")}
-          </h1>
-          <p className="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">
-            {text(
-              "Gestiona permisos desde la fuente central. Las cuentas, contraseñas, verificación y sesiones pertenecen a ProIdentity; ProCV solo consume los permisos firmados en el token.",
-              "Manage entitlements at the central source. Accounts, passwords, verification and sessions belong to ProIdentity; ProCV consumes the signed module grants in the access token.",
-            )}
+          <p className="text-sm font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-300">ProIdentity · Administración</p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">Usuarios y módulos</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Las cuentas, sesiones y permisos residen en ProIdentity. Desde aquí administras el acceso a cada módulo sin tocar credenciales locales de ProCV.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void loadUsers(page, search)}
-          disabled={loading}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-        >
-          {text("Actualizar", "Refresh")}
-        </button>
+        <button type="button" onClick={() => void loadAll()} className={buttonClass} disabled={loading || saving}>Actualizar datos</button>
       </header>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Cuentas en Identity", "Identity accounts")}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{pagination?.total ?? "—"}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Módulos disponibles", "Available modules")}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{modules.length}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Página actual", "Current page")}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{pagination ? `${pagination.page} / ${Math.max(pagination.pages, 1)}` : "—"}</p>
-        </div>
-      </div>
+      {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">{error}</div>}
+      {notice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{notice}</div>}
 
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100">
-        {text(
-          "Los cambios de permisos afectan los nuevos tokens. Las sesiones existentes reciben los permisos actualizados al renovar el token; los access tokens actuales duran hasta 15 minutos.",
-          "Permission changes apply to newly issued tokens. Existing sessions receive the updated grants on refresh; current access tokens can remain valid for up to 15 minutes.",
-        )}
-      </div>
-
-      <form onSubmit={submitSearch} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row dark:border-slate-700 dark:bg-slate-900">
-        <label className="sr-only" htmlFor="identity-user-search">{text("Buscar usuario", "Search users")}</label>
-        <input
-          id="identity-user-search"
-          value={searchInput}
-          onChange={(event) => setSearchInput(event.target.value)}
-          placeholder={text("Buscar por nombre o correo electrónico", "Search by name or email")}
-          className="min-h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none ring-brand-500 transition focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
-        />
-        <button type="submit" className="min-h-11 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
-          {text("Buscar", "Search")}
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3 dark:border-slate-800">
+        <button type="button" onClick={() => setTab("users")}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === "users" ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"}`}>
+          Acceso de usuarios
         </button>
-      </form>
+        <button type="button" onClick={() => setTab("catalog")}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === "catalog" ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900"}`}>
+          Catálogo de módulos ({catalog.length})
+        </button>
+      </div>
 
-      {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-100" role="alert">
-          <p>{error}</p>
-          <button type="button" className="mt-2 font-semibold underline" onClick={() => void loadUsers(page, search)}>
-            {text("Reintentar", "Try again")}
-          </button>
-        </div>
-      )}
-
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <div>
-            <h2 className="font-semibold text-slate-900 dark:text-white">{text("Acceso por usuario", "Access by user")}</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{text("Los permisos se gestionan en ProIdentity; los datos de CV permanecen en ProCV.", "Entitlements are managed in ProIdentity; CV data remains in ProCV.")}</p>
+      {loading ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">Consultando el registro central de ProIdentity…</div>
+      ) : tab === "users" ? (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="w-full max-w-md">
+              <label htmlFor="user-search" className={labelClass}>Buscar por nombre o correo</label>
+              <input id="user-search" className={inputClass} value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder="Buscar usuario…" />
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{pagination.total} cuentas en ProIdentity</p>
           </div>
-          {loading && <span className="text-sm text-slate-500">{text("Cargando…", "Loading…")}</span>}
-        </div>
 
-        {!loading && users.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500 dark:text-slate-400">
-            {text("No se encontraron cuentas.", "No accounts found.")}
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-200 dark:divide-slate-700">
-            {users.map((item) => (
-              <article key={item.id} className="p-5">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="break-all font-semibold text-slate-900 dark:text-white">{item.name || item.email}</h3>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.role === "admin" ? "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"}`}>
-                        {item.role === "admin" ? text("Administrador", "Administrator") : text("Usuario", "User")}
-                      </span>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.emailVerified ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"}`}>
-                        {item.emailVerified ? text("Correo verificado", "Email verified") : text("Correo pendiente", "Email pending")}
-                      </span>
-                      {!item.isActive && (
-                        <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-200">
-                          {text("Cuenta inactiva", "Inactive account")}
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <div className="overflow-x-auto">
+              <table className="min-w-[1050px] w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+                  <tr>
+                    <th className="px-5 py-4">Cuenta</th>
+                    <th className="px-5 py-4">Estado</th>
+                    <th className="px-5 py-4">Control central</th>
+                    <th className="px-5 py-4">Último acceso</th>
+                    {sortedCatalog.map((module) => <th className="px-4 py-4 text-center" key={module.code}>{module.name}</th>)}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {users.map((user) => (
+                    <tr key={user.id} className="align-top">
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{user.name || "Sin nombre"}</p>
+                        <p className="mt-1 text-slate-500 dark:text-slate-400">{user.email}</p>
+                        <p className="mt-1 text-xs text-slate-400">{user.role === "admin" ? "Administrador" : "Usuario"} · Alta {formatDate(user.createdAt)}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${user.emailVerified && user.isActive ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"}`}>
+                          {!user.isActive ? "Inactiva" : user.emailVerified ? "Verificada" : "Pendiente"}
                         </span>
-                      )}
-                    </div>
-                    <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">{item.email}</p>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                      {text("ID Identity", "Identity ID")}: <code>{item.id}</code>
-                    </p>
-                  </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex min-w-[155px] flex-col gap-2">
+                          <label className="sr-only" htmlFor={`role-${user.id}`}>Rol de ${user.email}</label>
+                          <select id={`role-${user.id}`} className={inputClass} value={user.role} disabled={saving || user.id === currentUser?.id}
+                            onChange={(event) => void updateUser(user, { role: event.target.value })}>
+                            <option value="user">Usuario</option>
+                            <option value="admin">Administrador</option>
+                          </select>
+                          <button type="button" disabled={saving || user.id === currentUser?.id}
+                            onClick={() => void updateUser(user, { isActive: !user.isActive })}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${user.isActive ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-200" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"}`}>
+                            {user.isActive ? "Desactivar cuenta" : "Activar cuenta"}
+                          </button>
+                          {user.id === currentUser?.id && <span className="text-[10px] text-slate-400">Tu rol y tu cuenta no se pueden cambiar aquí.</span>}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-slate-500 dark:text-slate-400">{formatDate(user.lastLoginAt)}</td>
+                      {sortedCatalog.map((module) => {
+                        const grant = user.moduleAccess.find((entry) => entry.moduleCode === module.code);
+                        const active = hasActiveGrant(grant);
+                        return (
+                          <td className="px-4 py-4 text-center" key={module.code}>
+                            <button type="button" disabled={saving || (!active && !module.enabled)}
+                              onClick={() => void toggleAccess(user, module)}
+                              title={!module.enabled && !active ? "Activa el módulo en el catálogo antes de conceder acceso" : active ? "Revocar acceso" : "Conceder acceso"}
+                              className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${active ? "bg-emerald-100 text-emerald-800 hover:bg-rose-100 hover:text-rose-800 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-rose-950/60" : "bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300"}`}>
+                              {active ? "Concedido" : "Conceder"}
+                            </button>
+                            {grant?.expiresAt && <p className="mt-1 text-[10px] text-slate-400">Hasta {formatDate(grant.expiresAt)}</p>}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                  {users.length === 0 && <tr><td colSpan={4 + sortedCatalog.length} className="px-5 py-12 text-center text-slate-500">No se encontraron cuentas.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 text-sm dark:border-slate-800">
+              <span className="text-slate-500">Página {pagination.page} de {Math.max(1, pagination.pages)}</span>
+              <div className="flex gap-2">
+                <button type="button" disabled={page <= 1 || saving} onClick={() => changePage(page - 1)} className="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40 dark:border-slate-700">Anterior</button>
+                <button type="button" disabled={page >= pagination.pages || saving} onClick={() => changePage(page + 1)} className="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40 dark:border-slate-700">Siguiente</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Registrar un módulo</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Los módulos nuevos se crean deshabilitados y sin acceso predeterminado. Actívalos después de desplegar su frontend y API.</p>
+            <form className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={createModule}>
+              <div><label className={labelClass} htmlFor="module-code">Código</label><input id="module-code" required pattern="[A-Za-z][A-Za-z0-9_]{1,31}" className={inputClass} value={newModule.code} onChange={(event) => setNewModule({ ...newModule, code: event.target.value.toUpperCase() })} placeholder="PROANALYTICS" /></div>
+              <div><label className={labelClass} htmlFor="module-name">Nombre</label><input id="module-name" required className={inputClass} value={newModule.name} onChange={(event) => setNewModule({ ...newModule, name: event.target.value })} placeholder="ProAnalytics" /></div>
+              <div><label className={labelClass} htmlFor="module-audience">Audience JWT</label><input id="module-audience" required className={inputClass} value={newModule.apiAudience} onChange={(event) => setNewModule({ ...newModule, apiAudience: event.target.value })} placeholder="proanalytics-api" /></div>
+              <div className="sm:col-span-2"><label className={labelClass} htmlFor="module-description">Descripción</label><input id="module-description" className={inputClass} value={newModule.description} onChange={(event) => setNewModule({ ...newModule, description: event.target.value })} /></div>
+              <div><label className={labelClass} htmlFor="module-url">URL base</label><input id="module-url" type="url" className={inputClass} value={newModule.baseUrl} onChange={(event) => setNewModule({ ...newModule, baseUrl: event.target.value })} placeholder="https://proanalytics.prosolutions.page" /></div>
+              <div><label className={labelClass} htmlFor="module-order">Orden en portal</label><input id="module-order" type="number" min="0" max="10000" required className={inputClass} value={newModule.displayOrder} onChange={(event) => setNewModule({ ...newModule, displayOrder: event.target.value })} /></div>
+              <div className="flex items-end"><button className={buttonClass} type="submit" disabled={saving}>Crear módulo deshabilitado</button></div>
+            </form>
+          </div>
 
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:w-[min(100%,580px)] xl:grid-cols-3">
-                    {modules.map((module) => {
-                      const grant = item.modules.find((candidate) => candidate.module === module);
-                      const active = Boolean(grant?.active);
-                      const key = `${item.id}:${module}`;
-                      const saving = savingKey === key;
-                      const ownProcvGuard = item.id === currentUser?.id && module === "PROCV" && active;
-                      return (
-                        <button
-                          key={module}
-                          type="button"
-                          aria-pressed={active}
-                          disabled={loading || savingKey !== null || !item.isActive || ownProcvGuard}
-                          onClick={() => void toggleModule(item, module)}
-                          title={ownProcvGuard ? text("Conserva tu propio acceso administrativo a ProCV.", "Keep your own ProCV admin access.") : undefined}
-                          className={`flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-100 dark:hover:bg-emerald-950/50" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}
-                        >
-                          <span className="min-w-0">
-                            <span className="block text-xs font-semibold">{MODULE_LABELS[module][isSpanish ? "es" : "en"]}</span>
-                            <span className="mt-0.5 block text-[11px] opacity-75">
-                              {saving ? text("Guardando…", "Saving…") : active ? text("Acceso activo", "Access enabled") : text("Sin acceso", "No access")}
-                            </span>
-                          </span>
-                          <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${active ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                        </button>
-                      );
-                    })}
+          <div className="space-y-3">
+            {sortedCatalog.map((module) => (
+              <article key={module.code} className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-[240px] flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-bold">{module.name}</h3>
+                      <code className="rounded bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-800">{module.code}</code>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${module.enabled ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{module.enabled ? "Habilitado" : "Deshabilitado"}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{module.description || "Sin descripción."}</p>
+                    <p className="mt-2 break-all text-xs text-slate-400">Audience: {module.apiAudience}{module.baseUrl ? ` · ${module.baseUrl}` : ""}</p>
+                  </div>
+                  <div className="flex min-w-[240px] flex-col gap-2">
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={module.enabled} disabled={saving} onChange={(event) => void patchModule(module, { enabled: event.target.checked })} /> Habilitado en el portal y para nuevas sesiones</label>
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={module.defaultForNewUsers} disabled={saving || !module.enabled} onChange={(event) => void patchModule(module, { defaultForNewUsers: event.target.checked })} /> Acceso predeterminado para usuarios nuevos</label>
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={module.defaultForAdmins} disabled={saving || !module.enabled} onChange={(event) => void patchModule(module, { defaultForAdmins: event.target.checked })} /> Acceso predeterminado para administradores nuevos</label>
                   </div>
                 </div>
               </article>
             ))}
           </div>
-        )}
-
-        <footer className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {pagination ? text(
-              `${pagination.total} cuentas · ${pagination.limit} por página`,
-              `${pagination.total} accounts · ${pagination.limit} per page`,
-            ) : ""}
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={loading || !pagination || page <= 1}
-              onClick={() => { const nextPage = page - 1; setPage(nextPage); void loadUsers(nextPage, search); }}
-              className="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200"
-            >
-              {text("Anterior", "Previous")}
-            </button>
-            <button
-              type="button"
-              disabled={loading || !pagination || page >= pagination.pages}
-              onClick={() => { const nextPage = page + 1; setPage(nextPage); void loadUsers(nextPage, search); }}
-              className="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200"
-            >
-              {text("Siguiente", "Next")}
-            </button>
-          </div>
-        </footer>
-      </div>
-    </section>
+        </section>
+      )}
+    </div>
   );
 }

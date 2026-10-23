@@ -4,12 +4,13 @@ import { config } from '../config';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
 
-export interface IdentityTokenPayload {  sub: string;
+export interface IdentityTokenPayload {
+  sub: string;
   email?: string;
   role?: string;
   modules?: string[];
   iss?: string;
-  aud?: string;
+  aud?: string | string[];
   iat?: number;
   exp?: number;
   jti?: string;
@@ -20,33 +21,55 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-const ACCESS_TOKEN_OPTIONS: jwt.SignOptions = {
-  issuer: config.issuer,
-  audience: config.audience,
-  expiresIn: config.jwtExpiresIn as any,
-};
-
 const REFRESH_TOKEN_OPTIONS: jwt.SignOptions = {
   issuer: config.issuer,
   audience: config.audience,
   expiresIn: config.jwtRefreshExpiresIn as any,
 };
 
-export function signAccessToken(payload: {
+/**
+ * Issue claims from the central access registry, never from client input.
+ * The audience list includes Identity plus each enabled module the user is
+ * currently entitled to use. Adding a registered module therefore does not
+ * require hard-coding a new audience into this service.
+ */
+export async function signAccessToken(payload: {
   sub: string;
   email?: string;
   role?: string;
-  modules?: string[];
-}): string {
+}): Promise<string> {
+  const now = new Date();
+  const access = await prisma.moduleAccess.findMany({
+    where: {
+      userId: payload.sub,
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      module: { enabled: true },
+    },
+    select: {
+      moduleCode: true,
+      module: { select: { apiAudience: true } },
+    },
+  });
+
+  const modules = access.map((entry) => entry.moduleCode);
+  const audience = Array.from(
+    new Set([config.audience, ...access.map((entry) => entry.module.apiAudience)]),
+  );
+
   return jwt.sign(
     {
       sub: payload.sub,
       email: payload.email,
       role: payload.role,
-      modules: payload.modules,
+      modules,
     },
     config.jwtSecret,
-    ACCESS_TOKEN_OPTIONS,
+    {
+      issuer: config.issuer,
+      audience,
+      expiresIn: config.jwtExpiresIn as any,
+    },
   );
 }
 
@@ -76,13 +99,13 @@ export async function createTokenPair(user: {
   id: string;
   email: string;
   role: string;
+  // Kept for compatibility with older internal callers; current modules are always reloaded from the registry.
   modules?: string[];
 }): Promise<TokenPair> {
-  const accessToken = signAccessToken({
+  const accessToken = await signAccessToken({
     sub: user.id,
     email: user.email,
     role: user.role,
-    modules: user.modules,
   });
 
   const jti = crypto.randomUUID();
@@ -125,8 +148,8 @@ export async function rotateSession(
   oldRefreshToken: string,
   userId: string,
 ): Promise<{ accessToken: string; refreshToken: string }> {
-  await prisma.session.update({
-    where: { id: oldRefreshToken },
+  await prisma.session.updateMany({
+    where: { refreshToken: oldRefreshToken, revokedAt: null },
     data: { revokedAt: new Date() },
   });
 
@@ -144,7 +167,15 @@ export async function rotateSession(
     },
   });
 
-  const accessToken = signAccessToken({ sub: userId });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, role: true },
+  });
+  const accessToken = await signAccessToken({
+    sub: userId,
+    email: user?.email ?? undefined,
+    role: user?.role ?? undefined,
+  });
 
   return { accessToken, refreshToken };
 }

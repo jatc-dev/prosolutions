@@ -20,6 +20,42 @@ import moduleRoutes from './routes/modules';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
+// CORS origins for registered, enabled modules are derived from the central registry.
+// The short cache avoids a database query for every browser preflight.
+let moduleOriginCache: { expiresAt: number; origins: Set<string> } = {
+  expiresAt: 0,
+  origins: new Set<string>(),
+};
+
+async function getEnabledModuleOrigins(): Promise<Set<string>> {
+  if (Date.now() < moduleOriginCache.expiresAt) {
+    return moduleOriginCache.origins;
+  }
+
+  const modules = await prisma.module.findMany({
+    where: { enabled: true, baseUrl: { not: null } },
+    select: { baseUrl: true },
+  });
+  const origins = new Set<string>();
+
+  for (const module of modules) {
+    if (!module.baseUrl) continue;
+    try {
+      const parsed = new URL(module.baseUrl);
+      const isPlatformSubdomain = parsed.hostname === 'prosolutions.page' ||
+        parsed.hostname.endsWith('.prosolutions.page');
+      if (parsed.protocol === 'https:' && isPlatformSubdomain) {
+        origins.add(parsed.origin);
+      }
+    } catch {
+      // Ignore malformed URLs; the module registry API validates new entries.
+    }
+  }
+
+  moduleOriginCache = { expiresAt: Date.now() + 30_000, origins };
+  return origins;
+}
+
 export function corsMiddleware(options: {
   isProduction: boolean;
   allowedOrigins: string[];
@@ -28,23 +64,30 @@ export function corsMiddleware(options: {
     ? options.allowedOrigins
     : [
         'https://prosolutions.page',
+        'https://www.prosolutions.page',
         'https://procv.prosolutions.page',
+        'https://projobs.prosolutions.page',
         'http://localhost:5173',
         'http://localhost:5174',
       ];
 
   return cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin) {
+      if (!origin || !options.isProduction || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      if (!options.isProduction || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
+
+      void getEnabledModuleOrigins()
+        .then((moduleOrigins) => callback(null, moduleOrigins.has(origin)))
+        .catch((error: unknown) => {
+          logger.warn('Dynamic module CORS lookup failed', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+          callback(null, false);
+        });
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Cookie'],
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,

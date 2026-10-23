@@ -8,13 +8,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Module {
-  PROCV
-  PROJOBS
-  PROSKILLS
-  PROCAREER
-  PROINTERVIEW
-  PRORECRUIT
+model Module {
+  code               String         @id
+  name               String
+  description        String?
+  baseUrl            String?
+  apiAudience        String         @unique
+  enabled            Boolean        @default(true)
+  defaultForNewUsers Boolean        @default(false)
+  defaultForAdmins   Boolean        @default(false)
+  displayOrder       Int            @default(100)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  accesses           ModuleAccess[]
+
+  @@index([enabled, displayOrder])
 }
 
 model User {
@@ -104,15 +112,16 @@ model ProfessionalProfile {
 model ModuleAccess {
   id        String   @id @default(cuid())
   userId    String
-  module    Module
-  grantedAt DateTime @default(now())
-  expiresAt DateTime?
-  active    Boolean  @default(true)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleCode String
+  grantedAt  DateTime @default(now())
+  expiresAt  DateTime?
+  active     Boolean  @default(true)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module     Module   @relation(fields: [moduleCode], references: [code], onDelete: Restrict)
 
   @@index([userId])
-  @@index([module])
-  @@unique([userId, module])
+  @@index([moduleCode])
+  @@unique([userId, moduleCode])
 }
 
 model AuditLog {
