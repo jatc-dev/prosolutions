@@ -1,9 +1,5 @@
 import 'dotenv/config';
 
-function getEnvironment() {
-  return process.env.NODE_ENV === 'production' ? 'production' : 'development';
-}
-
 function getPort(): number {
   const rawPort = process.env.PORT;
   const parsed = rawPort ? Number(rawPort) : 5176;
@@ -18,32 +14,18 @@ function getPort(): number {
 function getIdentityUrl(): string {
   const url = process.env.IDENTITY_URL || 'http://localhost:4001';
   try {
-    new URL(url);
-    return url;
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error('Unsupported URL protocol');
+    }
+    return parsed.toString().replace(/\\/$/, '');
   } catch {
-    throw new Error('IDENTITY_URL must be a valid URL');
+    throw new Error('IDENTITY_URL must be a valid HTTP(S) URL');
   }
-}
-
-function getJwtSecret(): string {
-  const secret = process.env.IDENTITY_JWT_SECRET || process.env.JWT_SECRET;
-  const isProduction = getEnvironment() === 'production';
-
-  if (isProduction && !secret) {
-    throw new Error(
-      'IDENTITY_JWT_SECRET must be set in production environment',
-    );
-  }
-
-  return secret || 'change-me-for-development-only';
 }
 
 export const config = {
   port: getPort(),
   identityUrl: getIdentityUrl(),
-  jwtSecret: getJwtSecret(),
-  issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
-  audience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
-  isProduction: getEnvironment() === 'production',
-  cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
+  isProduction: process.env.NODE_ENV === 'production',
 };
