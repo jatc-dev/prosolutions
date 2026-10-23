@@ -54,9 +54,9 @@ export async function identityMiddleware(
         where: { refreshToken },
       });
 
-      if (!session || session.expiresAt < new Date()) {
+      if (!session || session.expiresAt < new Date() || session.userId !== payload.sub) {
         clearRefreshTokenCookie(res);
-        return res.status(401).json({ message: 'Session expired' });
+        return res.status(401).json({ message: 'Session expired or does not match the access token' });
       }
 
       if (session.revokedAt) {
