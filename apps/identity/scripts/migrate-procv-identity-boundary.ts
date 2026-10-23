@@ -281,12 +281,6 @@ async function finalize() {
   console.log('[ProCV Identity cutover] Phase: finalize');
   console.log(`Mode: ${apply ? 'APPLY' : 'DRY RUN'}`);
 
-  if (plan.connectionTestRows > 0) {
-    throw new Error(
-      `public."_conn_test" contains ${plan.connectionTestRows} row(s); inspect and archive that test data before finalizing.`,
-    );
-  }
-
   const identityAccountExists = await tableExists('IdentityAccount');
   if (!identityAccountExists) {
     throw new Error('IdentityAccount does not exist. Run and verify the prepare phase first.');
@@ -311,7 +305,7 @@ async function finalize() {
 
   if (!apply) {
     console.log('Ready to remove ProCV-local User, Session and email-token tables.');
-    console.log('All CV owners point to IdentityAccount; CV, version, ATS and platform settings rows will be retained.');
+    console.log('All CV owners point to IdentityAccount; CV, version, ATS, platform settings, audit history and diagnostic tables will be retained.');
     console.log('Dry run only. Re-run with --finalize --apply after the new app version is healthy.');
     return;
   }
@@ -320,10 +314,6 @@ async function finalize() {
     await tx.$executeRawUnsafe('DROP TABLE IF EXISTS public."EmailVerificationToken"');
     await tx.$executeRawUnsafe('DROP TABLE IF EXISTS public."PasswordResetToken"');
     await tx.$executeRawUnsafe('DROP TABLE IF EXISTS public."Session"');
-
-    if (plan.connectionTestExists) {
-      await tx.$executeRawUnsafe('DROP TABLE public."_conn_test"');
-    }
 
     const legacyUserExists = await tableExists('User');
     if (legacyUserExists) {
@@ -340,7 +330,7 @@ async function finalize() {
     }
   });
 
-  console.log('Finalize phase completed. ProCV no longer has local credential/session tables.');
+  console.log('Finalize phase completed. ProCV no longer has local credential/session tables; diagnostic tables are preserved.');
 }
 
 async function main() {
