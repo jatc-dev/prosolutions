@@ -1,596 +1,353 @@
-import { useEffect, useId, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
-import { api } from "../../services/api";
+import { identityAuthApiUrl } from "../../lib/identityUrl";
+import { useAuth } from "../../stores/authStore";
 
-interface User {
+type ModuleName =
+  | "PROCV"
+  | "PROJOBS"
+  | "PROSKILLS"
+  | "PROCAREER"
+  | "PROINTERVIEW"
+  | "PRORECRUIT";
+
+interface ModuleGrant {
+  module: ModuleName;
+  active: boolean;
+  grantedAt: string | null;
+  expiresAt: string | null;
+}
+
+interface IdentityUser {
   id: string;
   email: string;
   name: string | null;
   role: string;
   emailVerified: boolean;
-  lastLoginAt: string | null;
+  isActive: boolean;
   createdAt: string;
-  updatedAt: string;
-  _count: {
-    cvs: number;
-  };
+  lastLoginAt: string | null;
+  modules: ModuleGrant[];
 }
 
 interface UsersResponse {
-  users: User[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  users: IdentityUser[];
+  availableModules: ModuleName[];
+  pagination: { page: number; limit: number; total: number; pages: number };
 }
 
+const IDENTITY_BASE_URL = identityAuthApiUrl().replace(/\\/api\\/auth\\/?$/i, "");
+const FALLBACK_MODULES: ModuleName[] = [
+  "PROCV",
+  "PROJOBS",
+  "PROSKILLS",
+  "PROCAREER",
+  "PROINTERVIEW",
+  "PRORECRUIT",
+];
+
+const MODULE_LABELS: Record<ModuleName, { es: string; en: string }> = {
+  PROCV: { es: "ProCV · CV y perfil", en: "ProCV · CV and profile" },
+  PROJOBS: { es: "ProJobs · Empleo", en: "ProJobs · Jobs" },
+  PROSKILLS: { es: "ProSkills · Competencias", en: "ProSkills · Skills" },
+  PROCAREER: { es: "ProCareer · Carrera", en: "ProCareer · Career" },
+  PROINTERVIEW: { es: "ProInterview · Entrevistas", en: "ProInterview · Interviews" },
+  PRORECRUIT: { es: "ProRecruit · Selección", en: "ProRecruit · Recruiting" },
+};
+
 export function UserManagement() {
-  const { t } = useTranslation();
-  const [users, setUsers] = useState<User[]>([]);
-  const [pagination, setPagination] = useState<UsersResponse['pagination'] | null>(null);
+  const { t, i18n } = useTranslation();
+  const { accessToken, user: currentUser } = useAuth();
+  const isSpanish = (i18n.resolvedLanguage || i18n.language || "en").toLowerCase().startsWith("es");
+  const [users, setUsers] = useState<IdentityUser[]>([]);
+  const [modules, setModules] = useState<ModuleName[]>(FALLBACK_MODULES);
+  const [pagination, setPagination] = useState<UsersResponse["pagination"] | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [editForm, setEditForm] = useState({ name: "", email: "", role: "" });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("");
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const searchInputId = useId();
-  const roleFilterId = useId();
-  const modalTitleId = useId();
-  const resetPasswordTitleId = useId();
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!editingUser) return;
+  const text = (es: string, en: string) => (isSpanish ? es : en);
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setEditingUser(null);
+  const request = useCallback(async (
+    path: string,
+    options: RequestInit = {},
+  ): Promise<Response> => {
+    if (!accessToken) throw new Error(text("No hay una sesión válida. Inicia sesión de nuevo.", "No active session. Please sign in again."));
+
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${accessToken}`);
+    if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+
+    if (options.method && !["GET", "HEAD", "OPTIONS"].includes(options.method.toUpperCase())) {
+      const csrfResponse = await fetch(`${IDENTITY_BASE_URL}/api/csrf-token`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!csrfResponse.ok) {
+        throw new Error(text("No se pudo preparar la solicitud segura.", "Unable to initialize a secure request."));
       }
-    };
+      const csrfData = await csrfResponse.json().catch(() => ({}));
+      if (typeof csrfData.csrfToken !== "string" || !csrfData.csrfToken) {
+        throw new Error(text("Identity no devolvió el token CSRF.", "Identity did not return a CSRF token."));
+      }
+      headers.set("X-CSRF-Token", csrfData.csrfToken);
+    }
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [editingUser]);
+    return fetch(`${IDENTITY_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+  }, [accessToken, isSpanish]);
 
-  const fetchUsers = async (page = 1, search = "", role = "") => {
+  const loadUsers = useCallback(async (targetPage = page, targetSearch = search) => {
     try {
       setLoading(true);
-      let url = `/admin/users?page=${page}&limit=10`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (role) url += `&role=${role}`;
-
-      const response = await api.get(url);
-      setUsers(response.data.users);
-      setPagination(response.data.pagination);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.loadUsers"));
+      setError(null);
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: "20",
+      });
+      if (targetSearch.trim()) params.set("search", targetSearch.trim());
+      const response = await request(`/api/modules/users?${params.toString()}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || text("No se pudieron cargar los usuarios de ProIdentity.", "Could not load ProIdentity users."));
+      }
+      const result = data as UsersResponse;
+      setUsers(result.users || []);
+      setModules(result.availableModules || FALLBACK_MODULES);
+      setPagination(result.pagination || null);
+      setPage(result.pagination?.page || targetPage);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : text("Error desconocido.", "Unknown error."));
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, request, isSpanish]);
 
   useEffect(() => {
-    fetchUsers(1, searchTerm, roleFilter);
-  }, [searchTerm, roleFilter]);
+    void loadUsers(1, "");
+  }, [loadUsers]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setSearch(searchInput);
+    setPage(1);
+    void loadUsers(1, searchInput);
   };
 
-  const handleRoleFilterChange = (value: string) => {
-    setRoleFilter(value);
-  };
+  const toggleModule = async (targetUser: IdentityUser, module: ModuleName) => {
+    const grant = targetUser.modules.find((item) => item.module === module);
+    const currentlyActive = Boolean(grant?.active);
+    const operation = currentlyActive ? "revoke" : "grant";
+    const key = `${targetUser.id}:${module}`;
 
-  const handleUserSelect = (userId: string, checked: boolean) => {
-    const newSelected = new Set(selectedUsers);
-    if (checked) {
-      newSelected.add(userId);
-    } else {
-      newSelected.delete(userId);
-    }
-    setSelectedUsers(newSelected);
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedUsers(new Set(users.map(user => user.id)));
-    } else {
-      setSelectedUsers(new Set());
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedUsers.size === 0) return;
-    if (!confirm(t("admin.userManagement.confirm.deleteUsers", { count: selectedUsers.size }))) return;
-
-    try {
-      await Promise.all(Array.from(selectedUsers).map(userId =>
-        api.delete(`/admin/users/${userId}`)
+    if (targetUser.id === currentUser?.id && module === "PROCV" && currentlyActive) {
+      toast.error(text(
+        "No puedes revocarte ProCV desde el panel de administración que depende de ese módulo.",
+        "You cannot revoke your own ProCV access from the administration panel that depends on it.",
       ));
-      setSelectedUsers(new Set());
-      fetchUsers(pagination?.page || 1, searchTerm, roleFilter);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.deleteUsers"));
+      return;
     }
-  };
-
-  const handleBulkRoleChange = async (newRole: string) => {
-    if (selectedUsers.size === 0) return;
 
     try {
-      await Promise.all(Array.from(selectedUsers).map(userId =>
-        api.put(`/admin/users/${userId}`, { role: newRole })
-      ));
-      setSelectedUsers(new Set());
-      fetchUsers(pagination?.page || 1, searchTerm, roleFilter);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.updateUsers"));
-    }
-  };
-
-  const handleExportCSV = async () => {
-    try {
-      const response = await api.get('/admin/export/users/csv', {
-        responseType: 'blob'
+      setSavingKey(key);
+      const response = await request(`/api/modules/${operation}`, {
+        method: "POST",
+        body: JSON.stringify({ userId: targetUser.id, module }),
       });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || text("No se pudo actualizar el permiso.", "Could not update module access."));
 
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.exportUsers"));
+      toast.success(text(
+        `${MODULE_LABELS[module].es.split(" · ")[0]}: ${currentlyActive ? "acceso revocado" : "acceso concedido"}.`,
+        `${module}: access ${currentlyActive ? "revoked" : "granted"}.`,
+      ));
+      await loadUsers(page, search);
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : text("Error al actualizar el permiso.", "Could not update access."));
+    } finally {
+      setSavingKey(null);
     }
   };
-
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setEditForm({
-      name: user.name || "",
-      email: user.email,
-      role: user.role
-    });
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingUser) return;
-
-    try {
-      await api.put(`/admin/users/${editingUser.id}`, editForm);
-      setEditingUser(null);
-      fetchUsers(pagination?.page || 1);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.updateUser"));
-    }
-  };
-
-  const handleDelete = async (userId: string) => {
-    if (!confirm(t("admin.userManagement.confirm.deleteUser"))) return;
-
-    try {
-      await api.delete(`/admin/users/${userId}`);
-      fetchUsers(pagination?.page || 1);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.deleteUser"));
-    }
-  };
-
-  const handleResetPassword = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    if (user) {
-      setResetPasswordUser(user);
-      setNewPassword("");
-    }
-  };
-
-  const handleSaveResetPassword = async () => {
-    if (!resetPasswordUser || !newPassword) return;
-
-    try {
-      await api.post(`/admin/users/${resetPasswordUser.id}/reset-password`, { newPassword });
-      setResetPasswordUser(null);
-      setNewPassword("");
-      toast.success(t("admin.userManagement.success.passwordReset"));
-    } catch (err: any) {
-      setError(err.response?.data?.message || t("admin.userManagement.errors.resetPassword"));
-    }
-  };
-
-  if (loading && users.length === 0) {
-    return (
-      <div className="ui-card flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-        <p className="ml-3 text-sm text-slate-500">{t("admin.userManagement.loading")}</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{t("admin.userManagement.title")}</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">{t("admin.userManagement.subtitle")}</p>
-      </div>
-
-      {error && (
-        <div className="ui-error-state" role="alert" aria-live="assertive">
-          <p className="text-rose-800">{error}</p>
-          <button
-            type="button"
-            onClick={() => setError(null)}
-            className="mt-2 text-sm text-rose-600 hover:underline"
-          >
-            {t("admin.userManagement.dismiss")}
-          </button>
+    <section className="space-y-6">
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600 dark:text-brand-300">
+            ProIdentity · Access control
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+            {text("Usuarios y acceso a módulos", "Users and module access")}
+          </h1>
+          <p className="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">
+            {text(
+              "Gestiona permisos desde la fuente central. Las cuentas, contraseñas, verificación y sesiones pertenecen a ProIdentity; ProCV solo consume los permisos firmados en el token.",
+              "Manage entitlements at the central source. Accounts, passwords, verification and sessions belong to ProIdentity; ProCV consumes the signed module grants in the access token.",
+            )}
+          </p>
         </div>
-      )}
+        <button
+          type="button"
+          onClick={() => void loadUsers(page, search)}
+          disabled={loading}
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          {text("Actualizar", "Refresh")}
+        </button>
+      </header>
 
-      {/* Search and Filters */}
-      <div className="ui-card mb-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
-            <label htmlFor={searchInputId} className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              {t("admin.userManagement.searchUsers")}
-            </label>
-            <input
-              id={searchInputId}
-              type="text"
-              placeholder={t("admin.userManagement.searchPlaceholder")}
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            />
-          </div>
-          <div>
-            <label htmlFor={roleFilterId} className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              {t("admin.userManagement.filterByRole")}
-            </label>
-            <select
-              id={roleFilterId}
-              value={roleFilter}
-              onChange={(e) => handleRoleFilterChange(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            >
-              <option value="">{t("admin.userManagement.allRoles")}</option>
-              <option value="user">{t("admin.userManagement.roleUser")}</option>
-              <option value="admin">{t("admin.userManagement.roleAdmin")}</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={() => fetchUsers(1, searchTerm, roleFilter)}
-              className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors"
-            >
-              {t("admin.userManagement.applyFilters")}
-            </button>
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Cuentas en Identity", "Identity accounts")}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{pagination?.total ?? "—"}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Módulos disponibles", "Available modules")}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{modules.length}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-slate-500 dark:text-slate-400">{text("Página actual", "Current page")}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{pagination ? `${pagination.page} / ${Math.max(pagination.pages, 1)}` : "—"}</p>
         </div>
       </div>
 
-      {/* Bulk Actions */}
-      {selectedUsers.size > 0 && (
-        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/40">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-blue-800 dark:text-blue-200">
-              {t("admin.userManagement.selectedUsers", { count: selectedUsers.size })}
-            </span>
-            <div className="flex gap-2">
-              <select
-                onChange={(e) => e.target.value && handleBulkRoleChange(e.target.value)}
-                className="rounded border border-blue-300 px-3 py-1 text-sm dark:border-blue-700 dark:bg-slate-900 dark:text-slate-100"
-                defaultValue=""
-              >
-                <option value="">{t("admin.userManagement.changeRole")}</option>
-                <option value="user">{t("admin.userManagement.setAsUser")}</option>
-                <option value="admin">{t("admin.userManagement.setAsAdmin")}</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-              >
-                {t("admin.userManagement.deleteSelected")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Users Table */}
-      <div className="ui-surface overflow-hidden">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {t("admin.userManagement.usersCount", { count: pagination?.total || 0 })}
-          </h2>
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            {t("admin.userManagement.exportCsv")}
-          </button>
-        </div>
-
-        <div className="overflow-x-auto" aria-busy={loading}>
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-slate-800/80">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.size === users.length && users.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    aria-label={t("admin.userManagement.selectAllUsers", { defaultValue: "Select all users" })}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.user")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.role")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.cvs")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.created")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.lastLogin")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.emailVerified")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-300">
-                  {t("admin.userManagement.table.actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-              {users.map((user) => (
-                <tr key={user.id} className="transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/70">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.has(user.id)}
-                      onChange={(e) => handleUserSelect(user.id, e.target.checked)}
-                      aria-label={t("admin.userManagement.selectUser", { defaultValue: "Select user" }) + ` ${user.email}`}
-                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="font-medium text-slate-900 dark:text-slate-100">{user.name || t("admin.unnamedUser")}</div>
-                      <div className="text-slate-500 dark:text-slate-300">{user.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.role === 'admin'
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-100'
-                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-100'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-slate-100">
-                    {user._count.cvs}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-300">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-300">
-                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : t("admin.userManagement.never")}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.emailVerified
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-100'
-                          : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-100'
-                      }`}
-                      title={
-                        user.emailVerified
-                          ? t("admin.userManagement.verified")
-                          : t("admin.userManagement.pending")
-                      }
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          user.emailVerified ? 'bg-emerald-500' : 'bg-amber-500'
-                        }`}
-                      />
-                      {user.emailVerified
-                        ? t("admin.userManagement.verified")
-                        : t("admin.userManagement.pending")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(user)}
-                      className="inline-flex rounded-md px-2 py-1 text-blue-600 hover:bg-blue-50 hover:text-blue-900"
-                    >
-                      {t("common.edit")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleResetPassword(user.id)}
-                      className="inline-flex rounded-md px-2 py-1 text-amber-600 hover:bg-amber-50 hover:text-amber-900"
-                    >
-                      {t("admin.userManagement.resetPassword")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(user.id)}
-                      className="inline-flex rounded-md px-2 py-1 text-rose-600 hover:bg-rose-50 hover:text-rose-900"
-                    >
-                      {t("common.delete")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {pagination && pagination.pages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4 dark:border-slate-700">
-            <div className="text-sm text-slate-700 dark:text-slate-300">
-              {t("admin.userManagement.showing", {
-                from: ((pagination.page - 1) * pagination.limit) + 1,
-                to: Math.min(pagination.page * pagination.limit, pagination.total),
-                total: pagination.total
-              })}
-            </div>
-            <div className="flex space-x-2">
-              <button
-                type="button"
-                onClick={() => fetchUsers(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="rounded border border-slate-300 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {t("common.previous")}
-              </button>
-              <button
-                type="button"
-                onClick={() => fetchUsers(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-                className="rounded border border-slate-300 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {t("common.next")}
-              </button>
-            </div>
-          </div>
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-100">
+        {text(
+          "Los cambios de permisos afectan los nuevos tokens. Las sesiones existentes reciben los permisos actualizados al renovar el token; los access tokens actuales duran hasta 15 minutos.",
+          "Permission changes apply to newly issued tokens. Existing sessions receive the updated grants on refresh; current access tokens can remain valid for up to 15 minutes.",
         )}
       </div>
 
-      {/* Edit Modal */}
-      {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setEditingUser(null)}>
-          <div
-            className="ui-surface w-full max-w-md p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={modalTitleId}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id={modalTitleId} className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{t("admin.userManagement.editUser")}</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">{t("auth.name")}</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">{t("auth.email")}</label>
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">{t("admin.userManagement.table.role")}</label>
-                <select
-                  value={editForm.role}
-                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                >
-                  <option value="user">{t("admin.userManagement.roleUser")}</option>
-                  <option value="admin">{t("admin.userManagement.roleAdmin")}</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setEditingUser(null)}
-                className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveEdit}
-                className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700"
-              >
-                {t("common.save")}
-              </button>
-            </div>
-          </div>
+      <form onSubmit={submitSearch} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row dark:border-slate-700 dark:bg-slate-900">
+        <label className="sr-only" htmlFor="identity-user-search">{text("Buscar usuario", "Search users")}</label>
+        <input
+          id="identity-user-search"
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          placeholder={text("Buscar por nombre o correo electrónico", "Search by name or email")}
+          className="min-h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none ring-brand-500 transition focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-white"
+        />
+        <button type="submit" className="min-h-11 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700">
+          {text("Buscar", "Search")}
+        </button>
+      </form>
+
+      {error && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-100" role="alert">
+          <p>{error}</p>
+          <button type="button" className="mt-2 font-semibold underline" onClick={() => void loadUsers(page, search)}>
+            {text("Reintentar", "Try again")}
+          </button>
         </div>
       )}
 
-      {/* Reset Password Modal */}
-      {resetPasswordUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setResetPasswordUser(null)}>
-          <div
-            className="ui-surface w-full max-w-md p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={resetPasswordTitleId}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id={resetPasswordTitleId} className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-              {t("admin.userManagement.resetPassword")}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {t("admin.userManagement.prompts.newPassword")}
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  placeholder={t("admin.userManagement.prompts.newPassword")}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setResetPasswordUser(null)}
-                className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveResetPassword}
-                disabled={!newPassword}
-                className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50"
-              >
-                {t("common.save")}
-              </button>
-            </div>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <div>
+            <h2 className="font-semibold text-slate-900 dark:text-white">{text("Acceso por usuario", "Access by user")}</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{text("Los permisos se gestionan en ProIdentity; los datos de CV permanecen en ProCV.", "Entitlements are managed in ProIdentity; CV data remains in ProCV.")}</p>
           </div>
+          {loading && <span className="text-sm text-slate-500">{text("Cargando…", "Loading…")}</span>}
         </div>
-      )}
-    </div>
+
+        {!loading && users.length === 0 ? (
+          <div className="p-10 text-center text-sm text-slate-500 dark:text-slate-400">
+            {text("No se encontraron cuentas.", "No accounts found.")}
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            {users.map((item) => (
+              <article key={item.id} className="p-5">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="break-all font-semibold text-slate-900 dark:text-white">{item.name || item.email}</h3>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.role === "admin" ? "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"}`}>
+                        {item.role === "admin" ? text("Administrador", "Administrator") : text("Usuario", "User")}
+                      </span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.emailVerified ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"}`}>
+                        {item.emailVerified ? text("Correo verificado", "Email verified") : text("Correo pendiente", "Email pending")}
+                      </span>
+                      {!item.isActive && (
+                        <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-200">
+                          {text("Cuenta inactiva", "Inactive account")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">{item.email}</p>
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                      {text("ID Identity", "Identity ID")}: <code>{item.id}</code>
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:w-[min(100%,580px)] xl:grid-cols-3">
+                    {modules.map((module) => {
+                      const grant = item.modules.find((candidate) => candidate.module === module);
+                      const active = Boolean(grant?.active);
+                      const key = `${item.id}:${module}`;
+                      const saving = savingKey === key;
+                      const ownProcvGuard = item.id === currentUser?.id && module === "PROCV" && active;
+                      return (
+                        <button
+                          key={module}
+                          type="button"
+                          aria-pressed={active}
+                          disabled={loading || savingKey !== null || !item.isActive || ownProcvGuard}
+                          onClick={() => void toggleModule(item, module)}
+                          title={ownProcvGuard ? text("Conserva tu propio acceso administrativo a ProCV.", "Keep your own ProCV admin access.") : undefined}
+                          className={`flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-100 dark:hover:bg-emerald-950/50" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-xs font-semibold">{MODULE_LABELS[module][isSpanish ? "es" : "en"]}</span>
+                            <span className="mt-0.5 block text-[11px] opacity-75">
+                              {saving ? text("Guardando…", "Saving…") : active ? text("Acceso activo", "Access enabled") : text("Sin acceso", "No access")}
+                            </span>
+                          </span>
+                          <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${active ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <footer className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {pagination ? text(
+              `${pagination.total} cuentas · ${pagination.limit} por página`,
+              `${pagination.total} accounts · ${pagination.limit} per page`,
+            ) : ""}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={loading || !pagination || page <= 1}
+              onClick={() => { const nextPage = page - 1; setPage(nextPage); void loadUsers(nextPage, search); }}
+              className="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200"
+            >
+              {text("Anterior", "Previous")}
+            </button>
+            <button
+              type="button"
+              disabled={loading || !pagination || page >= pagination.pages}
+              onClick={() => { const nextPage = page + 1; setPage(nextPage); void loadUsers(nextPage, search); }}
+              className="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200"
+            >
+              {text("Siguiente", "Next")}
+            </button>
+          </div>
+        </footer>
+      </div>
+    </section>
   );
 }
