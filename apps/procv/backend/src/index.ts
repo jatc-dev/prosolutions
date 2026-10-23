@@ -4,7 +4,6 @@ import { createApp } from './app';
 import prisma from './prismaClient';
 import { logger } from './utils/logger';
 import { closeBrowser } from './utils/pdfGenerator';
-import { ensureSchemaCompatibility } from './utils/schemaGuard';
 
 const port = config.port;
 const app = createApp();
@@ -12,8 +11,6 @@ const app = createApp();
 let server: import('http').Server;
 
 async function bootstrap() {
-  await ensureSchemaCompatibility();
-
   server = app.listen(port, () => {
     logger.info(`🚀 ProCV backend listening on http://localhost:${port}`);
   });
