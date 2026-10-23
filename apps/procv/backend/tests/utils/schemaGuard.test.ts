@@ -22,7 +22,9 @@ type TableRows = Array<{ table_name: string }>;
 const BUSINESS_TABLES = ['CV', 'CVVersion', 'CVAtsAnalysis', 'AuditLog', 'PlatformSetting'];
 
 const mockPrisma = prismaClient as unknown as {
-  $queryRaw: jest.MockedFunction<(query: TemplateStringsArray, ...values: unknown[]) => Promise<TableRows>>;
+  $queryRaw: jest.MockedFunction<
+    (query: TemplateStringsArray, ...values: unknown[]) => Promise<TableRows>
+  >;
 };
 
 describe('ProCV schema guard', () => {
@@ -31,7 +33,7 @@ describe('ProCV schema guard', () => {
   });
 
   it('accepts the complete business schema without issuing DDL', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue(BUSINESS_TABLES.map((table_name) => ({ table_name })));
+    mockPrisma.$queryRaw.mockResolvedValue(BUSINESS_TABLES.map(table_name => ({ table_name })));
 
     await expect(ensureSchemaCompatibility()).resolves.toBeUndefined();
 
