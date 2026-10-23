@@ -171,7 +171,8 @@ export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
       where: { userId, active: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
       select: { module: true },
     });
-    if (activeModules.length <= 1) {
+    const targetModuleIsActive = activeModules.some((access) => access.module === module);
+    if (targetModuleIsActive && activeModules.length <= 1) {
       return res.status(400).json({ message: 'Cannot revoke the last active module from your own account' });
     }
   }
