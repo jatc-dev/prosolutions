@@ -21,4 +21,5 @@ CREATE POLICY projobs_applications_owner ON public.projobs_applications FOR ALL 
 REVOKE ALL ON TABLE public.projobs_saved_jobs,public.projobs_applications FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON public.projobs_saved_jobs,public.projobs_applications TO projobs_api;
 REVOKE ALL ON FUNCTION public.projobs_touch_updated_at() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.projobs_touch_updated_at() TO projobs_api;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='anon') THEN EXECUTE 'REVOKE ALL ON public.projobs_saved_jobs,public.projobs_applications FROM anon'; END IF; IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN EXECUTE 'REVOKE ALL ON public.projobs_saved_jobs,public.projobs_applications FROM authenticated'; END IF; END $$;
