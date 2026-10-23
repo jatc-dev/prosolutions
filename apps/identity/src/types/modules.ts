@@ -7,17 +7,10 @@ export enum ProSolutionsModule {
   PRORECRUIT = 'PRORECRUIT',
 }
 
-export const ALL_MODULES: ProSolutionsModule[] = [
-  ProSolutionsModule.PROCV,
-  ProSolutionsModule.PROJOBS,
-  ProSolutionsModule.PROSKILLS,
-  ProSolutionsModule.PROCAREER,
-  ProSolutionsModule.PROINTERVIEW,
-  ProSolutionsModule.PRORECRUIT,
-];
+export const ALL_MODULES: string[] = Object.values(ProSolutionsModule);
 
 export interface ModuleGrant {
-  module: ProSolutionsModule;
+  module: string;
   grantedAt: Date;
   expiresAt?: Date;
   active: boolean;
@@ -27,23 +20,16 @@ export interface IdentityClaims {
   sub: string;
   email?: string;
   role?: string;
-  modules?: ProSolutionsModule[];
+  modules?: string[];
   iss?: string;
-  aud?: string;
+  aud?: string | string[];
 }
 
-export function hasModuleAccess(
-  claims: IdentityClaims,
-  requiredModule: ProSolutionsModule,
-): boolean {
-  if (!claims.modules) return false;
-  return claims.modules.includes(requiredModule);
+export function hasModuleAccess(claims: IdentityClaims, requiredModule: string): boolean {
+  return Array.isArray(claims.modules) && claims.modules.includes(requiredModule);
 }
 
-export function hasAnyModuleAccess(
-  claims: IdentityClaims,
-  requiredModules: ProSolutionsModule[],
-): boolean {
-  if (!claims.modules) return false;
-  return requiredModules.some((mod) => claims.modules!.includes(mod));
+export function hasAnyModuleAccess(claims: IdentityClaims, requiredModules: string[]): boolean {
+  if (!Array.isArray(claims.modules)) return false;
+  return requiredModules.some((module) => claims.modules!.includes(module));
 }
