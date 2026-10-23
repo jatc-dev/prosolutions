@@ -89,7 +89,7 @@ The cutover utility in `apps/identity/scripts/migrate-procv-identity-boundary.ts
 5. Run `npm run procv:identity:finalize:dry-run --workspace=apps/identity`. Only after the new version is healthy, run `npm run procv:identity:finalize --workspace=apps/identity` to drop ProCV-local credentials, sessions and token tables.
 6. Recheck counts of CVs, CV versions and ATS analyses, and confirm no foreign keys still point at the old User table.
 
-The utility aborts rather than dropping local auth tables when it finds unmatched accounts, unrecognized CV owners, a non-empty connection-test table, or CVs without valid local identity references. It does not delete CV, version, ATS-analysis, platform-setting, or audit rows.
+The utility aborts rather than dropping local auth tables when it finds unmatched accounts, unrecognized CV owners, a non-empty connection-test table, or CVs without valid local identity references. It does not delete CV, version, ATS-analysis, platform-setting, audit rows, or diagnostic tables such as `_conn_test`.
 
 ## 7. Data security in Supabase
 
