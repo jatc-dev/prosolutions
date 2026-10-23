@@ -12,7 +12,7 @@
 1. ProIdentity authenticates the account and issues a short-lived access JWT with `sub`, `iss`, `aud`, `role` and the module entitlements active at issuance.
 2. Each module API validates the signature and exact issuer/audience, then requires its own module key (`PROCV`, `PROJOBS`, etc.).
 3. Admin routes additionally require `role=admin`. Module access alone never implies administrator access.
-4. Browser apps keep access tokens in memory. The central HttpOnly refresh cookie bootstraps a fresh short-lived access token when a module opens; tokens are not copied between apps or placed in URLs.
+4. ProCV keeps its short-lived access token in memory; Core and ProJobs currently use tab-scoped `sessionStorage` while they complete their own navigation flow. All modules bootstrap/renew through the central HttpOnly refresh cookie. Do not put bearer or refresh tokens in `localStorage`, copy them between apps, or place them in URLs.
 5. Data queries always scope by the verified JWT subject. A user ID sent in request bodies or query strings is never an authorization source.
 6. `ModuleAccess` in ProIdentity is the entitlement source of truth. Because JWT claims are snapshots, entitlement revocations take effect for existing access tokens no later than the short access-token lifetime. If immediate revocation becomes a requirement, introduce a centralized introspection/cache strategy rather than adding account tables to each module.
 
@@ -25,7 +25,7 @@ ProCV retains:
 - `PlatformSetting` — ProCV-specific configuration.
 - `AuditLog` — module-level administrative and operational events, storing the central subject ID when available.
 
-ProCV removes its former `User`, `Session`, `EmailVerificationToken`, and `PasswordResetToken` tables. Prisma migration history is retained; migration files are immutable historical records and must not be deleted to make the new schema look cleaner. The old `/admin/users` UI and local user/password administration endpoints are removed so account lifecycle cannot diverge from ProIdentity.
+ProCV removes its former `User`, `Session`, `EmailVerificationToken`, and `PasswordResetToken` tables. Prisma migration history is retained; migration files are immutable historical records and must not be deleted to make the new schema look cleaner. The old `/admin/users` UI and local user/password administration endpoints are removed so account lifecycle cannot diverge from ProIdentity. Central account listing and module grant/revoke are provided by the Identity admin API and Core's `/admin/access` screen.
 
 ## Adding a module
 
