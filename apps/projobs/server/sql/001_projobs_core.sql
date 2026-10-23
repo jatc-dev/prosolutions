@@ -3,6 +3,8 @@
 -- Runtime login must not own these tables and must not be SUPERUSER/BYPASSRLS.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='projobs_api') THEN CREATE ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; END IF; END $$;
+GRANT USAGE ON SCHEMA public TO projobs_api;
+
 CREATE TABLE IF NOT EXISTS public.projobs_saved_jobs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id text NOT NULL,job_id text NOT NULL,job_url text NOT NULL CHECK(job_url ~* '^https?://'),job_title text NOT NULL DEFAULT '',company text NOT NULL DEFAULT '',created_at timestamptz NOT NULL DEFAULT now(),CONSTRAINT projobs_saved_jobs_user_job_unique UNIQUE(user_id,job_id));
 CREATE INDEX IF NOT EXISTS projobs_saved_jobs_user_created_idx ON public.projobs_saved_jobs(user_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS public.projobs_applications(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id text NOT NULL,job_id text NOT NULL,job_url text NOT NULL CHECK(job_url ~* '^https?://'),job_title text NOT NULL DEFAULT '',company text NOT NULL DEFAULT '',cover_letter text NOT NULL DEFAULT '',status text NOT NULL DEFAULT 'redirected_to_employer' CHECK(status IN('redirected_to_employer','applied','interview','rejected','offer','withdrawn')),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),CONSTRAINT projobs_applications_user_job_unique UNIQUE(user_id,job_id));
