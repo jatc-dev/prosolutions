@@ -81,15 +81,27 @@ export function ForgotPasswordPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
-                    Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.
+                    Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de correo no deseado.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => (window.location.href = "/login")}
-                    className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
-                  >
-                    Volver al inicio de sesión
-                  </button>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSuccess(false);
+                        setError(null);
+                      }}
+                      className="px-6 py-2 border border-brand-600 text-brand-700 rounded-lg hover:bg-brand-50 transition-colors font-medium dark:text-brand-300 dark:hover:bg-slate-800"
+                    >
+                      No recibí el correo · Intentar de nuevo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => (window.location.href = "/login")}
+                      className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
+                    >
+                      Volver al inicio de sesión
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
