@@ -52,4 +52,4 @@ RUN npm run build
 # Puerto de Render (inyectado dinámicamente vía variable de entorno PORT)
 EXPOSE 10000
 
-CMD ["sh", "-c", "node dist/index.js"]
+CMD ["sh", "-c", "npm run start:migrate"]
