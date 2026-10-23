@@ -91,6 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    try {
+      // Remove bearer tokens persisted by the retired ProCV login implementation.
+      window.localStorage.removeItem("procv_auth");
+    } catch {
+      // Storage may be unavailable in hardened browser contexts.
+    }
     void refreshToken().finally(() => {
       if (active) useAuthStore.setState({ loading: false });
     });
