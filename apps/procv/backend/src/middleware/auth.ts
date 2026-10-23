@@ -63,11 +63,7 @@ async function ensureIdentityReference(identityId: string): Promise<void> {
   }
 }
 
-export async function authMiddleware(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Authorization header missing' });
