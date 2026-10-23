@@ -30,7 +30,9 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
 
     const modules = Array.isArray(payload.modules) ? payload.modules : [];
     if (!modules.includes('PROCV')) {
-      return res.status(403).json({ message: 'ProCV module access required', requiredModule: 'PROCV' });
+      return res
+        .status(403)
+        .json({ message: 'ProCV module access required', requiredModule: 'PROCV' });
     }
 
     req.userId = payload.sub;
