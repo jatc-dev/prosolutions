@@ -28,32 +28,47 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
-import { ProSolutionsModule } from '../types/modules';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
-function getDefaultModules(role: string): ProSolutionsModule[] {
-  if (role === 'admin') {
-    return Object.values(ProSolutionsModule);
-  }
-  return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
+async function getDefaultModules(role: string): Promise<string[]> {
+  const roleDefaults = role === 'admin' ? [{ defaultForAdmins: true }] : [];
+  const modules = await prisma.module.findMany({
+    where: {
+      enabled: true,
+      OR: [{ defaultForNewUsers: true }, ...roleDefaults],
+    },
+    orderBy: { displayOrder: 'asc' },
+    select: { code: true },
+  });
+  return modules.map((module) => module.code);
 }
 
-async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
-  const defaults = getDefaultModules(role);
+async function ensureDefaultModuleAccess(userId: string, role: string): Promise<string[]> {
+  const defaults = await getDefaultModules(role);
   await Promise.all(
-    defaults.map((module) =>
+    defaults.map((moduleCode) =>
       prisma.moduleAccess.upsert({
-        where: { userId_module: { userId, module } },
+        where: { userId_moduleCode: { userId, moduleCode } },
         update: { active: true, expiresAt: null },
-        create: { userId, module, active: true },
+        create: { userId, moduleCode, active: true },
       }),
     ),
   );
-  // The temporary self-service rollout exposes exactly the currently available
-  // modules to regular users. Admins keep the full enum returned by defaults.
-  return defaults;
+
+  const now = new Date();
+  const access = await prisma.moduleAccess.findMany({
+    where: {
+      userId,
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      module: { enabled: true },
+    },
+    select: { moduleCode: true },
+    orderBy: { grantedAt: 'asc' },
+  });
+  return access.map((entry) => entry.moduleCode);
 }
 
 export async function register(req: Request, res: Response) {
@@ -78,12 +93,7 @@ export async function register(req: Request, res: Response) {
       data: { email: normalizedEmail, passwordHash, name },
     });
 
-    const defaultModules = getDefaultModules(user.role);
-    for (const module of defaultModules) {
-      await prisma.moduleAccess.create({
-        data: { userId: user.id, module },
-      });
-    }
+    await ensureDefaultModuleAccess(user.id, user.role);
 
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -298,7 +308,7 @@ export async function refreshToken(req: Request, res: Response) {
 
     const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
-    const accessToken = signAccessToken({
+    const accessToken = await signAccessToken({
       sub: user.id,
       email: user.email,
       role: user.role,
@@ -364,7 +374,7 @@ export async function me(req: Request, res: Response) {
           active: true,
           OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
-        select: { module: true },
+        select: { moduleCode: true },
       },
       professionalProfile: true,
     },
@@ -373,7 +383,7 @@ export async function me(req: Request, res: Response) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const modules = user.moduleAccess.map((ma) => ma.module);
+  const modules = user.moduleAccess.map((ma) => ma.moduleCode);
 
   return res.json({
     user: {
