@@ -128,7 +128,6 @@ export async function getModuleAccess(req: IdentityRequest, res: Response) {
 export async function getModuleCatalog(_req: Request, res: Response) {
   try {
     const modules = await prisma.module.findMany({
-      where: { enabled: true },
       select: {
         code: true,
         name: true,
