@@ -407,15 +407,22 @@ export async function updateProfile(req: Request, res: Response) {
   const { name, email } = value;
   const updateData: Record<string, unknown> = {};
   if (name !== undefined) updateData.name = name;
+
   if (email !== undefined) {
     const normalizedEmail = email.toLowerCase().trim();
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
     });
-    if (existingUser && existingUser.id !== userId) {
-      return res.status(409).json({ message: 'Email already in use' });
+    if (!currentUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    updateData.email = normalizedEmail;
+    if (normalizedEmail !== currentUser.email.toLowerCase().trim()) {
+      return res.status(400).json({
+        message: 'Changing your email requires a dedicated verification flow. Your account email was not changed.',
+        code: 'EMAIL_CHANGE_REQUIRES_VERIFICATION',
+      });
+    }
   }
 
   const user = await prisma.user.update({
