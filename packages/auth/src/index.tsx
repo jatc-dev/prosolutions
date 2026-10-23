@@ -141,6 +141,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         response = await authHttp.get("/me");
       }
 
+      if (!response) throw new Error("ProIdentity returned no response");
       const user = response.data?.user ?? null;
       if (!user) throw new Error("ProIdentity returned no user profile");
 
