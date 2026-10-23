@@ -328,6 +328,18 @@ async function finalize() {
       }
       await tx.$executeRawUnsafe('DROP TABLE public."User"');
     }
+
+    // A migration may be replayed by Prisma on the first Render deploy after
+    // this prepare phase, recreating the old subject aliases. Prune only those
+    // alias rows after dropping local User data, and only when no CV refers to
+    // the alias and it is not a valid ProIdentity subject.
+    for (const legacy of plan.legacyUsers) {
+      if (plan.identityIds.has(legacy.id)) continue;
+      await tx.$executeRawUnsafe(
+        'DELETE FROM public."IdentityAccount" WHERE "id" = $1 AND NOT EXISTS (SELECT 1 FROM public."CV" WHERE "userId" = $1)',
+        legacy.id,
+      );
+    }
   });
 
   console.log('Finalize phase completed. ProCV no longer has local credential/session tables; diagnostic tables are preserved.');
