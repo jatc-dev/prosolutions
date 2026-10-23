@@ -15,7 +15,7 @@
 Principios clave:
 
 - Una cuenta, un inicio de sesión y un token único para todos los módulos.
-- Cada módulo valida el JWT de forma independiente (firma, `issuer`, `audience`, `expiry`).
+- Cada módulo valida el JWT de forma independiente (firma, `issuer`, `audience`, `expiry`) y exige su claim de módulo.
 - La autorización se resuelve mediante el claim `modules[]` del token, no mediante credenciales locales.
 - No se duplican tiendas de contraseñas por módulo.
 
@@ -55,33 +55,25 @@ El refresh token se almacena únicamente en una cookie HttpOnly (`refreshToken`)
 
 ---
 
-## 3. Enum de Módulos (`ProSolutionsModule`)
+## 3. Catálogo central de módulos
 
-Definido en `apps/identity/src/types/modules.ts`:
+La tabla `Module` de ProIdentity es el registro de módulos. Añadir un módulo normal no requiere editar un enum ni alterar el esquema de permisos:
 
-```typescript
-export enum ProSolutionsModule {
-  PROCV = 'PROCV',
-  PROJOBS = 'PROJOBS',
-  PROSKILLS = 'PROSKILLS',
-  PROCAREER = 'PROCAREER',
-  PROINTERVIEW = 'PROINTERVIEW',
-  PRORECRUIT = 'PRORECRUIT',
-}
+| Campo | Uso |
+|---|---|
+| `code` | Identificador estable del módulo, por ejemplo `PROCV` |
+| `name`, `description` | Nombre y presentación en el portal |
+| `baseUrl` | URL de entrada del frontend |
+| `apiAudience` | Audience JWT que su API debe validar |
+| `enabled` | Permite mostrar el módulo y emitir acceso a su API |
+| `defaultForNewUsers` | Concede acceso inicial al registrar una cuenta |
+| `defaultForAdmins` | Concede acceso inicial a nuevos administradores |
+| `displayOrder` | Posición en el portal |
 
-export const ALL_MODULES: ProSolutionsModule[] = [
-  ProSolutionsModule.PROCV,
-  ProSolutionsModule.PROJOBS,
-  ProSolutionsModule.PROSKILLS,
-  ProSolutionsModule.PROCAREER,
-  ProSolutionsModule.PROINTERVIEW,
-  ProSolutionsModule.PRORECRUIT,
-];
-```
+Los permisos viven en `ModuleAccess`, con una relación a `Module`, estado activo y expiración opcional. Cada token se construye consultando los permisos activos y no expirados; los claims `modules[]` y `aud` se derivan de ese registro. Revocar un permiso no se deshace en el siguiente login: la revocación impide emitir la entitlement al renovar sesión o generar un token nuevo. Los access tokens duran 15 minutos, por lo que una revocación puede tardar como máximo la vida restante del token que ya esté en el navegador.
 
-Cuando se crea una cuenta nueva, se le asigna por defecto el módulo `PROCV`. Los administradores pueden conceder acceso a otros módulos mediante los endpoints de administración.
+Los nuevos módulos se registran desde Administración de ProCV/ProIdentity. Se crean deshabilitados y sin acceso predeterminado. Solo deben activarse cuando exista un frontend desplegado y una API que valide firma, emisor, expiración, su audience de módulo y el claim `modules[]` correspondiente.
 
----
 
 ## 4. Validación de Tokens en Backend (Node.js/Express)
 
@@ -230,13 +222,13 @@ Enviar el token en el header `Authorization: Bearer <token>` a las rutas propias
 
 ## 7. Cómo Agregar un Nuevo Módulo (Checklist)
 
-1. **Definir el enum** — Agregar el módulo a `ProSolutionsModule` en `apps/identity/src/types/modules.ts` si no existe.
+1. **Registrar el módulo** — Crear una fila en el catálogo central con `code`, `baseUrl`, `apiAudience` y el estado deshabilitado inicial. No es necesario modificar un enum ni desplegar Identity para un código nuevo.
 2. **Crear el servicio backend** — Nuevo servicio Express que sirva el frontend estático y exponga rutas API propias.
 3. **Agregar middleware de auth** — Copiar el patrón de `apps/projobs/server/src/middleware/auth.ts`, ajustando `REQUIRED_MODULE` y `IDENTITY_AUDIENCE`.
 4. **Proteger rutas personales** — Aplicar el middleware solo a rutas que requieran sesión (postulaciones, guardados, perfil, etc.). Mantener la navegación pública anónima.
 5. **Agregar cliente auth** — Crear un archivo `auth.js` similar al de ProJobs que valide contra `Identity /api/identity/me` y maneje UI de login/logout.
 6. **Registrar en el navegador del ecosistema** — Agregar el enlace al módulo en la barra de navegación compartida (`pro-nav`).
-7. **Definir variables de entorno** — `IDENTITY_URL`, `IDENTITY_JWT_SECRET`, `IDENTITY_ISSUER`, `IDENTITY_AUDIENCE`, `PORT`.
+7. **Definir variables de entorno** — `IDENTITY_URL`, `IDENTITY_JWT_SECRET`, `IDENTITY_ISSUER`, `IDENTITY_AUDIENCE`, `PORT`. `IDENTITY_AUDIENCE` debe corresponder al campo `apiAudience` del catálogo para ese módulo.
 8. **No crear tienda de contraseñas local** — Todo módulo nuevo debe delegar auth a Identity. Prohibido crear tablas `users`/`passwords` propias.
 
 ---
@@ -249,7 +241,7 @@ Enviar el token en el header `Authorization: Bearer <token>` a las rutas propias
 - Los tokens de acceso son de corta vida (15 min por defecto).
 - Cada módulo tiene su propia `audience`; no se aceptan tokens de otra audiencia.
 - El acceso a un módulo se concede explícitamente mediante `ModuleAccess`; no se hereda automáticamente.
-- El rol `admin` no otorga acceso automático a todos los módulos; se debe conceder por módulo.
+- El rol `admin` no elude `ModuleAccess`: solo se conceden los módulos predeterminados configurados en el catálogo para nuevas cuentas admin o los permisos otorgados explícitamente.
 - Nunca enviar tokens en URLs ni copiar tokens entre almacenes de diferentes orígenes.
 
 ---
