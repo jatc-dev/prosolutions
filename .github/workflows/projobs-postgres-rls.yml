@@ -1,0 +1,56 @@
+name: ProJobs PostgreSQL RLS integration
+
+on:
+  push:
+    branches: [feat/projobs-persistence-foundation]
+    paths:
+      - 'apps/projobs/server/sql/001_projobs_core.sql'
+      - 'apps/projobs/server/sql/tests/**'
+      - '.github/workflows/projobs-postgres-rls.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/projobs/server/sql/001_projobs_core.sql'
+      - 'apps/projobs/server/sql/tests/**'
+      - '.github/workflows/projobs-postgres-rls.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: projobs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d projobs_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply the dedicated ProJobs migration
+        env:
+          PGPASSWORD: postgres
+        run: psql "postgresql://postgres@localhost:5432/projobs_test" -v ON_ERROR_STOP=1 -f apps/projobs/server/sql/001_projobs_core.sql
+      - name: Create a restricted runtime login for the integration test
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgresql://postgres@localhost:5432/projobs_test" -v ON_ERROR_STOP=1 -c "CREATE ROLE projobs_runtime LOGIN PASSWORD 'test-only' NOSUPERUSER NOBYPASSRLS;"
+          psql "postgresql://postgres@localhost:5432/projobs_test" -v ON_ERROR_STOP=1 -c "GRANT projobs_api TO projobs_runtime;"
+      - name: Assert cross-user isolation as the runtime login
+        env:
+          PGPASSWORD: test-only
+        run: psql "postgresql://projobs_runtime@localhost:5432/projobs_test" -v ON_ERROR_STOP=1 -f apps/projobs/server/sql/tests/002_test_rls_isolation.sql
