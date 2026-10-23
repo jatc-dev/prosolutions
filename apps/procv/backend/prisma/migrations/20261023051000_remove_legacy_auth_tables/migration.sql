@@ -10,3 +10,6 @@ DROP TABLE IF EXISTS "EmailVerificationToken";
 DROP TABLE IF EXISTS "PasswordResetToken";
 DROP TABLE IF EXISTS "Session";
 DROP TABLE IF EXISTS "User";
+
+-- Temporary empty connection-check table left by a previous infrastructure test.
+DROP TABLE IF EXISTS "_conn_test";
