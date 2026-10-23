@@ -189,7 +189,7 @@ Cada módulo frontend debe seguir este patrón para integrarse con Identity:
 
 ### 6.1 Almacenamiento del token
 
-- Guardar el access token en `localStorage` bajo una clave específica del módulo (ej: `projobs_access_token`).
+- Mantener el access token corto en `sessionStorage` o en memoria por pestaña; no persistir tokens en `localStorage` ni enviarlos en query strings o fragmentos de URL.
 - Nunca almacenar el refresh token en localStorage (vive en cookie HttpOnly gestionada por Identity).
 
 ### 6.2 Validación al iniciar
