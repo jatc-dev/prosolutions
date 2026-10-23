@@ -23,7 +23,10 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy"
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "procv:identity:dry-run": "tsx scripts/migrate-procv-identity-boundary.ts --prepare",
+    "procv:identity:prepare": "tsx scripts/migrate-procv-identity-boundary.ts --prepare --apply",
+    "procv:identity:finalize": "tsx scripts/migrate-procv-identity-boundary.ts --finalize --apply"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
