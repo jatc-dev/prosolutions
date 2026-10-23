@@ -64,7 +64,12 @@
       }
 
       const data = await response.json();
-      return data.user || data;
+      const user = data.user || data;
+      if (!Array.isArray(user?.modules) || !user.modules.includes(MODULE_REQUIRED)) {
+        clearStoredToken();
+        return null;
+      }
+      return user;
     } catch {
       return null;
     }
