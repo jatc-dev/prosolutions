@@ -277,8 +277,14 @@ export async function refreshToken(req: Request, res: Response) {
       sub: string;
     };
     const session = await prisma.session.findUnique({ where: { refreshToken } });
-    if (!session || session.expiresAt < new Date()) {
+    if (
+      !session ||
+      session.revokedAt ||
+      session.userId !== payload.sub ||
+      session.expiresAt < new Date()
+    ) {
       logger.warn('Refresh token rejected');
+      clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
 
@@ -446,7 +452,12 @@ export async function forgotPassword(req: Request, res: Response) {
         resetUrl,
         userEmail: user.email,
       });
-      if (!emailSent) logger.warn('Password reset email could not be delivered', { userId: user.id });
+      if (!emailSent) {
+        await prisma.passwordResetToken.deleteMany({
+          where: { tokenHash, used: false },
+        });
+        logger.warn('Password reset email could not be delivered', { userId: user.id });
+      }
     }
 
     return res.json({
