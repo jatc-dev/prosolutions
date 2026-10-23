@@ -73,6 +73,19 @@ jobs:
         run: npm run build --workspace=@prosolutions/projobs
         env:
           PROJOBS_SKIP_FETCH: "1"
+          PROJOBS_API_URL: "https://projobs-api.example.invalid"
+      - name: Validate ProJobs API origin wiring
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+
+          const html = readFileSync("apps/projobs/dist/index.html", "utf8");
+          const expected = 'window.__PROJOBS_API_URL__ = "https://projobs-api.example.invalid"';
+          if (!html.includes(expected)) {
+            throw new Error("The generated ProJobs site does not point personal API requests at the configured API origin.");
+          }
+          console.log("ProJobs API origin wiring OK");
+          NODE
       - name: Validate embedded localization scripts
         run: |
           node --input-type=module <<'NODE'
