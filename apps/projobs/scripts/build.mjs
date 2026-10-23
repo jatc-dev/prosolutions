@@ -76,7 +76,7 @@ if (apiBaseUrl) {
   }
   html = html.replace(
     "</head>",
-    `<script>window.__PROJOBS_API_URL__ = ${JSON.stringify(apiBaseUrl)};</script>\\n</head>`,
+    `<script>window.__PROJOBS_API_URL__ = ${JSON.stringify(apiBaseUrl)};</script>` + String.fromCharCode(10) + "</head>",
   );
   console.log(`[projobs] API personal configurada en ${apiBaseUrl}`);
 } else {

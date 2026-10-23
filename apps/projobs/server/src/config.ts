@@ -18,7 +18,7 @@ function getIdentityUrl(): string {
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       throw new Error('Unsupported URL protocol');
     }
-    return parsed.toString().replace(/\\/$/, '');
+    return parsed.origin;
   } catch {
     throw new Error('IDENTITY_URL must be a valid HTTP(S) URL');
   }

@@ -12,7 +12,7 @@ const REQUIRED_MODULE = 'PROJOBS';
 const IDENTITY_REQUEST_TIMEOUT_MS = 5000;
 
 interface IdentityUser {
-  id?: string;
+  id: string;
   email?: string;
   role?: string;
   emailVerified?: boolean;
@@ -43,9 +43,19 @@ async function resolveIdentityUser(token: string): Promise<IdentityUser | null> 
     throw new Error(`ProIdentity introspection failed with status ${response.status}`);
   }
 
-  const data = await response.json() as { user?: IdentityUser } | IdentityUser;
-  const user = 'user' in data ? data.user : data;
-  if (!user || typeof user.id !== 'string' || !user.id) {
+  const payload: unknown = await response.json();
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('ProIdentity returned an invalid user payload');
+  }
+
+  const record = payload as Record<string, unknown>;
+  const candidate = 'user' in record ? record.user : record;
+  if (!candidate || typeof candidate !== 'object') {
+    throw new Error('ProIdentity returned an invalid user payload');
+  }
+
+  const user = candidate as IdentityUser;
+  if (typeof user.id !== 'string' || !user.id) {
     throw new Error('ProIdentity returned an invalid user payload');
   }
   return user;
