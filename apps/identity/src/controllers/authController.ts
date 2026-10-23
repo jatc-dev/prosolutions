@@ -392,7 +392,9 @@ export async function me(req: Request, res: Response) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const modules = user.moduleAccess.map((ma) => ma.module);
+  const modules = user.moduleAccess
+    .map((ma) => ma.module)
+    .filter((module) => AVAILABLE_MODULES.includes(module));
 
   return res.json({
     user: {
