@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
@@ -14,6 +14,12 @@ export function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
   const language = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
 
   const handleIdentityLogin = () => {
