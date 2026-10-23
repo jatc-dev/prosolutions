@@ -6,7 +6,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_U
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 
 const SESSION_STORAGE_KEY = "procv_auth";
-const LEGACY_LOCAL_STORAGE_KEY = "procv_auth";
 const MAX_GET_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 300;
 const RETRYABLE_STATUSES = new Set([429]);
