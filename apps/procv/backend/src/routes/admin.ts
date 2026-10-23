@@ -2,14 +2,9 @@ import { Router } from 'express';
 import multer from 'multer';
 import { requireAdmin } from '../middleware/admin';
 import {
-  getUsers,
-  updateUser,
-  deleteUser,
-  resetUserPassword,
   getSystemStats,
   getChartData,
   getAuditLogs,
-  exportUsersCSV,
   getPlatformSettings,
   updatePlatformSetting,
   bulkUpdatePlatformSettings,
@@ -37,21 +32,12 @@ const upload = multer({
 // All admin routes require admin authentication
 router.use(requireAdmin);
 
-// User management
-router.get('/users', getUsers);
-router.put('/users/:id', updateUser);
-router.delete('/users/:id', deleteUser);
-router.post('/users/:id/reset-password', resetUserPassword);
-
 // System stats
 router.get('/stats', getSystemStats);
 router.get('/charts', getChartData);
 
 // Audit logs
 router.get('/audit-logs', getAuditLogs);
-
-// Export
-router.get('/export/users/csv', exportUsersCSV);
 
 // Platform Settings
 router.get('/settings', getPlatformSettings);
