@@ -59,6 +59,30 @@ function storeSessionAccessToken(token: string | null) {
   localStorage.removeItem(LEGACY_STORAGE_KEY);
 }
 
+function readTokenModules(token: string): string[] | null {
+  try {
+    const payloadPart = token.split(".")[1];
+    if (!payloadPart) return null;
+    const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(padded)) as { modules?: unknown };
+    return Array.isArray(payload.modules) && payload.modules.every((value) => typeof value === "string")
+      ? payload.modules
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function sameModuleSet(token: string, modules: unknown): boolean {
+  const tokenModules = readTokenModules(token);
+  if (!tokenModules || !Array.isArray(modules)) return false;
+  const current = modules.filter((value): value is string => typeof value === "string");
+  if (current.length !== modules.length || current.length !== tokenModules.length) return false;
+  const tokenSet = new Set(tokenModules);
+  return tokenSet.size === tokenModules.length && current.every((module) => tokenSet.has(module));
+}
+
 async function fetchIdentity(path: string, options: RequestInit = {}) {
   return fetch(`${IDENTITY_AUTH_URL}${path}`, {
     credentials: "include",
@@ -162,6 +186,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const data = await response.json();
     const user = data?.user ?? null;
     if (!user) throw new Error("Identity response did not include a user");
+    // The /me response reflects current database grants, while the JWT may be
+    // older. Force one refresh on bootstrap if a module grant changed.
+    if (!sameModuleSet(accessToken, user.modules)) {
+      throw new Error("Identity module grants changed; refreshing the token");
+    }
 
     storeSessionAccessToken(accessToken);
     api.setToken(accessToken);
