@@ -23,7 +23,9 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy"
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "reconcile:procv-cv-owners:dry-run": "tsx scripts/reconcile-procv-cv-owners.ts",
+    "reconcile:procv-cv-owners": "tsx scripts/reconcile-procv-cv-owners.ts --apply"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
