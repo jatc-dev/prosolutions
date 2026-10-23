@@ -1,7 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "react-hot-toast";
+import { identityAuthApiUrl } from "../lib/identityUrl";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "/api";
+const IDENTITY_AUTH_URL = identityAuthApiUrl();
 
 const LOCAL_STORAGE_KEY = "procv_auth";
 const MAX_GET_RETRIES = 2;
@@ -74,20 +76,6 @@ export const publicApi = axios.create({
   withCredentials: true,
 });
 
-export const VERIFICATION_RESEND_COOLDOWN_SECONDS = 60;
-
-export const authApi = {
-  register: (email: string, password: string, name?: string) =>
-    publicApi.post("/auth/register", { email, password, name }),
-  forgotPassword: (email: string) => publicApi.post("/auth/forgot-password", { email }),
-  resetPassword: (token: string, password: string) => publicApi.post("/auth/reset-password", { token, password }),
-  verifyEmail: (token: string) => publicApi.post("/auth/verify-email", { token }),
-  resendVerification: (email: string) =>
-    publicApi.post("/auth/resend-verification", { email }, { _skipErrorToast: true } as object),
-  verificationCooldown: (email: string) =>
-    publicApi.get("/auth/verification-cooldown", { params: { email } }),
-};
-
 publicApi.interceptors.request.use(
   async (config) => {
     const method = config.method?.toUpperCase();
@@ -143,12 +131,13 @@ function redirectToLogin() {
 
 async function doRefresh(): Promise<string | null> {
   try {
-    const response = await instance.post<{ accessToken: string }>(
-      "/auth/refresh",
-      {},
-      { _skipAuthRetry: true, _skipErrorToast: true } as object
-    );
-    const { accessToken } = response.data;
+    const response = await fetch(`${IDENTITY_AUTH_URL}/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) return null;
+    const { accessToken } = await response.json();
     if (accessToken) {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {

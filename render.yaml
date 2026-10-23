@@ -84,6 +84,8 @@ services:
         value: production
       - key: VITE_IDENTITY_API_URL
         value: https://identity.prosolutions.page/api/auth
+      - key: VITE_PROSOLUTIONS_URL
+        value: https://prosolutions.page
       - key: VITE_PROCV_URL
         value: https://procv.prosolutions.page
 
@@ -99,6 +101,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: JWT_SECRET
+        sync: false
+      - key: IDENTITY_URL
+        value: https://identity.prosolutions.page
+      - key: FRONTEND_URL
+        value: https://procv.prosolutions.page
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_DATABASE_URL

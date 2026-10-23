@@ -11,7 +11,6 @@ import { generateCSRFMid, validateCSRF, getCSRFToken } from './middleware/csrf';
 import { errorHandler } from './middleware/errorHandler';
 import { monitorRequests, healthCheck } from './utils/monitoring';
 import { config } from './config';
-import authRoutes from './routes/auth';
 import cvRoutes from './routes/cv';
 import adminRoutes from './routes/admin';
 import prisma from './prismaClient';
@@ -98,10 +97,6 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
 
-  // Auth proxy routes to Identity (mounted BEFORE CSRF middleware so that
-  // ProCV's CSRF validation does not interfere with Identity's own CSRF flow).
-  app.use('/api/auth', authRoutes);
-
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);
   app.use(validateCSRF);
@@ -142,7 +137,6 @@ export function createApp() {
     }
   });
 
-  // Auth routes are proxied to Identity (mounted above CSRF middleware).
   app.use('/api/admin', adminLimiter, adminRoutes);
   app.use('/api/cvs', cvLimiter, cvRoutes);
   app.use(apiLimiter); // General API limiter for all remaining routes

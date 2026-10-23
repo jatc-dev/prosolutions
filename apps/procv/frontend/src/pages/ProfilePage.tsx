@@ -6,12 +6,12 @@ import { AppHeader } from "../components/AppHeader";
 import { Footer } from "../components/Footer";
 import { Input, Button } from "@prosolutions/ui";
 import { useApi } from "../hooks/useApi";
-import { api } from "../services/api";
+import { identityAuthApiUrl } from "../lib/identityUrl";
 
 export function ProfilePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const { execute: updateProfile, loading, error } = useApi();
 
   const [formData, setFormData] = useState({
@@ -22,7 +22,7 @@ export function ProfilePage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setSuccessMessage(""); // Clear success message when user starts typing
+    setSuccessMessage("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,12 +30,26 @@ export function ProfilePage() {
 
     try {
       const result = await updateProfile(
-        () => api.put('/auth/profile', {
-          name: formData.name || undefined,
-          email: formData.email || undefined
-        }),
+        async () => {
+          const response = await fetch(`${identityAuthApiUrl()}/profile`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              name: formData.name || undefined,
+              email: formData.email || undefined,
+            }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Failed to update profile");
+          }
+          return response.json();
+        },
         (data: any) => {
-          // Update local form data with response
           if (data.user) {
             setFormData({
               name: data.user.name || "",

@@ -8,19 +8,15 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { fetchCSRFToken } from "./services/api";
 
-const IDENTITY_URL =
-  import.meta.env.VITE_IDENTITY_URL ||
-  "https://prosolutions.page/login";
+const PROSOLUTIONS_URL =
+  import.meta.env.VITE_PROSOLUTIONS_URL ||
+  "https://prosolutions.page";
 
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
 const AuthPage = lazy(() => import("./pages/AuthPage").then((m) => ({ default: m.AuthPage })));
-const RegisterPage = lazy(() => import("./pages/RegisterPage").then((m) => ({ default: m.RegisterPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AuthCallback = lazy(() => import("./pages/AuthCallback").then((m) => ({ default: m.AuthCallback })));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
-const EmailVerificationPage = lazy(() => import("./pages/EmailVerificationPage").then((m) => ({ default: m.EmailVerificationPage })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 
@@ -35,6 +31,13 @@ const LandingPageManagement = lazy(() =>
 const ProCVHomePage = lazy(() => import("./modules/procv/pages/ProCVHomePage").then((m) => ({ default: m.ProCVHomePage })));
 const JobsPage = lazy(() => import("./modules/projobs/pages/JobsPage").then((m) => ({ default: m.JobsPage })));
 
+function RedirectToProsolutions({ path }: { path: string }) {
+  useEffect(() => {
+    window.location.href = `${PROSOLUTIONS_URL}${path}`;
+  }, [path]);
+  return null;
+}
+
 function RouteFallback() {
   const { t } = useTranslation();
 
@@ -48,14 +51,13 @@ function RouteFallback() {
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth();
 
-  // While session is being validated, don't redirect yet
   if (loading) {
     return <RouteFallback />;
   }
 
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
-    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
+    window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
     return null;
   }
 
@@ -71,7 +73,7 @@ function AdminRoute({ children }: { children: JSX.Element }) {
 
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
-    window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
+    window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
     return null;
   }
   if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
@@ -93,12 +95,12 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<AuthPage />} />
-            <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth" element={<Navigate to="/" replace />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<EmailVerificationPage />} />
+            <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
+            <Route path="/forgot-password" element={<RedirectToProsolutions path="/forgot-password" />} />
+            <Route path="/reset-password" element={<RedirectToProsolutions path="/reset-password" />} />
+            <Route path="/verify-email" element={<RedirectToProsolutions path="/verify-email" />} />
             <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route path="/dashboard" element={<PrivateRoute><WorkspacePage /></PrivateRoute>} />
             <Route path="/editor" element={<CVEditorPage />} />
@@ -143,5 +145,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
-

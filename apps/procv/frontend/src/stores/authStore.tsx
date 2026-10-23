@@ -19,7 +19,6 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ requiresVerification?: boolean } | void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
   signInWithToken: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
@@ -28,7 +27,16 @@ interface AuthState {
 }
 
 const LOCAL_STORAGE_KEY = "procv_auth";
-const IDENTITY_ME_URL = `${identityAuthApiUrl()}/me`;
+const IDENTITY_AUTH_URL = identityAuthApiUrl();
+const IDENTITY_ME_URL = `${IDENTITY_AUTH_URL}/me`;
+
+async function fetchIdentity(path: string, options: RequestInit = {}) {
+  return fetch(`${IDENTITY_AUTH_URL}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  });
+}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -38,35 +46,51 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email, password) => {
     try {
-      const response = await api.post("/auth/login", { email, password });
-      const { accessToken, user } = response.data;
+      const response = await fetchIdentity("/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 403) {
+          return { requiresVerification: true };
+        }
+        throw new Error(errorData.message || "Login failed");
+      }
+
+      const { accessToken, user } = await response.json();
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
       api.setToken(accessToken);
       set({ user, accessToken, isAuthenticated: true });
-    } catch (error: any) {
-      if (error.response?.status === 403) {
-        return { requiresVerification: true };
-      }
+    } catch (error) {
       throw error;
     }
-  },
-  register: async (email, password, name) => {
-    // Registration never issues credentials anymore: the account must verify
-    // its email first (login enforces it). Any tokens in the response are
-    // deliberately ignored so an unverified session can never be created.
-    await api.post("/auth/register", { email, password, name });
   },
 
   signInWithToken: async (accessToken) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
     api.setToken(accessToken);
-    const meResponse = await api.get("/auth/me");
-    const user = meResponse.data?.user ?? null;
-    set({ user, accessToken, isAuthenticated: true });
+    try {
+      const response = await fetch(IDENTITY_ME_URL, {
+        method: "GET",
+        credentials: "include",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await response.json();
+      const user = data?.user ?? null;
+      set({ user, accessToken, isAuthenticated: true });
+    } catch {
+      set({ accessToken, isAuthenticated: Boolean(accessToken) });
+    }
   },
+
   logout: async () => {
     try {
-      await api.post("/auth/logout");
+      await fetchIdentity("/logout", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${get().accessToken}` },
+      });
     } catch {
       // Ignore errors during logout
     }
@@ -87,18 +111,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      const response = await api.post(
-        "/auth/refresh",
-        {},
-        { _skipAuthRetry: true } as object
-      );
-      const { accessToken: newAccessToken } = response.data;
+      const response = await fetchIdentity("/refresh");
+      const { accessToken: newAccessToken } = await response.json();
 
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
       api.setToken(newAccessToken);
 
-      const meResponse = await api.get("/auth/me");
-      const user = meResponse.data?.user ?? null;
+      const meResponse = await fetch(IDENTITY_ME_URL, {
+        method: "GET",
+        credentials: "include",
+      });
+      const meData = await meResponse.json();
+      const user = meData?.user ?? null;
 
       set({ user, accessToken: newAccessToken, isAuthenticated: true });
     } catch {
@@ -113,8 +137,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   validateSession: async () => {
     try {
-      const response = await api.get(IDENTITY_ME_URL, { withCredentials: true });
-      const data = response.data;
+      const response = await fetch(IDENTITY_ME_URL, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await response.json();
       const user = data?.user ?? null;
       const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY)
         ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!).accessToken
@@ -141,7 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { accessToken } = JSON.parse(stored);
       if (accessToken) {
         setAccessToken(accessToken);
-        // Validate session with identity service before considering authenticated
         validateSession()
           .catch(() => refreshToken().catch(() => {}))
           .finally(() => useAuthStore.setState({ loading: false }));

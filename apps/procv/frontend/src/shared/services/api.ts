@@ -1,1 +1,1 @@
-export { publicApi, api, authApi, fetchCSRFToken, getCSRFToken, VERIFICATION_RESEND_COOLDOWN_SECONDS } from "../../services/api";
+export { publicApi, api, fetchCSRFToken, getCSRFToken } from "../../services/api";
