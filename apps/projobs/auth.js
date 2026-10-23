@@ -43,6 +43,19 @@
     } catch {}
   }
 
+  function tokenHasProJobsGrant(token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return false;
+      const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+      const claims = JSON.parse(atob(padded));
+      return Array.isArray(claims.modules) && claims.modules.includes(MODULE_REQUIRED);
+    } catch {
+      return false;
+    }
+  }
+
   async function validateToken(token) {
     try {
       const response = await fetch(`${IDENTITY_URL}/api/auth/me`, {
@@ -98,8 +111,13 @@
   async function initAuth() {
     accessToken = getStoredToken();
 
-    if (accessToken) {
+    if (accessToken && tokenHasProJobsGrant(accessToken)) {
       userProfile = await validateToken(accessToken);
+    } else if (accessToken) {
+      // If the active grant was added after this token was issued, refresh it
+      // instead of showing an authenticated UI with a token the API will deny.
+      clearStoredToken();
+      accessToken = null;
     }
 
     // First visit to this subdomain has no localStorage/sessionStorage token;
