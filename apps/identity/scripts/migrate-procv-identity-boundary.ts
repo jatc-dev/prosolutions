@@ -259,6 +259,18 @@ async function prepare() {
       'CREATE INDEX IF NOT EXISTS "CV_userId_idx" ON public."CV" ("userId")',
     );
     await repairAuditLogSchema(tx);
+
+    // Keep audit attribution consistent when a legacy ProCV subject was
+    // replaced by its canonical ProIdentity subject ID.
+    for (const { identity, legacy } of plan.mapping.values()) {
+      if (identity.id === legacy.id) continue;
+      await tx.$executeRawUnsafe(
+        'UPDATE public."AuditLog" SET "adminId" = $1, "adminEmail" = $2 WHERE "adminId" = $3 OR ("adminId" IS NULL AND "resourceId" = $3)',
+        identity.id,
+        identity.email,
+        legacy.id,
+      );
+    }
   });
 
   console.log('Prepare phase completed. Legacy auth tables remain intact until the new ProCV code is deployed and verified.');
