@@ -89,6 +89,8 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   identityUrl: process.env.IDENTITY_URL || 'http://localhost:4001',
+  identityIssuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
+  identityAudience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
   frontendUrl: getFrontendUrl(getEnvironment() === 'production'),
   databaseUrl: getDatabaseUrl(getEnvironment() === 'production'),
   isProduction: getEnvironment() === 'production',
