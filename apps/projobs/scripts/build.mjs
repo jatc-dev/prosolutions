@@ -46,6 +46,11 @@ for (const required of [
   'https://prosolutions.page',
   'https://procv.prosolutions.page',
   'data-i18n-aria="ecosystemNav"',
+  'class="jobs-hero"',
+  'class="results-heading"',
+  'class="pro-footer-bottom"',
+  'pro-active-pill',
+  'Encuentra tu próxima oportunidad',
 ]) {
   if (!html.includes(required)) {
     throw new Error(`[projobs] HTML generado sin elemento requerido: ${required}. Build cancelado.`);
