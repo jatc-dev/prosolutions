@@ -65,8 +65,10 @@ jobs:
         run: cp tests/fixtures/jobs.json jobs.json && python tests/test_generator.py && python tests/test_catalog_quality.py
         env:
           PROJOBS_SKIP_FETCH: "1"
+      - name: Install ProJobs API dependencies
+        run: npm ci --prefix apps/projobs/server
       - name: Build ProJobs API
-        run: npm run build:server --workspace=@prosolutions/projobs
+        run: npm run build --prefix apps/projobs/server
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
