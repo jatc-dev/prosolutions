@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { authMiddleware, AuthRequest } from '../../src/middleware/auth';
 
@@ -18,8 +18,14 @@ function mockResponse(): MockResponse {
   const res: MockResponse = {
     statusCode: 200,
     body: undefined,
-    status(code: number) { res.statusCode = code; return res; },
-    json(payload: unknown) { res.body = payload; return res; },
+    status(code: number) {
+      res.statusCode = code;
+      return res;
+    },
+    json(payload: unknown) {
+      res.body = payload;
+      return res;
+    },
   };
   return res;
 }
