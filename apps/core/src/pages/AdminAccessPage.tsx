@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { identityAuthApiUrl } from "../identityApi";
 
@@ -65,17 +66,18 @@ async function identityFetch(path: string, init: RequestInit = {}): Promise<Resp
   let token = await accessToken();
   let csrf = mutating ? await getCsrfToken() : null;
 
-  const send = (bearer: string, csrfValue: string | null) => fetch(`${IDENTITY_API}${path}`, {
-    ...init,
-    method,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-      Authorization: `Bearer ${bearer}`,
-      ...(csrfValue ? { "X-CSRF-Token": csrfValue } : {}),
-    },
-  });
+  const send = (bearer: string, csrfValue: string | null) => {
+    const headers = new Headers(init.headers || {});
+    headers.set("Content-Type", "application/json");
+    headers.set("Authorization", `Bearer ${bearer}`);
+    if (csrfValue) headers.set("X-CSRF-Token", csrfValue);
+    return fetch(`${IDENTITY_API}${path}`, {
+      ...init,
+      method,
+      credentials: "include",
+      headers,
+    });
+  };
 
   let response = await send(token, csrf);
   if (response.status === 401) {
