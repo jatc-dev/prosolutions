@@ -1,4 +1,13 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const localBin = join(__dirname, '..', 'node_modules', '.bin', 'prisma');
+const hasLocalPrisma = process.platform === 'win32'
+  ? existsSync(localBin + '.cmd') || existsSync(localBin)
+  : existsSync(localBin);
 
 const migrationName = 'add_jti_column';
 const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
@@ -8,9 +17,16 @@ if (!databaseUrl) {
 }
 
 const env = { ...process.env, DATABASE_URL: databaseUrl };
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
 function runPrisma(args) {
+  if (hasLocalPrisma) {
+    return execFileSync(process.platform === 'win32' ? localBin + '.cmd' : localBin, args, {
+      env,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
+  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   return execFileSync(npx, ['prisma', ...args], {
     env,
     encoding: 'utf8',

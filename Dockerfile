@@ -26,12 +26,14 @@ WORKDIR /app
 COPY apps/identity/package*.json ./
 RUN npm ci --only=production
 
-# Copiar Prisma y el código compilado desde la etapa builder
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/scripts ./scripts
+  # Copiar Prisma y el código compilado desde la etapa builder
+  COPY --from=builder /app/prisma ./prisma
+  COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+  COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+  COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+  COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+  COPY --from=builder /app/dist ./dist
+  COPY --from=builder /app/scripts ./scripts
 
 ENV NODE_ENV=production
 
