@@ -64,7 +64,14 @@
       }
 
       const data = await response.json();
-      return data.user || data;
+      const user = data.user || data;
+      // A platform session is not sufficient by itself: the frontend's private
+      // UI is shown only when Identity's active entitlement includes ProJobs.
+      if (!Array.isArray(user?.modules) || !user.modules.includes(MODULE_REQUIRED)) {
+        clearStoredToken();
+        return null;
+      }
+      return user;
     } catch {
       return null;
     }
