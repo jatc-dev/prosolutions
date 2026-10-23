@@ -265,7 +265,7 @@ async function prepare() {
     for (const { identity, legacy } of plan.mapping.values()) {
       if (identity.id === legacy.id) continue;
       await tx.$executeRawUnsafe(
-        'UPDATE public."AuditLog" SET "adminId" = $1, "adminEmail" = $2 WHERE "adminId" = $3 OR ("adminId" IS NULL AND "resourceId" = $3)',
+        'UPDATE public."AuditLog" SET "adminId" = $1, "adminEmail" = $2 WHERE "adminId" = $3',
         identity.id,
         identity.email,
         legacy.id,
