@@ -258,7 +258,10 @@ export async function deletePlatformSetting(req: Request, res: Response) {
 export async function getSystemStats(_req: Request, res: Response) {
   try {
     const [ownerRows, totalCVs] = await Promise.all([
-      prisma.$queryRaw<Array<{ count: number }>>`SELECT COUNT(DISTINCT "userId")::int AS count FROM "CV"`,
+      prisma.$queryRaw<Array<{ count: number }>>`
+        SELECT COUNT(DISTINCT "userId")::int AS count
+        FROM "CV"
+      `,
       prisma.cV.count(),
     ]);
 
