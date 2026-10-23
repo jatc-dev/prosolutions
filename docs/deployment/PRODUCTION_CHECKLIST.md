@@ -1,234 +1,119 @@
-# ProSolutions — Guía de Despliegue en Producción
+# ProSolutions — Despliegue de identidad central y módulos
 
-**Objetivo:** Desplegar el ecosistema ProSolutions (Identity + ProCV + ProJobs) sin downtime, migrando usuarios de ProCV a Identity y activando el proxy temporal de autenticación.
+Esta guía corresponde al monorepo actual. **ProIdentity es la única autoridad de cuentas, credenciales, verificación de correo, recuperación de contraseñas, sesiones y permisos de módulos.** ProCV y ProJobs validan los JWT emitidos por ProIdentity; cada uno conserva sus datos de producto.
 
-**Dominio oficial:** `prosolutions.page` con SSO entre subdominios mediante cookies `HttpOnly` con `Domain=.prosolutions.page`.
+## Dominios y contrato común
 
-**Servicios y URLs:**
+| Componente | Dominio |
+|---|---|
+| Portal de acceso | https://prosolutions.page |
+| ProIdentity API | https://identity.prosolutions.page |
+| ProCV | https://procv.prosolutions.page |
+| ProJobs | https://projobs.prosolutions.page |
 
-| Servicio | URL de producción | Carpeta |
-|----------|------------------|---------|
-| Identity | https://identity.prosolutions.page | `apps/identity/` |
-| ProCV Backend | https://procv.prosolutions.page | `apps/procv/backend/` |
-| ProCV Frontend | https://procv.prosolutions.page | `apps/procv/frontend/` |
-| ProJobs | https://projobs.prosolutions.page | `apps/projobs/` |
+Los API de ProCV y ProJobs usan este contrato:
 
----
+- `IDENTITY_ISSUER=https://identity.prosolutions.page`
+- `IDENTITY_AUDIENCE=prosolutions-api`
+- El secreto de firma configurado en el API del módulo debe ser exactamente el mismo que usa ProIdentity (`IDENTITY_JWT_SECRET` en Identity; los servicios heredados pueden leerlo mediante `JWT_SECRET`).
+- Los tokens de acceso viven 15 minutos. El refresh token se mantiene en una cookie `HttpOnly; Secure; SameSite=None; Domain=.prosolutions.page`, nunca en una URL ni en `localStorage`.
+- ProCV exige el claim firmado `PROCV`; ProJobs exige `PROJOBS`. Una sesión válida no concede acceso automáticamente a todos los módulos.
+- Los clientes de navegador usan únicamente los orígenes propios permitidos. Nunca se añaden callbacks externos arbitrarios al listado.
 
-## Configuración de cookies para SSO (Single Sign-On)
+## 1. Preparación previa
 
-Para que una sesión iniciada en cualquier subdominio sea válida en todos, las cookies de sesión deben configurarse con:
+1. Confirmar que la rama revisada pasa CI y que los cuatro servicios relevantes están disponibles en Render.
+2. Crear backups recuperables de las dos bases de datos de Supabase: ProIdentity (`wjmgzlrppxamymoxfgvm`) y ProCV (`bfazuuwtltergpnybpzk`). Conservar la fecha, ubicación y resultado de verificación.
+3. No pegar contraseñas de bases de datos, claves `service_role`, claves JWT ni secretos SMTP en tickets o mensajes.
+4. Verificar que la variable de entorno `DATABASE_URL` de la utilidad de corte apunte a ProIdentity, y `PROCV_DATABASE_URL` a ProCV mediante la conexión PostgreSQL directa (puerto 5432) para operaciones DDL.
 
-| Variable | Valor | Propósito |
-|----------|-------|-----------|
-| `COOKIE_DOMAIN` | `.prosolutions.page` | La cookie es válida en `identity.*`, `procv.*`, `projobs.*` y cualquier subdominio de `prosolutions.page` |
-| `COOKIE_SECURE` | `true` | Cookie solo sobre HTTPS |
-| `COOKIE_SAME_SITE` | `none` | Permite envío de credenciales entre subdominios |
-| `CORS_ORIGIN` | Lista de orígenes permitidos | Orígenes que pueden realizar peticiones con credenciales |
+## 2. Migración de ProCV a una referencia central de identidad
 
-Esto permite que un usuario autenticado en `identity.prosolutions.page` acceda a `procv.prosolutions.page` y `projobs.prosolutions.page` sin iniciar sesión de nuevo.
+Históricamente, ProCV mantenía `User`, `Session`, `EmailVerificationToken` y `PasswordResetToken`. Esas tablas ya no forman parte del modelo activo, pero **no se eliminan antes de mapear los propietarios de los CV a los IDs reales de ProIdentity**. El script `apps/identity/scripts/migrate-procv-identity-boundary.ts` implementa un corte en dos fases.
 
----
+### Fase A — comprobar y preparar
 
-## Orden cronológico estricto
-
-Ejecutar los pasos en este orden exacto. No saltar pasos.
-
-### Paso 0 — Pre-requisitos
-
-- [ ] Tener acceso a las dashboards de Render de los 4 servicios.
-- [ ] Tener acceso a Supabase (bases de datos de ProCV y de Identity).
-- [ ] Generar el `IDENTITY_JWT_SECRET` compartido: `openssl rand -base64 32`.
-- [ ] Verificar que todas las ramas estén en `main` y los cambios estén fusionados.
-- [ ] Hacer backup de las bases de datos de ProCV y de Identity antes de iniciar.
-
----
-
-### Paso 1 — Cargar variables de entorno en Render
-
-#### 1.1 Identity (`https://identity.prosolutions.page`)
-
-En la dashboard de Render, añadir/actualizar estas variables:
-
-```
-NODE_ENV=production
-PORT=4001
-DATABASE_URL=<supabase-identity-url>
-DIRECT_DATABASE_URL=<supabase-identity-direct-url>
-IDENTITY_JWT_SECRET=<openssl-rand-base64-32>
-IDENTITY_JWT_EXPIRES_IN=15m
-IDENTITY_JWT_REFRESH_EXPIRES_IN=7d
-IDENTITY_ISSUER=https://identity.prosolutions.page
-IDENTITY_AUDIENCE=prosolutions-api
-FRONTEND_URL=https://procv.prosolutions.page
-COOKIE_SECURE=true
-COOKIE_SAME_SITE=none
-COOKIE_DOMAIN=.prosolutions.page
-CORS_ORIGIN=https://procv.prosolutions.page,https://projobs.prosolutions.page
-SMTP_HOST=<smtp-host>
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=<smtp-user>
-SMTP_PASS=<smtp-pass>
-SMTP_FROM=noreply@prosolutions.page
-DISABLE_RATE_LIMIT=false
-SESSION_IDLE_TIMEOUT_MINUTES=30
-```
-
-#### 1.2 ProCV Backend (`https://procv.prosolutions.page`)
-
-```
-NODE_ENV=production
-PORT=4000
-FRONTEND_URL=https://procv.prosolutions.page
-IDENTITY_URL=https://identity.prosolutions.page
-JWT_SECRET=<mismo-que-IDENTITY_JWT_SECRET>
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-DATABASE_URL=<supabase-procv-url>
-COOKIE_SECURE=true
-COOKIE_SAME_SITE=none
-COOKIE_DOMAIN=.prosolutions.page
-CORS_ORIGIN=https://procv.prosolutions.page,https://projobs.prosolutions.page
-SESSION_IDLE_TIMEOUT_MINUTES=30
-SMTP_HOST=<smtp-host>
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=<smtp-user>
-SMTP_PASS=<smtp-pass>
-SMTP_FROM=no-responder@prosolutions.page
-```
-
-#### 1.3 ProCV Frontend (`https://procv.prosolutions.page`)
-
-```
-VITE_API_BASE_URL=https://procv.prosolutions.page/api
-```
-
-#### 1.4 ProJobs Server (`https://projobs.prosolutions.page`)
-
-```
-NODE_ENV=production
-PORT=5176
-IDENTITY_URL=https://identity.prosolutions.page
-IDENTITY_JWT_SECRET=<mismo-que-IDENTITY_JWT_SECRET>
-IDENTITY_ISSUER=https://identity.prosolutions.page
-IDENTITY_AUDIENCE=projobs-api
-COOKIE_SECURE=true
-COOKIE_SAME_SITE=none
-COOKIE_DOMAIN=.prosolutions.page
-CORS_ORIGIN=https://projobs.prosolutions.page,https://procv.prosolutions.page
-DISABLE_RATE_LIMIT=false
-```
-
----
-
-### Paso 2 — Ejecutar migraciones de base de datos en Supabase
-
-#### 2.1 Base de datos de Identity
-
-```
-DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
-```
-Desde `apps/identity/` con `DATABASE_URL` apuntando a Supabase Identity. Esto crea las tablas `User`, `Session`, `ProfessionalProfile`, `ModuleAccess`, `AuditLog`.
-
-Las migraciones de producción deben usar la conexión directa de Supabase, no el pooler de runtime. Si Prisma informa `P3009` porque `add_jti_column` quedó registrada como fallida, resolverla una sola vez después de verificar que la operación no dejó cambios incompletos:
-
-```
-DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate resolve --rolled-back add_jti_column
-DATABASE_URL=$DIRECT_DATABASE_URL npx prisma migrate deploy
-```
-
-La aplicación no debe iniciar si las migraciones fallan; así se evita servir login con un esquema incompleto.
-
-#### 2.2 Base de datos de ProCV
-
-No se modifica el esquema de ProCV. Solo se lee para la migración de usuarios.
-
----
-
-### Paso 3 — Correr el script de migración de usuarios (`migrate:users`)
-
-Desde `apps/identity/`:
+Desde la raíz del monorepo, con ambas conexiones disponibles solo en el entorno seguro de operaciones:
 
 ```bash
-# Variables requeridas:
-export DATABASE_URL=<supabase-identity-url>
-export PROCV_DATABASE_URL=<supabase-procv-url>
-
-npm run migrate:users
+npm run procv:identity:dry-run --workspace=apps/identity
 ```
 
-El script:
-- Lee todos los usuarios de `ProCV.User`.
-- Los inserta en `Identity.User` (id, email, passwordHash, role, emailVerified, etc.).
-- Crea un `ProfessionalProfile` por cada usuario.
-- Asigna `ModuleAccess` con módulo `PROCV` activo.
-- Es **idempotente**: si se ejecuta dos veces, no duplica ni sobrescribe emails existentes.
+El dry-run debe detectar todos los usuarios legacy y asociarlos por correo normalizado con una cuenta de ProIdentity, sin exponer esos correos en los logs. Si hay cuentas sin correspondencia o propietarios desconocidos, se aborta y se resuelve el mapeo antes de continuar.
 
-**Verificación:** Confirmar que el número de usuarios migrados coincide con el total en ProCV.
+Primero aplica la migración de esquema de ProCV sobre su conexión directa:
 
----
+```bash
+DATABASE_URL="$PROCV_DATABASE_URL" npm run prisma:migrate:deploy --workspace=apps/procv/backend
+```
 
-### Paso 4 — Desplegar en orden: Identity → ProCV → ProJobs
+Luego corre el mapeo conservando las tablas heredadas como rollback temporal:
 
-#### 4.1 Desplegar Identity primero
+```bash
+npm run procv:identity:prepare --workspace=apps/identity
+```
 
-1. Conectar el repo de `apps/identity/` a Render como nuevo servicio web.
-2. Build command: `npm run build` (o dejar que Render detecte).
-3. Start command: `npm start` (el Dockerfile ya ejecuta `prisma migrate deploy && node dist/index.js`).
-4. Verificar que el servicio esté `live` en `https://identity.prosolutions.page`.
-5. Health check: `GET https://identity.prosolutions.page/health` → `{ "status": "healthy" }`.
+La fase de preparación:
+- Crea `IdentityAccount`, que solo contiene el ID del sujeto de ProIdentity y marcas de tiempo.
+- Remapea `CV.userId` a los IDs centrales sin cambiar los IDs ni el contenido de CV, versiones o análisis ATS.
+- Conserva los registros y ajusta la atribución de auditoría.
+- No borra todavía las cuentas, sesiones ni tokens locales antiguos.
 
-#### 4.2 Desplegar ProCV Backend
+### Fase B — desplegar y validar
 
-1. En Render, redeploy del servicio `procv.prosolutions.page` con las nuevas variables de entorno (`IDENTITY_URL`, `JWT_SECRET` compartido).
-2. El backend de ProCV ahora actúa como proxy temporal de `/api/auth/*` hacia Identity.
-3. Verificar: `GET https://procv.prosolutions.page/health`.
+Desplegar la rama revisada a Render. El backend nuevo de ProCV exige que exista `IdentityAccount`; por eso la preparación de la base de datos debe completarse primero.
 
-#### 4.3 Desplegar ProCV Frontend
+Verificar:
+- `GET /health` de ProIdentity y del backend de ProCV.
+- Registro/verificación, login, renovación y logout mediante ProIdentity.
+- Acceso a ProCV con un token que tenga `PROCV`, y respuesta `403` para un token válido sin dicho permiso.
+- Acceso a ProJobs con `PROJOBS`; la navegación pública de empleos sigue siendo anónima.
+- Crear, editar, guardar y volver a abrir un CV; conservar versiones e informes ATS.
+- Panel de ProCV con métricas de producto y control de módulos mediante la API central.
+- Correo real de verificación y recuperación, con una cuenta de prueba controlada.
 
-1. Redeploy del servicio `procv.prosolutions.page` con `VITE_API_BASE_URL=https://procv.prosolutions.page/api`.
-2. El frontend ahora envía las peticiones de auth al proxy de ProCV, que a su vez delega en Identity.
-3. Verificar que el login, registro, verificación de email y refresh funcionen.
-4. Verificar que la cookie de sesión se establece con `Domain=.prosolutions.page`.
+### Fase C — retirar el esquema de autenticación antiguo
 
-#### 4.4 Desplegar ProJobs
+Solo después de que el backend y frontend nuevos estén saludables y se hayan validado los datos:
 
-1. Conectar `apps/projobs/` a Render como servicio web.
-2. El servidor estático sirve `dist/`. Las rutas `/api/*` van al servidor Express en el puerto 5176.
-3. Verificar: `GET https://projobs.prosolutions.page/health`.
-4. Verificar que las rutas personales (`/api/applications`, `/api/saved-jobs`) requieran token válido con claim `PROJOBS`.
+```bash
+npm run procv:identity:finalize:dry-run --workspace=apps/identity
+```
 
----
+Si la simulación confirma que no hay CV huérfanos, dependencias foráneas al usuario legacy ni filas en `_conn_test`, ejecutar:
 
-### Paso 5 — Verificaciones post-despliegue
+```bash
+npm run procv:identity:finalize --workspace=apps/identity
+```
 
-- [ ] Login en ProCV redirige a Identity y devuelve token válido.
-- [ ] Registro de nuevo usuario crea cuenta en Identity + módulo PROCV.
-- [ ] Verificación de email funciona y crea sesión.
-- [ ] Refresh de token funciona (cookie HttpOnly con `Domain=.prosolutions.page`).
-- [ ] SSO: iniciar sesión en ProCV y acceder a ProJobs sin volver a loguearse.
-- [ ] ProCV rutas protegidas (`/api/cvs/*`) validan JWT de Identity (issuer/audience).
-- [ ] ProJobs permite navegación pública anónima.
-- [ ] ProJobs rutas personales rechazan sin token (401) y con token sin claim PROJOBS (403).
-- [ ] Logout revoca la sesión en Identity y limpia la cookie en todos los subdominios.
+La finalización elimina exclusivamente las tablas locales de autenticación (`User`, `Session`, `EmailVerificationToken`, `PasswordResetToken`) y la tabla de prueba vacía `_conn_test`. **No elimina** `CV`, `CVVersion`, `CVAtsAnalysis`, `PlatformSetting` ni el historial de auditoría. Si cualquier precondición falla, no se debe forzar el borrado.
 
----
+## 3. Comprobación de permisos de módulos
 
-### Paso 6 — Rollback (en caso de fallo)
+ProIdentity mantiene el catálogo central `ModuleAccess` con estado y vencimiento. Alta de una nueva cuenta crea los permisos iniciales configurados; login y refresh solo leen permisos activos y **no deben reactivar permisos revocados**.
 
-1. Revertir variables de entorno a valores anteriores.
-2. Redploy de la versión anterior de cada servicio en orden inverso (ProJobs → ProCV → Identity).
-3. No ejecutar `migrate:users` en reversa (los usuarios ya creados en Identity no se eliminan; solo se deja de usarlos).
+La administración se realiza desde la API central `/api/modules`:
+- `GET /api/modules/me`: permisos de la cuenta actual.
+- `GET /api/modules/users`: listado paginado para administradores.
+- `POST /api/modules/grant` y `POST /api/modules/revoke`: operaciones de administración auditadas, con validación de módulo y protección CSRF.
 
----
+Después de revocar un permiso, un access token ya emitido puede seguir siendo aceptado hasta que expire (máximo 15 minutos) porque el token es autocontenido. Las operaciones que necesiten revocación inmediata deben consultar el estado de sesión/permisos en vivo.
 
-## Notas importantes
+## 4. Protección de bases de datos
 
-- **`IDENTITY_JWT_SECRET`** debe ser idéntico en Identity, ProCV Backend y ProJobs Server. Es el secreto compartido para validar firmas de JWT del ecosistema.
-- **`COOKIE_DOMAIN=.prosolutions.page`** es obligatorio en los 3 servicios para habilitar SSO entre subdominios.
-- **`CORS_ORIGIN`** debe incluir todos los orígenes del ecosistema que realicen peticiones con credenciales.
-- El proxy temporal en ProCV (`/api/auth/*` → Identity) permite una transición progresiva sin romper el frontend de ProCV. Una vez validado, se puede desacoplar el frontend para apuntar directamente a Identity.
-- No crear tiendas de contraseñas locales en nuevos módulos. Todos deben delegar auth a Identity.
-- ProJobs no tiene base de datos propia; solo valida JWT y protege rutas personales. Las aplicaciones y empleos guardados requieren un backend de persistencia adicional antes de usarse en producción.
+ProCV y ProIdentity se conectan a PostgreSQL desde el backend. Los navegadores no consultan estas tablas directamente mediante Supabase Data API. Por tanto:
+- RLS se mantiene habilitado como defensa en profundidad.
+- `anon` y `authenticated` no reciben permisos directos sobre tablas/sequence de estos esquemas.
+- Los secretos permanecen en Render o en el entorno operativo privado.
+- No se crean políticas amplias de RLS ni grants de cliente para resolver errores del backend.
+
+## 5. Criterios de cierre
+
+- [ ] CI aprobado para ProCV, ProIdentity, Core y ProJobs.
+- [ ] Preparación de datos hecha con mapeo completo y copias de seguridad verificadas.
+- [ ] Render está saludable y los logs no muestran errores de esquema/Prisma.
+- [ ] Flujos de login, verificación, renovación, cierre y recuperación validados en navegador.
+- [ ] Revisión de los permisos `PROCV` y `PROJOBS` y comportamiento 401/403.
+- [ ] Conteos de CV, versiones ATS y settings comparados antes/después.
+- [ ] Simulación de finalización limpia; luego retirada de tablas legacy.
+- [ ] Confirmación final de que ProCV ya no depende de usuarios o sesiones locales.
