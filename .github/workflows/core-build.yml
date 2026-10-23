@@ -69,6 +69,46 @@ jobs:
         run: npm ci --prefix apps/projobs/server
       - name: Build ProJobs API
         run: npm run build --prefix apps/projobs/server
+      - name: Smoke test ProJobs API startup and auth boundary
+        run: |
+          node --input-type=module <<'NODE'
+          import { spawn } from "node:child_process";
+
+          const port = 5199;
+          const child = spawn(process.execPath, ["apps/projobs/server/dist/index.js"], {
+            env: { ...process.env, NODE_ENV: "test", PORT: String(port), IDENTITY_URL: "https://identity.example.invalid" },
+            stdio: ["ignore", "pipe", "pipe"],
+          });
+          let output = "";
+          child.stdout.on("data", (chunk) => { output += chunk.toString(); });
+          child.stderr.on("data", (chunk) => { output += chunk.toString(); });
+
+          try {
+            let healthy = false;
+            for (let attempt = 0; attempt < 40; attempt += 1) {
+              if (child.exitCode !== null) throw new Error(`ProJobs API exited early: ${output}`);
+              try {
+                const response = await fetch(`http://127.0.0.1:${port}/health`);
+                if (response.ok) {
+                  const body = await response.json();
+                  if (body.service !== "projobs-api") throw new Error("Unexpected health payload");
+                  healthy = true;
+                  break;
+                }
+              } catch {}
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            if (!healthy) throw new Error(`ProJobs API did not become healthy: ${output}`);
+
+            const anonymousResponse = await fetch(`http://127.0.0.1:${port}/api/applications`);
+            if (anonymousResponse.status !== 401) {
+              throw new Error(`Expected anonymous applications request to return 401, got ${anonymousResponse.status}`);
+            }
+            console.log("ProJobs API startup and anonymous access rejection OK");
+          } finally {
+            child.kill("SIGTERM");
+          }
+          NODE
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
