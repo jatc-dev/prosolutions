@@ -25,7 +25,12 @@ async function bootstrap() {
   server.requestTimeout = 300_000;
 }
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  logger.error('ProCV startup failed because schema readiness validation did not pass', {
+    error: error instanceof Error ? error.message : String(error),
+  });
+  process.exitCode = 1;
+});
 
 let shuttingDown = false;
 
