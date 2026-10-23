@@ -45,27 +45,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
 
   login: async (email, password) => {
-    try {
-      const response = await fetchIdentity("/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+    const response = await fetchIdentity("/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 403) {
-          return { requiresVerification: true };
-        }
-        throw new Error(errorData.message || "Login failed");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 403) {
+        return { requiresVerification: true };
       }
-
-      const { accessToken, user } = await response.json();
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
-      api.setToken(accessToken);
-      set({ user, accessToken, isAuthenticated: true });
-    } catch (error) {
-      throw error;
+      throw new Error(errorData.message || "Login failed");
     }
+
+    const { accessToken, user } = await response.json();
+    if (!accessToken || !user) {
+      throw new Error("Login response did not include an access token and user");
+    }
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
+    api.setToken(accessToken);
+    set({ user, accessToken, isAuthenticated: true });
   },
 
   signInWithToken: async (accessToken) => {
@@ -77,11 +77,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         credentials: "include",
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      if (!response.ok) {
+        throw new Error("Unable to validate the supplied access token");
+      }
       const data = await response.json();
       const user = data?.user ?? null;
+      if (!user) {
+        throw new Error("Identity response did not include a user");
+      }
       set({ user, accessToken, isAuthenticated: true });
-    } catch {
-      set({ accessToken, isAuthenticated: Boolean(accessToken) });
+    } catch (error) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      api.setToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false });
+      throw error;
     }
   },
 
@@ -104,29 +113,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!stored) return;
 
     try {
-      JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      if (!parsed?.accessToken) {
+        throw new Error("Stored session does not contain an access token");
+      }
     } catch {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      api.setToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false });
       return;
     }
 
     try {
-      const response = await fetchIdentity("/refresh");
-      const { accessToken: newAccessToken } = await response.json();
+      const response = await fetchIdentity("/refresh", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Session refresh failed");
+      }
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
-      api.setToken(newAccessToken);
+      const { accessToken: newAccessToken } = await response.json();
+      if (!newAccessToken) {
+        throw new Error("Refresh response did not include an access token");
+      }
 
       const meResponse = await fetch(IDENTITY_ME_URL, {
         method: "GET",
         credentials: "include",
+        headers: { Authorization: `Bearer ${newAccessToken}` },
       });
+      if (!meResponse.ok) {
+        throw new Error("Unable to validate the refreshed access token");
+      }
+
       const meData = await meResponse.json();
       const user = meData?.user ?? null;
+      if (!user) {
+        throw new Error("Identity response did not include a user");
+      }
 
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
+      api.setToken(newAccessToken);
       set({ user, accessToken: newAccessToken, isAuthenticated: true });
     } catch {
-      get().logout();
+      await get().logout();
     }
   },
 
@@ -136,22 +164,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   validateSession: async () => {
-    try {
-      const response = await fetch(IDENTITY_ME_URL, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await response.json();
-      const user = data?.user ?? null;
-      const accessToken = localStorage.getItem(LOCAL_STORAGE_KEY)
-        ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!).accessToken
-        : null;
-      set({ user, accessToken, isAuthenticated: true });
-    } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      api.setToken(null);
-      set({ user: null, accessToken: null, isAuthenticated: false });
+    const accessToken = get().accessToken;
+    if (!accessToken) {
+      throw new Error("No access token is available to validate");
     }
+
+    const response = await fetch(IDENTITY_ME_URL, {
+      method: "GET",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Session validation failed");
+    }
+
+    const data = await response.json();
+    const user = data?.user ?? null;
+    if (!user) {
+      throw new Error("Identity response did not include a user");
+    }
+
+    set({ user, accessToken, isAuthenticated: true });
   },
 }));
 
