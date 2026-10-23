@@ -858,6 +858,8 @@ CSS_STYLES = """
         .pro-active-dot { display: none; }
         .pro-active-pill { border-radius: 999px; padding: 2px 6px; background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
         .language-toggle, .theme-toggle { min-height: 40px; border-radius: 12px; }
+        .mobile-menu-toggle { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; color: #475569; font-size: 19px; cursor: pointer; }
+        .mobile-menu-toggle:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
         .jobs-hero { margin: 0; padding: 56px max(24px, calc((100vw - 80rem) / 2)) 44px; text-align: left; background: linear-gradient(115deg,#f8fafc 0%,#eef2ff 55%,#ecfeff 100%); border-bottom: 1px solid #e2e8f0; }
         .hero-eyebrow { margin: 0 0 12px; color: #4f46e5; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
         h1 { max-width: 850px; margin: 0 0 12px; color: #0f172a; font-size: clamp(2rem,4vw,3.25rem); font-weight: 800; letter-spacing: -.045em; line-height: 1.08; }
@@ -896,6 +898,8 @@ CSS_STYLES = """
         .pro-footer-bottom { margin-top: 48px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         html.dark .pro-nav { background: rgba(15,23,42,.92); border-color: #334155; }
+        html.dark .mobile-menu-toggle { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+        html.dark .pro-links { border-color: #334155; }
         html.dark .pro-wordmark { color: #f8fafc; }
         html.dark .pro-links a:hover, html.dark .pro-links a.active { background: #1e293b; color: #f8fafc; }
         html.dark .pro-active-pill { background: #312e81; color: #e0e7ff; }
@@ -911,9 +915,14 @@ CSS_STYLES = """
         html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
         html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #cbd5e1; }
         @media (max-width: 980px) {
-          .pro-nav-inner { flex-wrap: wrap; justify-content: center; }
+          .pro-nav-inner { flex-wrap: wrap; justify-content: space-between; }
           .pro-brand { margin-right: auto; }
-          .pro-links { order: 3; width: 100%; justify-content: center; flex-wrap: wrap; }
+          .mobile-menu-toggle { display: inline-flex; }
+          .pro-links { display: none; order: 5; width: 100%; justify-content: stretch; flex-direction: column; flex-wrap: nowrap; padding: 8px 0 4px; border-top: 1px solid #e2e8f0; }
+          .pro-links.mobile-open { display: flex; }
+          .pro-links a { width: 100%; }
+          .language-toggle { order: 2; }
+          .theme-toggle { order: 3; }
           .jobs-hero { padding: 44px 24px 36px; }
           .filters-panel { margin-left: 16px; margin-right: 16px; }
           #jobsList { grid-template-columns: 1fr; }
@@ -977,6 +986,7 @@ def render_page(jobs: list[dict]) -> str:
                 <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-pill" data-i18n="active">Activo</span></a>
                 <a href="{CORE_URL}#planes"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><span aria-hidden="true">☰</span></button>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
         </div>
@@ -1156,6 +1166,7 @@ function escapeHtml(text) {{
 
         function renderJobs() {{
             jobsList.innerHTML = '';
+            if (totalJobsEl) totalJobsEl.textContent = filteredJobs.length;
             if (filteredJobs.length === 0) {{
                 jobsList.style.display = 'none';
                 noResults.style.display = 'block';
@@ -1266,6 +1277,24 @@ function escapeHtml(text) {{
         experienceFilter.addEventListener('change', applyFilters);
         searchInput.addEventListener('input', applyFilters);
         resetFiltersBtn.addEventListener('click', resetFilters);
+
+        document.getElementById('mobileMenuToggle').addEventListener('click', () => {{
+            const menu = document.querySelector('.pro-links');
+            const button = document.getElementById('mobileMenuToggle');
+            const isOpen = menu.classList.toggle('mobile-open');
+            button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute('aria-label', isOpen ? (locale === 'es' ? 'Cerrar menú' : 'Close menu') : (locale === 'es' ? 'Abrir menú' : 'Open menu'));
+            button.querySelector('span').textContent = isOpen ? '×' : '☰';
+        }});
+        document.addEventListener('keydown', event => {{
+            if (event.key === 'Escape') {{
+                document.querySelector('.pro-links').classList.remove('mobile-open');
+                const button = document.getElementById('mobileMenuToggle');
+                button.setAttribute('aria-expanded', 'false');
+                button.setAttribute('aria-label', locale === 'es' ? 'Abrir menú' : 'Open menu');
+                button.querySelector('span').textContent = '☰';
+            }}
+        }});
 
         document.getElementById('languageToggle').addEventListener('click', () => {{
             locale = locale === 'es' ? 'en' : 'es';
