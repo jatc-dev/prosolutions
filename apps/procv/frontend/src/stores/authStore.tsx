@@ -62,6 +62,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!accessToken || !user) {
       throw new Error("Login response did not include an access token and user");
     }
+    if (!Array.isArray(user.modules) || !user.modules.includes("PROCV")) {
+      await fetchIdentity("/logout", { method: "POST" }).catch(() => {});
+      throw new Error("Tu cuenta no tiene acceso a ProCV. Contacta con un administrador.");
+    }
 
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken }));
     api.setToken(accessToken);
@@ -122,6 +126,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!user) {
         throw new Error("Identity response did not include a user");
       }
+      if (!Array.isArray(user.modules) || !user.modules.includes("PROCV")) {
+        throw new Error("Tu cuenta no tiene acceso a ProCV");
+      }
 
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
       api.setToken(newAccessToken);
@@ -155,6 +162,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = data?.user ?? null;
     if (!user) {
       throw new Error("Identity response did not include a user");
+    }
+    if (!Array.isArray(user.modules) || !user.modules.includes("PROCV")) {
+      throw new Error("Tu cuenta no tiene acceso a ProCV");
     }
 
     set({ user, accessToken, isAuthenticated: true });
