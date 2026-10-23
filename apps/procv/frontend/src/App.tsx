@@ -14,9 +14,7 @@ const PROSOLUTIONS_URL =
 
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
-const AuthPage = lazy(() => import("./pages/AuthPage").then((m) => ({ default: m.AuthPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
-const AuthCallback = lazy(() => import("./pages/AuthCallback").then((m) => ({ default: m.AuthCallback })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 
@@ -94,8 +92,8 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/auth/callback" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Navigate to="/" replace />} />
             <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
             <Route path="/forgot-password" element={<RedirectToProsolutions path="/forgot-password" />} />
