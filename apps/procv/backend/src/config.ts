@@ -50,13 +50,13 @@ function getDatabaseUrl(isProduction: boolean): string {
 }
 
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.IDENTITY_JWT_SECRET || process.env.JWT_SECRET;
   const isProduction = getEnvironment() === 'production';
 
   if (isProduction) {
     if (!secret) {
       throw new Error(
-        'JWT_SECRET must be set in production environment. ' +
+        'IDENTITY_JWT_SECRET (or the identical legacy JWT_SECRET) must be set in production. ' +
           'Generate a strong secret using: openssl rand -base64 32',
       );
     }
