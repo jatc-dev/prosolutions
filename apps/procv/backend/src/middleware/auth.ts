@@ -28,6 +28,10 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
       modules?: string[];
     };
 
+    if (!payload.sub) {
+      return res.status(401).json({ message: 'Invalid Identity subject' });
+    }
+
     const modules = Array.isArray(payload.modules) ? payload.modules : [];
     if (!modules.includes('PROCV')) {
       return res
