@@ -23,10 +23,10 @@ INSERT INTO "Module"
 VALUES
     ('PROCV', 'ProCV', 'Creador y optimizador profesional de hojas de vida.', 'https://procv.prosolutions.page', 'procv-api', true, true, true, 10, NOW(), NOW()),
     ('PROJOBS', 'ProJobs', 'Exploración y seguimiento de oportunidades laborales.', 'https://projobs.prosolutions.page', 'projobs-api', true, true, true, 20, NOW(), NOW()),
-    ('PROSKILLS', 'ProSkills', 'Evaluación y desarrollo de competencias.', 'https://proskills.prosolutions.page', 'proskills-api', true, false, true, 30, NOW(), NOW()),
-    ('PROCAREER', 'ProCareer', 'Planificación y crecimiento profesional.', 'https://procareer.prosolutions.page', 'procareer-api', true, false, true, 40, NOW(), NOW()),
-    ('PROINTERVIEW', 'ProInterview', 'Preparación y simulación de entrevistas.', 'https://prointerview.prosolutions.page', 'prointerview-api', true, false, true, 50, NOW(), NOW()),
-    ('PRORECRUIT', 'ProRecruit', 'Herramientas para selección y gestión de talento.', 'https://prorecruit.prosolutions.page', 'prorecruit-api', true, false, true, 60, NOW(), NOW());
+    ('PROSKILLS', 'ProSkills', 'Evaluación y desarrollo de competencias.', 'https://proskills.prosolutions.page', 'proskills-api', false, false, true, 30, NOW(), NOW()),
+    ('PROCAREER', 'ProCareer', 'Planificación y crecimiento profesional.', 'https://procareer.prosolutions.page', 'procareer-api', false, false, true, 40, NOW(), NOW()),
+    ('PROINTERVIEW', 'ProInterview', 'Preparación y simulación de entrevistas.', 'https://prointerview.prosolutions.page', 'prointerview-api', false, false, true, 50, NOW(), NOW()),
+    ('PRORECRUIT', 'ProRecruit', 'Herramientas para selección y gestión de talento.', 'https://prorecruit.prosolutions.page', 'prorecruit-api', false, false, true, 60, NOW(), NOW());
 
 ALTER TABLE "ModuleAccess" ADD COLUMN "moduleCode" TEXT;
 UPDATE "ModuleAccess" SET "moduleCode" = "module"::text;
