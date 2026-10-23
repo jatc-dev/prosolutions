@@ -50,8 +50,13 @@ async function tableExists(tableName: string): Promise<boolean> {
   return Boolean(rows[0]?.exists);
 }
 
+type RawSqlExecutor = {
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Promise<T>;
+  $executeRawUnsafe(query: string, ...values: any[]): Promise<number>;
+};
+
 async function tableColumns(
-  db: { $queryRawUnsafe: (query: string, ...values: unknown[]) => Promise<unknown> },
+  db: RawSqlExecutor,
   tableName: string,
 ): Promise<Set<string>> {
   const rows = await db.$queryRawUnsafe<Array<{ column_name: string }>>(
@@ -62,12 +67,7 @@ async function tableColumns(
   return new Set(rows.map((row) => row.column_name));
 }
 
-async function repairAuditLogSchema(
-  tx: {
-    $executeRawUnsafe: (query: string, ...values: unknown[]) => Promise<number>;
-    $queryRawUnsafe: (query: string, ...values: unknown[]) => Promise<unknown>;
-  },
-): Promise<void> {
+async function repairAuditLogSchema(tx: RawSqlExecutor): Promise<void> {
   const hasAuditLog = await tableExists('AuditLog');
   if (!hasAuditLog) throw new Error('ProCV table AuditLog is missing; refusing schema cutover.');
 
