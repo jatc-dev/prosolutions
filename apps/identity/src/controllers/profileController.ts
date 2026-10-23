@@ -128,8 +128,11 @@ export async function grantModuleAccess(req: IdentityRequest, res: Response) {
   }
 
   try {
-    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isActive: true } });
     if (!target) return res.status(404).json({ message: 'Identity user not found' });
+    if (!target.isActive) {
+      return res.status(409).json({ message: 'Cannot grant module access to an inactive account' });
+    }
 
     const access = await prisma.moduleAccess.upsert({
       where: { userId_module: { userId, module } },
