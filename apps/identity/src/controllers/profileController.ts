@@ -157,9 +157,6 @@ export async function createModule(req: IdentityRequest, res: Response) {
     description,
     baseUrl,
     apiAudience,
-    enabled = true,
-    defaultForNewUsers = false,
-    defaultForAdmins = false,
     displayOrder = 100,
   } = req.body ?? {};
 
@@ -181,9 +178,6 @@ export async function createModule(req: IdentityRequest, res: Response) {
       return res.status(400).json({ message: 'baseUrl must be a valid HTTP(S) URL' });
     }
   }
-  if (typeof enabled !== 'boolean' || typeof defaultForNewUsers !== 'boolean' || typeof defaultForAdmins !== 'boolean') {
-    return res.status(400).json({ message: 'Module flags must be boolean values' });
-  }
   const parsedOrder = Number(displayOrder);
   if (!Number.isInteger(parsedOrder) || parsedOrder < 0 || parsedOrder > 10000) {
     return res.status(400).json({ message: 'displayOrder must be an integer between 0 and 10000' });
@@ -197,9 +191,10 @@ export async function createModule(req: IdentityRequest, res: Response) {
         description: typeof description === 'string' ? description.trim() || null : null,
         baseUrl: typeof baseUrl === 'string' && baseUrl.trim() ? baseUrl.trim().replace(/\/$/, '') : null,
         apiAudience: apiAudience.trim(),
-        enabled,
-        defaultForNewUsers,
-        defaultForAdmins,
+        // A new module can never become public/entitled at creation time.
+        enabled: false,
+        defaultForNewUsers: false,
+        defaultForAdmins: false,
         displayOrder: parsedOrder,
       },
     });
