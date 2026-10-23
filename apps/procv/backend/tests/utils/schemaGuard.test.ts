@@ -5,10 +5,7 @@ import { ensureSchemaCompatibility } from '../../src/utils/schemaGuard';
 
 jest.mock('../../src/prismaClient', () => ({
   __esModule: true,
-  default: {
-    $queryRaw: jest.fn(),
-    $executeRawUnsafe: jest.fn(),
-  },
+  default: { $queryRaw: jest.fn() },
 }));
 
 jest.mock('../../src/utils/logger', () => ({
@@ -21,88 +18,50 @@ jest.mock('../../src/utils/logger', () => ({
   },
 }));
 
-type QueryRawResult = Array<{ count: number }>;
+type TableRows = Array<{ table_name: string }>;
+const BUSINESS_TABLES = ['CV', 'CVVersion', 'CVAtsAnalysis', 'AuditLog', 'PlatformSetting'];
 
 const mockPrisma = prismaClient as unknown as {
-  $queryRaw: jest.MockedFunction<
-    (query: TemplateStringsArray, ...values: any[]) => Promise<QueryRawResult>
-  >;
-  $executeRawUnsafe: jest.MockedFunction<(query: string, ...values: any[]) => Promise<number>>;
+  $queryRaw: jest.MockedFunction<(query: TemplateStringsArray, ...values: unknown[]) => Promise<TableRows>>;
 };
 
-describe('schemaGuard', () => {
+describe('ProCV schema guard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('ensureSchemaCompatibility', () => {
-    it('no aplica DDL cuando todas las columnas y tablas ya existen', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([{ count: 1 }] as QueryRawResult);
+  it('accepts the complete business schema without issuing DDL', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue(BUSINESS_TABLES.map((table_name) => ({ table_name })));
 
-      await ensureSchemaCompatibility();
+    await expect(ensureSchemaCompatibility()).resolves.toBeUndefined();
 
-      expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith('Schema compatibility check completed');
-    });
+    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.$queryRaw.mock.calls[0][0].join('')).toContain('information_schema.tables');
+    expect(mockPrisma.$queryRaw.mock.calls[0][1]).toEqual(BUSINESS_TABLES);
+    expect(logger.info).toHaveBeenCalledWith(
+      'ProCV business schema check completed; no local authentication tables are managed by this service',
+    );
+  });
 
-    it('aplica ALTER TABLE cuando falta una columna de usuario', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // User.emailVerified falta
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // Session.revokedAt existe
+  it('reports missing business tables and does not recreate local authentication tables', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ table_name: 'CV' }, { table_name: 'AuditLog' }]);
 
-      await ensureSchemaCompatibility();
+    await expect(ensureSchemaCompatibility()).resolves.toBeUndefined();
 
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false',
-      );
-      const columnSql = (mockPrisma.$queryRaw.mock.calls[0][0] as TemplateStringsArray).join('');
-      expect(columnSql).toContain('information_schema.columns');
-      expect(mockPrisma.$queryRaw.mock.calls[0][1]).toBe('User');
-      expect(mockPrisma.$queryRaw.mock.calls[0][2]).toBe('emailVerified');
-    });
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProCV business schema is incomplete; apply Prisma migrations before serving CV requests',
+      { missingTables: ['CVVersion', 'CVAtsAnalysis', 'PlatformSetting'] },
+    );
+    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+  });
 
-    it('crea tablas cuando faltan', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // User.emailVerified existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.revokedAt existe
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // EmailVerificationToken falta
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // PasswordResetToken existe
+  it('contains database errors and logs a diagnostic', async () => {
+    mockPrisma.$queryRaw.mockRejectedValue(new Error('DB down'));
 
-      await ensureSchemaCompatibility();
-
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS "EmailVerificationToken"'),
-      );
-      const tableSql = (mockPrisma.$queryRaw.mock.calls[3][0] as TemplateStringsArray).join('');
-      expect(tableSql).toContain('information_schema.tables');
-      expect(mockPrisma.$queryRaw.mock.calls[3][1]).toBe('EmailVerificationToken');
-    });
-
-    it('no falla ni propaga errores cuando $queryRaw falla', async () => {
-      mockPrisma.$queryRaw.mockRejectedValue(new Error('DB down'));
-
-      await expect(ensureSchemaCompatibility()).resolves.not.toThrow();
-      expect(logger.error).toHaveBeenCalledWith(
-        'Schema compatibility check failed',
-        expect.objectContaining({ error: 'DB down' }),
-      );
-    });
-
-    it('no falla ni propaga errores cuando $executeRawUnsafe falla', async () => {
-      mockPrisma.$queryRaw
-        .mockResolvedValueOnce([{ count: 0 }] as QueryRawResult) // User.emailVerified falta -> dispara DDL
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult) // Session.lastAccessedAt existe
-        .mockResolvedValueOnce([{ count: 1 }] as QueryRawResult); // Session.revokedAt existe
-      mockPrisma.$executeRawUnsafe.mockRejectedValue(new Error('DDL failed'));
-
-      await expect(ensureSchemaCompatibility()).resolves.not.toThrow();
-      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith(
-        'Schema compatibility check failed',
-        expect.objectContaining({ error: 'DDL failed' }),
-      );
-    });
+    await expect(ensureSchemaCompatibility()).resolves.toBeUndefined();
+    expect(logger.error).toHaveBeenCalledWith(
+      'ProCV schema check failed',
+      expect.objectContaining({ error: 'DB down' }),
+    );
   });
 });
