@@ -31,7 +31,7 @@ function makeToken(payload: Record<string, unknown>, audience = config.identityA
 function makeRequest(token?: string) {
   return {
     headers: token ? { authorization: `Bearer ${token}` } : {},
-  } as AuthRequest;
+  } as unknown as AuthRequest;
 }
 
 describe('ProCV Identity access middleware', () => {
