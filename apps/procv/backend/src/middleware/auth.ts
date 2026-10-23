@@ -34,6 +34,35 @@ export function verifyIdentityAccessToken(token: string): IdentityAccessClaims {
   }) as IdentityAccessClaims;
 }
 
+const IDENTITY_REFERENCE_TTL_MS = 5 * 60 * 1000;
+const MAX_IDENTITY_REFERENCE_CACHE_ENTRIES = 10_000;
+const identityReferenceCache = new Map<string, number>();
+
+async function ensureIdentityReference(identityId: string): Promise<void> {
+  const now = Date.now();
+  const lastValidatedAt = identityReferenceCache.get(identityId);
+  if (lastValidatedAt && now - lastValidatedAt < IDENTITY_REFERENCE_TTL_MS) {
+    // Refresh insertion order so the bounded cache behaves like a small LRU.
+    identityReferenceCache.delete(identityId);
+    identityReferenceCache.set(identityId, now);
+    return;
+  }
+
+  await prisma.identityAccount.upsert({
+    where: { id: identityId },
+    update: {},
+    create: { id: identityId },
+  });
+  identityReferenceCache.delete(identityId);
+  identityReferenceCache.set(identityId, now);
+
+  while (identityReferenceCache.size > MAX_IDENTITY_REFERENCE_CACHE_ENTRIES) {
+    const oldest = identityReferenceCache.keys().next().value;
+    if (oldest === undefined) break;
+    identityReferenceCache.delete(oldest);
+  }
+}
+
 export async function authMiddleware(
   req: AuthRequest,
   res: Response,
@@ -63,13 +92,9 @@ export async function authMiddleware(
   }
 
   try {
-    // A minimal local identity reference preserves referential integrity for
-    // CV ownership. It contains no credentials, roles, sessions, or tokens.
-    await prisma.identityAccount.upsert({
-      where: { id: claims.sub },
-      update: {},
-      create: { id: claims.sub },
-    });
+    // Create/verify the non-secret local subject reference lazily. A bounded
+    // five-minute cache avoids a database write on every protected API call.
+    await ensureIdentityReference(claims.sub);
   } catch (error) {
     logger.error('Failed to synchronize ProIdentity account reference', {
       error: error instanceof Error ? error.message : String(error),
