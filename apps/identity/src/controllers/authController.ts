@@ -33,27 +33,46 @@ import { ProSolutionsModule } from '../types/modules';
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
-function getDefaultModules(role: string): ProSolutionsModule[] {
-  if (role === 'admin') {
-    return Object.values(ProSolutionsModule);
-  }
-  return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
+// Only modules with deployed, supported applications are eligible for access tokens.
+// Keep future modules disabled until their service and authorization checks are ready.
+const AVAILABLE_MODULES: ProSolutionsModule[] = [
+  ProSolutionsModule.PROCV,
+  ProSolutionsModule.PROJOBS,
+];
+
+function getDefaultModules(_role: string): ProSolutionsModule[] {
+  // Administrative role does not imply entitlement to every current or future module.
+  return [...AVAILABLE_MODULES];
 }
 
 async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
   const defaults = getDefaultModules(role);
+
+  // Create missing defaults only. Never reactivate a grant or clear its expiry on
+  // login/refresh: revocations must survive token renewal.
   await Promise.all(
     defaults.map((module) =>
       prisma.moduleAccess.upsert({
         where: { userId_module: { userId, module } },
-        update: { active: true, expiresAt: null },
+        update: {},
         create: { userId, module, active: true },
       }),
     ),
   );
-  // The temporary self-service rollout exposes exactly the currently available
-  // modules to regular users. Admins keep the full enum returned by defaults.
-  return defaults;
+
+  // JWT claims are built from effective persisted grants, not from defaults.
+  // Expired, revoked, and not-yet-enabled module grants are excluded.
+  const activeGrants = await prisma.moduleAccess.findMany({
+    where: {
+      userId,
+      module: { in: AVAILABLE_MODULES },
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: { module: true },
+  });
+
+  return activeGrants.map(({ module }) => module);
 }
 
 export async function register(req: Request, res: Response) {
