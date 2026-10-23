@@ -207,7 +207,6 @@ instance.interceptors.response.use(
     refreshPromise = null;
 
     if (!newToken) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
       instance.defaults.headers.common.Authorization = "";
       redirectToLogin();
       return Promise.reject(error);
