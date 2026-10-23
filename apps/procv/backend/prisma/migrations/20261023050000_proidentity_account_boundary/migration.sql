@@ -24,7 +24,7 @@ ALTER TABLE public."CV" DROP CONSTRAINT IF EXISTS "CV_userId_fkey";
 ALTER TABLE public."CV"
   ADD CONSTRAINT "CV_userId_fkey"
   FOREIGN KEY ("userId") REFERENCES public."IdentityAccount"("id")
-  ON DELETE CASCADE ON UPDATE CASCADE;
+  ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE INDEX IF NOT EXISTS "CV_userId_idx" ON public."CV" ("userId");
 
 -- Reconcile the pre-monorepo AuditLog shape with the current Prisma model.
