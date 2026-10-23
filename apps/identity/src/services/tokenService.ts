@@ -99,6 +99,8 @@ export async function createTokenPair(user: {
   id: string;
   email: string;
   role: string;
+  // Kept for compatibility with older internal callers; current modules are always reloaded from the registry.
+  modules?: string[];
 }): Promise<TokenPair> {
   const accessToken = await signAccessToken({
     sub: user.id,
