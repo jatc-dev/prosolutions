@@ -7,6 +7,9 @@
 -- three existing subjects already match and are intentionally left unchanged.
 BEGIN;
 
+-- Remove the legacy FK before remapping to subjects that exist only in Identity.
+ALTER TABLE "CV" DROP CONSTRAINT IF EXISTS "CV_userId_fkey";
+
 UPDATE "CV"
 SET "userId" = 'cmmtp0zpl0000kmda9jyefkz1'
 WHERE "userId" = 'cmmquvu4j000413tp8wqik3v3';
@@ -44,7 +47,6 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TABLE "CV" DROP CONSTRAINT IF EXISTS "CV_userId_fkey";
 DROP TABLE IF EXISTS "Session";
 DROP TABLE IF EXISTS "EmailVerificationToken";
 DROP TABLE IF EXISTS "PasswordResetToken";
