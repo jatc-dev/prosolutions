@@ -40,6 +40,22 @@ function getDefaultModules(role: string): ProSolutionsModule[] {
   return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
 }
 
+async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
+  const defaults = getDefaultModules(role);
+  await Promise.all(
+    defaults.map((module) =>
+      prisma.moduleAccess.upsert({
+        where: { userId_module: { userId, module } },
+        update: { active: true, expiresAt: null },
+        create: { userId, module, active: true },
+      }),
+    ),
+  );
+  // The temporary self-service rollout exposes exactly the currently available
+  // modules to regular users. Admins keep the full enum returned by defaults.
+  return defaults;
+}
+
 export async function register(req: Request, res: Response) {
   try {
     const { error, value } = registerSchema.validate(req.body);
@@ -90,21 +106,22 @@ export async function register(req: Request, res: Response) {
       ...extractRequestInfo(req),
     });
 
-    void sendVerificationEmail({
+    const verificationEmailSent = await sendVerificationEmail({
       to: user.email,
       verificationUrl,
       userEmail: user.email,
-    }).catch((err: unknown) => {
-      logger.warn('Verification email failed to send during registration', {
-        userId: user.id,
-        error: err instanceof Error ? err.message : String(err),
-      });
     });
+    if (!verificationEmailSent) {
+      await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, used: false } });
+      logger.warn('Verification email could not be delivered during registration', { userId: user.id });
+    }
 
     return res.status(201).json({
-      message:
-        'Account created. Check your email and follow the verification link before signing in.',
+      message: verificationEmailSent
+        ? 'Account created. Check your email and follow the verification link before signing in.'
+        : 'Account created, but the verification email could not be delivered. Please request a new link.',
       email: user.email,
+      verificationEmailSent,
     });
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -184,21 +201,7 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    let modules = user.moduleAccess
-      .filter((ma) => ma.active && (!ma.expiresAt || ma.expiresAt > new Date()))
-      .map((ma) => ma.module);
-
-    if (modules.length === 0) {
-      const defaultModules = getDefaultModules(user.role);
-      for (const module of defaultModules) {
-        await prisma.moduleAccess.upsert({
-          where: { userId_module: { userId: user.id, module } },
-          update: { active: true },
-          create: { userId: user.id, module },
-        });
-      }
-      modules = defaultModules;
-    }
+    const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
     const { accessToken, refreshToken } = await createTokenPair({
       id: user.id,
@@ -274,8 +277,14 @@ export async function refreshToken(req: Request, res: Response) {
       sub: string;
     };
     const session = await prisma.session.findUnique({ where: { refreshToken } });
-    if (!session || session.expiresAt < new Date()) {
+    if (
+      !session ||
+      session.revokedAt ||
+      session.userId !== payload.sub ||
+      session.expiresAt < new Date()
+    ) {
       logger.warn('Refresh token rejected');
+      clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
 
@@ -287,9 +296,7 @@ export async function refreshToken(req: Request, res: Response) {
       return res.status(401).json({ message: 'User not found or inactive' });
     }
 
-    const modules = user.moduleAccess
-      .filter((ma) => ma.active && (!ma.expiresAt || ma.expiresAt > new Date()))
-      .map((ma) => ma.module);
+    const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
     const accessToken = signAccessToken({
       sub: user.id,
@@ -440,16 +447,17 @@ export async function forgotPassword(req: Request, res: Response) {
 
       const resetUrl = `${config.frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
 
-      void sendPasswordResetEmail({
+      const emailSent = await sendPasswordResetEmail({
         to: user.email,
         resetUrl,
         userEmail: user.email,
-      }).catch((err: unknown) => {
-        logger.warn('Password reset email failed to send', {
-          userId: user.id,
-          error: err instanceof Error ? err.message : String(err),
-        });
       });
+      if (!emailSent) {
+        await prisma.passwordResetToken.deleteMany({
+          where: { tokenHash, used: false },
+        });
+        logger.warn('Password reset email could not be delivered', { userId: user.id });
+      }
     }
 
     return res.json({
@@ -567,16 +575,8 @@ export async function verifyEmail(req: Request, res: Response) {
       ...extractRequestInfo(req),
     });
 
-    const defaultModules = getDefaultModules(verificationToken.user.role);
-    for (const module of defaultModules) {
-      await prisma.moduleAccess.upsert({
-        where: { userId_module: { userId: verificationToken.userId, module } },
-        update: { active: true },
-        create: { userId: verificationToken.userId, module },
-      });
-    }
+    const modules = await ensureDefaultModuleAccess(verificationToken.userId, verificationToken.user.role);
 
-    const modules = defaultModules;
     const { accessToken, refreshToken } = await createTokenPair({
       id: verificationToken.userId,
       email: verificationToken.user.email,
@@ -704,16 +704,15 @@ export async function resendVerification(req: Request, res: Response) {
 
       const verificationUrl = `${config.frontendUrl}/verify-email?token=${token}&email=${encodeURIComponent(user.email)}`;
 
-      void sendVerificationEmail({
+      const emailSent = await sendVerificationEmail({
         to: user.email,
         verificationUrl,
         userEmail: user.email,
-      }).catch((err: unknown) => {
-        logger.warn('Verification email failed to resend', {
-          userId: user.id,
-          error: err instanceof Error ? err.message : String(err),
-        });
       });
+      if (!emailSent) {
+        await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, tokenHash } });
+        logger.warn('Verification email could not be delivered when resending', { userId: user.id });
+      }
     }
 
     return res.json({

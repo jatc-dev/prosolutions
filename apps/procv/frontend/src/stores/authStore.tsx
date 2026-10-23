@@ -110,20 +110,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   refreshToken: async () => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!stored) return;
-
-    try {
-      const parsed = JSON.parse(stored);
-      if (!parsed?.accessToken) {
-        throw new Error("Stored session does not contain an access token");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (!parsed?.accessToken) throw new Error("Stored session does not contain an access token");
+      } catch {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        api.setToken(null);
+        set({ user: null, accessToken: null, isAuthenticated: false });
       }
-    } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      api.setToken(null);
-      set({ user: null, accessToken: null, isAuthenticated: false });
-      return;
     }
 
+    // Bootstrap this origin's token from the shared HttpOnly cookie instead of URL tokens.
     try {
       const response = await fetchIdentity("/refresh", { method: "POST" });
       if (!response.ok) {
@@ -194,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) {
-      useAuthStore.setState({ loading: false });
+      refreshToken().catch(() => {}).finally(() => useAuthStore.setState({ loading: false }));
       return;
     }
     try {

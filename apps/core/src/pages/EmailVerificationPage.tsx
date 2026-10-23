@@ -44,6 +44,15 @@ export function EmailVerificationPage() {
           setMessage(data.message || "No se pudo verificar el correo.");
           return;
         }
+        if (data.accessToken) {
+          try {
+            sessionStorage.setItem("pro_identity_token", data.accessToken);
+            window.location.assign("/dashboard");
+            return;
+          } catch {
+            // Fall back to the sign-in page if browser storage is unavailable.
+          }
+        }
         setStatus("verified");
         setMessage("Correo verificado. Ya puedes iniciar sesión.");
       })

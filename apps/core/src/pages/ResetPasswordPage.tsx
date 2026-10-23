@@ -82,13 +82,22 @@ export function ResetPasswordPage() {
           <p className="mt-3 text-slate-600 dark:text-slate-300">
             El enlace de restablecimiento no es válido o ha expirado.
           </p>
-          <button
-            type="button"
-            onClick={() => (window.location.href = "/login")}
-            className="mt-6 px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
-          >
-            Volver al inicio de sesión
-          </button>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/forgot-password")}
+              className="px-6 py-2 border border-brand-600 text-brand-700 rounded-lg hover:bg-brand-50 transition-colors font-medium dark:text-brand-300 dark:hover:bg-slate-800"
+            >
+              Solicitar un nuevo enlace
+            </button>
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/login")}
+              className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
+            >
+              Volver al inicio de sesión
+            </button>
+          </div>
         </div>
       </div>
     );
