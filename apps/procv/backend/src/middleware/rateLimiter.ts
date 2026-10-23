@@ -42,22 +42,6 @@ function createRateLimiter(options: {
   });
 }
 
-export const authLimiter = createRateLimiter({
-  windowMs: isDevelopment ? 15 * 60 * 1000 : 15 * 60 * 1000,
-  // Only failed attempts count (skipSuccessful). 10 per IP per 15 min keeps
-  // credential stuffing out while tolerating typos and shared/CGNAT IPs.
-  max: isDevelopment ? 100 : 10,
-  message: 'Demasiados intentos de autenticación. Intenta de nuevo en 15 minutos.',
-  skipSuccessful: true,
-});
-
-export const refreshLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: isDevelopment ? 100 : 10,
-  message: 'Demasiados intentos de renovación de token. Intenta de nuevo en 1 hora.',
-  skipSuccessful: true,
-});
-
 export const apiLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   max: isDevelopment ? 1000 : 100,
@@ -74,20 +58,6 @@ export const publicImportLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   max: isDevelopment ? 100 : 20,
   message: 'Demasiadas importaciones. Intenta de nuevo en 1 hora.',
-});
-
-export const verificationLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: isDevelopment ? 100 : 5,
-  message: 'Too many verification requests. Please try again in 15 minutes.',
-  skipSuccessful: true,
-});
-
-export const passwordResetLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: isDevelopment ? 50 : 3,
-  message: 'Too many password reset requests. Please try again in 15 minutes.',
-  skipSuccessful: true,
 });
 
 export const adminLimiter = createRateLimiter({
