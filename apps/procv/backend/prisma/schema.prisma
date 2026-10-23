@@ -28,6 +28,7 @@ model CV {
   atsAnalyses CVAtsAnalysis[]
 
   @@index([userId, updatedAt])
+}
 
 model CVAtsAnalysis {
   id             String   @id @default(cuid())
