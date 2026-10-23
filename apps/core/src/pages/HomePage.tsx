@@ -5,11 +5,11 @@ import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
-const ALLOWED_POST_LOGIN_HOSTS = new Set([
-  "prosolutions.page",
-  "www.prosolutions.page",
-  "procv.prosolutions.page",
-  "projobs.prosolutions.page",
+const ALLOWED_POST_LOGIN_ORIGINS = new Set([
+  "https://prosolutions.page",
+  "https://www.prosolutions.page",
+  "https://procv.prosolutions.page",
+  "https://projobs.prosolutions.page",
 ]);
 
 function getPostLoginTarget(): string {
@@ -21,7 +21,9 @@ function getPostLoginTarget(): string {
     const target = new URL(requested, window.location.origin);
     const sameOrigin = target.origin === window.location.origin;
     const allowedModuleOrigin =
-      target.protocol === "https:" && ALLOWED_POST_LOGIN_HOSTS.has(target.hostname);
+      !target.username &&
+      !target.password &&
+      ALLOWED_POST_LOGIN_ORIGINS.has(target.origin);
     const allowedLocalOrigin =
       target.protocol === "http:" &&
       (target.hostname === "localhost" || target.hostname === "127.0.0.1") &&
