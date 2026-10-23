@@ -8,7 +8,9 @@ jest.mock('../../src/middleware/auth', () => ({
 import { verifyIdentityAccessToken } from '../../src/middleware/auth';
 import { requireAdmin } from '../../src/middleware/admin';
 
-const verifyMock = verifyIdentityAccessToken as jest.MockedFunction<typeof verifyIdentityAccessToken>;
+const verifyMock = verifyIdentityAccessToken as jest.MockedFunction<
+  typeof verifyIdentityAccessToken
+>;
 
 function makeResponse() {
   const res = {
@@ -39,7 +41,11 @@ describe('requireAdmin with ProIdentity claims', () => {
     const res = makeResponse();
     const next = jest.fn();
 
-    await requireAdmin(makeRequest() as Request, res as unknown as Response, next as unknown as NextFunction);
+    await requireAdmin(
+      makeRequest() as Request,
+      res as unknown as Response,
+      next as unknown as NextFunction,
+    );
 
     expect(res.statusCode).toBe(401);
     expect(next).not.toHaveBeenCalled();
@@ -54,14 +60,24 @@ describe('requireAdmin with ProIdentity claims', () => {
       modules: ['PROCV', 'PROJOBS'],
     });
 
-    const req = makeRequest('Bearer signed-token') as Request & { user?: { id: string; email: string; role: string } };
+    const req = makeRequest('Bearer signed-token') as Request & {
+      user?: { id: string; email: string; role: string };
+    };
     const res = makeResponse();
     const next = jest.fn();
 
-    await requireAdmin(req, res as unknown as Response, next as unknown as NextFunction);
+    await requireAdmin(
+      req,
+      res as unknown as Response,
+      next as unknown as NextFunction,
+    );
 
     expect(res.statusCode).toBe(200);
-    expect(req.user).toEqual({ id: 'identity-user-1', email: 'admin@example.test', role: 'admin' });
+    expect(req.user).toEqual({
+      id: 'identity-user-1',
+      email: 'admin@example.test',
+      role: 'admin',
+    });
     expect(next).toHaveBeenCalledTimes(1);
   });
 
@@ -75,7 +91,12 @@ describe('requireAdmin with ProIdentity claims', () => {
 
     const res = makeResponse();
     const next = jest.fn();
-    await requireAdmin(makeRequest('Bearer signed-token'), res as unknown as Response, next as unknown as NextFunction);
+
+    await requireAdmin(
+      makeRequest('Bearer signed-token'),
+      res as unknown as Response,
+      next as unknown as NextFunction,
+    );
 
     expect(res.statusCode).toBe(403);
     expect(next).not.toHaveBeenCalled();
@@ -91,7 +112,12 @@ describe('requireAdmin with ProIdentity claims', () => {
 
     const res = makeResponse();
     const next = jest.fn();
-    await requireAdmin(makeRequest('Bearer signed-token'), res as unknown as Response, next as unknown as NextFunction);
+
+    await requireAdmin(
+      makeRequest('Bearer signed-token'),
+      res as unknown as Response,
+      next as unknown as NextFunction,
+    );
 
     expect(res.statusCode).toBe(403);
     expect(next).not.toHaveBeenCalled();
@@ -104,7 +130,11 @@ describe('requireAdmin with ProIdentity claims', () => {
     const res = makeResponse();
     const next = jest.fn();
 
-    await requireAdmin(makeRequest('Bearer expired-token'), res as unknown as Response, next as unknown as NextFunction);
+    await requireAdmin(
+      makeRequest('Bearer expired-token'),
+      res as unknown as Response,
+      next as unknown as NextFunction,
+    );
 
     expect(res.statusCode).toBe(401);
     expect(next).not.toHaveBeenCalled();
