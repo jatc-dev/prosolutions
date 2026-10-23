@@ -26,14 +26,14 @@ function normalizeEmail(email: string): string {
 
 async function main() {
   const [legacyUsers, identityUsers, owners] = await Promise.all([
-    procv.$queryRaw<BasicUser[]>\`SELECT "id", "email" FROM public."User" ORDER BY "id"\`,
-    identity.$queryRaw<BasicUser[]>\`SELECT "id", "email" FROM public."User" ORDER BY "id"\`,
-    procv.$queryRaw<OwnerCount[]>\`
+    procv.$queryRaw<BasicUser[]>`SELECT "id", "email" FROM public."User" ORDER BY "id"`,
+    identity.$queryRaw<BasicUser[]>`SELECT "id", "email" FROM public."User" ORDER BY "id"`,
+    procv.$queryRaw<OwnerCount[]>`
       SELECT "userId", COUNT(*)::int AS count
       FROM public."CV"
       GROUP BY "userId"
       ORDER BY "userId"
-    \`,
+    `,
   ]);
 
   const identityByEmail = new Map(identityUsers.map((user) => [normalizeEmail(user.email), user]));
@@ -99,18 +99,18 @@ async function main() {
 
   await procv.$transaction(async (tx) => {
     for (const change of ownersToReassign) {
-      const updated = await tx.$executeRaw\`
+      const updated = await tx.$executeRaw`
         UPDATE public."CV"
         SET "userId" = ${change.newId}
         WHERE "userId" = ${change.oldId}
-      \`;
+      `;
       if (Number(updated) !== change.count) {
         throw new Error('CV ownership count changed during reconciliation; transaction rolled back.');
       }
     }
   });
 
-  const remainingLegacyOwners = await procv.$queryRaw<Array<{ count: number }>>\`
+  const remainingLegacyOwners = await procv.$queryRaw<Array<{ count: number }>>`
     SELECT COUNT(*)::int AS count
     FROM public."CV" cv
     WHERE EXISTS (
@@ -119,7 +119,7 @@ async function main() {
       AND NOT EXISTS (
         SELECT 1 FROM public."User" identity_user WHERE identity_user."id" = cv."userId"
       )
-  \`;
+  `;
 
   if (Number(remainingLegacyOwners[0]?.count ?? 0) > 0) {
     throw new Error('Post-update verification detected CV owners still linked to legacy-only IDs.');
