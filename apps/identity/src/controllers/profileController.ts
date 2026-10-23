@@ -168,7 +168,7 @@ export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
   if (!userId || !module) {
     return res.status(400).json({ message: 'userId and module are required' });
   }
-  if (!VALID_MODULES.includes(module as (typeof VALID_MODULES)[number])) {
+  if (!isValidModule(module)) {
     return res.status(400).json({ message: 'Unknown module' });
   }
   if (userId === req.userId) {
@@ -185,7 +185,7 @@ export async function revokeModuleAccess(req: IdentityRequest, res: Response) {
 
   try {
     const result = await prisma.moduleAccess.updateMany({
-      where: { userId, module: module as (typeof VALID_MODULES)[number] },
+      where: { userId, module },
       data: { active: false },
     });
 
