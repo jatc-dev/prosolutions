@@ -19,14 +19,14 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ requiresVerification?: boolean } | void>;
-  signInWithToken: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   setAccessToken: (token: string | null) => void;
   validateSession: () => Promise<void>;
 }
 
-const LOCAL_STORAGE_KEY = "procv_auth";
+const SESSION_STORAGE_KEY = "procv_auth";
+const LEGACY_LOCAL_STORAGE_KEY = "procv_auth";
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 const IDENTITY_ME_URL = `${IDENTITY_AUTH_URL}/me`;
 
@@ -63,36 +63,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error("Login response did not include an access token and user");
     }
 
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken }));
     api.setToken(accessToken);
     set({ user, accessToken, isAuthenticated: true });
   },
 
-  signInWithToken: async (accessToken) => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken }));
-    api.setToken(accessToken);
-    try {
-      const response = await fetch(IDENTITY_ME_URL, {
-        method: "GET",
-        credentials: "include",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!response.ok) {
-        throw new Error("Unable to validate the supplied access token");
-      }
-      const data = await response.json();
-      const user = data?.user ?? null;
-      if (!user) {
-        throw new Error("Identity response did not include a user");
-      }
-      set({ user, accessToken, isAuthenticated: true });
-    } catch (error) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      api.setToken(null);
-      set({ user: null, accessToken: null, isAuthenticated: false });
-      throw error;
-    }
-  },
 
   logout: async () => {
     try {
@@ -103,19 +78,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Ignore errors during logout
     }
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
     api.setToken(null);
     set({ user: null, accessToken: null, isAuthenticated: false });
   },
 
   refreshToken: async () => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
         if (!parsed?.accessToken) throw new Error("Stored session does not contain an access token");
       } catch {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
         api.setToken(null);
         set({ user: null, accessToken: null, isAuthenticated: false });
       }
@@ -148,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error("Identity response did not include a user");
       }
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken: newAccessToken }));
       api.setToken(newAccessToken);
       set({ user, accessToken: newAccessToken, isAuthenticated: true });
     } catch {
@@ -190,7 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { validateSession, refreshToken, setAccessToken } = useAuthStore();
 
   useEffect(() => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_LOCAL_STORAGE_KEY);
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (!stored) {
       refreshToken().catch(() => {}).finally(() => useAuthStore.setState({ loading: false }));
       return;
@@ -206,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useAuthStore.setState({ loading: false });
       }
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
       useAuthStore.setState({ loading: false });
     }
   }, [validateSession, refreshToken, setAccessToken]);
