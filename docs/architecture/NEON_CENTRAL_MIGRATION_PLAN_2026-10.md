@@ -22,6 +22,10 @@ Use one Neon project as the central PostgreSQL platform, with **three separate d
 
 A shared Neon project is a platform/accounting boundary, **not** a reason to combine module data or reuse a privileged database role. The databases must not use cross-database foreign keys; module APIs validate ProIdentity JWTs and authorize each request locally.
 
+### Free-plan capacity
+
+Neon's official [Free plan announcement (October 2, 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project) lists 1 GB of PostgreSQL storage, 100 CU-hours/month, 5 GB of monthly public egress, and 10 branches per project. A branch can contain multiple databases ([Neon API reference](https://api-docs.neon.tech/reference/createprojectbranchdatabase)). The storage, compute and egress allowances are **per project**, not per database; all three module databases will share those budgets. This is suitable for a controlled migration/test phase, but production viability depends on combined database size, request volume, and compute uptime. Measure before committing to a permanent all-production cutover, and monitor usage to avoid Free-plan suspension at a quota limit.
+
 Use separate non-owner login roles per application, with only the required database/schema/table/function privileges. The login used by an app must not be a database owner, superuser, or have `BYPASSRLS`. Keep an administrative/migration role out of runtime configuration. Verify Neon role membership and actual effective privileges before use; do not rely on a role name alone.
 
 ## Current repository findings
