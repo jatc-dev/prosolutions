@@ -46,7 +46,7 @@ export function signAccessToken(payload: {
       modules: payload.modules,
     },
     config.jwtSecret,
-    { ...ACCESS_TOKEN_OPTIONS, subject: payload.sub },
+    ACCESS_TOKEN_OPTIONS,
   );
 }
 
@@ -54,7 +54,7 @@ export function signRefreshToken(payload: { sub: string; jti: string }): string 
   return jwt.sign(
     { sub: payload.sub, jti: payload.jti },
     config.jwtSecret,
-    { ...REFRESH_TOKEN_OPTIONS, subject: payload.sub, jwtid: payload.jti },
+    REFRESH_TOKEN_OPTIONS,
   );
 }
 
