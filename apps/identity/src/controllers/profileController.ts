@@ -218,7 +218,7 @@ export async function createModule(req: IdentityRequest, res: Response) {
 
 export async function updateModule(req: IdentityRequest, res: Response) {
   const { code } = req.params;
-  const { name, description, baseUrl, apiAudience, enabled, defaultForNewUsers, defaultForAdmins, displayOrder } = req.body ?? {};
+  const { name, description, baseUrl, apiAudience, displayOrder } = req.body ?? {};
   const data: Record<string, unknown> = {};
 
   if (name !== undefined) {
