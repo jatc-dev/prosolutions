@@ -25,8 +25,6 @@ const AuditLogs = lazy(() => import("./pages/admin/AuditLogs").then((m) => ({ de
 const LandingPageManagement = lazy(() =>
   import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
 );
-const ProCVHomePage = lazy(() => import("./modules/procv/pages/ProCVHomePage").then((m) => ({ default: m.ProCVHomePage })));
-const JobsPage = lazy(() => import("./modules/projobs/pages/JobsPage").then((m) => ({ default: m.JobsPage })));
 
 function RedirectToProsolutions({ path }: { path: string }) {
   useEffect(() => {
