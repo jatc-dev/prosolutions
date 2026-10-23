@@ -1,25 +1,25 @@
 import prisma from '../prismaClient';
 import { logger } from './logger';
 
-export interface AuditLogData {
-  adminId: string;
-  adminEmail: string;
+interface AuditLogData {
+  actorId: string;
   action: string;
-  resource: string;
+  resourceType: string;
   resourceId?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
 }
 
+/** Writes module-local audit events using the stable ProIdentity subject. */
 export class AuditLogger {
   static async log(data: AuditLogData): Promise<void> {
     try {
       await prisma.auditLog.create({
         data: {
-          userId: data.adminId,
+          userId: data.actorId,
           action: data.action,
-          resourceType: data.resource,
+          resourceType: data.resourceType,
           resourceId: data.resourceId,
           details: data.details ? JSON.stringify(data.details) : undefined,
           ipAddress: data.ipAddress,
@@ -33,40 +33,19 @@ export class AuditLogger {
     }
   }
 
-  static async logUserAction(
-    adminId: string,
-    adminEmail: string,
-    action: string,
-    userId: string,
-    details?: Record<string, any>,
-    req?: any,
-  ): Promise<void> {
-    await this.log({
-      adminId,
-      adminEmail,
-      action,
-      resource: 'user',
-      resourceId: userId,
-      details,
-      ipAddress: req?.ip || req?.connection?.remoteAddress,
-      userAgent: req?.headers?.['user-agent'],
-    });
-  }
-
   static async logAdminAction(
-    adminId: string,
-    adminEmail: string,
+    actorId: string,
+    _actorEmail: string,
     action: string,
-    resource: string,
+    resourceType: string,
     resourceId?: string,
     details?: Record<string, any>,
     req?: any,
   ): Promise<void> {
     await this.log({
-      adminId,
-      adminEmail,
+      actorId,
       action,
-      resource,
+      resourceType,
       resourceId,
       details,
       ipAddress: req?.ip || req?.connection?.remoteAddress,
