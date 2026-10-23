@@ -42,8 +42,8 @@ export const config = {
   port: getPort(),
   identityUrl: getIdentityUrl(),
   jwtSecret: getJwtSecret(),
-  issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.dev',
-  audience: process.env.IDENTITY_AUDIENCE || 'projobs-api',
+  issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
+  audience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
 };
