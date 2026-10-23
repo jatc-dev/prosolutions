@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { useAuth } from "../../stores/authStore";
 import { identityAuthApiUrl } from "../../lib/identityUrl";
 
@@ -92,7 +93,7 @@ const labelClass = "mb-1.5 block text-sm font-medium text-slate-700 dark:text-sl
 const buttonClass = "inline-flex items-center justify-center rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function UserManagement() {
-  const { accessToken } = useAuth();
+  const { accessToken, user: currentUser } = useAuth();
   const [tab, setTab] = useState<Tab>("users");
   const [users, setUsers] = useState<IdentityUser[]>([]);
   const [catalog, setCatalog] = useState<ModuleInfo[]>([]);
@@ -171,6 +172,16 @@ export function UserManagement() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateUser = async (user: IdentityUser, values: { role?: string; isActive?: boolean }) => {
+    await withMutation(
+      () => requestIdentity(`/api/modules/admin/users/${encodeURIComponent(user.id)}`, accessToken!, {
+        method: "PATCH",
+        body: JSON.stringify(values),
+      }),
+      `Se actualizó la cuenta de ${user.email}.`,
+    );
   };
 
   const toggleAccess = async (user: IdentityUser, module: ModuleInfo) => {
@@ -281,6 +292,7 @@ export function UserManagement() {
                   <tr>
                     <th className="px-5 py-4">Cuenta</th>
                     <th className="px-5 py-4">Estado</th>
+                    <th className="px-5 py-4">Control central</th>
                     <th className="px-5 py-4">Último acceso</th>
                     {sortedCatalog.map((module) => <th className="px-4 py-4 text-center" key={module.code}>{module.name}</th>)}
                   </tr>
@@ -298,13 +310,29 @@ export function UserManagement() {
                           {!user.isActive ? "Inactiva" : user.emailVerified ? "Verificada" : "Pendiente"}
                         </span>
                       </td>
+                      <td className="px-5 py-4">
+                        <div className="flex min-w-[155px] flex-col gap-2">
+                          <label className="sr-only" htmlFor={`role-${user.id}`}>Rol de ${user.email}</label>
+                          <select id={`role-${user.id}`} className={inputClass} value={user.role} disabled={saving || user.id === currentUser?.id}
+                            onChange={(event) => void updateUser(user, { role: event.target.value })}>
+                            <option value="user">Usuario</option>
+                            <option value="admin">Administrador</option>
+                          </select>
+                          <button type="button" disabled={saving || user.id === currentUser?.id}
+                            onClick={() => void updateUser(user, { isActive: !user.isActive })}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${user.isActive ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-200" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"}`}>
+                            {user.isActive ? "Desactivar cuenta" : "Activar cuenta"}
+                          </button>
+                          {user.id === currentUser?.id && <span className="text-[10px] text-slate-400">Tu rol y tu cuenta no se pueden cambiar aquí.</span>}
+                        </div>
+                      </td>
                       <td className="px-5 py-4 text-slate-500 dark:text-slate-400">{formatDate(user.lastLoginAt)}</td>
                       {sortedCatalog.map((module) => {
                         const grant = user.moduleAccess.find((entry) => entry.moduleCode === module.code);
                         const active = hasActiveGrant(grant);
                         return (
                           <td className="px-4 py-4 text-center" key={module.code}>
-                            <button type="button" disabled={saving || (!active && !module.enabled) || !user.isActive}
+                            <button type="button" disabled={saving || (!active && !module.enabled)}
                               onClick={() => void toggleAccess(user, module)}
                               title={!module.enabled && !active ? "Activa el módulo en el catálogo antes de conceder acceso" : active ? "Revocar acceso" : "Conceder acceso"}
                               className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${active ? "bg-emerald-100 text-emerald-800 hover:bg-rose-100 hover:text-rose-800 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-rose-950/60" : "bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 dark:bg-slate-800 dark:text-slate-300"}`}>
@@ -316,7 +344,7 @@ export function UserManagement() {
                       })}
                     </tr>
                   ))}
-                  {users.length === 0 && <tr><td colSpan={3 + sortedCatalog.length} className="px-5 py-12 text-center text-slate-500">No se encontraron cuentas.</td></tr>}
+                  {users.length === 0 && <tr><td colSpan={4 + sortedCatalog.length} className="px-5 py-12 text-center text-slate-500">No se encontraron cuentas.</td></tr>}
                 </tbody>
               </table>
             </div>
