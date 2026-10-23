@@ -48,6 +48,30 @@ Use separate non-owner login roles per application, with only the required datab
 - It creates `projobs_saved_jobs` and `projobs_applications`, with forced RLS and a `projobs_api` NOLOGIN role. The runtime adapter uses transaction-local role and verified JWT subject context.
 - PR #53 is still open/draft; its PostgreSQL CI tests against ephemeral PostgreSQL are not evidence that a real Neon connection or deployed API works. Keep it unmerged until the Neon-specific integration and authenticated end-to-end tests pass.
 
+### Read-only source inventory (2026-10-23)
+
+A metadata-only read of the currently connected Supabase projects returned the following exact table counts and approximate database sizes. No row contents, emails, CV text, tokens, or passwords were retrieved. Counts can change; repeat this inventory immediately before any export.
+
+| Source | Table | Rows at inventory time |
+| --- | --- | ---: |
+| ProCV | `CV` | 9 |
+| ProCV | `CVVersion` | 18 |
+| ProCV | `CVAtsAnalysis` | 3 |
+| ProCV | `PlatformSetting` | 5 |
+| ProCV | `AuditLog` | 0 |
+| ProIdentity | `User` | 7 |
+| ProIdentity | `Session` | 58 |
+| ProIdentity | `PasswordResetToken` | 0 |
+| ProIdentity | `EmailVerificationToken` | 1 |
+| ProIdentity | `ProfessionalProfile` | 6 |
+| ProIdentity | `ModuleAccess` | 22 |
+| ProIdentity | `AuditLog` | 0 |
+
+Reported database sizes were approximately 16 MB for ProCV and 11 MB for ProIdentity. The data volume appears small enough for a controlled export/import test, but this is not a backup or proof that the databases are identical to repository schemas. The live ProCV tables currently have RLS enabled. Supabase project migration history also contains provider-specific hardening migrations, so the repo Prisma history alone is not a full inventory of live database configuration.
+
+**Session decision required before Identity cutover:** ProIdentity currently has 58 session rows. Migration must either preserve still-valid refresh-session state and the matching signing configuration, or intentionally revoke sessions and communicate the resulting re-login. Do not silently discard or copy sessions without verifying token expiry/revocation semantics. ProCV's current live schema has no local `User`/`Session` tables and should keep that boundary.
+
+
 ## Provisioning plan (manual Neon-console/SQL step will be requested later)
 
 1. Keep the existing Neon project and its default branch; do not install Neon app scaffolding or create a second project.
