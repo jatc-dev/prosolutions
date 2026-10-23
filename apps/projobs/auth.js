@@ -176,48 +176,57 @@
       }
     });
 
-    // Manejar botones de postular (apply)
+    // Postular siempre debe permitir continuar a la oferta pública. Si hay sesión,
+    // registramos la intención de continuar en el sitio externo sin bloquear el enlace.
     document.querySelectorAll("[data-action='apply']").forEach((btn) => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        if (!authed) {
-          window.proJobsAuth.login();
+      btn.onclick = async (e) => {
+        const rawUrl = btn.dataset.jobUrl || btn.getAttribute("href") || "";
+        let destination;
+        try {
+          destination = new URL(rawUrl, window.location.href);
+          if (!["https:", "http:"].includes(destination.protocol)) throw new Error("Invalid protocol");
+        } catch {
+          e.preventDefault();
+          alert("El enlace de esta oferta no es válido.");
           return;
         }
+
+        if (!authed) return; // El enlace nativo abre la oferta sin exigir una cuenta.
+
+        e.preventDefault();
         const jobId = btn.dataset.jobId || "";
-        const jobUrl = btn.dataset.jobUrl || "";
         const jobTitle = btn.dataset.jobTitle || "";
         const company = btn.dataset.company || "";
-        fetch(`${PROJOBS_API_URL}/api/applications`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ jobId, jobUrl, jobTitle, company }),
-        })
-          .then((r) => {
-            if (r.status === 401) {
-              clearStoredToken();
-              window.location.reload();
-              return;
-            }
-            return r.json();
-          })
-          .then((data) => {
-            if (data?.message) {
-              alert(data.message);
-            }
-          })
-          .catch(() => {
-            alert("No se pudo crear la postulación. Intenta de nuevo.");
+        try {
+          const response = await fetch(`${PROJOBS_API_URL}/api/applications`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              jobId,
+              jobUrl: destination.toString(),
+              jobTitle,
+              company,
+            }),
           });
+          if (response.status === 401) {
+            clearStoredToken();
+            accessToken = null;
+            userProfile = null;
+            updateAuthUI();
+          }
+        } catch {
+          // El registro es secundario: un fallo de API no debe impedir postularse.
+        }
+        window.location.assign(destination.toString());
       };
     });
 
-    // Manejar botones de guardar empleo (save)
+    // Guardar una oferta sí es una función personal y requiere una sesión válida.
     document.querySelectorAll("[data-action='save-job']").forEach((btn) => {
-      btn.onclick = (e) => {
+      btn.onclick = async (e) => {
         e.preventDefault();
         if (!authed) {
           window.proJobsAuth.login();
@@ -227,30 +236,34 @@
         const jobUrl = btn.dataset.jobUrl || "";
         const jobTitle = btn.dataset.jobTitle || "";
         const company = btn.dataset.company || "";
-        fetch(`${PROJOBS_API_URL}/api/saved-jobs`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ jobId, jobUrl, jobTitle, company }),
-        })
-          .then((r) => {
-            if (r.status === 401) {
-              clearStoredToken();
-              window.location.reload();
-              return;
-            }
-            return r.json();
-          })
-          .then((data) => {
-            if (data?.message) {
-              alert(data.message);
-            }
-          })
-          .catch(() => {
-            alert("No se pudo guardar el empleo. Intenta de nuevo.");
+        const originalLabel = btn.textContent;
+        btn.setAttribute("aria-busy", "true");
+        btn.disabled = true;
+        try {
+          const response = await fetch(`${PROJOBS_API_URL}/api/saved-jobs`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ jobId, jobUrl, jobTitle, company }),
           });
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 401) {
+            clearStoredToken();
+            window.location.reload();
+            return;
+          }
+          if (!response.ok) throw new Error(data.message || "Save failed");
+          btn.textContent = "✓ Guardado";
+          btn.setAttribute("aria-pressed", "true");
+        } catch (error) {
+          alert(error?.message || "No se pudo guardar el empleo. Intenta de nuevo.");
+          btn.textContent = originalLabel;
+        } finally {
+          btn.disabled = false;
+          btn.removeAttribute("aria-busy");
+        }
       };
     });
   }
