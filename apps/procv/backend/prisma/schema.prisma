@@ -33,7 +33,7 @@ model CV {
   data        String          @default("{}")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  identityAccount IdentityAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityAccount IdentityAccount @relation(fields: [userId], references: [id], onDelete: Restrict)
   atsAnalyses CVAtsAnalysis[]
 
   @@index([userId])
