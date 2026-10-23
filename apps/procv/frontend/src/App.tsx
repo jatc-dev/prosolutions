@@ -62,6 +62,8 @@ function RouteFallback() {
 
 function ModuleAccessRequired() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const isSpanish = (i18n.resolvedLanguage || i18n.language || "es").toLowerCase().startsWith("es");
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-16 dark:bg-slate-950">
@@ -71,20 +73,31 @@ function ModuleAccessRequired() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v4m0 4h.01M10.3 3.86 1.82 18.1A2 2 0 003.54 21h16.92a2 2 0 001.72-2.9L13.7 3.86a2 2 0 00-3.4 0z" />
           </svg>
         </div>
-        <h1 className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">Acceso a ProCV no habilitado</h1>
+        <h1 className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">
+          {isSpanish ? "Acceso a ProCV no habilitado" : "ProCV access is not enabled"}
+        </h1>
         <p className="mt-3 text-slate-600 dark:text-slate-300">
-          La cuenta {user?.email ? <strong>{user.email}</strong> : "actual"} está autenticada en ProSolutions, pero Identity no ha concedido el permiso de módulo <code>PROCV</code>.
-          No necesitas crear otra cuenta ni restablecer tu contraseña.
+          {isSpanish ? "La cuenta " : "The account "}
+          {user?.email ? <strong>{user.email}</strong> : (isSpanish ? "actual" : "currently signed in")}
+          {isSpanish
+            ? " está autenticada en ProSolutions, pero Identity no ha concedido el permiso de módulo "
+            : " is authenticated with ProSolutions, but Identity has not granted the "}
+          <code>PROCV</code>
+          {isSpanish
+            ? ". No necesitas crear otra cuenta ni restablecer tu contraseña."
+            : " module entitlement. You do not need to create another account or reset your password."}
         </p>
         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-          Abre el portal central para consultar tus módulos o pide a un administrador que revise tu permiso.
+          {isSpanish
+            ? "Abre el portal central para consultar tus módulos o pide a un administrador que revise tu permiso."
+            : "Open the central portal to review your modules or ask an administrator to check your entitlement."}
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <a href={PROSOLUTIONS_URL + "/dashboard"} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
-            Ir al portal ProSolutions
+            {isSpanish ? "Ir al portal ProSolutions" : "Go to ProSolutions portal"}
           </a>
-          <a href="mailto:soporte@prosolutions.page" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
-            Contactar soporte
+          <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+            {isSpanish ? "Volver al inicio" : "Back to home"}
           </a>
         </div>
       </section>
