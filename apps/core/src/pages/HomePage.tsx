@@ -11,28 +11,15 @@ export function HomePage() {
 
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Si llegamos por callback de auth (redirect_uri o /auth/callback),
-  // leer token guardado en sessionStorage y continuar al dashboard.
-  const searchParams = new URLSearchParams(window.location.search);
-  const isAuthCallback = searchParams.get("auth_callback") === "1" || window.location.pathname === "/auth/callback";
-  const storedToken = sessionStorage.getItem("pro_identity_token");
-  const hashToken = window.location.hash.replace(/^#access_token=/, "");
-  const tokenFromCallback = hashToken !== window.location.hash ? hashToken : null;
-  const callbackToken = tokenFromCallback || storedToken;
-
-  if (isAuthCallback && callbackToken) {
-    sessionStorage.removeItem("pro_identity_token");
-    const procvUrl =
-      import.meta.env.VITE_PROCV_URL ||
-      "https://procv.prosolutions.page";
-    window.location.href = `${procvUrl}/dashboard?access_token=${encodeURIComponent(callbackToken)}`;
-    return null;
-  }
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
 
   const handleLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoginError(null);
+    setVerificationEmail(null);
+    setResendMessage(null);
     setIsSubmitting(true);
 
     const form = event.currentTarget as HTMLFormElement;
@@ -50,30 +37,23 @@ export function HomePage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        setLoginError(errorData.message || copy.auth.loginError);
+        const message = errorData.message || copy.auth.loginError;
+        setLoginError(message);
+        if (response.status === 403 && /verif|verify|correo/i.test(message)) {
+          setVerificationEmail(email);
+        }
         return;
       }
 
       const data = await response.json();
-      // Sesión activa mediante cookie HTTP-only (.prosolutions.page)
-      setIsSubmitting(false);
-
-        // Si se especificó un redirect_uri (por ejemplo desde ProCV o ProJobs), redirigir allí pasando el token
-        const searchParams = new URLSearchParams(window.location.search);
-        const redirectUri = searchParams.get("redirect_uri") || searchParams.get("redirect");
-
-        if (redirectUri) {
-          try {
-            const target = new URL(redirectUri, window.location.origin);
-            if (target.protocol === "http:" || target.protocol === "https:") {
-              target.searchParams.set("auth_callback", "1");
-              if (data.accessToken) {
-                target.hash = `access_token=${encodeURIComponent(data.accessToken)}`;
-              }
-              window.location.href = target.toString();
-              return;
-            }
-          } catch {
+      if (!data.accessToken) {
+        setLoginError("La autenticación no devolvió una sesión válida. Intenta de nuevo.");
+        return;
+      }
+      sessionStorage.setItem("pro_identity_token", data.accessToken);
+      window.location.assign("/dashboard");
+      return;
+    } catch {
             // Fall through to the default ProCV redirect.
           }
         }
@@ -94,6 +74,28 @@ export function HomePage() {
       setLoginError(copy.auth.loginError);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!verificationEmail) return;
+    setIsResending(true);
+    setResendMessage(null);
+    try {
+      const response = await fetch(`${IDENTITY_API_URL}/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      const data = await response.json().catch(() => ({}));
+      setResendMessage(response.ok
+        ? "Si la cuenta existe y aún no está verificada, enviaremos un nuevo enlace. Revisa también el correo no deseado."
+        : data.message || "No se pudo solicitar otro enlace. Espera un minuto e inténtalo de nuevo.");
+    } catch {
+      setResendMessage("No se pudo conectar con el servicio de correo. Inténtalo de nuevo.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -200,9 +202,16 @@ export function HomePage() {
 
                 {loginError && (
                   <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50">
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      {loginError}
-                    </p>
+                    <p className="text-sm text-red-600 dark:text-red-400">{loginError}</p>
+                  </div>
+                )}
+                {verificationEmail && (
+                  <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-900/20">
+                    <button type="button" onClick={handleResendVerification} disabled={isResending}
+                      className="text-sm font-semibold text-amber-800 underline disabled:opacity-60 dark:text-amber-200">
+                      {isResending ? "Enviando..." : "Reenviar correo de verificación"}
+                    </button>
+                    {resendMessage && <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">{resendMessage}</p>}
                   </div>
                 )}
 
