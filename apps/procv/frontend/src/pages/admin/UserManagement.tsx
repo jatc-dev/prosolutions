@@ -37,7 +37,7 @@ interface UsersResponse {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
-const IDENTITY_BASE_URL = identityAuthApiUrl().replace(/\\/api\\/auth\\/?$/i, "");
+const IDENTITY_BASE_URL = identityAuthApiUrl().replace(/\/api\/auth\/?$/i, "");
 const FALLBACK_MODULES: ModuleName[] = [
   "PROCV",
   "PROJOBS",
