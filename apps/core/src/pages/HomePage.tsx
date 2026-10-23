@@ -24,8 +24,8 @@ export function HomePage() {
 
     const form = event.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "");
 
     try {
       const response = await fetch(`${IDENTITY_API_URL}/login`, {
@@ -50,26 +50,10 @@ export function HomePage() {
         setLoginError("La autenticación no devolvió una sesión válida. Intenta de nuevo.");
         return;
       }
+      // Keep the short-lived access token in this origin's session only.
+      // The refresh cookie is shared by the platform's first-party subdomains.
       sessionStorage.setItem("pro_identity_token", data.accessToken);
       window.location.assign("/dashboard");
-      return;
-    } catch {
-            // Fall through to the default ProCV redirect.
-          }
-        }
-
-        // Redirigir a ProCV Dashboard con el token de acceso
-        const procvUrl =
-          import.meta.env.VITE_PROCV_URL ||
-          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-            ? "http://localhost:5173"
-            : "https://procv.prosolutions.page");
-
-        if (data.accessToken) {
-          window.location.href = `${procvUrl}/auth/callback#access_token=${encodeURIComponent(data.accessToken)}`;
-        } else {
-          window.location.href = `${procvUrl}/dashboard`;
-        }
     } catch {
       setLoginError(copy.auth.loginError);
     } finally {
