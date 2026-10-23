@@ -66,11 +66,7 @@ describe('requireAdmin with ProIdentity claims', () => {
     const res = makeResponse();
     const next = jest.fn();
 
-    await requireAdmin(
-      req,
-      res as unknown as Response,
-      next as unknown as NextFunction,
-    );
+    await requireAdmin(req, res as unknown as Response, next as unknown as NextFunction);
 
     expect(res.statusCode).toBe(200);
     expect(req.user).toEqual({
