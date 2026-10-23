@@ -64,9 +64,26 @@
       }
 
       const data = await response.json();
-      return data;
+      return data.user || data;
     } catch {
-      clearStoredToken();
+      return null;
+    }
+  }
+
+  async function refreshAccessToken() {
+    try {
+      const response = await fetch(`${IDENTITY_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (!data.accessToken) return null;
+      setStoredToken(data.accessToken);
+      return data.accessToken;
+    } catch {
+      // The module remains usable anonymously when there is no active session.
       return null;
     }
   }
@@ -76,9 +93,20 @@
 
     if (accessToken) {
       userProfile = await validateToken(accessToken);
-      if (!userProfile) {
-        accessToken = null;
+    }
+
+    // First visit to this subdomain has no localStorage/sessionStorage token;
+    // bootstrap from ProIdentity's HttpOnly refresh cookie instead of URL tokens.
+    if (!userProfile) {
+      accessToken = await refreshAccessToken();
+      if (accessToken) {
+        userProfile = await validateToken(accessToken);
       }
+    }
+
+    if (!userProfile) {
+      accessToken = null;
+      clearStoredToken();
     }
 
     updateAuthUI();
@@ -93,12 +121,19 @@
         const loginUrl = window.__PROJOBS_LOGIN_URL__ || "https://prosolutions.page/login";
         window.location.href = `${loginUrl}?redirect_uri=${redirectUri}`;
       },
-      logout: () => {
-        clearStoredToken();
-        accessToken = null;
-        userProfile = null;
-        updateAuthUI();
-        window.location.reload();
+      logout: async () => {
+        try {
+          await fetch(`${IDENTITY_URL}/api/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } finally {
+          clearStoredToken();
+          accessToken = null;
+          userProfile = null;
+          updateAuthUI();
+          window.location.reload();
+        }
       },
     };
   }
