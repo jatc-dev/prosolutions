@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { config } from '../config';
+import { config } from '../config.js';
 
 export interface ProJobsAuthRequest extends Request {
   userId?: string;
