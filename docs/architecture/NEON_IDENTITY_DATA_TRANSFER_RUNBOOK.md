@@ -32,7 +32,7 @@ Use the connection URLs from their respective provider consoles. Do not put real
 
 ## Mandatory reconciliation gate
 
-**Do not run the transfer against production yet.** The existing script is designed to stop when a target table is populated but differs from the source. This is the correct fail-closed behavior; do not disable or bypass it.
+**Do not run the transfer against production yet.** The script now handles one specifically verified activity-timestamp discrepancy, but production transfer remains gated on review, fresh source-session counts, and application smoke tests. Do not disable or bypass any assertion.
 
 Before any real transfer:
 
@@ -62,7 +62,7 @@ The current script:
 6. Refuses to overwrite, duplicate, or silently reconcile a table that is partially populated or differs from the source, except for the exact timestamp-only case above.
 7. Verifies all counts and content digests again and confirms `proidentity_login` can read the migrated user count.
 
-It preserves IDs, password hashes, sessions, refresh tokens, module entitlements, profiles, and verification/reset token records. It does not alter the Supabase source. Because of the timestamp discrepancy above, the current script is expected to stop and must not be bypassed.
+It preserves IDs, password hashes, sessions, refresh tokens, module entitlements, profiles, and verification/reset token records. It does not alter the Supabase source. The synthetic CI fixture validates the allowed timestamp-only reconciliation; production execution remains a separate, explicitly reviewed step.
 
 ## After a successful run
 
