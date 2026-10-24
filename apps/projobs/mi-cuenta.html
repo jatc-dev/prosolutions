@@ -119,23 +119,22 @@
         open.target = "_blank";
         open.rel = "noopener noreferrer";
         actions.append(open);
-        if (kind === "saved") {
-          const remove = element("button", "danger", "Quitar");
-          remove.type = "button";
-          remove.addEventListener("click", async () => {
-            remove.disabled = true;
-            try {
-              await request("/api/saved-jobs/" + encodeURIComponent(item.job_id), {method:"DELETE"});
-              await loadSaved();
-              status.textContent = "Empleo eliminado de tu lista.";
-              status.classList.remove("error");
-            } catch (error) {
-              showError(error.message || "No se pudo eliminar el empleo.");
-              remove.disabled = false;
-            }
-          });
-          actions.append(remove);
-        }
+        const remove = element("button", "danger", "Quitar");
+        remove.type = "button";
+        remove.addEventListener("click", async () => {
+          remove.disabled = true;
+          try {
+            const endpoint = kind === "saved" ? "/api/saved-jobs/" : "/api/applications/";
+            await request(endpoint + encodeURIComponent(item.job_id), {method:"DELETE"});
+            if (kind === "saved") await loadSaved(); else await loadApplications();
+            status.textContent = kind === "saved" ? "Empleo eliminado de tu lista." : "Actividad eliminada de tu historial.";
+            status.classList.remove("error");
+          } catch (error) {
+            showError(error.message || "No se pudo eliminar el registro.");
+            remove.disabled = false;
+          }
+        });
+        actions.append(remove);
         row.append(info, actions);
         return row;
       }
