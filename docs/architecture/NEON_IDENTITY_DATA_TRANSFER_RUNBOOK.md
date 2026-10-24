@@ -21,6 +21,7 @@ The source includes password hashes, refresh-token/session records, and token ha
 - A Supabase direct database connection URL for ProIdentity.
 - A direct, non-pooled Neon connection URL for the `proidentity` database, using the database owner for the data import.
 - A Neon connection URL for the restricted `proidentity_login` role for post-import verification.
+- Verify `proidentity_login` has no ownership of application objects, no direct elevated role attributes, and no inherited membership in any role with `SUPERUSER`, `CREATEDB`, `CREATEROLE`, `REPLICATION`, or `BYPASSRLS`. The transfer script enforces these checks.
 
 Set these as shell environment variables without displaying them:
 
@@ -38,12 +39,17 @@ Before any real transfer:
 
 1. Recheck source/target schema, row counts, and content digests.
 2. Review the implemented narrowly scoped reconciliation for the one user's `lastLoginAt` and `updatedAt` values. It checks matching User counts/IDs and a digest of all non-activity fields before changing only the two activity timestamps from Supabase. Do not apply a guessed timezone offset.
-3. Require the integration workflow to pass its synthetic timestamp-only fixture and negative cases for non-timestamp drift and extra target users. These are test-only databases, never production.
+3. Require the integration workflow to pass its synthetic timestamp-only fixture and all negative cases: non-timestamp drift, extra target users, multiple users with timestamp drift, unsafe runtime role attributes, and inherited membership in a privileged role. These are test-only databases, never production.
 4. Recheck the current source `Session` count and state; the latest observed 90 sessions are a point-in-time snapshot, not a fixed expected count.
-5. Transfer missing tables in a transaction, then verify row counts and content digests for every table and visibility through `proidentity_login`.
-6. Run authentication, refresh, logout/revocation, and module-entitlement smoke tests against Neon before considering Render cutover.
+5. Confirm the transfer operator has identified the source project/database and target Neon project/database from provider consoles before setting the three connection variables. Never echo or log connection URLs.
+6. Transfer missing tables in a transaction, then verify row counts and content digests for every table and visibility through `proidentity_login`.
+7. Run authentication, refresh rotation, logout/revocation, password-reset session invalidation, cookie/CSRF, and module-entitlement smoke tests against Neon before considering Render cutover.
 
 Any failed assertion blocks the transfer. Do not alter Supabase as part of this procedure.
+
+## Security review finding — cutover blocker
+
+Code review of `apps/identity/src/middleware/auth.ts` found that a valid access JWT is accepted when the refresh-token cookie is absent; session revocation/expiry checks run only when that cookie is present. Because logout revokes the refresh session and clears the cookie but does not revoke already-issued access JWTs, a copied access JWT may remain usable until its JWT expiry. Before production cutover, either change access-token validation to enforce the intended revocation semantics or explicitly accept the short residual access-token lifetime as a documented risk with compensating controls. Add a regression test: login, save access JWT, logout (cookie cleared and session revoked), then call a protected endpoint with only the saved JWT and no refresh cookie; assert the intended security outcome. This finding is separate from data-transfer integrity and must be resolved or formally accepted before changing Render's database connection.
 
 ## Execute — only after the gate above is satisfied and reviewed
 
