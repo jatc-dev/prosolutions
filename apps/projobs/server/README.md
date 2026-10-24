@@ -4,24 +4,24 @@
 
 The ProJobs API uses the PostgreSQL driver directly. ProIdentity remains the authentication authority; the API validates its JWT issuer, audience, expiry and `PROJOBS` module claim before any personal-data route runs. The public job catalog stays static.
 
-This change does not provision a database, apply SQL, add Render environment variables, or deploy an API service. Until a dedicated ProJobs PostgreSQL database is configured, personal routes return a safe HTTP 503 response.
+The Neon project `Prosolutions.page` now contains a dedicated `projobs` database with the migration in `sql/001_projobs_core.sql` applied and a transactional RLS isolation smoke test passed. The ProJobs API service and its Render environment variables are not yet configured; until `DATABASE_URL` is set on a separate API service, personal routes return a safe HTTP 503 response.
 
-## Provisioning a dedicated database
+## Provisioning and runtime role
 
-1. Create a separate PostgreSQL database for ProJobs (Neon is a candidate, not yet provisioned).
-2. Apply `apps/projobs/server/sql/001_projobs_core.sql` with a database administrator. Never run it against ProCV or ProIdentity.
-3. Create a dedicated login role for the API, for example `projobs_runtime`. It must not be a superuser, table owner, or have `BYPASSRLS`.
-4. Grant role membership: `GRANT projobs_api TO projobs_runtime;`. Keep the login credentials server-side only.
-5. Set `DATABASE_URL` on the ProJobs API service. Use the provider's TLS connection string (for example, `sslmode=require`).
-6. Configure `IDENTITY_JWT_SECRET`, `IDENTITY_ISSUER` and `IDENTITY_AUDIENCE` to match ProIdentity. Do not expose these secrets to the static frontend.
-7. Before production enablement, run the RLS isolation SQL tests from PR #55 against a disposable PostgreSQL instance and authenticated API smoke tests.
+1. Use only the Neon database `projobs` for this migration. Never apply it to ProCV or ProIdentity.
+2. Apply `apps/projobs/server/sql/001_projobs_core.sql` with a database administrator when provisioning a fresh environment.
+3. Use the dedicated Neon login role `projobs_login` for the API. It must not be a superuser, table owner, or have `BYPASSRLS`.
+4. The Neon production database already has `GRANT projobs_api TO projobs_login`. For another environment, grant membership to that environment's dedicated login role, e.g. `GRANT projobs_api TO projobs_login;`.
+5. Set `DATABASE_URL` on the ProJobs API service to a TLS connection string for the `projobs_login` role. Never use `neondb_owner` or the legacy `projobs_runtime` role for application traffic.
+6. Configure `IDENTITY_JWT_SECRET`, `IDENTITY_ISSUER=https://identity.prosolutions.page` and `IDENTITY_AUDIENCE=prosolutions-api` to match ProIdentity. Do not expose these secrets to the static frontend.
+7. Before production enablement, run the RLS isolation SQL tests from PR #55 and authenticated API smoke tests against the provider database.
 
 ## How isolation works
 
 Each store operation starts a transaction, switches to the restricted `projobs_api` role, and sets `projobs.user_id` transaction-locally from the verified JWT subject. RLS policies compare that value to the row's `user_id`. The application query intentionally does not accept a user ID from request input for list/delete scope. Transaction-local settings are cleared at transaction end to prevent pooled connections from carrying a previous user's identity.
 
-The runtime role must be granted membership in `projobs_api` and must not own the tables. If role setup is incorrect, operations fail closed rather than bypassing RLS. The API maps database failures to a generic 503 and does not return SQL errors or connection details.
+The runtime login must be granted membership in `projobs_api` and must not own the tables. If role setup is incorrect, operations fail closed rather than bypassing RLS. The API maps database failures to a generic 503 and does not return SQL errors or connection details.
 
 ## Validation
 
-The API test suite covers health, missing/invalid JWTs, missing module entitlement, and the safe 503 path when `DATABASE_URL` is absent. The separate PostgreSQL RLS proof of concept validates row isolation against an ephemeral database. A real provider connection and production credentials have not been tested yet.
+The API test suite covers health, missing/invalid JWTs, missing module entitlement, and the safe 503 path when `DATABASE_URL` is absent. The separate PostgreSQL RLS proof of concept validates row isolation against an ephemeral database. A transactional smoke test against the actual Neon `projobs` database verified that one test user can see its row, another user cannot, and the temporary test row is removed. The deployed API and end-to-end browser flow still need testing.
