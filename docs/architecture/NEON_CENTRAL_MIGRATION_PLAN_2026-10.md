@@ -2,13 +2,13 @@
 
 ## Status and scope
 
-This document plans the move of ProSolutions' PostgreSQL data stores to the newly created Neon project. It is an implementation plan, not a statement that migration or production connectivity has happened.
+This document tracks the move of ProSolutions' PostgreSQL data stores to Neon. Module schemas are now present; ProCV data is migrated and verified; ProIdentity data is only partially transferred; ProJobs schema/RLS are installed. Production application connectivity has not been switched.
 
 **Safety boundaries**
 - Keep the existing Supabase ProCV and ProIdentity projects intact until each cutover is verified and a rollback window has passed.
-- Do not run `neon deploy`, `neon init`, Prisma migrations, or schema SQL against a live database as part of onboarding. Neon-generated app wiring is not the deployment mechanism for this monorepo.
+- Schema setup was performed with reviewed SQL against Neon after validating each migration on a temporary branch. Do not replay schema creation or Prisma history blindly against the already-populated target.
 - Never commit connection strings, passwords, JWT secrets, or production data.
-- Do not merge this plan or change Render services/environment variables until the corresponding test gates pass and the owner explicitly approves production cutover.
+- Supabase remains intact. Do not change Render services/environment variables until Identity data integrity, authentication, module-entitlement and API smoke-test gates pass.
 
 ## Target topology
 
@@ -27,6 +27,14 @@ A shared Neon project is a platform/accounting boundary, **not** a reason to com
 Neon's official [Free plan announcement (October 2, 2026)](https://neon.com/blog/neon-free-plan-1-gb-per-project) lists 1 GB of PostgreSQL storage, 100 CU-hours/month, 5 GB of monthly public egress, and 10 branches per project. A branch can contain multiple databases ([Neon API reference](https://api-docs.neon.tech/reference/createprojectbranchdatabase)). The storage, compute and egress allowances are **per project**, not per database; all three module databases will share those budgets. This is suitable for a controlled migration/test phase, but production viability depends on combined database size, request volume, and compute uptime. Measure before committing to a permanent all-production cutover, and monitor usage to avoid Free-plan suspension at a quota limit.
 
 Use separate non-owner login roles per application, with only the required database/schema/table/function privileges. The login used by an app must not be a database owner, superuser, or have `BYPASSRLS`. Keep an administrative/migration role out of runtime configuration. Verify Neon role membership and actual effective privileges before use; do not rely on a role name alone.
+
+## Migration status (2026-10-24)
+
+- `procv`: schema and data migrated. Counts and content digests match Supabase for `CV` (9), `CVVersion` (18), `CVAtsAnalysis` (3), `PlatformSetting` (5), `AuditLog` (0), and `_prisma_migrations` (9). Four distinct CV owners all match ProIdentity user IDs.
+- `proidentity`: schema and migration history are present. The seven `User` rows were copied and their content digest matches Supabase. `Session` (58), `EmailVerificationToken` (1), `ProfessionalProfile` (6), and `ModuleAccess` (22) remain to be transferred; the guarded script and manual workflow are in PR #58.
+- `projobs`: schema, forced RLS, restricted `projobs_api`, and `projobs_login` membership are present. A transactional smoke test proved row isolation and removed its test row. No user data is expected in these new tables yet.
+- Legacy `*_runtime` roles remain members of `neon_superuser`; do not use them in Render or delete them without a separate dependency review.
+- No Render environment variables or traffic have been changed. The current production applications still use Supabase.
 
 ## Current repository findings
 
