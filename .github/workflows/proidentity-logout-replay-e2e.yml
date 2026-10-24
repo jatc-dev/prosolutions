@@ -1,0 +1,27 @@
+name: ProIdentity logout JWT replay E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proidentity-logout-replay-e2e
+  cancel-in-progress: false
+
+jobs:
+  logout-replay:
+    name: Verify logout revokes saved access JWT
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify production login/logout/JWT replay
+        env:
+          IDENTITY_E2E_BASE_URL: https://identity.prosolutions.page
+          IDENTITY_E2E_EMAIL: ${{ secrets.IDENTITY_E2E_EMAIL }}
+          IDENTITY_E2E_PASSWORD: ${{ secrets.IDENTITY_E2E_PASSWORD }}
+        run: node scripts/e2e/proidentity-logout-replay.mjs
