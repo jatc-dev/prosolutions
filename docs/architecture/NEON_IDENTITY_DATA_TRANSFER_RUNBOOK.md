@@ -7,7 +7,7 @@
 - The target schema and Prisma migration history are present.
 - Seven `User` rows exist in both databases and their stable identity fields match. Six users have identical `lastLoginAt` and `updatedAt` values; one user's two activity timestamps are newer in Supabase than in Neon.
 - Supabase remains the source of truth. The transfer script now permits exactly one narrowly scoped reconciliation: `lastLoginAt` and/or `updatedAt` differ for exactly one existing user, while the full user ID set, row count, and every other User field match. It updates only those two target fields from Supabase inside a transaction, then requires the complete integrity manifests to match. Any other drift is rejected.
-- Read-only audit on 2026-10-24 found 90 source sessions and zero target sessions. All 90 source sessions have future expiry timestamps; 66 are revoked and 24 are not revoked. No session rows had orphaned user references. These counts can change while Supabase remains live, so re-check immediately before any approved transfer.
+- Read-only audit on 2026-10-24 found 97 source sessions and zero target sessions. All 97 source sessions have future expiry timestamps; 72 are revoked and 25 are not revoked. All 97 session IDs are distinct and no session rows had orphaned user references. A fresh read-only target role audit found `proidentity_login` is non-superuser, cannot create databases/roles, has no replication or `BYPASSRLS`, owns zero application objects, and inherits no privileged-role memberships. These are point-in-time observations; re-check immediately before any approved transfer.
 - Other Identity application tables need transfer after the `User` mismatch is safely resolved.
 - No production data was changed by this audit. This runbook does not change Render or switch traffic.
 
@@ -40,7 +40,7 @@ Before any real transfer:
 1. Recheck source/target schema, row counts, and content digests.
 2. Review the implemented narrowly scoped reconciliation for the one user's `lastLoginAt` and `updatedAt` values. It checks matching User counts/IDs and a digest of all non-activity fields before changing only the two activity timestamps from Supabase. Do not apply a guessed timezone offset.
 3. Require the integration workflow to pass its synthetic timestamp-only fixture and all negative cases: non-timestamp drift, extra target users, multiple users with timestamp drift, unsafe runtime role attributes, and inherited membership in a privileged role. These are test-only databases, never production.
-4. Recheck the current source `Session` count and state; the latest observed 90 sessions are a point-in-time snapshot, not a fixed expected count.
+4. Recheck the current source `Session` count and state; the latest observed 97 sessions are a point-in-time snapshot, not a fixed expected count.
 5. Confirm the transfer operator has identified the source project/database and target Neon project/database from provider consoles before setting the three connection variables. Never echo or log connection URLs.
 6. Transfer missing tables in a transaction, then verify row counts and content digests for every table and visibility through `proidentity_login`.
 7. Run authentication, refresh rotation, logout/revocation, password-reset session invalidation, cookie/CSRF, and module-entitlement smoke tests against Neon before considering Render cutover.
