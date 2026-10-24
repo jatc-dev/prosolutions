@@ -7,7 +7,7 @@
 - The target schema and Prisma migration history are present.
 - Seven `User` rows exist in both databases and their stable identity fields match. Six users have identical `lastLoginAt` and `updatedAt` values; one user's two activity timestamps are newer in Supabase than in Neon.
 - Supabase remains the source of truth. The transfer script now permits exactly one narrowly scoped reconciliation: `lastLoginAt` and/or `updatedAt` differ for exactly one existing user, while the full user ID set, row count, and every other User field match. It updates only those two target fields from Supabase inside a transaction, then requires the complete integrity manifests to match. Any other drift is rejected.
-- Read-only audit on 2026-10-24 found 89 source sessions and zero target sessions. All 89 source sessions have future expiry timestamps; 65 are revoked and 24 are not revoked. No session rows had orphaned user references. These counts can change while Supabase remains live, so re-check immediately before any approved transfer.
+- Read-only audit on 2026-10-24 found 90 source sessions and zero target sessions. All 90 source sessions have future expiry timestamps; 66 are revoked and 24 are not revoked. No session rows had orphaned user references. These counts can change while Supabase remains live, so re-check immediately before any approved transfer.
 - Other Identity application tables need transfer after the `User` mismatch is safely resolved.
 - No production data was changed by this audit. This runbook does not change Render or switch traffic.
 
