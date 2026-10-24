@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { afterEach, test } from 'node:test';
+import { after, afterEach, test } from 'node:test';
 import jwt from 'jsonwebtoken';
 import { config } from '../../src/config';
 import prisma from '../../src/prismaClient';
@@ -138,7 +138,7 @@ test('accepts an active session-bound access JWT without requiring the refresh c
   assert.equal(nextCalled, true);
 });
 
-afterEach(() => {
+after(() => {
   (prisma.session as any).findUnique = originalFindUnique;
   (prisma.session as any).update = originalUpdate;
 });
