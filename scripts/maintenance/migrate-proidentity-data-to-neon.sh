@@ -79,6 +79,17 @@ runtime_role="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT
   exit 5
 }
 
+runtime_role_flags="$(psql --no-psqlrc -X -qAt -F '|' "$NEON_IDENTITY_URL" -c "SELECT rolcanlogin, rolsuper, rolcreatedb, rolcreaterole, rolreplication, rolbypassrls FROM pg_catalog.pg_roles WHERE rolname = 'proidentity_login'")"
+[[ "$runtime_role_flags" == "t|f|f|f|f|f" ]] || {
+  printf 'Target role proidentity_login must be LOGIN without SUPERUSER, CREATEDB, CREATEROLE, REPLICATION, or BYPASSRLS. Refusing to transfer data.\n' >&2
+  exit 10
+}
+runtime_owned_objects="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT count(*) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_roles r ON r.oid = c.relowner WHERE r.rolname = 'proidentity_login' AND c.relkind IN ('r','p','v','m','S','f')")"
+[[ "$runtime_owned_objects" == "0" ]] || {
+  printf 'Target role proidentity_login must not own database objects. Refusing to transfer data.\n' >&2
+  exit 11
+}
+
 printf 'Capturing source and target integrity manifests...\n'
 source_manifest="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "$manifest_sql")"
 target_manifest="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$manifest_sql")"
