@@ -1,0 +1,122 @@
+name: PostgreSQL migration readiness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/identity/prisma/**"
+      - "apps/procv/backend/prisma/**"
+      - ".github/workflows/postgres-migration-readiness.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/identity/prisma/**"
+      - "apps/procv/backend/prisma/**"
+      - ".github/workflows/postgres-migration-readiness.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fresh-database-migrations:
+    name: Fresh ProIdentity and ProCV databases
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install monorepo dependencies
+        run: npm ci
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Create isolated module databases
+        run: |
+          psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE proidentity'
+          psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE procv'
+
+      - name: Apply ProIdentity Prisma migration history to an empty database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/proidentity?schema=public
+        run: npx prisma migrate deploy --schema=apps/identity/prisma/schema.prisma
+
+      - name: Apply ProCV Prisma migration history to an empty database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv?schema=public
+        run: npx prisma migrate deploy --schema=apps/procv/backend/prisma/schema.prisma
+
+      - name: Assert final module schema boundaries
+        shell: bash
+        run: |
+          psql -d proidentity -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('"User"') IS NULL
+              OR to_regclass('"Session"') IS NULL
+              OR to_regclass('"PasswordResetToken"') IS NULL
+              OR to_regclass('"EmailVerificationToken"') IS NULL
+              OR to_regclass('"ProfessionalProfile"') IS NULL
+              OR to_regclass('"ModuleAccess"') IS NULL
+              OR to_regclass('"AuditLog"') IS NULL THEN
+              RAISE EXCEPTION 'ProIdentity final schema is missing an expected account/security table';
+            END IF;
+          END $$;
+          SQL
+
+          psql -d procv -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('"CV"') IS NULL
+              OR to_regclass('"CVVersion"') IS NULL
+              OR to_regclass('"CVAtsAnalysis"') IS NULL
+              OR to_regclass('"PlatformSetting"') IS NULL
+              OR to_regclass('"AuditLog"') IS NULL THEN
+              RAISE EXCEPTION 'ProCV final schema is missing an expected product-data table';
+            END IF;
+
+            IF to_regclass('"User"') IS NOT NULL
+              OR to_regclass('"Session"') IS NOT NULL
+              OR to_regclass('"PasswordResetToken"') IS NOT NULL
+              OR to_regclass('"EmailVerificationToken"') IS NOT NULL THEN
+              RAISE EXCEPTION 'ProCV final schema still contains legacy local-auth tables';
+            END IF;
+          END $$;
+          SQL
+
+      - name: Report migration status for both schemas
+        env:
+          IDENTITY_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/proidentity?schema=public
+          PROCV_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv?schema=public
+        run: |
+          DATABASE_URL="$IDENTITY_DATABASE_URL" npx prisma migrate status --schema=apps/identity/prisma/schema.prisma
+          DATABASE_URL="$PROCV_DATABASE_URL" npx prisma migrate status --schema=apps/procv/backend/prisma/schema.prisma
