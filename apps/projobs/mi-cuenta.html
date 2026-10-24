@@ -170,6 +170,7 @@
         document.getElementById("applications-panel").classList.toggle("hidden", saved);
         if (saved) loadSaved(); else loadApplications();
       }
+      document.getElementById("login-button").addEventListener("click", (event) => { event.preventDefault(); window.proJobsAuth?.login(); });
       document.getElementById("saved-tab").addEventListener("click", () => selectTab("saved"));
       document.getElementById("applications-tab").addEventListener("click", () => selectTab("applications"));
       async function init() {
