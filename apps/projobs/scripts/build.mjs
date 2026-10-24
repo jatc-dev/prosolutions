@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
-const FILES = ["index.html", "privacidad.html", "sitemap.xml", "ads.txt", "auth.js"];
+const FILES = ["index.html", "mi-cuenta.html", "privacidad.html", "sitemap.xml", "ads.txt", "auth.js"];
 
 function resolvePython() {
   for (const cmd of ["python", "py", "python3"]) {
