@@ -3,6 +3,7 @@ import { proJobsAuthMiddleware, ProJobsAuthRequest } from '../middleware/auth.js
 import {
   createApplication,
   listApplications,
+  removeApplication,
   StoreNotConfiguredError,
 } from '../data/projobs-store.js';
 
@@ -76,6 +77,22 @@ router.get('/', proJobsAuthMiddleware, async (req: ProJobsAuthRequest, res) => {
   if (!req.userId) return res.status(401).json({ message: 'Sesión inválida.' });
   try {
     return res.json({ applications: await listApplications(req.userId) });
+  } catch (error) {
+    return handleStoreError(error, res);
+  }
+});
+
+/** DELETE /api/applications/:jobId — elimina una actividad del historial del usuario autenticado. */
+router.delete('/:jobId', proJobsAuthMiddleware, async (req: ProJobsAuthRequest, res) => {
+  if (!req.userId) return res.status(401).json({ message: 'Sesión inválida.' });
+  const jobId = req.params.jobId;
+  if (!jobId || jobId.length > 512) {
+    return res.status(400).json({ message: 'Identificador de empleo inválido.' });
+  }
+  try {
+    const removed = await removeApplication(req.userId, jobId);
+    if (!removed) return res.status(404).json({ message: 'La actividad no existe en tu historial.' });
+    return res.json({ message: 'Actividad eliminada del historial.' });
   } catch (error) {
     return handleStoreError(error, res);
   }
