@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <meta name="description" content="Gestiona tus empleos guardados y consulta tu actividad de postulaciones en ProJobs.">
+  <title>Mi cuenta | ProJobs</title>
+  <style>
+    :root{color-scheme:light;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f8fafc;--brand:#4f46e5;--danger:#b91c1c}
+    *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:var(--brand)}.topbar{background:var(--surface);border-bottom:1px solid var(--line)}.topbar-inner{max-width:1000px;margin:auto;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+    .brand{font-weight:800;font-size:1.1rem;text-decoration:none;color:var(--ink)}.nav{display:flex;gap:18px;align-items:center}.nav a{font-weight:600;text-decoration:none}
+    main{max-width:1000px;margin:34px auto;padding:0 22px 48px}.eyebrow{color:var(--brand);font-weight:750;text-transform:uppercase;letter-spacing:.08em;font-size:.78rem}
+    h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;margin:8px 0}.intro{color:var(--muted);margin:0 0 24px}
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;margin:18px 0;box-shadow:0 4px 16px #0f172a08}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+    button,.button{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 14px;font-weight:650;text-decoration:none;color:var(--ink)}
+    button[aria-selected=true],.primary{background:var(--brand);border-color:var(--brand);color:white}button:disabled{opacity:.6;cursor:wait}
+    .status{border-radius:10px;background:#eef2ff;color:#3730a3;padding:12px 14px;margin:16px 0}.status.error{background:#fef2f2;color:var(--danger)}.status[hidden]{display:none}
+    .item{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}
+    .item h3{font-size:1.05rem;margin:0 0 4px}.item p{color:var(--muted);margin:3px 0;font-size:.92rem}.item-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .danger{color:var(--danger)}.empty{padding:28px 8px;text-align:center;color:var(--muted)}.empty strong{display:block;color:var(--ink);margin-bottom:4px}
+    .small{font-size:.85rem;color:var(--muted)}.hidden{display:none!important}
+    @media(max-width:620px){.topbar-inner{align-items:flex-start;flex-direction:column}.item{flex-direction:column}.item-actions{justify-content:flex-start}.panel{padding:16px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">ProJobs <span style="color:#4f46e5">/ Mi cuenta</span></a>
+      <nav class="nav pro-links" aria-label="Navegación de cuenta">
+        <a href="/">Explorar empleos</a>
+        <a href="/login" data-anon-label="Iniciar sesión" data-authed-label="Mi cuenta">Iniciar sesión</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <p class="eyebrow">Tu espacio profesional</p>
+    <h1>Mi cuenta de ProJobs</h1>
+    <p class="intro">Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.</p>
+    <div id="status" class="status" role="status" aria-live="polite">Comprobando tu sesión…</div>
+    <section id="account" class="panel hidden" aria-label="Actividad personal">
+      <div class="tabs" role="tablist" aria-label="Secciones de mi cuenta">
+        <button type="button" role="tab" id="saved-tab" aria-controls="saved-panel" aria-selected="true">Empleos guardados</button>
+        <button type="button" role="tab" id="applications-tab" aria-controls="applications-panel" aria-selected="false">Actividad de postulaciones</button>
+      </div>
+      <section id="saved-panel" role="tabpanel" aria-labelledby="saved-tab">
+        <div id="saved-list"></div>
+      </section>
+      <section id="applications-panel" role="tabpanel" aria-labelledby="applications-tab" class="hidden">
+        <div id="applications-list"></div>
+        <p class="small">ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.</p>
+      </section>
+    </section>
+    <section id="signed-out" class="panel hidden">
+      <h2>Inicia sesión para ver tu actividad</h2>
+      <p class="intro">Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.</p>
+      <a class="button primary" href="/login" id="login-button">Iniciar sesión con ProIdentity</a>
+    </section>
+  </main>
+  <script>
+    window.__PROJOBS_API_URL__ = window.__PROJOBS_API_URL__ || "https://projobs-api-0clw.onrender.com";
+  </script>
+  <script src="/auth.js"></script>
+  <script>
+    (() => {
+      const api = window.__PROJOBS_API_URL__ || "https://projobs-api-0clw.onrender.com";
+      const status = document.getElementById("status");
+      const account = document.getElementById("account");
+      const signedOut = document.getElementById("signed-out");
+      const savedList = document.getElementById("saved-list");
+      const applicationsList = document.getElementById("applications-list");
+      let currentTab = "saved";
+      const dateText = (value) => {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(document.documentElement.lang || "es", {dateStyle:"medium",timeStyle:"short"}).format(date);
+      };
+      const element = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      };
+      function showError(message) {
+        status.textContent = message;
+        status.classList.add("error");
+        status.hidden = false;
+      }
+      function emptyState(container, title, message) {
+        const wrap = element("div", "empty");
+        wrap.append(element("strong", "", title), element("span", "", message));
+        container.replaceChildren(wrap);
+      }
+      async function request(path, options = {}) {
+        const token = window.proJobsAuth?.getToken();
+        if (!token) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+        const response = await fetch(api + path, {
+          ...options,
+          headers: {...(options.headers || {}), Authorization: "Bearer " + token}
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+        if (!response.ok) throw new Error(data.message || "No se pudo cargar tu actividad.");
+        return data;
+      }
+      function jobItem(item, kind) {
+        const row = element("article", "item");
+        const info = element("div");
+        info.append(element("h3", "", item.job_title || "Oferta de empleo"));
+        info.append(element("p", "", [item.company, dateText(item.created_at)].filter(Boolean).join(" · ")));
+        if (kind === "application") {
+          const statusText = item.status === "redirected_to_employer" ? "Continuaste al sitio de la empresa" : (item.status || "Actividad registrada");
+          info.append(element("p", "", statusText));
+        }
+        const actions = element("div", "item-actions");
+        const open = element("a", "button primary", "Ver oferta");
+        open.href = item.job_url;
+        open.target = "_blank";
+        open.rel = "noopener noreferrer";
+        actions.append(open);
+        if (kind === "saved") {
+          const remove = element("button", "danger", "Quitar");
+          remove.type = "button";
+          remove.addEventListener("click", async () => {
+            remove.disabled = true;
+            try {
+              await request("/api/saved-jobs/" + encodeURIComponent(item.job_id), {method:"DELETE"});
+              await loadSaved();
+              status.textContent = "Empleo eliminado de tu lista.";
+              status.classList.remove("error");
+            } catch (error) {
+              showError(error.message || "No se pudo eliminar el empleo.");
+              remove.disabled = false;
+            }
+          });
+          actions.append(remove);
+        }
+        row.append(info, actions);
+        return row;
+      }
+      async function loadSaved() {
+        savedList.replaceChildren(element("p", "", "Cargando empleos guardados…"));
+        try {
+          const data = await request("/api/saved-jobs");
+          if (!data.savedJobs?.length) return emptyState(savedList, "Aún no guardaste empleos", "Explora las ofertas y pulsa «Guardar» para conservarlas aquí.");
+          savedList.replaceChildren(...data.savedJobs.map(item => jobItem(item, "saved")));
+        } catch (error) {
+          emptyState(savedList, "No pudimos cargar tus empleos", error.message || "Inténtalo de nuevo.");
+          showError(error.message || "No se pudo cargar tu actividad.");
+        }
+      }
+      async function loadApplications() {
+        applicationsList.replaceChildren(element("p", "", "Cargando actividad…"));
+        try {
+          const data = await request("/api/applications");
+          if (!data.applications?.length) return emptyState(applicationsList, "Todavía no hay actividad", "Cuando continúes a una oferta desde ProJobs, aparecerá aquí.");
+          applicationsList.replaceChildren(...data.applications.map(item => jobItem(item, "application")));
+        } catch (error) {
+          emptyState(applicationsList, "No pudimos cargar la actividad", error.message || "Inténtalo de nuevo.");
+          showError(error.message || "No se pudo cargar tu actividad.");
+        }
+      }
+      function selectTab(tab) {
+        currentTab = tab;
+        const saved = tab === "saved";
+        document.getElementById("saved-tab").setAttribute("aria-selected", String(saved));
+        document.getElementById("applications-tab").setAttribute("aria-selected", String(!saved));
+        document.getElementById("saved-panel").classList.toggle("hidden", !saved);
+        document.getElementById("applications-panel").classList.toggle("hidden", saved);
+        if (saved) loadSaved(); else loadApplications();
+      }
+      document.getElementById("saved-tab").addEventListener("click", () => selectTab("saved"));
+      document.getElementById("applications-tab").addEventListener("click", () => selectTab("applications"));
+      async function init() {
+        if (!window.proJobsAuth?.isAuthenticated()) {
+          account.classList.add("hidden");
+          signedOut.classList.remove("hidden");
+          status.hidden = true;
+          return;
+        }
+        signedOut.classList.add("hidden");
+        account.classList.remove("hidden");
+        status.classList.remove("error");
+        status.textContent = "Sesión activa.";
+        await loadSaved();
+      }
+      window.addEventListener("projobs:auth-ready", init);
+      if (window.proJobsAuth) init();
+    })();
+  </script>
+</body>
+</html>
