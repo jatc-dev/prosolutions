@@ -43,44 +43,55 @@ export async function identityMiddleware(
       jti?: string;
     };
 
+    // Access tokens are bound to the persisted session via the same jti as the
+    // refresh token. Reject legacy/unbound JWTs rather than allowing them to
+    // bypass logout and session revocation.
+    if (!payload.jti) {
+      return res.status(401).json({ message: 'Session token missing' });
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { jti: payload.jti },
+    });
+
+    if (
+      !session ||
+      session.userId !== payload.sub ||
+      session.expiresAt <= new Date() ||
+      session.revokedAt
+    ) {
+      if (req.cookies?.[REFRESH_TOKEN_COOKIE_NAME]) {
+        clearRefreshTokenCookie(res);
+      }
+      return res.status(401).json({ message: 'Session revoked or expired' });
+    }
+
+    const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
+    if (refreshToken && refreshToken !== session.refreshToken) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Session mismatch' });
+    }
+
+    const now = new Date();
+    const idleMs = now.getTime() - session.lastAccessedAt.getTime();
+    if (idleMs > SESSION_IDLE_TIMEOUT) {
+      await prisma.session.update({
+        where: { id: session.id },
+        data: { revokedAt: now },
+      });
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Session timed out due to inactivity' });
+    }
+
+    await prisma.session.update({
+      where: { id: session.id },
+      data: { lastAccessedAt: now },
+    });
+
     req.userId = payload.sub;
     req.email = payload.email;
     req.role = payload.role;
     req.modules = payload.modules;
-
-    const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
-    if (refreshToken) {
-      const session = await prisma.session.findUnique({
-        where: { refreshToken },
-      });
-
-      if (!session || session.expiresAt < new Date()) {
-        clearRefreshTokenCookie(res);
-        return res.status(401).json({ message: 'Session expired' });
-      }
-
-      if (session.revokedAt) {
-        clearRefreshTokenCookie(res);
-        return res.status(401).json({ message: 'Session revoked' });
-      }
-
-      const now = new Date();
-      const idleMs = now.getTime() - session.lastAccessedAt.getTime();
-
-      if (idleMs > SESSION_IDLE_TIMEOUT) {
-        await prisma.session.update({
-          where: { id: session.id },
-          data: { revokedAt: new Date() },
-        });
-        clearRefreshTokenCookie(res);
-        return res.status(401).json({ message: 'Session timed out due to inactivity' });
-      }
-
-      await prisma.session.update({
-        where: { id: session.id },
-        data: { lastAccessedAt: new Date() },
-      });
-    }
 
     auditLog('authentication.token_validated', {
       userId: req.userId,
