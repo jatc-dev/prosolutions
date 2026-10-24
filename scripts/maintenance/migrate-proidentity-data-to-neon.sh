@@ -84,6 +84,12 @@ runtime_role_flags="$(psql --no-psqlrc -X -qAt -F '|' "$NEON_IDENTITY_URL" -c "S
   printf 'Target role proidentity_login must be LOGIN without SUPERUSER, CREATEDB, CREATEROLE, REPLICATION, or BYPASSRLS. Refusing to transfer data.\n' >&2
   exit 10
 }
+runtime_elevated_memberships="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "WITH RECURSIVE memberships(roleid) AS (SELECT oid FROM pg_catalog.pg_roles WHERE rolname = 'proidentity_login' UNION SELECT am.roleid FROM pg_catalog.pg_auth_members am JOIN memberships m ON am.member = m.roleid) SELECT count(*) FROM memberships m JOIN pg_catalog.pg_roles r ON r.oid = m.roleid WHERE r.rolname <> 'proidentity_login' AND (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)")"
+[[ "$runtime_elevated_memberships" == "0" ]] || {
+  printf 'Target role proidentity_login must not inherit membership in privileged roles. Refusing to transfer data.\\n' >&2
+  exit 15
+}
+
 runtime_owned_objects="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT count(*) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_roles r ON r.oid = c.relowner WHERE r.rolname = 'proidentity_login' AND c.relkind IN ('r','p','v','m','S','f')")"
 [[ "$runtime_owned_objects" == "0" ]] || {
   printf 'Target role proidentity_login must not own database objects. Refusing to transfer data.\n' >&2
