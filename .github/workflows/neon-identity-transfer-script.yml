@@ -99,6 +99,17 @@ jobs:
           fi
           grep -q 'must be LOGIN without SUPERUSER' /tmp/proidentity-unsafe-role.log
           psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS'
+      - name: Verify transfer refuses privileged runtime role membership
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'CREATE ROLE proidentity_test_privileged NOLOGIN NOBYPASSRLS BYPASSRLS'
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'GRANT proidentity_test_privileged TO proidentity_login'
+          if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-privileged-membership.log 2>&1; then
+            echo 'Transfer unexpectedly accepted privileged runtime role membership.' >&2
+            exit 1
+          fi
+          grep -q 'must not inherit membership in privileged roles' /tmp/proidentity-privileged-membership.log
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'REVOKE proidentity_test_privileged FROM proidentity_login'
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'DROP ROLE proidentity_test_privileged'
       - name: Run data transfer and verify content digests
         run: bash scripts/maintenance/migrate-proidentity-data-to-neon.sh
       - name: Verify unexpected non-timestamp User drift is rejected
