@@ -1,0 +1,49 @@
+name: ProJobs PostgreSQL RLS isolation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/projobs/server/sql/poc/**'
+      - 'docs/architecture/PROJOBS_POSTGRES_RLS_POC.md'
+      - '.github/workflows/projobs-postgres-rls.yml'
+  workflow_dispatch:
+
+jobs:
+  postgres-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: projobs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d projobs_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply isolated ProJobs PoC schema
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgresql://postgres@localhost:5432/projobs_test" \
+            -v ON_ERROR_STOP=1 \
+            -f apps/projobs/server/sql/poc/001_projobs_postgres_rls.sql
+      - name: Assert row-level security and ownership boundaries
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgresql://postgres@localhost:5432/projobs_test" \
+            -v ON_ERROR_STOP=1 \
+            -f apps/projobs/server/sql/poc/002_test_rls_isolation.sql
