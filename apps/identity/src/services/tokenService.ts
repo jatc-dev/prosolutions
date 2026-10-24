@@ -147,7 +147,7 @@ export async function rotateSession(
     },
   });
 
-  const accessToken = signAccessToken({ sub: userId });
+  const accessToken = signAccessToken({ sub: userId, jti });
 
   return { accessToken, refreshToken };
 }
