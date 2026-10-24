@@ -1,7 +1,7 @@
 # Evaluación de plataformas de datos para ProSolutions
 
 **Fecha de revisión:** 2026-10-23  
-**Estado:** evaluación preliminar; no se han creado recursos externos ni cambiado producción.
+**Estado:** evaluación preliminar actualizada el 2026-10-24. Neon ya tiene un proyecto y bases aisladas para evaluación; no se ha cambiado el tráfico de producción ni se han habilitado cobros.
 
 ## 1. Objetivo y restricciones
 
@@ -19,9 +19,9 @@ Revisado en GitHub el estado de `main` y la rama `feat/projobs-persistence-found
 - `apps/procv/backend/prisma/schema.prisma` ya usa PostgreSQL con Prisma.
 - `apps/identity` también usa Prisma y PostgreSQL, pero su base de datos debe seguir separada y ser la autoridad de identidad.
 - ProJobs mantiene un catálogo estático; el PR #53 propone una API Express separada para favoritos e historial de redirecciones.
-- El adaptador del PR #53 usa Supabase REST con `PROJOBS_SUPABASE_SERVICE_ROLE_KEY`. Esa clave tiene privilegios amplios y no se debe reutilizar contra la base de ProCV.
-- El esquema SQL propuesto en el PR #53 está pensado para un proyecto dedicado de Supabase, no para aplicarse tal cual a la base de ProCV.
-- `apps/projobs/server/package.json` todavía no declara `pg` ni `@types/pg`; el lockfile debe actualizarse de forma coherente si se escoge el cliente PostgreSQL.
+- La revisión inicial del PR #53 se hizo antes de que evolucionara su adaptador. La revisión actual de la rama muestra un adaptador PostgreSQL con `pg`, consultas parametrizadas y contexto de usuario/rol por transacción; no debe describirse como una API REST de Supabase.
+- El SQL de ProJobs es específico de sus tablas y políticas RLS. No se debe aplicar a ProCV ni a ProIdentity.
+- El adaptador PostgreSQL del PR #53 y su lockfile ya están en la rama, pero el PR sigue pendiente de revisión y no forma parte de `main`.
 - La rama del PR #53 continúa sin integrar y no debe desplegarse ni habilitarse persistencia en producción antes de completar la revisión de seguridad y las pruebas.
 
 ## 3. Matriz de decisión preliminar
@@ -52,8 +52,8 @@ Las cuotas pueden cambiar. Confirmar las páginas oficiales inmediatamente antes
 
 Comparar Neon y Prisma Postgres con el mismo esquema SQL y el mismo backend Express. No migrar ProCV ni ProIdentity durante esta evaluación.
 
-- **Neon:** crear un proyecto gratuito independiente de prueba para ProJobs, solo después de confirmar que la creación no solicita pago ni activa facturación.
-- **Prisma Postgres:** crear una base gratuita de prueba, solo después de verificar los límites y que el flujo no puede incurrir en cargos.
+- **Neon:** utilizar únicamente el proyecto Neon ya existente y su base `projobs` aislada para pruebas sintéticas; no crear otro proyecto ni activar facturación para esta evaluación.
+- **Prisma Postgres:** mantener como alternativa documental; no crear una base adicional hasta verificar límites, coste y autorización.
 - **Supabase con esquema separado:** mantener como opción de reserva; no aplicar migraciones en la base de ProCV durante la PoC.
 - **Cloudflare D1:** no probar inicialmente, porque implicaría cambiar de PostgreSQL a SQLite y añadir cambios que no hacen falta para evaluar la separación de datos.
 
@@ -99,10 +99,9 @@ No elegir solo por la cantidad de almacenamiento o el número de proyectos anunc
 ## 7. Límites y siguientes pasos
 
 Esta revisión de código y documentación no sustituye una prueba ejecutada. En el momento de escribir este documento:
-- no se ha creado ningún proyecto de Neon o Prisma Postgres;
-- no se ha aplicado SQL a ninguna base de datos;
-- no se han cambiado variables de entorno ni servicios de Render;
-- no se ha migrado ni desplegado el PR #53;
-- la PoC y las pruebas de aislamiento siguen pendientes.
+- el proyecto Neon existente ya tiene bases de módulo y roles restringidos; ProCV está migrado y verificado, ProIdentity solo se ha transferido parcialmente y ProJobs tiene un smoke test RLS sintético satisfactorio;
+- no se han cambiado variables de entorno de Render ni el tráfico de producción;
+- el PR #53 sigue sin fusionar; sus validaciones pendientes de extremo a extremo y navegador siguen siendo gates;
+- la evaluación de Prisma Postgres no se ha convertido en una prueba ejecutada ni se han creado recursos adicionales.
 
 Siguiente paso técnico: crear en una rama de evaluación un adaptador PostgreSQL desacoplado del proveedor y una migración de prueba común, con pruebas automatizadas de propiedad por usuario. Luego conectar esa rama a los recursos gratuitos de prueba solo después de confirmar sus límites y coste. El despliegue a producción queda fuera del alcance de la PoC.
