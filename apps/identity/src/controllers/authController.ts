@@ -40,6 +40,10 @@ const AVAILABLE_MODULES: ProSolutionsModule[] = [
   ProSolutionsModule.PROJOBS,
 ];
 
+function isAvailableModule(module: string): module is ProSolutionsModule {
+  return AVAILABLE_MODULES.some((availableModule) => availableModule === module);
+}
+
 function getDefaultModules(_role: string): ProSolutionsModule[] {
   // Administrative role does not imply entitlement to every current or future module.
   return [...AVAILABLE_MODULES];
@@ -72,7 +76,9 @@ async function ensureDefaultModuleAccess(userId: string, role: string): Promise<
     select: { module: true },
   });
 
-  return activeGrants.map(({ module }) => module);
+  return activeGrants
+    .map(({ module }) => module)
+    .filter(isAvailableModule);
 }
 
 export async function register(req: Request, res: Response) {
@@ -394,7 +400,7 @@ export async function me(req: Request, res: Response) {
 
   const modules = user.moduleAccess
     .map((ma) => ma.module)
-    .filter((module) => AVAILABLE_MODULES.includes(module));
+    .filter(isAvailableModule);
 
   return res.json({
     user: {
