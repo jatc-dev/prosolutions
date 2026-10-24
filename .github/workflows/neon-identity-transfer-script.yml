@@ -101,7 +101,7 @@ jobs:
           psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS'
       - name: Verify transfer refuses privileged runtime role membership
         run: |
-          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'CREATE ROLE proidentity_test_privileged NOLOGIN NOBYPASSRLS BYPASSRLS'
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'CREATE ROLE proidentity_test_privileged NOLOGIN BYPASSRLS'
           psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'GRANT proidentity_test_privileged TO proidentity_login'
           if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-privileged-membership.log 2>&1; then
             echo 'Transfer unexpectedly accepted privileged runtime role membership.' >&2
