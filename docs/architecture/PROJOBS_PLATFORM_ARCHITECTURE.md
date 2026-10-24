@@ -20,7 +20,7 @@ Static HTML alone cannot securely persist cross-device user state, enforce per-u
 ## Proposed deployment shape
 
 1. **ProJobs web** — current Render Static Site. Serves public listings and SEO-friendly content.
-2. **ProJobs API** — separate Render Web Service rooted at apps/projobs/server. Exposes /health, /api/saved-jobs, /api/applications, and later /api/job-alerts. Uses the same Identity issuer, audience (prosolutions-api) and signing secret as ProIdentity; each personal route requires the PROJOBS module entitlement.
+2. **ProJobs API** — separate Render Web Service rooted at `apps/projobs/server`, deployed at `https://projobs-api-0clw.onrender.com`. It exposes `/health`, `/api/saved-jobs`, `/api/applications`, and `/api/identity/me`; later it can add `/api/job-alerts`. Live health and authenticated identity/access checks have returned HTTP 200; full persistence CRUD tests remain a release gate. It uses the same Identity issuer, audience (`prosolutions-api`) and signing secret as ProIdentity; each personal route requires the `PROJOBS` module entitlement.
 3. **ProJobs data** — dedicated Neon database `projobs` in the existing `Prosolutions.page` project. The API connects with the restricted `projobs_login` role, switches to `projobs_api` inside each transaction, and relies on forced RLS. Browser clients never receive database credentials and do not query personal tables directly.
 4. **Ingestion** — scheduled refresh of external sources, normalization, canonical URL deduplication, stale listing handling and source-health telemetry. The current static build can remain the first delivery path; move ingestion into a cron/worker when its schedule or volume outgrows build-time generation.
 
@@ -62,8 +62,9 @@ Consider replacing static public delivery with a dynamic application only if the
 ## Acceptance criteria before production API rollout
 
 - The dedicated Neon `projobs` database exists, the migration is applied, and a real Neon transaction smoke test verified row-level isolation.
-- ProJobs API is deployed as a separate Render Web Service (not yet completed).
+- [x] ProJobs API is deployed as a separate Render Web Service; live health and authenticated entitlement checks passed.
 - IDENTITY_JWT_SECRET matches ProIdentity; IDENTITY_ISSUER=https://identity.prosolutions.page; IDENTITY_AUDIENCE=prosolutions-api.
 - The public static service points PROJOBS_API_URL at the API origin.
 - API verifies no token (401), wrong entitlement (403), user A cannot read/delete user B's data, invalid external URLs are rejected, and database outage returns a safe 503.
-- Smoke tests pass against the deployed /health, saved-job create/list/delete, and application activity create/list routes.
+- [x] Live `/health` and authenticated `/api/identity/me` checks pass.
+- [ ] Authenticated smoke tests pass against deployed saved-job create/list/delete and application activity create/list routes.
