@@ -9,23 +9,22 @@ umask 077
 : "${NEON_IDENTITY_URL:?Set NEON_IDENTITY_URL to the direct Neon owner connection URL}"
 : "${NEON_IDENTITY_RUNTIME_URL:?Set NEON_IDENTITY_RUNTIME_URL to the proidentity_login connection URL}"
 
-for cmd in psql pg_dump diff; do
+for cmd in psql pg_dump diff awk; do
   command -v "$cmd" >/dev/null 2>&1 || {
     printf 'Missing required command: %s\n' "$cmd" >&2
     exit 2
   }
 done
 
-identity_tables_empty_sql='
-SELECT
- (SELECT count(*) FROM public."User") +
- (SELECT count(*) FROM public."Session") +
- (SELECT count(*) FROM public."PasswordResetToken") +
- (SELECT count(*) FROM public."EmailVerificationToken") +
- (SELECT count(*) FROM public."ProfessionalProfile") +
- (SELECT count(*) FROM public."ModuleAccess") +
- (SELECT count(*) FROM public."AuditLog");
-'
+application_tables=(
+  "User"
+  "Session"
+  "PasswordResetToken"
+  "EmailVerificationToken"
+  "ProfessionalProfile"
+  "ModuleAccess"
+  "AuditLog"
+)
 
 manifest_sql="
 SELECT table_name || '|' || n || '|' || digest
@@ -70,7 +69,7 @@ source_db="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c 'SELECT curren
 target_db="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c 'SELECT current_database()')"
 runtime_role="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT current_user')"
 
-[[ "$source_db" == "postgres" || -n "$source_db" ]] || { printf 'Source connection failed.\n' >&2; exit 3; }
+[[ -n "$source_db" ]] || { printf 'Source connection failed.\n' >&2; exit 3; }
 [[ "$target_db" == "proidentity" ]] || {
   printf 'NEON_IDENTITY_URL must connect to database proidentity (got %s).\n' "$target_db" >&2
   exit 4
@@ -80,37 +79,60 @@ runtime_role="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT
   exit 5
 }
 
-target_rows="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$identity_tables_empty_sql")"
-[[ "$target_rows" == "0" ]] || {
-  printf 'Refusing to import: Neon already contains %s Identity application rows. No data was changed.\n' "$target_rows" >&2
-  exit 6
-}
-
-printf 'Capturing source integrity manifest...\n'
+printf 'Capturing source and target integrity manifests...\n'
 source_manifest="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "$manifest_sql")"
+target_manifest="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$manifest_sql")"
 
-printf 'Copying Identity rows in one transaction (session and token records are preserved)...\n'
-{
-  printf 'BEGIN;\n'
-  pg_dump --data-only --inserts --no-owner --no-privileges \
-    --exclude-table-data=public._prisma_migrations \
-    "$SUPABASE_IDENTITY_URL"
-  printf '\nCOMMIT;\n'
-} | psql --no-psqlrc -X --set=ON_ERROR_STOP=1 "$NEON_IDENTITY_URL" >/dev/null
+missing_tables=()
+while IFS='|' read -r table source_count source_digest; do
+  [[ -n "$table" ]] || continue
+  target_line="$(printf '%s\n' "$target_manifest" | awk -F'|' -v name="$table" '$1 == name {print; exit}')"
+  if [[ -z "$target_line" ]]; then
+    printf 'Target manifest is missing table %s. Refusing to continue.\n' "$table" >&2
+    exit 6
+  fi
+  IFS='|' read -r _ target_count target_digest <<< "$target_line"
 
-printf 'Verifying source and target row counts and content digests...\n'
+  if [[ "$source_count" == "$target_count" && "$source_digest" == "$target_digest" ]]; then
+    continue
+  fi
+  if [[ "$target_count" == "0" && "$source_count" != "0" && "$table" != "_prisma_migrations" ]]; then
+    missing_tables+=("$table")
+    continue
+  fi
+  printf 'Target table %s is neither empty nor an exact match. Refusing to overwrite or duplicate data.\n' "$table" >&2
+  exit 7
+done <<< "$source_manifest"
+
+if (("${#missing_tables[@]}" > 0)); then
+  dump_args=()
+  for table in "${missing_tables[@]}"; do
+    dump_args+=(--table="public.\"$table\"")
+  done
+  printf 'Copying %s missing Identity table(s) in one transaction...\n' "${#missing_tables[@]}"
+  {
+    printf 'BEGIN;\n'
+    pg_dump --data-only --inserts --no-owner --no-privileges "${dump_args[@]}" "$SUPABASE_IDENTITY_URL"
+    printf '\nCOMMIT;\n'
+  } | psql --no-psqlrc -X --set=ON_ERROR_STOP=1 "$NEON_IDENTITY_URL" >/dev/null
+else
+  printf 'No missing Identity tables detected; checking integrity only.\n'
+fi
+
+printf 'Verifying row counts and content digests...\n'
+source_manifest="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "$manifest_sql")"
 target_manifest="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$manifest_sql")"
 if [[ "$source_manifest" != "$target_manifest" ]]; then
   diff -u <(printf '%s\n' "$source_manifest") <(printf '%s\n' "$target_manifest") || true
   printf 'Integrity verification failed. Do not switch application traffic. Keep Supabase unchanged and investigate the diff above.\n' >&2
-  exit 7
+  exit 8
 fi
 
 runtime_user_count="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT count(*) FROM public."User"')"
 source_user_count="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c 'SELECT count(*) FROM public."User"')"
 [[ "$runtime_user_count" == "$source_user_count" ]] || {
   printf 'Runtime role visibility check failed. Do not switch application traffic.\n' >&2
-  exit 8
+  exit 9
 }
 
 printf '\nIdentity data transfer verified.\n'
