@@ -88,5 +88,14 @@ jobs:
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"ProfessionalProfile\" (id,\"userId\",skills,experience,education,links,\"createdAt\",\"updatedAt\") VALUES ('test-profile-1','test-user-1',jsonb_build_array('sql'),'[]'::jsonb,'[]'::jsonb,'{}'::jsonb,'2026-01-01 00:00:00','2026-01-01 00:00:00')"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"ModuleAccess\" (id,\"userId\",module,\"grantedAt\",active) VALUES ('test-module-access-1','test-user-1','PROCV','2026-01-01 00:00:00',true)"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"AuditLog\" (id,\"userId\",action,resource,\"details\",\"createdAt\") VALUES ('test-audit-1','test-user-1','migration-test','User','{}'::jsonb,'2026-01-01 00:00:00')"
+      - name: Verify transfer refuses an unsafe runtime role
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login SUPERUSER BYPASSRLS'
+          if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-unsafe-role.log 2>&1; then
+            echo 'Transfer unexpectedly accepted an unsafe runtime role.' >&2
+            exit 1
+          fi
+          grep -q 'must be LOGIN without SUPERUSER' /tmp/proidentity-unsafe-role.log
+          psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS'
       - name: Run data transfer and verify content digests
         run: bash scripts/maintenance/migrate-proidentity-data-to-neon.sh
