@@ -275,14 +275,15 @@ export async function refreshToken(req: Request, res: Response) {
 
     const modules = await ensureDefaultModuleAccess(user.id, user.role);
 
+    const jti = crypto.randomUUID();
     const accessToken = signAccessToken({
       sub: user.id,
       email: user.email,
       role: user.role,
       modules,
+      jti,
     });
 
-    const jti = crypto.randomUUID();
     const newRefreshToken = jwt.sign(
       { sub: user.id, jti },
       config.jwtSecret,
