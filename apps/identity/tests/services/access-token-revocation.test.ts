@@ -127,7 +127,7 @@ test('accepts an active session-bound access JWT without requiring the refresh c
   const { res, result } = responseRecorder();
   let nextCalled = false;
   await identityMiddleware(
-    { headers: { authorization: `Bearer ${accessToken('session-jti-123')}`, cookies: {} } as any,
+    { headers: { authorization: `Bearer ${accessToken('session-jti-123')}` }, cookies: {} } as any,
     res,
     (() => {
       nextCalled = true;
