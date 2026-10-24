@@ -28,7 +28,7 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
-import { ensureDefaultModuleAccess } from '../services/moduleAccessService';
+import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
