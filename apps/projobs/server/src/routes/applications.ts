@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { proJobsAuthMiddleware, ProJobsAuthRequest } from '../middleware/auth';
+import { proJobsAuthMiddleware, ProJobsAuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
