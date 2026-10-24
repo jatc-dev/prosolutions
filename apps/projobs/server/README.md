@@ -4,7 +4,7 @@
 
 The ProJobs API uses the PostgreSQL driver directly. ProIdentity remains the authentication authority; the API validates its JWT issuer, audience, expiry and `PROJOBS` module claim before any personal-data route runs. The public job catalog stays static.
 
-The Neon project `Prosolutions.page` contains a dedicated `projobs` database with the migration in `sql/001_projobs_core.sql` applied and a transactional RLS isolation smoke test passed. The separate Render API service is deployed at `https://projobs-api-0clw.onrender.com`; its `/health` endpoint and an authenticated `GET /api/identity/me` request have returned HTTP 200. End-to-end saved-job/application create-list-delete tests against the deployed API and database are still required before production rollout.
+The Neon project `Prosolutions.page` contains a dedicated `projobs` database with the migration in `sql/001_projobs_core.sql` applied and a transactional RLS isolation smoke test passed. The separate Render API service is deployed at `https://projobs-api-0clw.onrender.com`; its `/health` endpoint and an authenticated `GET /api/identity/me` request have returned HTTP 200. Saved-job create/list/delete has been verified against the deployed API and database. Application create/list/delete and browser validation remain release gates.
 
 ## Provisioning and runtime role
 
