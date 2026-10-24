@@ -21,29 +21,9 @@ Official references:
 
 ## Restricted login roles
 
-Because the names `*_runtime` already exist as Console-created roles, create new SQL-based logins with distinct names. Use a password manager to generate three unique strong passwords. Do not send passwords or connection strings in chat or commit them to GitHub.
+The three restricted logins (`proidentity_login`, `procv_login`, and `projobs_login`) have already been created and verified in the `production` branch. **Do not rerun `CREATE ROLE` or rotate credentials as part of this checklist.** The existing `*_runtime` roles are not approved for Render because they inherit `neon_superuser`; leave them unused pending a separate dependency review.
 
-Run the following in Neon SQL Editor on the `production` branch, connected to `neondb`. Replace each password placeholder with its own generated password before execution. Do not execute the placeholders literally.
-
-```sql
-CREATE ROLE proidentity_login
-  LOGIN PASSWORD 'REPLACE_WITH_UNIQUE_PROIDENTITY_PASSWORD'
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
-
-CREATE ROLE procv_login
-  LOGIN PASSWORD 'REPLACE_WITH_UNIQUE_PROCV_PASSWORD'
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
-
-CREATE ROLE projobs_login
-  LOGIN PASSWORD 'REPLACE_WITH_UNIQUE_PROJOBS_PASSWORD'
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
-
-GRANT proidentity_app TO proidentity_login;
-GRANT procv_app TO procv_login;
-GRANT projobs_app TO projobs_login;
-```
-
-If any `CREATE ROLE` fails because the login name already exists, stop and inspect that role; do not drop or alter it blindly. If a later statement fails, report the exact error without any secret values.
+For future provisioning in a new environment only, generate unique passwords in a password manager and apply the reviewed role setup through the approved operational procedure. Never put passwords or connection strings in chat, GitHub, or committed files.
 
 ## Verify the login roles
 
