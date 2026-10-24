@@ -1,0 +1,29 @@
+name: Neon Identity transfer script validation
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/maintenance/migrate-proidentity-data-to-neon.sh'
+      - '.github/workflows/neon-identity-transfer-script.yml'
+  push:
+    branches: [ops/neon-identity-data-transfer-2026-10]
+    paths:
+      - 'scripts/maintenance/migrate-proidentity-data-to-neon.sh'
+      - '.github/workflows/neon-identity-transfer-script.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shell-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell syntax
+        run: bash -n scripts/maintenance/migrate-proidentity-data-to-neon.sh
+      - name: Ensure no connection URLs are hard-coded
+        run: |
+          if grep -nE 'postgres(ql)?://[^[:space:]]+:[^[:space:]]+@' scripts/maintenance/migrate-proidentity-data-to-neon.sh; then
+            echo 'Do not commit database connection URLs.' >&2
+            exit 1
+          fi
