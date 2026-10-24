@@ -95,17 +95,17 @@ runtime_owned_objects="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELEC
 # Temporary manifests contain IDs/timestamps only and are protected by umask 077.
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
-source_user_shape="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT count(*) || '|' || md5(COALESCE(string_agg((to_jsonb(t) - 'lastLoginAt' - 'updatedAt')::text, E'\\n' ORDER BY t.\\"id\\"), '')) FROM public.\\"User\\" t")"
-target_user_shape="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT count(*) || '|' || md5(COALESCE(string_agg((to_jsonb(t) - 'lastLoginAt' - 'updatedAt')::text, E'\\n' ORDER BY t.\\"id\\"), '')) FROM public.\\"User\\" t")"
-source_user_ids="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT md5(COALESCE(string_agg(\\"id\\", E'\\n' ORDER BY \\"id\\"), '')) FROM public.\\"User\\"")"
-target_user_ids="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT md5(COALESCE(string_agg(\\"id\\", E'\\n' ORDER BY \\"id\\"), '')) FROM public.\\"User\\"")"
+source_user_shape="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT count(*) || '|' || md5(COALESCE(string_agg((to_jsonb(t) - 'lastLoginAt' - 'updatedAt')::text, E'\\n' ORDER BY t.\"id\"), '')) FROM public.\"User\" t")"
+target_user_shape="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT count(*) || '|' || md5(COALESCE(string_agg((to_jsonb(t) - 'lastLoginAt' - 'updatedAt')::text, E'\\n' ORDER BY t.\"id\"), '')) FROM public.\"User\" t")"
+source_user_ids="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT md5(COALESCE(string_agg(\"id\", E'\\n' ORDER BY \"id\"), '')) FROM public.\"User\"")"
+target_user_ids="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT md5(COALESCE(string_agg(\"id\", E'\\n' ORDER BY \"id\"), '')) FROM public.\"User\"")"
 [[ "$source_user_shape" == "$target_user_shape" && "$source_user_ids" == "$target_user_ids" ]] || {
   printf 'User identity or non-activity fields differ between source and target. Refusing timestamp reconciliation.\n' >&2
   exit 12
 }
 
-psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT md5(\\"id\\") || '|' || encode(convert_to(\\"id\\", 'UTF8'), 'base64') || '|' || COALESCE(\\"lastLoginAt\\"::text, '<NULL>') || '|' || \\"updatedAt\\"::text FROM public.\\"User\\" ORDER BY md5(\\"id\\")" > "$tmp_dir/source-user-times"
-psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT md5(\\"id\\") || '|' || encode(convert_to(\\"id\\", 'UTF8'), 'base64') || '|' || COALESCE(\\"lastLoginAt\\"::text, '<NULL>') || '|' || \\"updatedAt\\"::text FROM public.\\"User\\" ORDER BY md5(\\"id\\")" > "$tmp_dir/target-user-times"
+psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT md5(\"id\") || '|' || encode(convert_to(\"id\", 'UTF8'), 'base64') || '|' || COALESCE(\"lastLoginAt\"::text, '<NULL>') || '|' || \"updatedAt\"::text FROM public.\"User\" ORDER BY md5(\"id\")" > "$tmp_dir/source-user-times"
+psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT md5(\"id\") || '|' || encode(convert_to(\"id\", 'UTF8'), 'base64') || '|' || COALESCE(\"lastLoginAt\"::text, '<NULL>') || '|' || \"updatedAt\"::text FROM public.\"User\" ORDER BY md5(\"id\")" > "$tmp_dir/target-user-times"
 exec 3<"$tmp_dir/target-user-times"
 timestamp_differences=0
 reconcile_hash=""
@@ -136,7 +136,7 @@ if (( timestamp_differences > 0 )); then
     exit 14
   }
   printf 'Reconciling the single verified User activity-timestamp discrepancy from source of truth...\n'
-  psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT format('UPDATE public.%I SET %I = %L, %I = %L WHERE %I = %L;', 'User', 'lastLoginAt', \\"lastLoginAt\\", 'updatedAt', \\"updatedAt\\", 'id', \\"id\\") FROM public.\\"User\\" WHERE md5(\\"id\\") = '$reconcile_hash'" |
+  psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT format('UPDATE public.%I SET %I = %L, %I = %L WHERE %I = %L;', 'User', 'lastLoginAt', \"lastLoginAt\", 'updatedAt', \"updatedAt\", 'id', \"id\") FROM public.\"User\" WHERE md5(\"id\") = '$reconcile_hash'" |
     { printf 'BEGIN;\n'; cat; printf '\nCOMMIT;\n'; } |
     psql --no-psqlrc -X --set=ON_ERROR_STOP=1 "$NEON_IDENTITY_URL" >/dev/null
 fi
