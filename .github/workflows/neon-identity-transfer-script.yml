@@ -82,7 +82,9 @@ jobs:
             psql "$target" -v ON_ERROR_STOP=1 -c "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.\"$table\" TO proidentity_app"
             psql "$target" -v ON_ERROR_STOP=1 -c "CREATE POLICY \"${table}_app_access\" ON public.\"$table\" FOR ALL TO proidentity_app USING (true) WITH CHECK (true)"
           done
-          psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"User\" (id,email,name,\"passwordHash\",role,\"createdAt\",\"updatedAt\",\"emailVerified\",\"isActive\") VALUES ('test-user-1','test@example.invalid','Synthetic Test','not-a-real-password-hash','user','2026-01-01 00:00:00','2026-01-01 00:00:00',true,true)"
+          psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"User\" (id,email,name,\"passwordHash\",role,\"lastLoginAt\",\"createdAt\",\"updatedAt\",\"emailVerified\",\"isActive\") VALUES ('test-user-1','test@example.invalid','Synthetic Test','not-a-real-password-hash','user','2026-01-02 00:00:00','2026-01-01 00:00:00','2026-01-03 00:00:00',true,true)"
+          # The target deliberately has the same identity fields but stale activity timestamps.
+          psql "$NEON_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"User\" (id,email,name,\"passwordHash\",role,\"lastLoginAt\",\"createdAt\",\"updatedAt\",\"emailVerified\",\"isActive\") VALUES ('test-user-1','test@example.invalid','Synthetic Test','not-a-real-password-hash','user','2026-01-01 12:00:00','2026-01-01 00:00:00','2026-01-02 00:00:00',true,true)"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"Session\" (id,\"userId\",\"refreshToken\",jti,\"expiresAt\",\"createdAt\",\"lastAccessedAt\") VALUES ('test-session-1','test-user-1','synthetic-refresh-token','synthetic-jti','2027-01-01 00:00:00','2026-01-01 00:00:00','2026-01-01 00:00:00')"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"EmailVerificationToken\" (id,\"userId\",\"tokenHash\",\"expiresAt\",used,\"createdAt\") VALUES ('test-email-token-1','test-user-1','synthetic-token-hash','2027-01-01 00:00:00',false,'2026-01-01 00:00:00')"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"ProfessionalProfile\" (id,\"userId\",skills,experience,education,links,\"createdAt\",\"updatedAt\") VALUES ('test-profile-1','test-user-1',jsonb_build_array('sql'),'[]'::jsonb,'[]'::jsonb,'{}'::jsonb,'2026-01-01 00:00:00','2026-01-01 00:00:00')"
@@ -99,3 +101,20 @@ jobs:
           psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS'
       - name: Run data transfer and verify content digests
         run: bash scripts/maintenance/migrate-proidentity-data-to-neon.sh
+      - name: Verify unexpected non-timestamp User drift is rejected
+        run: |
+          psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "UPDATE public.\"User\" SET name = 'Unexpected drift' WHERE id = 'test-user-1'"
+          if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-unexpected-user-drift.log 2>&1; then
+            echo 'Transfer unexpectedly accepted a non-timestamp User difference.' >&2
+            exit 1
+          fi
+          grep -q 'User identity or non-activity fields differ' /tmp/proidentity-unexpected-user-drift.log
+      - name: Verify unexpected target User rows are rejected
+        run: |
+          psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "UPDATE public.\"User\" SET name = 'Synthetic Test' WHERE id = 'test-user-1'"
+          psql "$NEON_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"User\" (id,email,name,\"passwordHash\",role,\"createdAt\",\"updatedAt\",\"emailVerified\",\"isActive\") VALUES ('unexpected-target-user','unexpected@example.invalid','Unexpected','not-a-real-password-hash','user','2026-01-01 00:00:00','2026-01-01 00:00:00',true,true)"
+          if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-unexpected-target-user.log 2>&1; then
+            echo 'Transfer unexpectedly accepted an extra target User row.' >&2
+            exit 1
+          fi
+          grep -q 'User identity or non-activity fields differ' /tmp/proidentity-unexpected-target-user.log
