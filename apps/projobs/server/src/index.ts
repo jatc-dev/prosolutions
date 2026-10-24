@@ -4,10 +4,10 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { config } from './config';
-import { proJobsAuthMiddleware } from './middleware/auth';
-import applicationsRoutes from './routes/applications';
-import savedJobsRoutes from './routes/saved-jobs';
+import { config } from './config.js';
+import { proJobsAuthMiddleware } from './middleware/auth.js';
+import applicationsRoutes from './routes/applications.js';
+import savedJobsRoutes from './routes/saved-jobs.js';
 
 const currentFile = fileURLToPath(import.meta.url);
 const configuredOrigins = (process.env.PROJOBS_ALLOWED_ORIGINS ?? '')
