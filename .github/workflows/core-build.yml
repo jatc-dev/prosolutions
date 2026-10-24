@@ -95,7 +95,7 @@ jobs:
           node --input-type=module <<'NODE'
           import { readFileSync } from "node:fs";
           const html = readFileSync("apps/projobs/dist/mi-cuenta.html", "utf8");
-          const scriptRegex = /<script\\s*>([\\s\\S]*?)<\\/script>/g;
+          const scriptRegex = /<script\s*>([\s\S]*?)<\/script>/g;
           let match;
           let count = 0;
           while ((match = scriptRegex.exec(html)) !== null) {
