@@ -4,8 +4,9 @@
 
 - Neon project: `Prosolutions.page`
 - Target database: `proidentity`
-- The target schema and Prisma migration history are already present.
-- ProIdentity application tables are intentionally empty until the data transfer is run.
+- The target schema and Prisma migration history are present.
+- The seven source `User` rows have already been copied and their content digest matches Supabase.
+- Other Identity application tables still need transfer.
 - Supabase remains the source of truth. This runbook does not change Render or switch traffic.
 
 ## Why the transfer runs from a trusted workstation
@@ -37,11 +38,11 @@ bash scripts/maintenance/migrate-proidentity-data-to-neon.sh
 
 The script:
 1. Checks all three connections and verifies the target database and runtime role.
-2. Refuses to run if any Identity application table in Neon is already populated.
-3. Dumps data only, excluding `_prisma_migrations` because that history has already been copied.
-4. Restores the rows in one transaction.
-5. Compares row counts and content digests for every Identity table.
-6. Verifies the restricted runtime role can read the migrated user count.
+2. Compares source and target row counts plus content digests for every Identity table.
+3. Skips any table that already matches exactly, including the `User` rows already transferred.
+4. Imports only tables that are empty in Neon but populated in Supabase, in one transaction.
+5. Refuses to overwrite, duplicate, or silently reconcile a table that is partially populated or differs from the source.
+6. Verifies all counts and content digests again and confirms `proidentity_login` can read the migrated user count.
 
 It preserves IDs, password hashes, sessions, refresh tokens, module entitlements, profiles, and verification/reset token records. It does not alter the Supabase source.
 
@@ -56,5 +57,5 @@ It preserves IDs, password hashes, sessions, refresh tokens, module entitlements
 ## Other modules
 
 - ProCV schema and data have already been copied into Neon and verified using row counts and content digests.
-- ProJobs schema and RLS were prepared in Neon; its tables are new and currently contain no application data.
+- ProJobs schema and forced RLS policies are present in Neon; its new tables currently contain no application data.
 - This script does not configure Render or perform production cutover.
