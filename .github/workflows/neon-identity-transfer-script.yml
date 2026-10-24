@@ -118,3 +118,15 @@ jobs:
             exit 1
           fi
           grep -q 'User identity or non-activity fields differ' /tmp/proidentity-unexpected-target-user.log
+
+      - name: Verify timestamp drift for multiple users is rejected
+        run: |
+          psql "$NEON_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "DELETE FROM public.\\"User\\" WHERE id = 'unexpected-target-user'"
+          psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\\"User\\" (id,email,name,\\"passwordHash\\",role,\\"lastLoginAt\\",\\"createdAt\\",\\"updatedAt\\",\\"emailVerified\\",\\"isActive\\") VALUES ('test-user-2','test2@example.invalid','Synthetic Test 2','not-a-real-password-hash','user','2026-01-02 00:00:00','2026-01-01 00:00:00','2026-01-03 00:00:00',true,true)"
+          psql "$NEON_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\\"User\\" (id,email,name,\\"passwordHash\\",role,\\"lastLoginAt\\",\\"createdAt\\",\\"updatedAt\\",\\"emailVerified\\",\\"isActive\\") VALUES ('test-user-2','test2@example.invalid','Synthetic Test 2','not-a-real-password-hash','user','2026-01-01 12:00:00','2026-01-01 00:00:00','2026-01-02 00:00:00',true,true)"
+          psql "$NEON_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "UPDATE public.\\"User\\" SET \\"lastLoginAt\\" = '2026-01-01 12:00:00', \\"updatedAt\\" = '2026-01-02 00:00:00' WHERE id = 'test-user-1'"
+          if bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-multiple-timestamp-drift.log 2>&1; then
+            echo 'Transfer unexpectedly accepted timestamp drift for multiple users.' >&2
+            exit 1
+          fi
+          grep -q 'only exactly one is permitted' /tmp/proidentity-multiple-timestamp-drift.log
