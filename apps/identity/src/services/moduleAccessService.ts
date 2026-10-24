@@ -6,8 +6,13 @@ const AVAILABLE_MODULES: ProSolutionsModule[] = [
   ProSolutionsModule.PROJOBS,
 ];
 
-function isAvailableModule(module: string): module is ProSolutionsModule {
+export function isAvailableModule(module: string): module is ProSolutionsModule {
   return AVAILABLE_MODULES.some((availableModule) => availableModule === module);
+}
+
+export function getDefaultModules(_role: string): ProSolutionsModule[] {
+  // Admin role does not grant access to future or unavailable modules.
+  return [...AVAILABLE_MODULES];
 }
 
 /**
