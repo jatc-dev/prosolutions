@@ -28,33 +28,10 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
-import { ProSolutionsModule } from '../types/modules';
+import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
-
-function getDefaultModules(role: string): ProSolutionsModule[] {
-  if (role === 'admin') {
-    return Object.values(ProSolutionsModule);
-  }
-  return [ProSolutionsModule.PROCV, ProSolutionsModule.PROJOBS];
-}
-
-async function ensureDefaultModuleAccess(userId: string, role: string): Promise<ProSolutionsModule[]> {
-  const defaults = getDefaultModules(role);
-  await Promise.all(
-    defaults.map((module) =>
-      prisma.moduleAccess.upsert({
-        where: { userId_module: { userId, module } },
-        update: { active: true, expiresAt: null },
-        create: { userId, module, active: true },
-      }),
-    ),
-  );
-  // The temporary self-service rollout exposes exactly the currently available
-  // modules to regular users. Admins keep the full enum returned by defaults.
-  return defaults;
-}
 
 export async function register(req: Request, res: Response) {
   try {
@@ -373,7 +350,9 @@ export async function me(req: Request, res: Response) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const modules = user.moduleAccess.map((ma) => ma.module);
+  const modules = user.moduleAccess
+    .map((ma) => ma.module)
+    .filter(isAvailableModule);
 
   return res.json({
     user: {

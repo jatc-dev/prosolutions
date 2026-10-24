@@ -235,6 +235,9 @@ jobs:
       - name: Generate Prisma client
         run: npm run prisma:generate --workspace=apps/identity
 
+      - name: Test Identity module-access regressions
+        run: npm run test:regression --workspace=apps/identity
+
       # Identity currently has no flat ESLint config; validate its generated Prisma client and TypeScript build here.
       - name: Build application
         run: npm run build --workspace=apps/identity
