@@ -24,4 +24,4 @@ The runtime login must be granted membership in `projobs_api` and must not own t
 
 ## Validation
 
-The API test suite covers health, missing/invalid JWTs, missing module entitlement, and the safe 503 path when `DATABASE_URL` is absent. The separate PostgreSQL RLS proof of concept validates row isolation against an ephemeral database. A transactional smoke test against the actual Neon `projobs` database verified that one test user can see its row, another user cannot, and the temporary test row is removed. The deployed API and end-to-end browser flow still need testing.
+The API test suite covers health, missing/invalid JWTs, missing module entitlement, and the safe 503 path when `DATABASE_URL` is absent. The separate PostgreSQL RLS proof of concept validates row isolation against an ephemeral database. A transactional smoke test against the actual Neon `projobs` database verified that one test user can see its row, another user cannot, and the temporary test row is removed. Live API health and JWT authorization have been verified; full authenticated persistence CRUD tests and the updated static frontend/account page still need validation before rollout.
