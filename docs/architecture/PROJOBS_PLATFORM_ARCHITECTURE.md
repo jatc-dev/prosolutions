@@ -50,7 +50,7 @@ Static HTML alone cannot securely persist cross-device user state, enforce per-u
 - Neon schema and RLS are now provisioned; deploy the API only after the restricted `projobs_login` connection and matching ProIdentity JWT settings are configured.
 
 ### Phase 3 — candidate product
-- Saved-jobs page and application activity/history UI.
+- [x] Candidate account page for saved jobs and application activity/history implemented in `apps/projobs/mi-cuenta.html` on this branch; still requires live browser/API validation before rollout.
 - Search alerts (email + frequency preferences), consent and unsubscribe.
 - Job freshness/expiry status and better source attribution.
 - Job detail pages with structured data only when the listing data and publisher terms support it.
