@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Copy ProIdentity application data from Supabase to Neon.
+# Run from a trusted workstation with PostgreSQL client tools installed.
+# This script never prints connection URLs or row contents.
+set -Eeuo pipefail
+umask 077
+
+: "${SUPABASE_IDENTITY_URL:?Set SUPABASE_IDENTITY_URL in your shell; do not paste it into chat}"
+: "${NEON_IDENTITY_URL:?Set NEON_IDENTITY_URL to the direct Neon owner connection URL}"
+: "${NEON_IDENTITY_RUNTIME_URL:?Set NEON_IDENTITY_RUNTIME_URL to the proidentity_login connection URL}"
+
+for cmd in psql pg_dump diff; do
+  command -v "$cmd" >/dev/null 2>&1 || {
+    printf 'Missing required command: %s\n' "$cmd" >&2
+    exit 2
+  }
+done
+
+identity_tables_empty_sql='
+SELECT
+ (SELECT count(*) FROM public."User") +
+ (SELECT count(*) FROM public."Session") +
+ (SELECT count(*) FROM public."PasswordResetToken") +
+ (SELECT count(*) FROM public."EmailVerificationToken") +
+ (SELECT count(*) FROM public."ProfessionalProfile") +
+ (SELECT count(*) FROM public."ModuleAccess") +
+ (SELECT count(*) FROM public."AuditLog");
+'
+
+manifest_sql="
+SELECT table_name || '|' || n || '|' || digest
+FROM (
+  SELECT 'User'::text AS table_name, count(*)::text AS n,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),'')) AS digest
+    FROM public.\"User\" t
+  UNION ALL
+  SELECT 'Session', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"Session\" t
+  UNION ALL
+  SELECT 'PasswordResetToken', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"PasswordResetToken\" t
+  UNION ALL
+  SELECT 'EmailVerificationToken', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"EmailVerificationToken\" t
+  UNION ALL
+  SELECT 'ProfessionalProfile', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"ProfessionalProfile\" t
+  UNION ALL
+  SELECT 'ModuleAccess', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"ModuleAccess\" t
+  UNION ALL
+  SELECT 'AuditLog', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"AuditLog\" t
+  UNION ALL
+  SELECT '_prisma_migrations', count(*)::text,
+    md5(COALESCE(string_agg(to_jsonb(t)::text, E'\\n' ORDER BY t.\"id\"),''))
+    FROM public.\"_prisma_migrations\" t
+) AS manifest
+ORDER BY table_name;
+"
+
+printf 'Checking source and target connections...\n'
+source_db="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c 'SELECT current_database()')"
+target_db="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c 'SELECT current_database()')"
+runtime_role="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT current_user')"
+
+[[ "$source_db" == "postgres" || -n "$source_db" ]] || { printf 'Source connection failed.\n' >&2; exit 3; }
+[[ "$target_db" == "proidentity" ]] || {
+  printf 'NEON_IDENTITY_URL must connect to database proidentity (got %s).\n' "$target_db" >&2
+  exit 4
+}
+[[ "$runtime_role" == "proidentity_login" ]] || {
+  printf 'NEON_IDENTITY_RUNTIME_URL must connect as proidentity_login (got %s).\n' "$runtime_role" >&2
+  exit 5
+}
+
+target_rows="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$identity_tables_empty_sql")"
+[[ "$target_rows" == "0" ]] || {
+  printf 'Refusing to import: Neon already contains %s Identity application rows. No data was changed.\n' "$target_rows" >&2
+  exit 6
+}
+
+printf 'Capturing source integrity manifest...\n'
+source_manifest="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "$manifest_sql")"
+
+printf 'Copying Identity rows in one transaction (session and token records are preserved)...\n'
+{
+  printf 'BEGIN;\n'
+  pg_dump --data-only --inserts --no-owner --no-privileges \
+    --exclude-table-data=public._prisma_migrations \
+    "$SUPABASE_IDENTITY_URL"
+  printf '\nCOMMIT;\n'
+} | psql --no-psqlrc -X --set=ON_ERROR_STOP=1 "$NEON_IDENTITY_URL" >/dev/null
+
+printf 'Verifying source and target row counts and content digests...\n'
+target_manifest="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "$manifest_sql")"
+if [[ "$source_manifest" != "$target_manifest" ]]; then
+  diff -u <(printf '%s\n' "$source_manifest") <(printf '%s\n' "$target_manifest") || true
+  printf 'Integrity verification failed. Do not switch application traffic. Keep Supabase unchanged and investigate the diff above.\n' >&2
+  exit 7
+fi
+
+runtime_user_count="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT count(*) FROM public."User"')"
+source_user_count="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c 'SELECT count(*) FROM public."User"')"
+[[ "$runtime_user_count" == "$source_user_count" ]] || {
+  printf 'Runtime role visibility check failed. Do not switch application traffic.\n' >&2
+  exit 8
+}
+
+printf '\nIdentity data transfer verified.\n'
+printf 'Source database: %s\nTarget database: %s\n' "$source_db" "$target_db"
+printf 'User rows visible to proidentity_login: %s\n' "$runtime_user_count"
+printf 'Row counts and content digests match for all Identity tables, including migration history.\n'
+printf 'Supabase remains unchanged. Render cutover is a separate step and has not been performed.\n'
