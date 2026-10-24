@@ -10,7 +10,7 @@
     "https://identity.prosolutions.page";
   const PROJOBS_API_URL =
     window.__PROJOBS_API_URL__ ||
-    window.location.origin;
+    "https://projobs-api-0clw.onrender.com";
   const ACCESS_TOKEN_KEY = "projobs_access_token";
   const MODULE_REQUIRED = "PROJOBS";
 
@@ -136,6 +136,7 @@
         }
       },
     };
+    window.dispatchEvent(new CustomEvent("projobs:auth-ready"));
   }
 
   function updateAuthUI() {
@@ -162,9 +163,7 @@
           link.textContent = link.dataset.authedLabel || "Mi Perfil";
           link.onclick = (e) => {
             e.preventDefault();
-            window.location.href = `/profile.html?user=${encodeURIComponent(
-              userProfile?.email || "",
-            )}`;
+            window.location.href = "/mi-cuenta.html";
           };
         } else {
           link.textContent = link.dataset.anonLabel || "Iniciar sesión";
