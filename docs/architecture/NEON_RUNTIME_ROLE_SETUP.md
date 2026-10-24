@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Prepare least-privilege application logins for the separate `proidentity`, `procv`, and `projobs` databases. This is a preparation guide only. Do not configure Render or run application migrations against Neon until module-specific schema and permission checks have been reviewed.
+Document the least-privilege application logins for the separate `proidentity`, `procv`, and `projobs` databases. The roles and module schemas have now been created in Neon; ProCV data is migrated and verified, ProIdentity data transfer is partial, and Render cutover remains blocked pending full Identity transfer and end-to-end tests.
 
 ## Neon-specific behavior and current state
 
 Neon roles created in the Console, API, or CLI are automatically granted membership in `neon_superuser`. That membership carries administrative privileges and can bypass row-level security. In this project, attempting to revoke that membership from the Console-created `proidentity_runtime`, `procv_runtime`, and `projobs_runtime` roles failed with SQLSTATE 42501. **Do not use those three existing roles in Render.** Leave them unused while we establish the restricted roles; do not delete them yet.
 
-The following roles have been created through SQL in the `production` branch and verified:
+The following permission-group roles were created and verified in the `production` branch:
 - `proidentity_app` — NOLOGIN, NOSUPERUSER, NOCREATEDB, NOCREATEROLE, NOREPLICATION, NOBYPASSRLS.
 - `procv_app` — same restricted attributes.
 - `projobs_app` — same restricted attributes.
 
-The verification showed all three are not members of `neon_superuser`. These are permission-group roles, not connection logins. They have not yet been granted table privileges.
+The following login roles were also created and verified: `proidentity_login`, `procv_login`, and `projobs_login`. Each is restricted, is not a member of `neon_superuser`, and can connect only to its matching database. The matching app-role memberships and module-specific table grants/policies have been applied. `projobs_login` is additionally a member of `projobs_api` for the forced-RLS ProJobs adapter.
 
 Official references:
 - https://neon.com/docs/manage/roles
@@ -75,12 +75,12 @@ Expected for all three: `rolcanlogin=true`; all administrative attributes and `m
 
 ## Important sequencing
 
-1. Do not grant table, schema, or function access yet. The module-specific schema and RLS strategy must be reviewed and tested first.
-2. Database `CONNECT` grants and restrictions for other databases must be set deliberately; do not assume a role can access only one database merely because of its name.
-3. ProIdentity needs account-wide access for its server-only API. ProCV currently has RLS enabled without policies in the source schema; preserve application-level ownership checks and explicitly decide/test its runtime access strategy before cutover. ProJobs is designed for transaction-local subject context and forced RLS.
-4. Keep a separate administrative/migration connection for schema changes. Runtime logins must not own application tables and must not be used for migrations.
-5. Do not change Render environment variables, apply production schemas, copy data, or deploy until per-module permissions and smoke tests pass and the owner explicitly approves cutover.
+1. `CONNECT` is restricted so each `*_login` role can connect only to its corresponding module database.
+2. ProIdentity and ProCV have RLS enabled with server-role policies that permit the authenticated backend role to perform its application operations. This is defense in depth for server-only access, not per-row authorization; application-level authorization remains required.
+3. ProJobs uses forced RLS and a transaction-local `projobs.user_id`; the Neon smoke test confirmed cross-user isolation and removed its test row.
+4. ProCV schema/data have been migrated and row counts/content digests match Supabase. ProIdentity schema/history are present; the `User` table matches Supabase, but sessions, tokens, profiles, module grants, and audit data remain to be transferred by the guarded script/ workflow in PR #58.
+5. Keep Supabase intact and do not change Render environment variables until the remaining Identity data transfer, authentication/module-entitlement tests, and service smoke tests pass. Runtime logins must not own tables and must not be used for migrations.
 
 ## Safety boundary
 
-This guide does not apply database schemas, copy data, change Render, or deploy. Role passwords and connection strings are secrets and must remain outside GitHub and ChatGPT.
+This guide records database roles and schema setup already completed in Neon. It does not perform the remaining Identity data transfer or change Render. Role passwords and connection strings are secrets and must remain outside committed files and chat.
