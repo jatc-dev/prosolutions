@@ -39,7 +39,7 @@ Before any real transfer:
 1. Recheck source/target schema, row counts, and content digests.
 2. Review the implemented narrowly scoped reconciliation for the one user's `lastLoginAt` and `updatedAt` values. It checks matching User counts/IDs and a digest of all non-activity fields before changing only the two activity timestamps from Supabase. Do not apply a guessed timezone offset.
 3. Require the integration workflow to pass its synthetic timestamp-only fixture and negative cases for non-timestamp drift and extra target users. These are test-only databases, never production.
-4. Recheck the current source `Session` count and state; the observed 89 sessions are a point-in-time snapshot, not a fixed expected count.
+4. Recheck the current source `Session` count and state; the latest observed 90 sessions are a point-in-time snapshot, not a fixed expected count.
 5. Transfer missing tables in a transaction, then verify row counts and content digests for every table and visibility through `proidentity_login`.
 6. Run authentication, refresh, logout/revocation, and module-entitlement smoke tests against Neon before considering Render cutover.
 
