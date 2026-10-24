@@ -1,5 +1,5 @@
 -- Dedicated provider-neutral ProJobs PostgreSQL schema. Apply with a database administrator.
--- Never apply to ProCV or ProIdentity. After migration: GRANT projobs_api TO projobs_runtime;
+-- Never apply to ProCV or ProIdentity. After migration, grant projobs_api to the environment's restricted login (Neon: GRANT projobs_api TO projobs_login).
 -- Runtime login must not own these tables and must not be SUPERUSER/BYPASSRLS.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='projobs_api') THEN CREATE ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; END IF; END $$;
