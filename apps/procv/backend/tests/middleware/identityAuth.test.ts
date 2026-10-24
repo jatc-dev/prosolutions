@@ -21,17 +21,16 @@ const upsertMock = prisma.identityAccount.upsert as jest.MockedFunction<
 
 function makeResponse() {
   const state: { statusCode: number; body?: unknown } = { statusCode: 200 };
-  const res = {
-    status: jest.fn((code: number) => {
-      state.statusCode = code;
-      return res;
-    }),
-    json: jest.fn((body: unknown) => {
-      state.body = body;
-      return res;
-    }),
-    state,
-  };
+  const res = {} as Response & { state: typeof state };
+  res.state = state;
+  res.status = jest.fn((code: number) => {
+    state.statusCode = code;
+    return res;
+  });
+  res.json = jest.fn((body: unknown) => {
+    state.body = body;
+    return res;
+  });
   return res;
 }
 
