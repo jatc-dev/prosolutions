@@ -37,6 +37,7 @@ export function signAccessToken(payload: {
   email?: string;
   role?: string;
   modules?: string[];
+  jti: string;
 }): string {
   return jwt.sign(
     {
@@ -44,6 +45,7 @@ export function signAccessToken(payload: {
       email: payload.email,
       role: payload.role,
       modules: payload.modules,
+      jti: payload.jti,
     },
     config.jwtSecret,
     ACCESS_TOKEN_OPTIONS,
@@ -78,14 +80,15 @@ export async function createTokenPair(user: {
   role: string;
   modules?: string[];
 }): Promise<TokenPair> {
+  const jti = crypto.randomUUID();
   const accessToken = signAccessToken({
     sub: user.id,
     email: user.email,
     role: user.role,
     modules: user.modules,
+    jti,
   });
 
-  const jti = crypto.randomUUID();
   const refreshToken = signRefreshToken({ sub: user.id, jti });
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
