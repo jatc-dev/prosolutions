@@ -2,7 +2,9 @@
 -- Never apply to ProCV or ProIdentity. After migration, grant projobs_api to the environment's restricted login (Neon: GRANT projobs_api TO projobs_login).
 -- Runtime login must not own these tables and must not be SUPERUSER/BYPASSRLS.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='projobs_api') THEN CREATE ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT; END IF; END $$;
+DO $ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='projobs_api') THEN CREATE ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS; END IF; END $;
+-- Reassert least-privilege attributes even when the role already existed; CREATE ROLE IF NOT EXISTS alone would preserve unsafe attributes.
+ALTER ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
 GRANT USAGE ON SCHEMA public TO projobs_api;
 
 CREATE TABLE IF NOT EXISTS public.projobs_saved_jobs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id text NOT NULL,job_id text NOT NULL,job_url text NOT NULL CHECK(job_url ~* '^https?://'),job_title text NOT NULL DEFAULT '',company text NOT NULL DEFAULT '',created_at timestamptz NOT NULL DEFAULT now(),CONSTRAINT projobs_saved_jobs_user_job_unique UNIQUE(user_id,job_id));
