@@ -6,7 +6,7 @@
 - Target database: `proidentity`
 - The target schema and Prisma migration history are present.
 - Seven `User` rows exist in both databases and their stable identity fields match. Six users have identical `lastLoginAt` and `updatedAt` values; one user's two activity timestamps are newer in Supabase than in Neon.
-- Supabase is the source of truth until a reviewed reconciliation is implemented. The current transfer script intentionally refuses to overwrite a non-empty, non-identical `User` table.
+- Supabase remains the source of truth. The transfer script now permits exactly one narrowly scoped reconciliation: `lastLoginAt` and/or `updatedAt` differ for exactly one existing user, while the full user ID set, row count, and every other User field match. It updates only those two target fields from Supabase inside a transaction, then requires the complete integrity manifests to match. Any other drift is rejected.
 - Read-only audit on 2026-10-24 found 89 source sessions and zero target sessions. All 89 source sessions have future expiry timestamps; 65 are revoked and 24 are not revoked. No session rows had orphaned user references. These counts can change while Supabase remains live, so re-check immediately before any approved transfer.
 - Other Identity application tables need transfer after the `User` mismatch is safely resolved.
 - No production data was changed by this audit. This runbook does not change Render or switch traffic.
@@ -37,8 +37,8 @@ Use the connection URLs from their respective provider consoles. Do not put real
 Before any real transfer:
 
 1. Recheck source/target schema, row counts, and content digests.
-2. Implement a narrowly scoped reconciliation for the one user's `lastLoginAt` and `updatedAt` values, with assertions that every other `User` field matches and that exactly the expected timestamp-only discrepancy is present. Use Supabase as the source of truth for those two fields. Do not apply a guessed timezone offset.
-3. Extend the integration workflow with a synthetic fixture for this timestamp-only discrepancy, and verify the script refuses unexpected differences and duplicate rows.
+2. Review the implemented narrowly scoped reconciliation for the one user's `lastLoginAt` and `updatedAt` values. It checks matching User counts/IDs and a digest of all non-activity fields before changing only the two activity timestamps from Supabase. Do not apply a guessed timezone offset.
+3. Require the integration workflow to pass its synthetic timestamp-only fixture and negative cases for non-timestamp drift and extra target users. These are test-only databases, never production.
 4. Recheck the current source `Session` count and state; the observed 89 sessions are a point-in-time snapshot, not a fixed expected count.
 5. Transfer missing tables in a transaction, then verify row counts and content digests for every table and visibility through `proidentity_login`.
 6. Run authentication, refresh, logout/revocation, and module-entitlement smoke tests against Neon before considering Render cutover.
@@ -55,11 +55,12 @@ bash scripts/maintenance/migrate-proidentity-data-to-neon.sh
 
 The current script:
 1. Checks all three connections and verifies the target database and runtime role.
-2. Compares source and target row counts plus content digests for every Identity table.
-3. Skips any table that already matches exactly.
-4. Imports only tables that are empty in Neon but populated in Supabase, in one transaction.
-5. Refuses to overwrite, duplicate, or silently reconcile a table that is partially populated or differs from the source.
-6. Verifies all counts and content digests again and confirms `proidentity_login` can read the migrated user count.
+2. Before the full manifest comparison, verifies the User row count, ID set, and digest of all fields except `lastLoginAt` and `updatedAt`. It permits activity timestamp drift for exactly one user only, updates those two values from Supabase in a transaction, and refuses all other User differences.
+3. Compares source and target row counts plus content digests for every Identity table.
+4. Skips any table that already matches exactly.
+5. Imports only tables that are empty in Neon but populated in Supabase, in one transaction.
+6. Refuses to overwrite, duplicate, or silently reconcile a table that is partially populated or differs from the source, except for the exact timestamp-only case above.
+7. Verifies all counts and content digests again and confirms `proidentity_login` can read the migrated user count.
 
 It preserves IDs, password hashes, sessions, refresh tokens, module entitlements, profiles, and verification/reset token records. It does not alter the Supabase source. Because of the timestamp discrepancy above, the current script is expected to stop and must not be bypassed.
 
