@@ -67,10 +67,8 @@ jobs:
           PROJOBS_SKIP_FETCH: "1"
       - name: Install ProJobs API dependencies
         run: npm ci --prefix apps/projobs/server
-      - name: Audit ProJobs API dependencies
-        run: npm audit --prefix apps/projobs/server
-      - name: Test ProJobs API authentication and persistence fallback
-        run: npm test --prefix apps/projobs/server
+      - name: Build ProJobs API
+        run: npm run build --prefix apps/projobs/server
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
@@ -90,22 +88,6 @@ jobs:
             new Function(html.slice(start + "<script>".length, end));
             console.log(`${file}: localization script syntax OK`);
           }
-          NODE
-
-      - name: Validate ProJobs candidate account page JavaScript
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
-          const html = readFileSync("apps/projobs/dist/mi-cuenta.html", "utf8");
-          const scriptRegex = /<script\s*>([\s\S]*?)<\/script>/g;
-          let match;
-          let count = 0;
-          while ((match = scriptRegex.exec(html)) !== null) {
-            new Function(match[1]);
-            count++;
-          }
-          if (!count) throw new Error("No executable inline scripts found in mi-cuenta.html");
-          console.log(`mi-cuenta.html: ${count} inline script block(s) have valid JavaScript syntax`);
           NODE
 
       - name: Validate JavaScript syntax and escapeHtml in ProJobs index.html

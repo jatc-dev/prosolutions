@@ -19,7 +19,8 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy"
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "test:regression": "tsx --test tests/services/*.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
