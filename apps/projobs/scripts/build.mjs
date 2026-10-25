@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
-const FILES = ["index.html", "privacidad.html", "sitemap.xml", "ads.txt", "auth.js"];
+const FILES = ["index.html", "mi-cuenta.html", "privacidad.html", "sitemap.xml", "ads.txt", "auth.js"];
 
 function resolvePython() {
   for (const cmd of ["python", "py", "python3"]) {
@@ -46,6 +46,9 @@ for (const required of [
   'https://prosolutions.page',
   'https://procv.prosolutions.page',
   'data-i18n-aria="ecosystemNav"',
+  'data-action="apply"',
+  'data-action="save-job"',
+  'window.__PROJOBS_API_URL__',
   'class="jobs-hero"',
   'class="results-heading"',
   'class="pro-footer-bottom"',
