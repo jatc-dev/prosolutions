@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { config } from '../config.js';
 
 export interface ProJobsAuthRequest extends Request {
   userId?: string;
@@ -33,6 +33,14 @@ export function proJobsAuthMiddleware(
       role?: string;
       modules?: string[];
     };
+
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
 
     req.userId = payload.sub;
     req.email = payload.email;

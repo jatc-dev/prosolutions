@@ -2,19 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { config } from './config';
-import { proJobsAuthMiddleware } from './middleware/auth';
-import applicationsRoutes from './routes/applications';
-import savedJobsRoutes from './routes/saved-jobs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const root = path.resolve(__dirname, '../../');
-const distDir = path.join(root, 'dist');
-const publicDir = path.join(root, 'dist');
+import { config } from './config.js';
+import { proJobsAuthMiddleware } from './middleware/auth.js';
+import applicationsRoutes from './routes/applications.js';
+import savedJobsRoutes from './routes/saved-jobs.js';
 
 export function createApp() {
   const app = express();
@@ -23,9 +14,7 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: config.isProduction
-        ? ['https://projobs.prosolutions.page', 'https://prosolutions.page']
-        : true,
+      origin: config.isProduction ? config.corsOrigins : true,
       credentials: true,
     }),
   );
@@ -57,12 +46,9 @@ export function createApp() {
   app.use('/api/applications', applicationsRoutes);
   app.use('/api/saved-jobs', savedJobsRoutes);
 
-  // Serve static files (the generated ProJobs site)
-  app.use(express.static(publicDir));
-
-  // SPA fallback: serve index.html for non-API routes
+  // This service is API-only; the frontend is deployed separately.
   app.use((_req, res) => {
-    res.sendFile(path.join(publicDir, 'index.html'));
+    res.status(404).json({ error: 'Not found' });
   });
 
   return app;

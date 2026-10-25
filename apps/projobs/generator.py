@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import json
+import hashlib
 import os
 import sys
 import unicodedata
@@ -14,6 +15,7 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 # Configuración básica
 # ---------------------------------------------------------------------------
 SITE_URL = "https://projobs.prosolutions.page/"
+PROJOBS_API_URL = os.environ.get("PROJOBS_API_URL", "").strip().rstrip("/")
 SITE_TITLE = "ProJobs - Empleos Tech y Más"
 SITE_DESC = "Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente."
 
@@ -533,7 +535,13 @@ def render_job_card(job: dict) -> str:
     if job.get("experience") and job["experience"] != "no-especificado":
         experience_text = " • " + job["experience"].title()
 
-    return ('        <article class="job-card" data-country="' + escape_html(job['country']) + '"\n'
+    stable_url = canonical_url(job.get("url", ""))
+    job_id = hashlib.sha256(stable_url.encode("utf-8")).hexdigest()[:24]
+    job_url = escape_html(job["url"])
+    job_title = escape_html(job["title"])
+    company = escape_html(job["company"])
+
+    return ('        <article class="job-card" data-job-id="' + job_id + '" data-country="' + escape_html(job['country']) + '"\n'
             '             data-sector="' + escape_html(job['sector']) + '"\n'
             '             data-modality="' + escape_html(job['modality']) + '"\n'
             '             data-contract="' + escape_html(job['contract_type']) + '"\n'
@@ -554,8 +562,10 @@ def render_job_card(job: dict) -> str:
             '                <span class="badge">' + escape_html(job['contract_type'].title()) + '</span>\n'
             '                <span class="badge">' + escape_html(job['sector'].title()) + '</span>\n'
             '            </div>\n'
-            '            <a href="' + escape_html(job['url']) + '" class="btn" target="_blank"\n'
-            '               rel="noopener sponsored">Ver Oferta Completa</a>\n'
+            '            <div class="job-actions">\n'
+            '                <a href="' + job_url + '" class="btn" data-i18n="viewJob" data-action="apply" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" target="_blank" rel="noopener sponsored">Ver oferta</a>\n'
+            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob">♡ Guardar</button>\n'
+            '            </div>\n'
             '        </article>\n    ')
 
 
@@ -888,6 +898,15 @@ CSS_STYLES = """
         .job-card > .badge { border-radius: 999px; background: #eef2ff; color: #4338ca; }
         .btn { margin-top: auto; border-radius: 10px; background: #4f46e5; padding: 11px 16px; }
         .btn:hover { background: #4338ca; }
+        .job-actions { display: flex; width: 100%; align-items: center; gap: 10px; margin-top: auto; }
+        .job-actions .btn { display: inline-flex; align-items: center; justify-content: center; flex: 1; margin-top: 0; text-decoration: none; }
+        .btn-save { min-height: 42px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
+        .btn-save:hover { border-color: #818cf8; background: #eef2ff; color: #3730a3; }
+        .btn-save:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+        html.dark .btn-save { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+        html.dark .btn-save:hover { background: #312e81; border-color: #6366f1; color: #e0e7ff; }
+        @media (max-width: 420px) { .job-actions { flex-direction: column; align-items: stretch; } .job-actions .btn, .btn-save { width: 100%; } }
+
         .no-results { max-width: 80rem; margin: 0 auto 32px; padding: 44px 20px; border: 1px dashed #cbd5e1; border-radius: 18px; background: #fff; }
         .pro-footer { margin-top: 28px; background: #fff; border-top: 1px solid #e2e8f0; }
         .pro-footer-inner { max-width: 80rem; margin: 0 auto; padding: 56px 16px 24px; }
@@ -1065,6 +1084,7 @@ def render_page(jobs: list[dict]) -> str:
     </footer>
 
     {JS_CODE}
+    <script>window.__PROJOBS_API_URL__ = {json.dumps(PROJOBS_API_URL)};</script>
     <script src="auth.js"></script>
 </body>
 </html>'''
@@ -1074,8 +1094,8 @@ def render_page(jobs: list[dict]) -> str:
 
 JS_CODE = f'''<script>
 const COPY = {{
-  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
-  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
+  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', saveJob: '♡ Guardar', savedJob: '✓ Guardado', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
+  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', saveJob: '♡ Save', savedJob: '✓ Saved', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
 }};
 let locale = localStorage.getItem('projobs-locale');
 if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
