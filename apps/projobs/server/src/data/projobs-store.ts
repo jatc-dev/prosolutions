@@ -114,7 +114,10 @@ export async function getCareerProgress(userId: string) {
     const [applications, saved, events] = await Promise.all([
       c.query(`SELECT status,count(*)::int AS count FROM public.projobs_applications GROUP BY status`),
       c.query('SELECT count(*)::int AS count FROM public.projobs_saved_jobs'),
-      c.query(`SELECT job_id,previous_status,new_status,note,created_at FROM public.projobs_application_events ORDER BY created_at DESC LIMIT 20`),
+      c.query(`SELECT e.job_id,a.job_title,a.company,e.previous_status,e.new_status,e.note,e.created_at
+        FROM public.projobs_application_events e
+        LEFT JOIN public.projobs_applications a ON a.user_id=e.user_id AND a.job_id=e.job_id
+        ORDER BY e.created_at DESC LIMIT 20`),
     ]);
     const counts: Record<string, number> = {};
     let totalApplications = 0;
