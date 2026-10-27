@@ -345,7 +345,10 @@ def normalize_job(job: dict, source: str) -> dict | None:
     if not is_valid_url(url):
         return None
 
-    country = normalize_country(location)
+    country_hint = str(
+        job.get("country") or job.get("country_code") or job.get("countryCode") or ""
+    ).strip()
+    country = normalize_country(country_hint or location)
     sector = normalize_sector(
         job.get("category"),
         job.get("tags"),
@@ -465,43 +468,123 @@ def fetch_json(url: str, timeout: int = 15) -> list | dict | None:
 
 
 def fetch_arbeitnow() -> list[dict]:
-    try:
-        data = fetch_json("https://www.arbeitnow.com/api/job-board-api")
+    """Fetch several pages so the catalogue is not capped at the first 50 listings."""
+    result = []
+    for page in range(1, 6):
+        data = fetch_json(
+            "https://www.arbeitnow.com/api/job-board-api"
+            + (f"?page={page}" if page > 1 else "")
+        )
         if not data:
-            return []
-        jobs = data.get("data", [])[:50]
-        result = []
+            break
+        jobs = data.get("data", [])
+        if not jobs:
+            break
         for job in jobs:
             normalized = normalize_job(job, "Arbeitnow")
             if normalized:
                 result.append(normalized)
-        return result
-    except Exception:
-        return []
+    return result
 
 
 def fetch_remotive() -> list[dict]:
-    try:
-        data = fetch_json("https://remotive.com/api/remote-jobs?limit=50")
-        if not data:
-            return []
-        jobs = data.get("jobs", [])[:50]
-        result = []
-        for job in jobs:
-            normalized = normalize_job(job, "Remotive")
-            if normalized:
-                result.append(normalized)
-        return result
-    except Exception:
+    data = fetch_json("https://remotive.com/api/remote-jobs?limit=50")
+    if not data:
         return []
+    result = []
+    for job in data.get("jobs", [])[:50]:
+        normalized = normalize_job(job, "Remotive")
+        if normalized:
+            result.append(normalized)
+    return result
+
+
+def fetch_jobicy() -> list[dict]:
+    """Worldwide remote roles from Jobicy's public remote-jobs API."""
+    data = fetch_json("https://jobicy.com/api/v2/remote-jobs?count=50")
+    if not data:
+        return []
+    result = []
+    for item in data.get("jobs", [])[:50]:
+        job = {
+            "title": item.get("jobTitle"),
+            "company_name": item.get("companyName"),
+            "location": item.get("jobGeo") or "Worldwide remote",
+            "url": item.get("url") or item.get("jobUrl"),
+            "category": item.get("jobIndustry"),
+            "job_type": item.get("jobType"),
+            "remote": item.get("isRemote", True),
+            "date_published": item.get("pubDate"),
+            "description": item.get("jobDescription") or "",
+            "salary": item.get("annualSalary") or item.get("salary"),
+        }
+        normalized = normalize_job(job, "Jobicy")
+        if normalized:
+            result.append(normalized)
+    return result
+
+
+def fetch_himalayas() -> list[dict]:
+    """Fetch remote roles from Himalayas' public jobs API."""
+    data = fetch_json("https://himalayas.app/jobs/api?limit=50")
+    if not data:
+        return []
+    items = data.get("jobs", []) if isinstance(data, dict) else data
+    result = []
+    for item in items[:50] if isinstance(items, list) else []:
+        job = {
+            "title": item.get("title"),
+            "company_name": item.get("companyName") or item.get("company"),
+            "location": item.get("location") or "Worldwide remote",
+            "url": item.get("applicationLink") or item.get("url"),
+            "category": item.get("categories") or item.get("category"),
+            "job_type": item.get("employmentType") or item.get("jobType"),
+            "remote": True,
+            "date_published": item.get("pubDate") or item.get("publishedAt"),
+            "description": item.get("description") or "",
+            "salary": item.get("salary"),
+        }
+        normalized = normalize_job(job, "Himalayas")
+        if normalized:
+            result.append(normalized)
+    return result
+
+
+def fetch_remoteok() -> list[dict]:
+    """RemoteOK's public JSON feed, with its metadata object excluded."""
+    data = fetch_json("https://remoteok.com/api")
+    if not isinstance(data, list):
+        return []
+    result = []
+    for item in data:
+        if not isinstance(item, dict) or not item.get("position"):
+            continue
+        job = {
+            "title": item.get("position"),
+            "company_name": item.get("company"),
+            "location": item.get("location") or "Worldwide remote",
+            "url": item.get("apply_url") or item.get("url"),
+            "category": item.get("tags") or item.get("category"),
+            "job_type": item.get("job_type"),
+            "remote": True,
+            "date_published": item.get("date") or item.get("epoch"),
+            "description": item.get("description") or "",
+            "salary": item.get("salary"),
+        }
+        normalized = normalize_job(job, "RemoteOK")
+        if normalized:
+            result.append(normalized)
+    return result
 
 
 def fetch_all_jobs() -> list[dict]:
     all_jobs = []
-    for fetcher in (fetch_arbeitnow, fetch_remotive):
+    # Each source is independent: an outage or rate limit must not block the others.
+    for fetcher in (
+        fetch_arbeitnow, fetch_remotive, fetch_jobicy, fetch_himalayas, fetch_remoteok
+    ):
         try:
-            fetched = fetcher()
-            all_jobs.extend(fetched)
+            all_jobs.extend(fetcher())
         except Exception:
             continue
     all_jobs = deduplicate_jobs(all_jobs)
