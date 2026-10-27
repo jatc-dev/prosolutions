@@ -68,6 +68,66 @@
   <script>
     (() => {
       const api = window.__PROJOBS_API_URL__ || "https://projobs-api-0clw.onrender.com";
+      const COPY = {
+        es: {
+          exploreJobs:"Explorar empleos",signIn:"Iniciar sesión",eyebrow:"Tu espacio profesional",pageTitle:"Mi cuenta de ProJobs",
+          checkingUser:"Comprobando usuario autenticado…",intro:"Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.",
+          checkingSession:"Comprobando tu sesión…",personalActivity:"Actividad personal",accountNavigation:"Navegación de cuenta",
+          savedJobs:"Empleos guardados",applicationsActivity:"Actividad de postulaciones",
+          activityDisclaimer:"ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.",
+          signInToView:"Inicia sesión para ver tu actividad",identityPrivacy:"Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.",
+          signInIdentity:"Iniciar sesión con ProIdentity",sessionExpired:"Tu sesión expiró. Inicia sesión de nuevo.",loadFailed:"No se pudo cargar tu actividad.",
+          defaultJob:"Oferta de empleo",continued:"Continuaste al sitio de la empresa",recordedActivity:"Actividad registrada",viewJob:"Ver oferta",remove:"Quitar",
+          savedRemoved:"Empleo eliminado de tu lista.",activityRemoved:"Actividad eliminada de tu historial.",removeFailed:"No se pudo eliminar el registro.",
+          loadingSaved:"Cargando empleos guardados…",noSaved:"Aún no guardaste empleos",noSavedHelp:"Explora las ofertas y pulsa «Guardar» para conservarlas aquí.",
+          loadSavedFailed:"No pudimos cargar tus empleos",tryAgain:"Inténtalo de nuevo.",loadingActivity:"Cargando actividad…",noActivity:"Todavía no hay actividad",
+          noActivityHelp:"Cuando continúes a una oferta desde ProJobs, aparecerá aquí.",loadActivityFailed:"No pudimos cargar la actividad",
+          signInProfile:"Inicia sesión para ver tu perfil y tu actividad.",signedInAs:"Sesión iniciada como",signedInIdentity:"Sesión iniciada con ProIdentity.",
+          sessionActive:"Sesión activa.",languageLabel:"Cambiar idioma a inglés"
+        },
+        en: {
+          exploreJobs:"Explore jobs",signIn:"Sign in",eyebrow:"Your professional space",pageTitle:"My ProJobs account",
+          checkingUser:"Checking signed-in user…",intro:"Review jobs you saved and your activity when visiting employers’ websites.",
+          checkingSession:"Checking your session…",personalActivity:"Personal activity",accountNavigation:"Account navigation",
+          savedJobs:"Saved jobs",applicationsActivity:"Application activity",
+          activityDisclaimer:"ProJobs records when you open or continue to an external listing; it cannot confirm that an employer received an application.",
+          signInToView:"Sign in to view your activity",identityPrivacy:"We use ProIdentity for your session. ProJobs does not create or store passwords.",
+          signInIdentity:"Sign in with ProIdentity",sessionExpired:"Your session expired. Please sign in again.",loadFailed:"Could not load your activity.",
+          defaultJob:"Job listing",continued:"Continued to employer website",recordedActivity:"Activity recorded",viewJob:"View listing",remove:"Remove",
+          savedRemoved:"Job removed from your list.",activityRemoved:"Activity removed from your history.",removeFailed:"Could not remove this record.",
+          loadingSaved:"Loading saved jobs…",noSaved:"You have not saved any jobs yet",noSavedHelp:"Explore listings and select “Save” to keep them here.",
+          loadSavedFailed:"Could not load your saved jobs",tryAgain:"Please try again.",loadingActivity:"Loading activity…",noActivity:"There is no activity yet",
+          noActivityHelp:"When you continue to a listing from ProJobs, it will appear here.",loadActivityFailed:"Could not load activity",
+          signInProfile:"Sign in to view your profile and activity.",signedInAs:"Signed in as",signedInIdentity:"Signed in with ProIdentity.",
+          sessionActive:"Session active.",languageLabel:"Switch language to Spanish"
+        }
+      };
+      function readSharedLocale() {
+        const entry = document.cookie.split("; ").find(part => part.startsWith("prosolutions_locale="));
+        const value = entry ? entry.split("=").slice(1).join("=") : "";
+        return value === "en" || value === "es" ? value : null;
+      }
+      function persistLocale(value) {
+        try { localStorage.setItem("projobs-locale", value); } catch { /* storage unavailable */ }
+        const host = window.location.hostname;
+        const domain = host === "prosolutions.page" || host.endsWith(".prosolutions.page") ? "; Domain=.prosolutions.page" : "";
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = "prosolutions_locale=" + value + "; Path=/; Max-Age=31536000; SameSite=Lax" + domain + secure;
+      }
+      let locale = readSharedLocale() || localStorage.getItem("projobs-locale");
+      if (locale !== "en" && locale !== "es") locale = navigator.language?.toLowerCase().startsWith("en") ? "en" : "es";
+      const t = key => COPY[locale][key] || COPY.es[key] || key;
+      function applyLocale() {
+        document.documentElement.lang = locale;
+        document.querySelectorAll("[data-i18n]").forEach(node => { node.textContent = t(node.dataset.i18n); });
+        document.querySelectorAll("[data-i18n-aria]").forEach(node => node.setAttribute("aria-label", t(node.dataset.i18nAria)));
+        const toggle = document.getElementById("languageToggle");
+        toggle.textContent = locale === "es" ? "EN" : "ES";
+        toggle.setAttribute("aria-label", t("languageLabel"));
+        toggle.title = t("languageLabel");
+        persistLocale(locale);
+      }
+
       const status = document.getElementById("status");
       const account = document.getElementById("account");
       const signedOut = document.getElementById("signed-out");
