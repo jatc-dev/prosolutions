@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Briefcase, FileText, Gem, House, Menu, Moon, Sun, X, type LucideIcon } from "lucide-react";
+import { Briefcase, FileText, Gem, House, LogOut, Menu, Moon, Settings, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -14,9 +14,23 @@ interface NavItem {
   icon: LucideIcon;
 }
 
+interface HeaderProfile {
+  name?: string | null;
+  email: string;
+  avatarUrl?: string | null;
+}
+
 interface ProHeaderProps {
   /** App actual: resalta su enlace con un badge "Activo". */
   activeApp: ActiveApp;
+  /** Usuario autenticado; cuando existe, muestra el menú unificado de cuenta. */
+  profile?: HeaderProfile | null;
+  /** Acción de cierre de sesión del módulo autenticado. */
+  onSignOut?: () => void | Promise<void>;
+  /** Destino opcional para la página de perfil del módulo actual. */
+  profileHref?: string;
+  /** Destino opcional para configuración de cuenta. */
+  settingsHref?: string;
   /** Idioma de la interfaz compartida. */
   locale?: "es" | "en";
   /** Acción para cambiar el idioma, cuando la aplicación ofrece traducciones. */
@@ -59,7 +73,7 @@ function navItems(locale: "es" | "en"): NavItem[] {
  * Header unificado del ecosistema ProSolutions.
  * Uso: <ProHeader activeApp="core" /> en apps/core, "procv" en apps/procv, etc.
  */
-export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange }: ProHeaderProps) {
+export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = navItems(locale);
 
@@ -128,6 +142,30 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
 
           <div className="flex items-center gap-2">
             {actions ? <div className="hidden items-center gap-2 xl:flex">{actions}</div> : null}
+
+            {profile ? (
+              <details className="group relative">
+                <summary className="inline-flex h-10 max-w-56 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                  {profile.avatarUrl ? (
+                    <img src={profile.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <span aria-hidden="true" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900/60 dark:text-brand-200">
+                      {(profile.name || profile.email).trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="max-w-32 truncate">{profile.name || (locale === "en" ? "My account" : "Mi cuenta")}</span>
+                </summary>
+                <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                  <div className="border-b border-slate-100 px-3 py-3 dark:border-slate-700">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{profile.name || (locale === "en" ? "Signed in" : "Sesión iniciada")}</p>
+                    <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{profile.email}</p>
+                  </div>
+                  {profileHref ? <a href={profileHref} className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"><UserRound className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "My profile" : "Mi perfil"}</a> : null}
+                  {settingsHref ? <a href={settingsHref} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"><Settings className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "Settings" : "Configuración"}</a> : null}
+                  {onSignOut ? <button type="button" onClick={() => void onSignOut()} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:text-red-400 dark:hover:bg-red-900/20"><LogOut className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "Sign out" : "Cerrar sesión"}</button> : null}
+                </div>
+              </details>
+            ) : null}
 
             {onLocaleChange ? (
               <button
