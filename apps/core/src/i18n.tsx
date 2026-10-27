@@ -311,10 +311,10 @@ export function CoreLocaleProvider({ children }: { children: ReactNode }) {
 
     try {
       window.localStorage.setItem("prosolutions-core-locale", locale);
-      writeSharedLocale(locale);
     } catch {
       // Language switching remains available when browser storage is disabled.
     }
+    writeSharedLocale(locale);
   }, [locale]);
 
   const value = useMemo(() => ({ locale, setLocale, copy: messages[locale] }), [locale]);
