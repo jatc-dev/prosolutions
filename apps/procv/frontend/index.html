@@ -26,6 +26,21 @@
         }
       })();
     </script>
+    <script>
+      // Resolve the shared language before ProCV's React app mounts.
+      (function () {
+        try {
+          var entry = document.cookie.split("; ").find(function (part) { return part.indexOf("prosolutions_locale=") === 0; });
+          var shared = entry ? entry.split("=").slice(1).join("=") : "";
+          var saved = localStorage.getItem("i18nextLng");
+          var locale = shared === "en" || shared === "es" ? shared : (saved === "en" || saved === "es" ? saved : "");
+          if (!locale) locale = (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es";
+          document.documentElement.lang = locale;
+        } catch (e) {
+          document.documentElement.lang = (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es";
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
