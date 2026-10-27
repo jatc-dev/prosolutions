@@ -47,7 +47,7 @@ export function LandingFeaturesGrid({ features, loading, error, onRetry }: Landi
       ) : (
         features.map((feature, index) => {
           const visual = getLandingFeatureVisual(feature, index);
-          const IconDisplay = feature.icon || visual.icon;
+          const IconDisplay = visual.icon;
 
           return (
             <div
@@ -56,8 +56,8 @@ export function LandingFeaturesGrid({ features, loading, error, onRetry }: Landi
             >
               <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-brand-400/20 blur-3xl transition group-hover:scale-110" />
               <div className="relative flex items-start gap-4">
-                <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ring-1 ${visual.iconContainerClass}`}>
-                  <span aria-hidden="true">{IconDisplay}</span>
+                <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1 ${visual.iconContainerClass}`}>
+                  <IconDisplay className="h-6 w-6" strokeWidth={1.8} aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{feature.title}</h3>
