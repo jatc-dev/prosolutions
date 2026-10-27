@@ -76,14 +76,14 @@
           savedJobs:"Empleos guardados",applicationsActivity:"Actividad de postulaciones",
           activityDisclaimer:"ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.",
           signInToView:"Inicia sesión para ver tu actividad",identityPrivacy:"Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.",
-          signInIdentity:"Iniciar sesión con ProIdentity",sessionExpired:"Tu sesión expiró. Inicia sesión de nuevo.",loadFailed:"No se pudo cargar tu actividad.",
-          defaultJob:"Oferta de empleo",continued:"Continuaste al sitio de la empresa",recordedActivity:"Actividad registrada",viewJob:"Ver oferta",remove:"Quitar",
-          savedRemoved:"Empleo eliminado de tu lista.",activityRemoved:"Actividad eliminada de tu historial.",removeFailed:"No se pudo eliminar el registro.",
-          loadingSaved:"Cargando empleos guardados…",noSaved:"Aún no guardaste empleos",noSavedHelp:"Explora las ofertas y pulsa «Guardar» para conservarlas aquí.",
-          loadSavedFailed:"No pudimos cargar tus empleos",tryAgain:"Inténtalo de nuevo.",loadingActivity:"Cargando actividad…",noActivity:"Todavía no hay actividad",
-          noActivityHelp:"Cuando continúes a una oferta desde ProJobs, aparecerá aquí.",loadActivityFailed:"No pudimos cargar la actividad",
-          signInProfile:"Inicia sesión para ver tu perfil y tu actividad.",signedInAs:"Sesión iniciada como",signedInIdentity:"Sesión iniciada con ProIdentity.",
-          sessionActive:"Sesión activa.",languageLabel:"Cambiar idioma a inglés"
+          signInIdentity:"Iniciar sesión con ProIdentity",sessionExpired:t("sessionExpired"),loadFailed:t("loadFailed"),
+          defaultJob:t("defaultJob"),continued:t("continued"),recordedActivity:t("recordedActivity"),viewJob:t("viewJob"),remove:t("remove"),
+          savedRemoved:t("savedRemoved"),activityRemoved:t("activityRemoved"),removeFailed:t("removeFailed"),
+          loadingSaved:t("loadingSaved"),noSaved:t("noSaved"),noSavedHelp:t("noSavedHelp"),
+          loadSavedFailed:t("loadSavedFailed"),tryAgain:t("tryAgain"),loadingActivity:t("loadingActivity"),noActivity:t("noActivity"),
+          noActivityHelp:t("noActivityHelp"),loadActivityFailed:t("loadActivityFailed"),
+          signInProfile:t("signInProfile"),signedInAs:"Sesión iniciada como",signedInIdentity:t("signedInIdentity"),
+          sessionActive:t("sessionActive"),languageLabel:"Cambiar idioma a inglés"
         },
         en: {
           exploreJobs:"Explore jobs",signIn:"Sign in",eyebrow:"Your professional space",pageTitle:"My ProJobs account",
@@ -156,32 +156,32 @@
       }
       async function request(path, options = {}) {
         const token = window.proJobsAuth?.getToken();
-        if (!token) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+        if (!token) throw new Error(t("sessionExpired"));
         const response = await fetch(api + path, {
           ...options,
           headers: {...(options.headers || {}), Authorization: "Bearer " + token}
         });
         const data = await response.json().catch(() => ({}));
-        if (response.status === 401) throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
-        if (!response.ok) throw new Error(data.message || "No se pudo cargar tu actividad.");
+        if (response.status === 401) throw new Error(t("sessionExpired"));
+        if (!response.ok) throw new Error(data.message || t("loadFailed"));
         return data;
       }
       function jobItem(item, kind) {
         const row = element("article", "item");
         const info = element("div");
-        info.append(element("h3", "", item.job_title || "Oferta de empleo"));
+        info.append(element("h3", "", item.job_title || t("defaultJob")));
         info.append(element("p", "", [item.company, dateText(item.created_at)].filter(Boolean).join(" · ")));
         if (kind === "application") {
-          const statusText = item.status === "redirected_to_employer" ? "Continuaste al sitio de la empresa" : (item.status || "Actividad registrada");
+          const statusText = item.status === "redirected_to_employer" ? t("continued") : (item.status || t("recordedActivity"));
           info.append(element("p", "", statusText));
         }
         const actions = element("div", "item-actions");
-        const open = element("a", "button primary", "Ver oferta");
+        const open = element("a", "button primary", t("viewJob"));
         open.href = item.job_url;
         open.target = "_blank";
         open.rel = "noopener noreferrer";
         actions.append(open);
-        const remove = element("button", "danger", "Quitar");
+        const remove = element("button", "danger", t("remove"));
         remove.type = "button";
         remove.addEventListener("click", async () => {
           remove.disabled = true;
@@ -189,10 +189,10 @@
             const endpoint = kind === "saved" ? "/api/saved-jobs/" : "/api/applications/";
             await request(endpoint + encodeURIComponent(item.job_id), {method:"DELETE"});
             if (kind === "saved") await loadSaved(); else await loadApplications();
-            status.textContent = kind === "saved" ? "Empleo eliminado de tu lista." : "Actividad eliminada de tu historial.";
+            status.textContent = kind === "saved" ? t("savedRemoved") : t("activityRemoved");
             status.classList.remove("error");
           } catch (error) {
-            showError(error.message || "No se pudo eliminar el registro.");
+            showError(error.message || t("removeFailed"));
             remove.disabled = false;
           }
         });
@@ -201,25 +201,25 @@
         return row;
       }
       async function loadSaved() {
-        savedList.replaceChildren(element("p", "", "Cargando empleos guardados…"));
+        savedList.replaceChildren(element("p", "", t("loadingSaved")));
         try {
           const data = await request("/api/saved-jobs");
-          if (!data.savedJobs?.length) return emptyState(savedList, "Aún no guardaste empleos", "Explora las ofertas y pulsa «Guardar» para conservarlas aquí.");
+          if (!data.savedJobs?.length) return emptyState(savedList, t("noSaved"), t("noSavedHelp"));
           savedList.replaceChildren(...data.savedJobs.map(item => jobItem(item, "saved")));
         } catch (error) {
-          emptyState(savedList, "No pudimos cargar tus empleos", error.message || "Inténtalo de nuevo.");
-          showError(error.message || "No se pudo cargar tu actividad.");
+          emptyState(savedList, t("loadSavedFailed"), error.message || t("tryAgain"));
+          showError(error.message || t("loadFailed"));
         }
       }
       async function loadApplications() {
-        applicationsList.replaceChildren(element("p", "", "Cargando actividad…"));
+        applicationsList.replaceChildren(element("p", "", t("loadingActivity")));
         try {
           const data = await request("/api/applications");
-          if (!data.applications?.length) return emptyState(applicationsList, "Todavía no hay actividad", "Cuando continúes a una oferta desde ProJobs, aparecerá aquí.");
+          if (!data.applications?.length) return emptyState(applicationsList, t("noActivity"), t("noActivityHelp"));
           applicationsList.replaceChildren(...data.applications.map(item => jobItem(item, "application")));
         } catch (error) {
-          emptyState(applicationsList, "No pudimos cargar la actividad", error.message || "Inténtalo de nuevo.");
-          showError(error.message || "No se pudo cargar tu actividad.");
+          emptyState(applicationsList, t("loadActivityFailed"), error.message || t("tryAgain"));
+          showError(error.message || t("loadFailed"));
         }
       }
       function selectTab(tab) {
@@ -236,7 +236,7 @@
       document.getElementById("applications-tab").addEventListener("click", () => selectTab("applications"));
       async function init() {
         if (!window.proJobsAuth?.isAuthenticated()) {
-          document.getElementById("account-user").textContent = "Inicia sesión para ver tu perfil y tu actividad.";
+          document.getElementById("account-user").textContent = t("signInProfile");
           account.classList.add("hidden");
           signedOut.classList.remove("hidden");
           status.hidden = true;
@@ -254,12 +254,18 @@
           (typeof user.email === "string" ? user.email.split("@")[0] : "");
         const userLine = document.getElementById("account-user");
         userLine.textContent = name
-          ? `Sesión iniciada como ${name}${user.email && user.email !== name ? " · " + user.email : ""}`
-          : "Sesión iniciada con ProIdentity.";
+          ? `${t("signedInAs")} ${name}${user.email && user.email !== name ? " · " + user.email : ""}`
+          : t("signedInIdentity");
         status.classList.remove("error");
-        status.textContent = "Sesión activa.";
+        status.textContent = t("sessionActive");
         await loadSaved();
       }
+      applyLocale();
+      document.getElementById("languageToggle").addEventListener("click", () => {
+        locale = locale === "es" ? "en" : "es";
+        applyLocale();
+        if (window.proJobsAuth?.isAuthenticated()) init();
+      });
       window.addEventListener("projobs:auth-ready", init);
       if (window.proJobsAuth) init();
     })();
