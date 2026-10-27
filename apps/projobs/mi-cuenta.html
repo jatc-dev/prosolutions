@@ -33,6 +33,13 @@
     .item h3{font-size:1.05rem;margin:0 0 4px}.item p{color:var(--muted);margin:3px 0;font-size:.92rem}.item-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .danger{color:var(--danger)}.empty{padding:28px 8px;text-align:center;color:var(--muted)}.empty strong{display:block;color:var(--ink);margin-bottom:4px}
     .small{font-size:.85rem;color:var(--muted)}.hidden{display:none!important}
+    .status-select{max-width:220px;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface);color:var(--ink);font:inherit}
+    .progress-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0 22px}
+    .progress-metric{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface)}
+    .progress-metric strong{font-size:1.8rem;line-height:1.1;color:var(--brand)}
+    .progress-events p{border-bottom:1px solid var(--line);padding:10px 0;margin:0;font-size:.9rem;overflow-wrap:anywhere}
+    .alert-match-link{display:block;padding:5px 0;font-size:.9rem}
+    .tabs button[aria-selected=false]{color:var(--muted)}
     @media(max-width:620px){.topbar-inner{align-items:flex-start;flex-direction:column}.item{flex-direction:column}.item-actions{justify-content:flex-start}.panel{padding:16px}}
   </style>
 </head>
@@ -56,14 +63,23 @@
     <section id="account" class="panel hidden" aria-label="Actividad personal" data-i18n-aria="personalActivity">
       <div class="tabs" role="tablist" aria-label="Secciones de mi cuenta">
         <button type="button" role="tab" id="saved-tab" aria-controls="saved-panel" aria-selected="true" data-i18n="savedJobs">Empleos guardados</button>
-        <button type="button" role="tab" id="applications-tab" aria-controls="applications-panel" aria-selected="false" data-i18n="applicationsActivity">Actividad de postulaciones</button>
+        <button type="button" role="tab" id="applications-tab" aria-controls="applications-panel" aria-selected="false" data-i18n="applicationsActivity">Seguimiento de postulaciones</button>
+        <button type="button" role="tab" id="alerts-tab" aria-controls="alerts-panel" aria-selected="false" data-i18n="alertsTab">Alertas guardadas</button>
+        <button type="button" role="tab" id="progress-tab" aria-controls="progress-panel" aria-selected="false" data-i18n="progressTab">Mi progreso</button>
       </div>
       <section id="saved-panel" role="tabpanel" aria-labelledby="saved-tab">
         <div id="saved-list"></div>
       </section>
       <section id="applications-panel" role="tabpanel" aria-labelledby="applications-tab" class="hidden">
         <div id="applications-list"></div>
-        <p class="small" data-i18n="activityDisclaimer">ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.</p>
+        <p class="small" data-i18n="activityDisclaimer">Actualiza manualmente cada estado. ProJobs no puede confirmar que una empresa haya recibido tu postulación.</p>
+      </section>
+      <section id="alerts-panel" role="tabpanel" aria-labelledby="alerts-tab" class="hidden">
+        <div id="alerts-list"></div>
+        <p class="small" data-i18n="alertsDeliveryNote">Las alertas se guardan en tu cuenta y muestran ofertas coincidentes al revisar esta sección. El envío automático de correos requiere configurar el proveedor de notificaciones del entorno.</p>
+      </section>
+      <section id="progress-panel" role="tabpanel" aria-labelledby="progress-tab" class="hidden">
+        <div id="progress-content"></div>
       </section>
     </section>
     <section id="signed-out" class="panel hidden">
@@ -84,7 +100,7 @@
           exploreJobs:"Explorar empleos",signIn:"Iniciar sesión",eyebrow:"Tu espacio profesional",pageTitle:"Mi cuenta de ProJobs",
           checkingUser:"Comprobando usuario autenticado…",intro:"Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.",
           checkingSession:"Comprobando tu sesión…",personalActivity:"Actividad personal",accountNavigation:"Navegación de cuenta",
-          savedJobs:"Empleos guardados",applicationsActivity:"Actividad de postulaciones",
+          savedJobs:"Empleos guardados",applicationsActivity:"Seguimiento de postulaciones",alertsTab:"Alertas guardadas",progressTab:"Mi progreso",alertLoading:"Cargando alertas…",alertEmpty:"Aún no tienes alertas",alertEmptyHelp:"Crea una alerta desde los filtros de búsqueda de ProJobs.",alertLoadFailed:"No se pudieron cargar las alertas",alertFrequencyDaily:"Frecuencia diaria",alertFrequencyWeekly:"Frecuencia semanal",alertActive:"Activa",alertDelete:"Eliminar alerta",alertDeleted:"Alerta eliminada.",statusLabel:"Estado de la postulación",statusRedirected:"Pendiente de confirmar",statusApplied:"Postulación enviada",statusInterview:"Entrevista",statusRejected:"No seleccionado",statusOffer:"Oferta recibida",statusWithdrawn:"Retirada",statusUpdated:"Seguimiento actualizado.",statusUpdateFailed:"No se pudo actualizar el seguimiento.",progressLoading:"Calculando tu progreso…",progressSaved:"Empleos guardados",progressApplications:"Procesos registrados",progressInterviews:"Entrevistas",progressOffers:"Ofertas recibidas",progressRecent:"Actividad reciente",progressNoEvents:"Tus cambios de estado aparecerán aquí.",progressLoadFailed:"No se pudo cargar el progreso.",activityDisclaimer:"Actualiza manualmente cada estado. ProJobs no puede confirmar que una empresa haya recibido tu postulación.",alertsDeliveryNote:"Las alertas se guardan en tu cuenta. El envío automático de correos requiere configurar el proveedor de notificaciones del entorno.",
           activityDisclaimer:"ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.",
           signInToView:"Inicia sesión para ver tu actividad",identityPrivacy:"Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.",
           signInIdentity:"Iniciar sesión con ProIdentity",sessionExpired:t("sessionExpired"),loadFailed:t("loadFailed"),
@@ -100,7 +116,7 @@
           exploreJobs:"Explore jobs",signIn:"Sign in",eyebrow:"Your professional space",pageTitle:"My ProJobs account",
           checkingUser:"Checking signed-in user…",intro:"Review jobs you saved and your activity when visiting employers’ websites.",
           checkingSession:"Checking your session…",personalActivity:"Personal activity",accountNavigation:"Account navigation",
-          savedJobs:"Saved jobs",applicationsActivity:"Application activity",
+          savedJobs:"Saved jobs",applicationsActivity:"Application tracking",alertsTab:"Saved alerts",progressTab:"My progress",alertLoading:"Loading alerts…",alertEmpty:"You have no saved alerts yet",alertEmptyHelp:"Create an alert from the ProJobs search filters.",alertLoadFailed:"Could not load alerts",alertFrequencyDaily:"Daily frequency",alertFrequencyWeekly:"Weekly frequency",alertActive:"Active",alertDelete:"Delete alert",alertDeleted:"Alert deleted.",statusLabel:"Application status",statusRedirected:"Awaiting confirmation",statusApplied:"Application submitted",statusInterview:"Interview",statusRejected:"Not selected",statusOffer:"Offer received",statusWithdrawn:"Withdrawn",statusUpdated:"Application tracking updated.",statusUpdateFailed:"Could not update application tracking.",progressLoading:"Calculating your progress…",progressSaved:"Saved jobs",progressApplications:"Applications tracked",progressInterviews:"Interviews",progressOffers:"Offers received",progressRecent:"Recent activity",progressNoEvents:"Your status updates will appear here.",progressLoadFailed:"Could not load progress.",activityDisclaimer:"Update each status manually. ProJobs cannot confirm whether an employer received your application.",alertsDeliveryNote:"Alerts are saved to your account. Automatic email delivery requires configuring the environment notification provider.",
           activityDisclaimer:"ProJobs records when you open or continue to an external listing; it cannot confirm that an employer received an application.",
           signInToView:"Sign in to view your activity",identityPrivacy:"We use ProIdentity for your session. ProJobs does not create or store passwords.",
           signInIdentity:"Sign in with ProIdentity",sessionExpired:"Your session expired. Please sign in again.",loadFailed:"Could not load your activity.",
@@ -148,6 +164,8 @@
       const signedOut = document.getElementById("signed-out");
       const savedList = document.getElementById("saved-list");
       const applicationsList = document.getElementById("applications-list");
+      const alertsList = document.getElementById("alerts-list");
+      const progressContent = document.getElementById("progress-content");
       let currentTab = "saved";
       const dateText = (value) => {
         const date = new Date(value);
@@ -187,10 +205,46 @@
         info.append(element("h3", "", item.job_title || t("defaultJob")));
         info.append(element("p", "", [item.company, dateText(item.created_at)].filter(Boolean).join(" · ")));
         if (kind === "application") {
-          const statusText = item.status === "redirected_to_employer" ? t("continued") : (item.status || t("recordedActivity"));
-          info.append(element("p", "", statusText));
+          const statusLabels = {
+            redirected_to_employer: t("statusRedirected"), applied: t("statusApplied"),
+            interview: t("statusInterview"), rejected: t("statusRejected"),
+            offer: t("statusOffer"), withdrawn: t("statusWithdrawn")
+          };
+          info.append(element("p", "", statusLabels[item.status] || t("recordedActivity")));
         }
         const actions = element("div", "item-actions");
+        if (kind === "application") {
+          const statusSelect = element("select", "status-select");
+          statusSelect.setAttribute("aria-label", t("statusLabel"));
+          const statuses = [
+            ["redirected_to_employer", t("statusRedirected")],
+            ["applied", t("statusApplied")],
+            ["interview", t("statusInterview")],
+            ["offer", t("statusOffer")],
+            ["rejected", t("statusRejected")],
+            ["withdrawn", t("statusWithdrawn")]
+          ];
+          statuses.forEach(([value, label]) => statusSelect.add(new Option(label, value)));
+          statusSelect.value = item.status || "redirected_to_employer";
+          statusSelect.addEventListener("change", async () => {
+            const previous = item.status || "redirected_to_employer";
+            statusSelect.disabled = true;
+            try {
+              await request("/api/applications/" + encodeURIComponent(item.job_id) + "/status", {
+                method: "PATCH", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: statusSelect.value })
+              });
+              item.status = statusSelect.value;
+              status.textContent = t("statusUpdated");
+              status.classList.remove("error");
+              await loadProgress();
+            } catch (error) {
+              statusSelect.value = previous;
+              showError(error.message || t("statusUpdateFailed"));
+            } finally { statusSelect.disabled = false; }
+          });
+          actions.append(statusSelect);
+        }
         const open = element("a", "button primary", t("viewJob"));
         open.href = item.job_url;
         open.target = "_blank";
@@ -237,18 +291,96 @@
           showError(error.message || t("loadFailed"));
         }
       }
+      async function loadAlerts() {
+        alertsList.replaceChildren(element("p", "", t("alertLoading")));
+        try {
+          const data = await request("/api/job-alerts");
+          if (!data.alerts?.length) return emptyState(alertsList, t("alertEmpty"), t("alertEmptyHelp"));
+          let catalog = [];
+          try {
+            const response = await fetch("/");
+            if (response.ok) {
+              const html = await response.text();
+              const doc = new DOMParser().parseFromString(html, "text/html");
+              catalog = JSON.parse(doc.getElementById("projobs-data")?.textContent || "[]");
+            }
+          } catch { catalog = []; }
+          alertsList.replaceChildren(...data.alerts.map(alert => {
+            const row = element("article", "item");
+            const info = element("div");
+            info.append(element("h3", "", alert.name));
+            info.append(element("p", "", Object.entries(alert.filters || {}).map(([key, value]) => key + ": " + value).join(" · ")));
+            const filters = alert.filters || {};
+            const matches = catalog.filter(job => {
+              if (filters.q && ![job.title, job.company, job.location, job.description].join(" ").toLowerCase().includes(String(filters.q).toLowerCase())) return false;
+              if (filters.country && job.country !== filters.country && job.country !== "REMOTE" && !(job.countries || []).includes(filters.country)) return false;
+              if (filters.sector && job.sector !== filters.sector) return false;
+              if (filters.modality && job.modality !== filters.modality) return false;
+              if (filters.contract && job.contract_type !== filters.contract) return false;
+              if (filters.jobType && job.job_type !== filters.jobType) return false;
+              if (filters.experience && job.experience !== filters.experience) return false;
+              return true;
+            });
+            info.append(element("p", "small", (alert.frequency === "weekly" ? t("alertFrequencyWeekly") : t("alertFrequencyDaily")) + " · " + t("alertActive") + " · " + (locale === "es" ? matches.length + " ofertas coincidentes ahora" : matches.length + " matching listings now")));
+            matches.slice(0, 3).forEach(job => {
+              const link = element("a", "alert-match-link", (job.title || t("defaultJob")) + (job.company ? " · " + job.company : ""));
+              link.href = job.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+              info.append(link);
+            });
+            const actions = element("div", "item-actions");
+            const remove = element("button", "danger", t("alertDelete"));
+            remove.addEventListener("click", async () => {
+              remove.disabled = true;
+              try {
+                await request("/api/job-alerts/" + encodeURIComponent(alert.id), { method: "DELETE" });
+                status.textContent = t("alertDeleted");
+                await loadAlerts();
+              } catch (error) { showError(error.message || t("alertLoadFailed")); remove.disabled = false; }
+            });
+            actions.append(remove); row.append(info, actions); return row;
+          }));
+        } catch (error) { emptyState(alertsList, t("alertLoadFailed"), error.message || t("tryAgain")); }
+      }
+      async function loadProgress() {
+        progressContent.replaceChildren(element("p", "", t("progressLoading")));
+        try {
+          const data = await request("/api/career/progress");
+          const grid = element("div", "progress-grid");
+          [
+            [t("progressSaved"), data.savedJobs || 0],
+            [t("progressApplications"), data.totalApplications || 0],
+            [t("progressInterviews"), data.statuses?.interview || 0],
+            [t("progressOffers"), data.statuses?.offer || 0]
+          ].forEach(([label, value]) => {
+            const tile = element("div", "progress-metric");
+            tile.append(element("span", "small", label), element("strong", "", String(value)));
+            grid.append(tile);
+          });
+          progressContent.replaceChildren(grid);
+          if (data.events?.length) {
+            progressContent.append(element("h3", "", t("progressRecent")));
+            const list = element("div", "progress-events");
+            data.events.forEach(event => list.append(element("p", "", [event.job_title || event.job_id, event.company, event.previous_status || "—", "→", event.new_status, event.note].filter(Boolean).join(" · "))));
+            progressContent.append(list);
+          } else progressContent.append(element("p", "small", t("progressNoEvents")));
+        } catch (error) { emptyState(progressContent, t("progressLoadFailed"), error.message || t("tryAgain")); }
+      }
       function selectTab(tab) {
         currentTab = tab;
-        const saved = tab === "saved";
-        document.getElementById("saved-tab").setAttribute("aria-selected", String(saved));
-        document.getElementById("applications-tab").setAttribute("aria-selected", String(!saved));
-        document.getElementById("saved-panel").classList.toggle("hidden", !saved);
-        document.getElementById("applications-panel").classList.toggle("hidden", saved);
-        if (saved) loadSaved(); else loadApplications();
+        ["saved", "applications", "alerts", "progress"].forEach(name => {
+          document.getElementById(name + "-tab").setAttribute("aria-selected", String(name === tab));
+          document.getElementById(name + "-panel").classList.toggle("hidden", name !== tab);
+        });
+        if (tab === "saved") loadSaved();
+        else if (tab === "applications") loadApplications();
+        else if (tab === "alerts") loadAlerts();
+        else loadProgress();
       }
       document.getElementById("login-button").addEventListener("click", (event) => { event.preventDefault(); window.proJobsAuth?.login(); });
       document.getElementById("saved-tab").addEventListener("click", () => selectTab("saved"));
       document.getElementById("applications-tab").addEventListener("click", () => selectTab("applications"));
+      document.getElementById("alerts-tab").addEventListener("click", () => selectTab("alerts"));
+      document.getElementById("progress-tab").addEventListener("click", () => selectTab("progress"));
       async function init() {
         if (!window.proJobsAuth?.isAuthenticated()) {
           document.getElementById("account-user").textContent = t("signInProfile");
