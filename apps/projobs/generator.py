@@ -1220,7 +1220,7 @@ def render_page(jobs: list[dict]) -> str:
 
     <div class="search-container">
         <input type="text" id="searchInput" class="search-input"
-               data-i18n-placeholder="searchPlaceholder" placeholder="🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+               data-i18n-placeholder="searchPlaceholder" placeholder="Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
     </div>
 
     {filters_html}
@@ -1238,7 +1238,7 @@ def render_page(jobs: list[dict]) -> str:
     {jobs_json}
 
     <div id="noResults" class="no-results">
-        <p data-i18n="noMatches">No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
+        <p data-i18n="noMatches">No se encontraron ofertas que coincidan con tu búsqueda.</p>
         <p data-i18n="adjustFilters">Intenta ajustar los filtros o prueba con otras palabras clave.</p>
     </div>
 
