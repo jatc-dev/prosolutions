@@ -11,8 +11,8 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   if (!address || typeof address === 'string') throw Error('No test port');
 
   const base = `http://127.0.0.1:${address.port}`;
-  const token = (modules: string[]) =>
-    jwt.sign({ modules }, config.jwtSecret, {
+  const token = (modules: string[], email?: string) =>
+    jwt.sign({ modules, email }, config.jwtSecret, {
       subject: 'synthetic-test-user',
       issuer: config.issuer,
       audience: config.audience,
@@ -68,7 +68,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   await t.test('alert creation rejects empty filters before persistence', async () => {
     const response = await fetch(`${base}/api/job-alerts`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token(['PROJOBS'])}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${token(['PROJOBS'], 'synthetic@example.com')}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Test alert', frequency: 'daily', filters: {} }),
     });
     assert.equal(response.status, 400);
