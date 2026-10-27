@@ -69,6 +69,8 @@ jobs:
         run: npm ci --prefix apps/projobs/server
       - name: Build ProJobs API
         run: npm run build --prefix apps/projobs/server
+      - name: Test ProJobs API authorization and validation
+        run: npm test --prefix apps/projobs/server
       - name: Build ProJobs from cached job data
         run: npm run build --workspace=@prosolutions/projobs
         env:
