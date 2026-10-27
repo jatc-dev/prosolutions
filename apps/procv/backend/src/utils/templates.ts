@@ -830,6 +830,7 @@ function buildCreativeTemplate(cv: CV) {
       .name { font-size: 2.8rem; font-weight: 800; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.35); }
       .role { font-size: 1.1rem; color: rgba(255,255,255,0.85); margin: 0; }
       .badge { display: inline-block; background: rgba(255,255,255,0.12); padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.75rem; margin: 0.2rem 0.2rem 0 0; }
+      .badge svg { width: 12px; height: 12px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .blk { margin-top: 2.5rem; }
       .blk-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.15em; margin: 0 0 0.8rem; color: rgba(255,255,255,0.85); }
       .panel { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 1rem; }
@@ -852,19 +853,19 @@ function buildCreativeTemplate(cv: CV) {
           ${emails
             .map(
               item =>
-                `<span class="badge">✉️ <span class="font-semibold">${escapeHtml(item.type)}:</span> ${escapeHtml(item.value)}</span>`,
+                `<span class="badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> <span class="font-semibold">${escapeHtml(item.type)}:</span> ${escapeHtml(item.value)}</span>`,
             )
             .join('')}
           ${phones
             .map(
               item =>
-                `<span class="badge">📞 <span class="font-semibold">${escapeHtml(item.type)}:</span> ${escapeHtml(item.value)}</span>`,
+                `<span class="badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6.3 6.3l1.3-1.3a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2Z"/></svg> <span class="font-semibold">${escapeHtml(item.type)}:</span> ${escapeHtml(item.value)}</span>`,
             )
             .join('')}
           ${Object.entries(links)
             .map(
               ([label, url]) =>
-                `<span class="badge">🔗 <a href="${escapeHtml(url)}">${escapeHtml(label)}</a></span>`,
+                `<span class="badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3A5 5 0 0 0 13 2.9l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21.1l1.7-1.7"/></svg> <a href="${escapeHtml(url)}">${escapeHtml(label)}</a></span>`,
             )
             .join('')}
         </div>
