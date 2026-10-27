@@ -868,6 +868,9 @@ CSS_STYLES = """
         .job-title { font-size: 1.2rem; font-weight: 600; color: #3f6ff5; margin: 0 0 6px 0; }
         .job-info { color: #64748b; font-size: 0.9rem; margin-bottom: 14px; }
         .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .search-field { position: relative; display: block; width: 100%; }
+        .search-field-icon { position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: #64748b; }
+        .search-field .search-input { padding-left: 48px; }
         .mobile-menu-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
         .search-field { position: relative; display: block; width: 100%; }
@@ -1234,8 +1237,11 @@ def render_page(jobs: list[dict]) -> str:
     </header>
 
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-input"
-               data-i18n-placeholder="searchPlaceholder" placeholder="Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+        <label class="search-field" for="searchInput">
+            <svg class="inline-icon search-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input type="text" id="searchInput" class="search-input"
+                   data-i18n-placeholder="searchPlaceholder" placeholder="Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+        </label>
     </div>
 
     {filters_html}
