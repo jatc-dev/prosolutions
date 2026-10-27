@@ -157,23 +157,74 @@
   function updateAuthUI() {
     const authed = !!userProfile;
 
-    // Provide a visible sign-out action on both the job listing and account page.
+    // Unified avatar dropdown: profile details and sign-out live in one place.
     const nav = document.querySelector(".pro-links");
-    let logoutButton = nav?.querySelector("[data-projobs-logout]");
-    if (nav && !logoutButton) {
-      logoutButton = document.createElement("button");
-      logoutButton.type = "button";
-      logoutButton.dataset.projobsLogout = "true";
-      logoutButton.style.cssText = "border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;padding:8px 12px;font:inherit;font-size:14px;font-weight:650;cursor:pointer;";
-      logoutButton.addEventListener("click", () => {
+    let profileMenu = nav?.querySelector("[data-projobs-profile-menu]");
+    if (nav && !profileMenu) {
+      profileMenu = document.createElement("details");
+      profileMenu.dataset.projobsProfileMenu = "true";
+      profileMenu.className = "projobs-profile-menu";
+      profileMenu.style.cssText = "position:relative;display:inline-flex;align-items:center;";
+      const summary = document.createElement("summary");
+      summary.style.cssText = "display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:220px;padding:4px 12px 4px 4px;border:1px solid #cbd5e1;border-radius:999px;cursor:pointer;list-style:none;font:inherit;font-size:13px;font-weight:650;color:inherit;";
+      summary.setAttribute("aria-label", document.documentElement.lang === "en" ? "Open profile menu" : "Abrir menú de perfil");
+      const avatar = document.createElement("span");
+      avatar.dataset.profileAvatar = "true";
+      avatar.style.cssText = "display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:999px;background:#e0e7ff;color:#3730a3;font-weight:800;flex:none;";
+      const name = document.createElement("span");
+      name.dataset.profileName = "true";
+      name.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      const caret = document.createElement("span");
+      caret.setAttribute("aria-hidden", "true");
+      caret.textContent = "⌄";
+      summary.append(avatar, name, caret);
+      const menu = document.createElement("div");
+      menu.dataset.profileDropdown = "true";
+      menu.style.cssText = "position:absolute;right:0;top:calc(100% + 8px);z-index:1000;width:260px;padding:8px;border:1px solid #cbd5e1;border-radius:16px;background:#fff;color:#0f172a;box-shadow:0 16px 40px rgba(15,23,42,.18);";
+      const identity = document.createElement("div");
+      identity.dataset.profileIdentity = "true";
+      identity.style.cssText = "padding:10px 12px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;";
+      const profileName = document.createElement("p");
+      profileName.dataset.profileFullName = "true";
+      profileName.style.cssText = "font-size:14px;font-weight:700;overflow-wrap:anywhere;";
+      const profileEmail = document.createElement("p");
+      profileEmail.dataset.profileEmail = "true";
+      profileEmail.style.cssText = "margin-top:4px;font-size:12px;color:#64748b;overflow-wrap:anywhere;";
+      identity.append(profileName, profileEmail);
+      const accountLink = document.createElement("a");
+      accountLink.href = "/mi-cuenta.html";
+      accountLink.dataset.profileAccount = "true";
+      accountLink.style.cssText = "display:block;padding:10px 12px;border-radius:10px;color:inherit;text-decoration:none;font-size:13px;";
+      const signOut = document.createElement("button");
+      signOut.type = "button";
+      signOut.dataset.projobsLogout = "true";
+      signOut.style.cssText = "display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:#dc2626;font:inherit;font-size:13px;font-weight:650;cursor:pointer;";
+      signOut.addEventListener("click", () => {
         if (window.proJobsAuth?.logout) window.proJobsAuth.logout();
       });
-      nav.appendChild(logoutButton);
+      menu.append(identity, accountLink, signOut);
+      profileMenu.append(summary, menu);
+      nav.appendChild(profileMenu);
+      document.addEventListener("click", (event) => {
+        if (profileMenu.open && !profileMenu.contains(event.target)) profileMenu.open = false;
+      });
     }
-    if (logoutButton) {
-      logoutButton.hidden = !authed;
-      logoutButton.textContent = document.documentElement.lang === "en" ? "Sign out" : "Cerrar sesión";
-      logoutButton.setAttribute("aria-label", logoutButton.textContent);
+    if (profileMenu) {
+      profileMenu.hidden = !authed;
+      const name = displayUserName(userProfile);
+      const email = typeof userProfile?.email === "string" ? userProfile.email : "";
+      const avatar = profileMenu.querySelector("[data-profile-avatar]");
+      const shortName = profileMenu.querySelector("[data-profile-name]");
+      const fullName = profileMenu.querySelector("[data-profile-full-name]");
+      const profileEmail = profileMenu.querySelector("[data-profile-email]");
+      const accountLink = profileMenu.querySelector("[data-profile-account]");
+      const signOut = profileMenu.querySelector("[data-projobs-logout]");
+      if (avatar) avatar.textContent = name ? name.charAt(0).toLocaleUpperCase() : "U";
+      if (shortName) shortName.textContent = name || (document.documentElement.lang === "en" ? "My account" : "Mi cuenta");
+      if (fullName) fullName.textContent = name || (document.documentElement.lang === "en" ? "Signed in" : "Sesión iniciada");
+      if (profileEmail) profileEmail.textContent = email;
+      if (accountLink) accountLink.textContent = document.documentElement.lang === "en" ? "My profile" : "Mi perfil";
+      if (signOut) signOut.textContent = document.documentElement.lang === "en" ? "Sign out" : "Cerrar sesión";
     }
 
     // Mostrar/ocultar botones de postular y guardar empleo
@@ -189,27 +240,14 @@
     const navLinks = document.querySelectorAll(".pro-links a");
     navLinks.forEach((link) => {
       const href = link.getAttribute("href") || "";
-      if (
-        href.includes("procv.prosolutions.page") ||
-        href.includes("/login")
-      ) {
-        if (authed) {
-          const name = displayUserName(userProfile);
-          link.textContent = name
-            ? (document.documentElement.lang === "en" ? `My profile · ${name}` : `Mi perfil · ${name}`)
-            : (link.dataset.authedLabel || "Mi Perfil");
-          link.title = name || (link.dataset.authedLabel || "Mi Perfil");
-          link.onclick = (e) => {
-            e.preventDefault();
-            window.location.href = "/mi-cuenta.html";
-          };
-        } else {
-          link.textContent = link.dataset.anonLabel || "Iniciar sesión";
-          link.onclick = (e) => {
-            e.preventDefault();
-            window.proJobsAuth.login();
-          };
-        }
+      if (!href.includes("/login")) return;
+      link.hidden = authed;
+      if (!authed) {
+        link.textContent = link.dataset.anonLabel || "Iniciar sesión";
+        link.onclick = (e) => {
+          e.preventDefault();
+          window.proJobsAuth.login();
+        };
       }
     });
 
