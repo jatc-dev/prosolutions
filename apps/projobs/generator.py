@@ -388,6 +388,13 @@ def normalize_job(job: dict, source: str) -> dict | None:
         job.get("country") or job.get("country_code") or job.get("countryCode") or ""
     ).strip()
     country = normalize_country(country_hint or location)
+    country_codes = []
+    for raw_country in job.get("country_codes") or []:
+        code = normalize_country(str(raw_country))
+        if code not in ("UNKNOWN", "REMOTE") and code not in country_codes:
+            country_codes.append(code)
+    if country_codes:
+        country = country_codes[0]
     sector = normalize_sector(
         job.get("category"),
         job.get("tags"),
@@ -407,6 +414,7 @@ def normalize_job(job: dict, source: str) -> dict | None:
         "company": company.strip(),
         "location": location.strip(),
         "country": country,
+        "countries": country_codes or ([country] if country != "UNKNOWN" else []),
         "url": url,
         "source": source,
         "sector": sector,
@@ -598,6 +606,7 @@ def fetch_himalayas() -> list[dict]:
                 "title": item.get("title"),
                 "company_name": item.get("companyName") or item.get("company"),
                 "location": location,
+                "country_codes": restrictions,
                 "url": item.get("applicationLink"),
                 "category": (item.get("categories") or item.get("parentCategories") or [""])[0],
                 "job_type": item.get("employmentType") or "full-time",
