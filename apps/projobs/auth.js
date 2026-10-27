@@ -157,6 +157,25 @@
   function updateAuthUI() {
     const authed = !!userProfile;
 
+    // Provide a visible sign-out action on both the job listing and account page.
+    const nav = document.querySelector(".pro-links");
+    let logoutButton = nav?.querySelector("[data-projobs-logout]");
+    if (nav && !logoutButton) {
+      logoutButton = document.createElement("button");
+      logoutButton.type = "button";
+      logoutButton.dataset.projobsLogout = "true";
+      logoutButton.style.cssText = "border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;padding:8px 12px;font:inherit;font-size:14px;font-weight:650;cursor:pointer;";
+      logoutButton.addEventListener("click", () => {
+        if (window.proJobsAuth?.logout) window.proJobsAuth.logout();
+      });
+      nav.appendChild(logoutButton);
+    }
+    if (logoutButton) {
+      logoutButton.hidden = !authed;
+      logoutButton.textContent = document.documentElement.lang === "en" ? "Sign out" : "Cerrar sesión";
+      logoutButton.setAttribute("aria-label", logoutButton.textContent);
+    }
+
     // Mostrar/ocultar botones de postular y guardar empleo
     document.querySelectorAll("[data-auth-required]").forEach((el) => {
       el.style.display = authed ? "" : "none";
