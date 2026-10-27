@@ -949,6 +949,7 @@ CSS_STYLES = """
         .language-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
         .theme-toggle { border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; color: #334155; padding: 9px 11px; font: inherit; font-size: 16px; cursor: pointer; }
         .theme-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .theme-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         /* Navegación del ecosistema ProSolutions */
@@ -1198,7 +1199,7 @@ def render_page(jobs: list[dict]) -> str:
             </div>
             <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><span aria-hidden="true">☰</span></button>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg></button>
         </div>
     </nav>
 
@@ -1552,7 +1553,9 @@ function escapeHtml(text) {{
             const label = isDark
                 ? (locale === 'es' ? 'Activar modo claro' : 'Switch to light mode')
                 : (locale === 'es' ? 'Activar modo oscuro' : 'Switch to dark mode');
-            button.textContent = isDark ? '☀️' : '🌙';
+            button.innerHTML = isDark
+                ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>'
+                : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg>';
             button.setAttribute('aria-label', label);
             button.title = label;
         }}
