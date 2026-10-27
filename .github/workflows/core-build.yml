@@ -80,7 +80,7 @@ jobs:
           node --input-type=module <<'NODE'
           import { readFileSync } from "node:fs";
 
-          for (const file of ["apps/projobs/dist/index.html", "apps/projobs/dist/privacidad.html"]) {
+          for (const file of ["apps/projobs/dist/index.html", "apps/projobs/dist/privacidad.html", "apps/projobs/dist/mi-cuenta.html"]) {
             const html = readFileSync(file, "utf8");
             const marker = html.indexOf("const COPY");
             if (marker < 0) throw new Error(`Localization script missing in ${file}`);
