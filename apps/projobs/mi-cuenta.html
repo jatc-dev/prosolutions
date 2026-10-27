@@ -29,35 +29,36 @@
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="/">ProJobs <span style="color:#4f46e5">/ Mi cuenta</span></a>
-      <nav class="nav pro-links" aria-label="Navegación de cuenta">
-        <a href="/">Explorar empleos</a>
-        <a href="/login" data-anon-label="Iniciar sesión" data-authed-label="Mi cuenta">Iniciar sesión</a>
+      <nav class="nav pro-links" aria-label="Navegación de cuenta" data-i18n-aria="accountNavigation">
+        <button type="button" id="languageToggle" aria-label="Cambiar idioma a inglés" title="Cambiar idioma a inglés">EN</button>
+        <a href="/" data-i18n="exploreJobs">Explorar empleos</a>
+        <a href="/login" data-anon-label="Iniciar sesión" data-authed-label="Mi cuenta" data-i18n="signIn">Iniciar sesión</a>
       </nav>
     </div>
   </header>
   <main>
-    <p class="eyebrow">Tu espacio profesional</p>
-    <h1>Mi cuenta de ProJobs</h1>
-    <p id="account-user" class="intro" aria-live="polite">Comprobando usuario autenticado…</p>
-    <p class="intro">Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.</p>
-    <div id="status" class="status" role="status" aria-live="polite">Comprobando tu sesión…</div>
-    <section id="account" class="panel hidden" aria-label="Actividad personal">
+    <p class="eyebrow" data-i18n="eyebrow">Tu espacio profesional</p>
+    <h1 data-i18n="pageTitle">Mi cuenta de ProJobs</h1>
+    <p id="account-user" class="intro" aria-live="polite" data-i18n="checkingUser">Comprobando usuario autenticado…</p>
+    <p class="intro" data-i18n="intro">Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.</p>
+    <div id="status" class="status" role="status" aria-live="polite" data-i18n="checkingSession">Comprobando tu sesión…</div>
+    <section id="account" class="panel hidden" aria-label="Actividad personal" data-i18n-aria="personalActivity">
       <div class="tabs" role="tablist" aria-label="Secciones de mi cuenta">
-        <button type="button" role="tab" id="saved-tab" aria-controls="saved-panel" aria-selected="true">Empleos guardados</button>
-        <button type="button" role="tab" id="applications-tab" aria-controls="applications-panel" aria-selected="false">Actividad de postulaciones</button>
+        <button type="button" role="tab" id="saved-tab" aria-controls="saved-panel" aria-selected="true" data-i18n="savedJobs">Empleos guardados</button>
+        <button type="button" role="tab" id="applications-tab" aria-controls="applications-panel" aria-selected="false" data-i18n="applicationsActivity">Actividad de postulaciones</button>
       </div>
       <section id="saved-panel" role="tabpanel" aria-labelledby="saved-tab">
         <div id="saved-list"></div>
       </section>
       <section id="applications-panel" role="tabpanel" aria-labelledby="applications-tab" class="hidden">
         <div id="applications-list"></div>
-        <p class="small">ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.</p>
+        <p class="small" data-i18n="activityDisclaimer">ProJobs registra que abriste o continuaste hacia la oferta externa; no puede confirmar que la empresa haya recibido una postulación.</p>
       </section>
     </section>
     <section id="signed-out" class="panel hidden">
-      <h2>Inicia sesión para ver tu actividad</h2>
-      <p class="intro">Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.</p>
-      <a class="button primary" href="/login" id="login-button">Iniciar sesión con ProIdentity</a>
+      <h2 data-i18n="signInToView">Inicia sesión para ver tu actividad</h2>
+      <p class="intro" data-i18n="identityPrivacy">Usamos ProIdentity para tu sesión. ProJobs no crea ni almacena contraseñas.</p>
+      <a class="button primary" href="/login" id="login-button" data-i18n="signInIdentity">Iniciar sesión con ProIdentity</a>
     </section>
   </main>
   <script>
