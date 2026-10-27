@@ -11,8 +11,8 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   if (!address || typeof address === 'string') throw Error('No test port');
 
   const base = `http://127.0.0.1:${address.port}`;
-  const token = (modules: string[]) =>
-    jwt.sign({ modules }, config.jwtSecret, {
+  const token = (modules: string[], email?: string) =>
+    jwt.sign({ modules, email }, config.jwtSecret, {
       subject: 'synthetic-test-user',
       issuer: config.issuer,
       audience: config.audience,
@@ -49,6 +49,30 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
       headers: { Authorization: `Bearer ${token(['PROCV'])}` },
     })).status, 403),
   );
+
+  await t.test('new personal endpoints require authentication', async () => {
+    assert.equal((await fetch(`${base}/api/job-alerts`)).status, 401);
+    assert.equal((await fetch(`${base}/api/career/progress`)).status, 401);
+    assert.equal((await fetch(`${base}/api/applications/test-job/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'interview' }) })).status, 401);
+  });
+
+  await t.test('application tracking rejects unsupported status before persistence', async () => {
+    const response = await fetch(`${base}/api/applications/test-job/status`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token(['PROJOBS'])}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'hired-instantly' }),
+    });
+    assert.equal(response.status, 400);
+  });
+
+  await t.test('alert creation rejects empty filters before persistence', async () => {
+    const response = await fetch(`${base}/api/job-alerts`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token(['PROJOBS'], 'synthetic@example.com')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test alert', frequency: 'daily', filters: {} }),
+    });
+    assert.equal(response.status, 400);
+  });
 
   await t.test('unconfigured database returns safe 503', async () => {
     if (config.databaseUrl) return;
