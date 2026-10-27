@@ -5,11 +5,11 @@
 - Neon project: `Prosolutions.page`
 - Target database: `proidentity`
 - The target schema and Prisma migration history are present.
-- Seven `User` rows exist in both databases and their stable identity fields match. Six users have identical `lastLoginAt` and `updatedAt` values; one user's two activity timestamps are newer in Supabase than in Neon.
-- Supabase remains the source of truth. The transfer script now permits exactly one narrowly scoped reconciliation: `lastLoginAt` and/or `updatedAt` differ for exactly one existing user, while the full user ID set, row count, and every other User field match. It updates only those two target fields from Supabase inside a transaction, then requires the complete integrity manifests to match. Any other drift is rejected.
-- Read-only audit on 2026-10-24 found 97 source sessions and zero target sessions. All 97 source sessions have future expiry timestamps; 72 are revoked and 25 are not revoked. All 97 session IDs are distinct and no session rows had orphaned user references. A fresh read-only target role audit found `proidentity_login` is non-superuser, cannot create databases/roles, has no replication or `BYPASSRLS`, owns zero application objects, and inherits no privileged-role memberships. These are point-in-time observations; re-check immediately before any approved transfer.
-- Other Identity application tables need transfer after the `User` mismatch is safely resolved.
-- No production data was changed by this audit. This runbook does not change Render or switch traffic.
+- Latest verified ProIdentity manifests matched between Supabase and Neon for the application tables and Prisma migration history: `User` 8, `Session` 0, `ModuleAccess` 24, `ProfessionalProfile` 6, `EmailVerificationToken` 2, `PasswordResetToken` 0, `AuditLog` 0, and `_prisma_migrations` 2. Counts and content digests matched at that verification point; recheck before any future transfer or cutover.
+- Session rows were deliberately truncated in both Supabase ProIdentity and Neon ProIdentity under explicit development-data-discard authorization. Do not rely on the older 2026-10-24 source-session snapshot (97 rows); it is obsolete. No session records are currently expected in either database from that operation.
+- Supabase remains the source of truth for the remaining ProIdentity application data. The transfer script permits exactly one narrowly scoped reconciliation: `lastLoginAt` and/or `updatedAt` differ for exactly one existing user, while the full user ID set, row count, and every other User field match. It updates only those two target fields from Supabase inside a transaction, then requires the complete integrity manifests to match. Any other drift is rejected.
+- A fresh role audit previously confirmed `proidentity_login` is non-superuser, cannot create databases/roles, has no replication or `BYPASSRLS`, owns zero application objects, and inherits no privileged-role memberships. Recheck immediately before any approved transfer.
+- The transfer and cutover are still separate from these prior data checks. This runbook does not change Render or switch traffic.
 
 ## Why the transfer runs from a trusted workstation
 
@@ -49,7 +49,9 @@ Any failed assertion blocks the transfer. Do not alter Supabase as part of this 
 
 ## Security review finding — cutover blocker
 
-Code review of `apps/identity/src/middleware/auth.ts` found that a valid access JWT is accepted when the refresh-token cookie is absent; session revocation/expiry checks run only when that cookie is present. Because logout revokes the refresh session and clears the cookie but does not revoke already-issued access JWTs, a copied access JWT may remain usable until its JWT expiry. Before production cutover, either change access-token validation to enforce the intended revocation semantics or explicitly accept the short residual access-token lifetime as a documented risk with compensating controls. Add a regression test: login, save access JWT, logout (cookie cleared and session revoked), then call a protected endpoint with only the saved JWT and no refresh cookie; assert the intended security outcome. This finding is separate from data-transfer integrity and must be resolved or formally accepted before changing Render's database connection.
+The current `main` implementation of `apps/identity/src/middleware/auth.ts` verifies the access JWT's `jti` against the persisted session on every protected request, even when the refresh-token cookie is absent, and rejects missing, expired, or revoked sessions. A unit regression test exists at `apps/identity/tests/services/access-token-revocation.test.ts` for replaying a saved access JWT after revocation without a cookie. Therefore, the older finding that the middleware checks revocation only when the cookie is present is stale relative to `main`; do not reintroduce that older middleware version when resolving this PR.
+
+Production verification is still pending: the manual workflow `.github/workflows/proidentity-logout-replay-e2e.yml` must run against the intended deployed Identity service with a dedicated verified E2E account configured in GitHub Actions secrets `IDENTITY_E2E_EMAIL` and `IDENTITY_E2E_PASSWORD`. That workflow creates and revokes a test session, so use only a dedicated test account. Do not claim the deployed service has passed until that workflow reports success. This is a cutover gate separate from data-transfer integrity.
 
 ## Execute — only after the gate above is satisfied and reviewed
 
