@@ -68,6 +68,9 @@ export async function removeApplication(userId: string, jobId: string) {
 }
 export async function updateApplicationStatus(userId: string, jobId: string, status: ApplicationStatus, note = '') {
   return withUserTransaction(userId, async c => {
+    const previous = await c.query('SELECT status FROM public.projobs_applications WHERE job_id=$1', [jobId]);
+    if (!previous.rows[0]) return null;
+    const previousStatus = previous.rows[0].status as ApplicationStatus;
     const q = await c.query(
       `UPDATE public.projobs_applications
        SET status=$2, status_history=status_history || jsonb_build_array(jsonb_build_object('status',$2,'at',now(),'note',$3)),
@@ -79,7 +82,7 @@ export async function updateApplicationStatus(userId: string, jobId: string, sta
     await c.query(
       `INSERT INTO public.projobs_application_events(user_id,job_id,previous_status,new_status,note)
        VALUES($1,$2,$3,$4,$5)`,
-      [userId, jobId, q.rows[0].status_history?.at(-2)?.status ?? null, status, note],
+      [userId, jobId, previousStatus, status, note],
     );
     return q.rows[0];
   });
