@@ -2007,7 +2007,13 @@ function escapeHtml(text) {
                 card.dataset.experience = job.experience || '';
                 card.dataset.date = job.date_published || '';
                 card.innerHTML = `
-                    <span class="badge">${copy().source}: ${escapeHtml(job.source || 'ProJobs')}</span>
+                    <span class="badge">${copy().source}: <a href="${({
+                        'Arbeitnow': 'https://www.arbeitnow.com/',
+                        'Remotive': 'https://remotive.com/',
+                        'Jobicy': 'https://jobicy.com/',
+                        'Himalayas': 'https://himalayas.app/',
+                        'RemoteOK': 'https://remoteok.com/'
+                    })[job.source] || 'https://projobs.prosolutions.page/'}" target="_blank" rel="noopener noreferrer">${escapeHtml(job.source || 'ProJobs')}</a></span>
                     <h2 class="job-title">${escapeHtml(jobTitle)}</h2>
                     <div class="job-info">
                         🏢 <strong>${escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}</strong>
