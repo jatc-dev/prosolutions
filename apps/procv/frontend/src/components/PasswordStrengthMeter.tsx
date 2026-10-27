@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Check, X } from "lucide-react";
 
 interface PasswordStrengthMeterProps {
   password: string;
@@ -90,7 +91,7 @@ export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) 
               key={rule}
               className={passed ? "text-green-600 dark:text-green-400" : "text-slate-400"}
             >
-              {passed ? "✓" : "✗"} {t(`passwordRule.${rule}`, rule)}
+              {passed ? <Check className="inline h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" /> : <X className="inline h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" />} {t(`passwordRule.${rule}`, rule)}
             </span>
           ))}
         </div>
