@@ -58,6 +58,15 @@ def test_normalize_job_accepts_common_publication_date_fields_and_trims_values()
     assert result["company"] == "Example Co"
     assert result["url"] == "https://jobs.example/backend"
     assert result["date_published"] == "2026-10-17T12:00:00Z"
+    tracked = normalize_job({
+        "title": "Backend Engineer",
+        "company_name": "Example Co",
+        "location": "Remote",
+        "url": "https://jobs.example/backend?utm_source=newsletter",
+    }, "TestSource")
+    assert tracked is not None
+    assert result["id"] == tracked["id"]
+    assert len(result["id"]) == 24
 
 
 def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
@@ -66,6 +75,23 @@ def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
     assert normalize_country("España") == "ES"
     assert normalize_country("Remote - UK") == "GB"
     assert normalize_country("Worldwide") == "REMOTE"
+    assert normalize_country("Worldwide remote") == "REMOTE"
+    assert normalize_country("Berlin") == "DE"
+    assert normalize_country("Bogota") == "CO"
+    assert normalize_country("Toronto") == "CA"
+
+
+def test_normalize_job_preserves_multi_country_remote_eligibility():
+    result = normalize_job({
+        "title": "Remote Engineer",
+        "company_name": "Example Co",
+        "location": "US, CA",
+        "country_codes": ["US", "CA", "US"],
+        "url": "https://jobs.example/remote-engineer",
+    }, "TestSource")
+    assert result is not None
+    assert result["country"] == "US"
+    assert result["countries"] == ["US", "CA"]
 
 
 def test_normalize_job_rejects_non_http_urls_after_trimming():

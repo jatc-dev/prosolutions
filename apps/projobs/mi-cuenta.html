@@ -38,6 +38,7 @@
   <main>
     <p class="eyebrow">Tu espacio profesional</p>
     <h1>Mi cuenta de ProJobs</h1>
+    <p id="account-user" class="intro" aria-live="polite">Comprobando usuario autenticado…</p>
     <p class="intro">Consulta los empleos que guardaste y revisa tu actividad al visitar los sitios de las empresas.</p>
     <div id="status" class="status" role="status" aria-live="polite">Comprobando tu sesión…</div>
     <section id="account" class="panel hidden" aria-label="Actividad personal">
@@ -174,6 +175,7 @@
       document.getElementById("applications-tab").addEventListener("click", () => selectTab("applications"));
       async function init() {
         if (!window.proJobsAuth?.isAuthenticated()) {
+          document.getElementById("account-user").textContent = "Inicia sesión para ver tu perfil y tu actividad.";
           account.classList.add("hidden");
           signedOut.classList.remove("hidden");
           status.hidden = true;
@@ -181,6 +183,18 @@
         }
         signedOut.classList.add("hidden");
         account.classList.remove("hidden");
+        const user = window.proJobsAuth.getUser() || {};
+        const fullName = [
+          user.firstName || user.first_name,
+          user.lastName || user.last_name
+        ].filter(Boolean).join(" ").trim();
+        const name = user.fullName || user.full_name || user.displayName ||
+          user.display_name || user.name || fullName ||
+          (typeof user.email === "string" ? user.email.split("@")[0] : "");
+        const userLine = document.getElementById("account-user");
+        userLine.textContent = name
+          ? `Sesión iniciada como ${name}${user.email && user.email !== name ? " · " + user.email : ""}`
+          : "Sesión iniciada con ProIdentity.";
         status.classList.remove("error");
         status.textContent = "Sesión activa.";
         await loadSaved();

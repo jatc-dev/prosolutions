@@ -212,6 +212,7 @@ COUNTRY_ALIASES = {
     "za": "ZA", "south africa": "ZA",
     "remote": "REMOTE", "remoto": "REMOTE", "worldwide": "REMOTE",
     "anywhere": "REMOTE", "global": "REMOTE", "remote worldwide": "REMOTE",
+    "worldwide remote": "REMOTE", "remote - worldwide": "REMOTE",
     "latin america": "REMOTE", "latam": "REMOTE", "multiple locations": "REMOTE",
 }
 
@@ -222,6 +223,40 @@ def _country_key(value: str) -> str:
     )
 
 
+# Arbeitnow and some aggregators often return a city instead of a country.
+# Map common city-only locations to ISO codes; explicit source country fields always win.
+CITY_COUNTRY_ALIASES = {
+    "berlin": "DE", "munich": "DE", "munchen": "DE", "hamburg": "DE",
+    "frankfurt": "DE", "cologne": "DE", "koln": "DE", "stuttgart": "DE",
+    "dusseldorf": "DE", "dortmund": "DE", "leipzig": "DE", "dresden": "DE",
+    "hanover": "DE", "hannover": "DE", "nuremberg": "DE", "nurnberg": "DE",
+    "london": "GB", "manchester": "GB", "birmingham": "GB", "edinburgh": "GB",
+    "new york": "US", "san francisco": "US", "los angeles": "US", "seattle": "US",
+    "austin": "US", "chicago": "US", "boston": "US", "denver": "US",
+    "toronto": "CA", "vancouver": "CA", "montreal": "CA", "ottawa": "CA",
+    "sydney": "AU", "melbourne": "AU", "brisbane": "AU", "perth": "AU",
+    "paris": "FR", "lyon": "FR", "amsterdam": "NL", "rotterdam": "NL",
+    "madrid": "ES", "barcelona": "ES", "valencia": "ES", "lisbon": "PT",
+    "lisboa": "PT", "porto": "PT", "rome": "IT", "roma": "IT", "milan": "IT",
+    "milano": "IT", "dublin": "IE", "zurich": "CH", "geneva": "CH",
+    "vienna": "AT", "wien": "AT", "prague": "CZ", "warsaw": "PL",
+    "krakow": "PL", "copenhagen": "DK", "stockholm": "SE", "oslo": "NO",
+    "helsinki": "FI", "brussels": "BE", "bruges": "BE", "athens": "GR",
+    "bucharest": "RO", "budapest": "HU", "istanbul": "TR", "tel aviv": "IL",
+    "dubai": "AE", "abu dhabi": "AE", "singapore": "SG", "tokyo": "JP",
+    "osaka": "JP", "seoul": "KR", "taipei": "TW", "hong kong": "HK",
+    "bangalore": "IN", "bengaluru": "IN", "mumbai": "IN", "delhi": "IN",
+    "jakarta": "ID", "manila": "PH", "bangkok": "TH", "kuala lumpur": "MY",
+    "lagos": "NG", "nairobi": "KE", "cape town": "ZA", "johannesburg": "ZA",
+    "sao paulo": "BR", "são paulo": "BR", "rio de janeiro": "BR",
+    "mexico city": "MX", "bogota": "CO", "bogotá": "CO", "medellin": "CO",
+    "medellín": "CO", "buenos aires": "AR", "santiago": "CL", "lima": "PE",
+    "quito": "EC", "montevideo": "UY", "panama city": "PA",
+}
+
+
+def normalize_country(location: str | None) -> str:
+    """Devuelve un código ISO estable para países reconocidos y un fallback limpio."""
 def normalize_country(location: str | None) -> str:
     """Devuelve un código ISO estable para países reconocidos y un fallback limpio."""
     if not location or not str(location).strip():
@@ -229,11 +264,13 @@ def normalize_country(location: str | None) -> str:
 
     raw = str(location).strip()
     parts = [part.strip() for part in raw.split(",") if part.strip()]
-    # Prefer a recognized country at the end of a city/country location.
+    # Prefer explicit country names/codes at the end of a location.
     for candidate in reversed(parts or [raw]):
         key = _country_key(candidate)
         if key in COUNTRY_ALIASES:
             return COUNTRY_ALIASES[key]
+        if key in CITY_COUNTRY_ALIASES:
+            return CITY_COUNTRY_ALIASES[key]
         # Handles values such as "Remote - US" and "Remote (UK)".
         suffix = candidate.rsplit("-", 1)[-1].strip(" ()")
         suffix_key = _country_key(suffix)
@@ -243,6 +280,8 @@ def normalize_country(location: str | None) -> str:
     key = _country_key(raw)
     if key in COUNTRY_ALIASES:
         return COUNTRY_ALIASES[key]
+    if key in CITY_COUNTRY_ALIASES:
+        return CITY_COUNTRY_ALIASES[key]
     # Keep unfamiliar locations useful, but normalize whitespace and casing.
     return " ".join(parts[-1].split()).title() if parts else raw.title()
 
@@ -345,7 +384,17 @@ def normalize_job(job: dict, source: str) -> dict | None:
     if not is_valid_url(url):
         return None
 
-    country = normalize_country(location)
+    country_hint = str(
+        job.get("country") or job.get("country_code") or job.get("countryCode") or ""
+    ).strip()
+    country = normalize_country(country_hint or location)
+    country_codes = []
+    for raw_country in job.get("country_codes") or []:
+        code = normalize_country(str(raw_country))
+        if code not in ("UNKNOWN", "REMOTE") and code not in country_codes:
+            country_codes.append(code)
+    if country_codes:
+        country = country_codes[0]
     sector = normalize_sector(
         job.get("category"),
         job.get("tags"),
@@ -360,10 +409,12 @@ def normalize_job(job: dict, source: str) -> dict | None:
     salary = normalize_salary(job.get("salary"))
 
     result = {
+        "id": hashlib.sha256(canonical_url(url).encode("utf-8")).hexdigest()[:24],
         "title": title.strip(),
         "company": company.strip(),
         "location": location.strip(),
         "country": country,
+        "countries": country_codes or ([country] if country != "UNKNOWN" else []),
         "url": url,
         "source": source,
         "sector": sector,
@@ -465,43 +516,149 @@ def fetch_json(url: str, timeout: int = 15) -> list | dict | None:
 
 
 def fetch_arbeitnow() -> list[dict]:
-    try:
-        data = fetch_json("https://www.arbeitnow.com/api/job-board-api")
+    """Fetch several pages so the catalogue is not capped at the first 50 listings."""
+    result = []
+    for page in range(1, 6):
+        data = fetch_json(
+            "https://www.arbeitnow.com/api/job-board-api"
+            + (f"?page={page}" if page > 1 else "")
+        )
         if not data:
-            return []
-        jobs = data.get("data", [])[:50]
-        result = []
+            break
+        jobs = data.get("data", [])
+        if not jobs:
+            break
         for job in jobs:
             normalized = normalize_job(job, "Arbeitnow")
             if normalized:
                 result.append(normalized)
-        return result
-    except Exception:
-        return []
+    return result
 
 
 def fetch_remotive() -> list[dict]:
-    try:
-        data = fetch_json("https://remotive.com/api/remote-jobs?limit=50")
-        if not data:
-            return []
-        jobs = data.get("jobs", [])[:50]
-        result = []
-        for job in jobs:
-            normalized = normalize_job(job, "Remotive")
+    data = fetch_json("https://remotive.com/api/remote-jobs?limit=50")
+    if not data:
+        return []
+    result = []
+    for job in data.get("jobs", [])[:50]:
+        normalized = normalize_job(job, "Remotive")
+        if normalized:
+            result.append(normalized)
+    return result
+
+
+def fetch_jobicy() -> list[dict]:
+    """Worldwide remote roles from Jobicy's current public jobs API."""
+    data = fetch_json("https://jobicy.com/api/jobs?count=200")
+    if not data or data.get("success") is False:
+        return []
+    result = []
+    for item in data.get("jobs", [])[:200]:
+        job_types = item.get("jobType") or []
+        industries = item.get("jobIndustry") or []
+        salary = item.get("salary")
+        if not salary and (item.get("salaryMin") or item.get("salaryMax")):
+            salary = " - ".join(str(value) for value in (item.get("salaryMin"), item.get("salaryMax")) if value)
+            salary = (salary + " " + str(item.get("salaryCurrency") or "")).strip()
+        job = {
+            "title": item.get("jobTitle"),
+            "company_name": item.get("companyName"),
+            "location": item.get("jobGeo") or "Worldwide remote",
+            "url": item.get("url"),
+            "category": industries[0] if isinstance(industries, list) and industries else industries,
+            "job_type": job_types[0] if isinstance(job_types, list) and job_types else job_types,
+            "remote": True,
+            "date_published": item.get("pubDate"),
+            "description": item.get("jobExcerpt") or item.get("jobDescription") or "",
+            "salary": salary,
+        }
+        normalized = normalize_job(job, "Jobicy")
+        if normalized:
+            result.append(normalized)
+    return result
+
+
+def fetch_himalayas() -> list[dict]:
+    """Fetch several cursor pages from Himalayas' public jobs API (max 20 per page)."""
+    result = []
+    cursor = ""
+    for _ in range(5):
+        url = "https://himalayas.app/jobs/api?limit=20"
+        if cursor:
+            url += "&cursor=" + urllib.parse.quote(cursor, safe="")
+        data = fetch_json(url)
+        if not data or not isinstance(data, dict):
+            break
+        items = data.get("jobs", [])
+        if not isinstance(items, list) or not items:
+            break
+        for item in items:
+            restrictions = item.get("locationRestrictions") or []
+            location = item.get("location") or (
+                ", ".join(str(value) for value in restrictions[:3])
+                if restrictions else "Worldwide remote"
+            )
+            salary = item.get("salary")
+            if not salary and (item.get("minSalary") or item.get("maxSalary")):
+                salary = " - ".join(str(value) for value in (item.get("minSalary"), item.get("maxSalary")) if value)
+                salary = (salary + " " + str(item.get("currency") or "")).strip()
+            job = {
+                "title": item.get("title"),
+                "company_name": item.get("companyName") or item.get("company"),
+                "location": location,
+                "country_codes": restrictions,
+                "url": item.get("applicationLink"),
+                "category": (item.get("categories") or item.get("parentCategories") or [""])[0],
+                "job_type": item.get("employmentType") or "full-time",
+                "remote": True,
+                "date_published": item.get("pubDate") or item.get("publishedAt"),
+                "description": item.get("excerpt") or item.get("description") or "",
+                "salary": salary,
+            }
+            normalized = normalize_job(job, "Himalayas")
             if normalized:
                 result.append(normalized)
-        return result
-    except Exception:
+        cursor = data.get("nextCursor") or ""
+        if not cursor:
+            break
+    return result
+
+
+def fetch_remoteok() -> list[dict]:
+    """RemoteOK's public JSON feed, with its metadata object excluded."""
+    data = fetch_json("https://remoteok.com/api")
+    if not isinstance(data, list):
         return []
+    result = []
+    for item in data:
+        if not isinstance(item, dict) or not item.get("position"):
+            continue
+        job = {
+            "title": item.get("position"),
+            "company_name": item.get("company"),
+            "location": item.get("location") or "Worldwide remote",
+            "url": item.get("apply_url") or item.get("url"),
+            "category": item.get("tags") or item.get("category"),
+            "job_type": item.get("job_type"),
+            "remote": True,
+            "date_published": item.get("date") or item.get("epoch"),
+            "description": item.get("description") or "",
+            "salary": item.get("salary"),
+        }
+        normalized = normalize_job(job, "RemoteOK")
+        if normalized:
+            result.append(normalized)
+    return result
 
 
 def fetch_all_jobs() -> list[dict]:
     all_jobs = []
-    for fetcher in (fetch_arbeitnow, fetch_remotive):
+    # Each source is independent: an outage or rate limit must not block the others.
+    for fetcher in (
+        fetch_arbeitnow, fetch_remotive, fetch_jobicy, fetch_himalayas, fetch_remoteok
+    ):
         try:
-            fetched = fetcher()
-            all_jobs.extend(fetched)
+            all_jobs.extend(fetcher())
         except Exception:
             continue
     all_jobs = deduplicate_jobs(all_jobs)
@@ -540,6 +697,15 @@ def render_job_card(job: dict) -> str:
     job_url = escape_html(job["url"])
     job_title = escape_html(job["title"])
     company = escape_html(job["company"])
+    source_urls = {
+        "Arbeitnow": "https://www.arbeitnow.com/",
+        "Remotive": "https://remotive.com/",
+        "Jobicy": "https://jobicy.com/",
+        "Himalayas": "https://himalayas.app/",
+        "RemoteOK": "https://remoteok.com/",
+    }
+    source_url = escape_html(source_urls.get(job.get("source", ""), "https://projobs.prosolutions.page/"))
+    source_name = escape_html(job.get("source", "ProJobs"))
 
     return ('        <article class="job-card" data-job-id="' + job_id + '" data-country="' + escape_html(job['country']) + '"\n'
             '             data-sector="' + escape_html(job['sector']) + '"\n'
@@ -548,7 +714,7 @@ def render_job_card(job: dict) -> str:
             '             data-jobtype="' + escape_html(job['job_type']) + '"\n'
             '             data-experience="' + escape_html(job['experience']) + '"\n'
             '             data-date="' + escape_html(job.get('date_published','')) + '">\n'
-            '            <span class="badge">Fuente: ' + escape_html(job['source']) + '</span>\n'
+            '            <span class="badge">Fuente: <a href="' + source_url + '" target="_blank" rel="noopener noreferrer">' + source_name + '</a></span>\n'
             '            <h2 class="job-title">' + escape_html(job['title']) + '</h2>\n'
             '            <div class="job-info">\n'
             '                🏢 <strong>' + escape_html(job['company']) + '</strong>\n'
@@ -1173,68 +1339,113 @@ function escapeHtml(text) {{
             return country;
         }}
 
+        // ISO 3166-1 codes: expose every country/territory even if no jobs are listed there.
+        const WORLD_COUNTRY_CODES = ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"];
         function populateCountries() {{
-            const selected = countryFilter.value;
-            const countries = [...new Set(allJobs.map(j => j.country).filter(Boolean))]
-                .sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
+            const selectedCode = activeFilters.country || '';
+            const countries = [...new Set([
+                'REMOTE', ...WORLD_COUNTRY_CODES,
+                ...allJobs.map(job => job.country).filter(Boolean)
+            ])].sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
             document.getElementById('countryOptions').innerHTML = countries
-                .map(country => `<option value="${{escapeHtml(country)}}" label="${{escapeHtml(countryLabel(country))}}"></option>`)
+                .map(country => {{
+                    const label = countryLabel(country);
+                    return `<option value="${{escapeHtml(label)}}" label="${{escapeHtml(label)}}" data-country-code="${{escapeHtml(country)}}"></option>`;
+                }})
                 .join('');
-            countryFilter.value = selected;
+            countryFilter.value = selectedCode ? countryLabel(selectedCode) : '';
         }}
         populateCountries();
 
+        function stableJobId(job) {{
+            if (job.id) return String(job.id);
+            const input = String(job.url || job.title || '');
+            let hash = 2166136261;
+            for (let i = 0; i < input.length; i++) {{
+                hash ^= input.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }}
+            return (hash >>> 0).toString(16).padStart(8, '0');
+        }}
+
         function renderJobs() {{
-            jobsList.innerHTML = '';
+            jobsList.replaceChildren();
             if (totalJobsEl) totalJobsEl.textContent = filteredJobs.length;
             if (filteredJobs.length === 0) {{
                 jobsList.style.display = 'none';
                 noResults.style.display = 'block';
+                window.dispatchEvent(new CustomEvent('projobs:jobs-rendered'));
                 return;
             }}
             jobsList.style.display = '';
             noResults.style.display = 'none';
             filteredJobs.forEach(job => {{
+                const jobId = stableJobId(job);
+                const jobUrl = String(job.url || '');
+                const jobTitle = String(job.title || '');
+                const company = String(job.company || '');
+                const sourceUrls = {{
+                    'Arbeitnow': 'https://www.arbeitnow.com/',
+                    'Remotive': 'https://remotive.com/',
+                    'Jobicy': 'https://jobicy.com/',
+                    'Himalayas': 'https://himalayas.app/',
+                    'RemoteOK': 'https://remoteok.com/'
+                }};
                 const card = document.createElement('article');
                 card.className = 'job-card';
-                card.dataset.country = job.country;
-                card.dataset.sector = job.sector;
-                card.dataset.modality = job.modality;
-                card.dataset.contract = job.contract_type;
-                card.dataset.jobtype = job.job_type;
-                card.dataset.experience = job.experience;
-                card.dataset.date = job.date_published;
+                card.dataset.jobId = jobId;
+                card.dataset.country = job.country || '';
+                card.dataset.sector = job.sector || '';
+                card.dataset.modality = job.modality || '';
+                card.dataset.contract = job.contract_type || '';
+                card.dataset.jobtype = job.job_type || '';
+                card.dataset.experience = job.experience || '';
+                card.dataset.date = job.date_published || '';
                 card.innerHTML = `
-                    <span class="badge">${{copy().source}}: ${{escapeHtml(job.source)}}</span>
-                    <h2 class="job-title">${{escapeHtml(job.title)}}</h2>
+                    <span class="badge">${{copy().source}}: <a href="${{sourceUrls[job.source] || 'https://projobs.prosolutions.page/'}}" target="_blank" rel="noopener noreferrer">${{escapeHtml(job.source || 'ProJobs')}}</a></span>
+                    <h2 class="job-title">${{escapeHtml(jobTitle)}}</h2>
                     <div class="job-info">
-                        🏢 <strong>${{escapeHtml(job.company)}}</strong>
-                        &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location)}}
-                        ${{job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
+                        🏢 <strong>${{escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}}</strong>
+                        &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location || (locale === 'es' ? 'Ubicación no especificada' : 'Location not specified'))}}
+                        ${{job.country && job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
                         ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
-                        ${{job.experience && job.experience !== 'no-especificado'
-                          ? `· ${{labelFor(job.experience)}}`
-                          : ''}}
+                        ${{job.experience && job.experience !== 'no-especificado' ? `· ${{labelFor(job.experience)}}` : ''}}
                     </div>
                     <div class="job-tags">
-                        <span class="badge">${{labelFor(job.modality)}}</span>
-                        <span class="badge">${{labelFor(job.contract_type)}}</span>
-                        <span class="badge">${{copy().sectors[job.sector] || job.sector}}</span>
+                        <span class="badge">${{labelFor(job.modality || 'no-especificado')}}</span>
+                        <span class="badge">${{labelFor(job.contract_type || 'no-especificado')}}</span>
+                        <span class="badge">${{copy().sectors[job.sector] || escapeHtml(job.sector || 'otras')}}</span>
                     </div>
-                    <a href="${{escapeHtml(job.url)}}" class="btn" target="_blank"
-                       rel="noopener sponsored">${{copy().viewJob}}</a>
+                    <div class="job-actions">
+                        <a href="${{escapeHtml(jobUrl)}}" class="btn" data-i18n="viewJob"
+                           data-action="apply" data-job-id="${{escapeHtml(jobId)}}"
+                           data-job-url="${{escapeHtml(jobUrl)}}" data-job-title="${{escapeHtml(jobTitle)}}"
+                           data-company="${{escapeHtml(company)}}" target="_blank" rel="noopener sponsored">${{copy().viewJob}}</a>
+                        <button type="button" class="btn-save" data-action="save-job"
+                           data-job-id="${{escapeHtml(jobId)}}" data-job-url="${{escapeHtml(jobUrl)}}"
+                           data-job-title="${{escapeHtml(jobTitle)}}" data-company="${{escapeHtml(company)}}"
+                           aria-label="${{locale === 'es' ? 'Guardar empleo' : 'Save job'}}"
+                           aria-pressed="false">${{copy().saveJob}}</button>
+                    </div>
                 `;
                 jobsList.appendChild(card);
             }});
+            window.dispatchEvent(new CustomEvent('projobs:jobs-rendered'));
         }}
 
         function applyFilters() {{
             const countryInput = countryFilter.value.trim().toLocaleLowerCase();
-            const matchedCountry = allJobs.find(job =>
-                String(job.country || '') === countryFilter.value
+            const matchedJobCountry = allJobs.find(job =>
+                String(job.country || '').toLocaleLowerCase() === countryInput
                 || countryLabel(job.country).toLocaleLowerCase() === countryInput
             );
-            const country = matchedCountry ? matchedCountry.country : countryFilter.value;
+            const matchedWorldCode = WORLD_COUNTRY_CODES.find(code =>
+                code.toLocaleLowerCase() === countryInput
+                || countryLabel(code).toLocaleLowerCase() === countryInput
+            );
+            const country = matchedJobCountry
+                ? matchedJobCountry.country
+                : (matchedWorldCode || (countryInput ? countryFilter.value : ''));
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
@@ -1253,7 +1464,7 @@ function escapeHtml(text) {{
             }};
 
             filteredJobs = allJobs.filter(job => {{
-                if (country && job.country !== country) return false;
+                if (country && job.country !== country && job.country !== 'REMOTE' && !(job.countries || []).includes(country)) return false;
                 if (sector && job.sector !== sector) return false;
                 if (modality && job.modality !== modality) return false;
                 if (contract && job.contract_type !== contract) return false;

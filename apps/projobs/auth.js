@@ -139,6 +139,21 @@
     window.dispatchEvent(new CustomEvent("projobs:auth-ready"));
   }
 
+  function displayUserName(user) {
+    if (!user) return "";
+    const fullName = [
+      user.firstName || user.first_name,
+      user.lastName || user.last_name,
+    ].filter(Boolean).join(" ").trim();
+    const candidate = user.fullName || user.full_name || user.displayName ||
+      user.display_name || user.name || fullName;
+    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+    if (typeof user.email === "string" && user.email.includes("@")) {
+      return user.email.split("@")[0];
+    }
+    return "";
+  }
+
   function updateAuthUI() {
     const authed = !!userProfile;
 
@@ -160,7 +175,11 @@
         href.includes("/login")
       ) {
         if (authed) {
-          link.textContent = link.dataset.authedLabel || "Mi Perfil";
+          const name = displayUserName(userProfile);
+          link.textContent = name
+            ? (document.documentElement.lang === "en" ? `My profile · ${name}` : `Mi perfil · ${name}`)
+            : (link.dataset.authedLabel || "Mi Perfil");
+          link.title = name || (link.dataset.authedLabel || "Mi Perfil");
           link.onclick = (e) => {
             e.preventDefault();
             window.location.href = "/mi-cuenta.html";
@@ -266,6 +285,10 @@
       };
     });
   }
+
+  // Dynamic job cards are recreated after filtering or changing language.
+  // Rebind save/apply handlers whenever that happens.
+  window.addEventListener("projobs:jobs-rendered", updateAuthUI);
 
   // Inicializar cuando el DOM esté listo
   if (document.readyState === "loading") {
