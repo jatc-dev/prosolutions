@@ -687,6 +687,15 @@ def render_job_card(job: dict) -> str:
     job_url = escape_html(job["url"])
     job_title = escape_html(job["title"])
     company = escape_html(job["company"])
+    source_urls = {
+        "Arbeitnow": "https://www.arbeitnow.com/",
+        "Remotive": "https://remotive.com/",
+        "Jobicy": "https://jobicy.com/",
+        "Himalayas": "https://himalayas.app/",
+        "RemoteOK": "https://remoteok.com/",
+    }
+    source_url = escape_html(source_urls.get(job.get("source", ""), "https://projobs.prosolutions.page/"))
+    source_name = escape_html(job.get("source", "ProJobs"))
 
     return ('        <article class="job-card" data-job-id="' + job_id + '" data-country="' + escape_html(job['country']) + '"\n'
             '             data-sector="' + escape_html(job['sector']) + '"\n'
@@ -695,7 +704,7 @@ def render_job_card(job: dict) -> str:
             '             data-jobtype="' + escape_html(job['job_type']) + '"\n'
             '             data-experience="' + escape_html(job['experience']) + '"\n'
             '             data-date="' + escape_html(job.get('date_published','')) + '">\n'
-            '            <span class="badge">Fuente: ' + escape_html(job['source']) + '</span>\n'
+            '            <span class="badge">Fuente: <a href="' + source_url + '" target="_blank" rel="noopener noreferrer">' + source_name + '</a></span>\n'
             '            <h2 class="job-title">' + escape_html(job['title']) + '</h2>\n'
             '            <div class="job-info">\n'
             '                🏢 <strong>' + escape_html(job['company']) + '</strong>\n'
