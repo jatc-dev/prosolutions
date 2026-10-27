@@ -73,6 +73,8 @@ services:
         value: https://identity.prosolutions.page/api/auth
       - key: VITE_PROCV_URL
         value: https://procv.prosolutions.page
+      - key: VITE_ADSENSE_CLIENT
+        value: ca-pub-3956322934366702
 
   - type: web
     name: procv-frontend
