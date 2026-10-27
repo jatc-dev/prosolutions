@@ -22,7 +22,8 @@ i18n
   .use(initReactI18next) // Pass i18n down to react-i18next
   .init({
     resources,
-    fallbackLng: 'en', // Fallback language (Spanish)
+    fallbackLng: 'es',
+    supportedLngs: ['en', 'es'],
     debug: import.meta.env.DEV,
 
     // Language detection options
