@@ -74,6 +74,19 @@ runtime_role="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_RUNTIME_URL" -c 'SELECT
   printf 'NEON_IDENTITY_URL must connect to database proidentity (got %s).\n' "$target_db" >&2
   exit 4
 }
+
+# Fail closed if the source and target URLs resolve to the same PostgreSQL
+# server endpoint and database. Never print endpoint details or connection URLs.
+source_endpoint="$(psql --no-psqlrc -X -qAt "$SUPABASE_IDENTITY_URL" -c "SELECT COALESCE(inet_server_addr()::text, 'local') || '|' || COALESCE(inet_server_port()::text, '') || '|' || current_database()")"
+target_endpoint="$(psql --no-psqlrc -X -qAt "$NEON_IDENTITY_URL" -c "SELECT COALESCE(inet_server_addr()::text, 'local') || '|' || COALESCE(inet_server_port()::text, '') || '|' || current_database()")"
+[[ -n "$source_endpoint" && -n "$target_endpoint" ]] || {
+  printf 'Could not establish source/target endpoint identity. Refusing to transfer.\n' >&2
+  exit 16
+}
+[[ "$source_endpoint" != "$target_endpoint" ]] || {
+  printf 'Source and target resolve to the same PostgreSQL endpoint and database. Refusing to transfer.\n' >&2
+  exit 17
+}
 [[ "$runtime_role" == "proidentity_login" ]] || {
   printf 'NEON_IDENTITY_RUNTIME_URL must connect as proidentity_login (got %s).\n' "$runtime_role" >&2
   exit 5
