@@ -1453,7 +1453,7 @@ function escapeHtml(text) {{
                         <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg> <strong>${{escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}}</strong>
                         &nbsp;|&nbsp; <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> ${{escapeHtml(job.location || (locale === 'es' ? 'Ubicación no especificada' : 'Location not specified'))}}
                         ${{job.country && job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
-                        ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
+                        ${{job.salary?.raw ? `· <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10h.01M18 14h.01"/></svg> ${{escapeHtml(job.salary.raw)}}` : ''}}
                         ${{job.experience && job.experience !== 'no-especificado' ? `· ${{labelFor(job.experience)}}` : ''}}
                     </div>
                     <div class="job-tags">
@@ -1470,7 +1470,7 @@ function escapeHtml(text) {{
                            data-job-id="${{escapeHtml(jobId)}}" data-job-url="${{escapeHtml(jobUrl)}}"
                            data-job-title="${{escapeHtml(jobTitle)}}" data-company="${{escapeHtml(company)}}"
                            aria-label="${{locale === 'es' ? 'Guardar empleo' : 'Save job'}}"
-                           aria-pressed="false">${{copy().saveJob}}</button>
+                           aria-pressed="false"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg><span>${{copy().saveJob}}</span></button>
                     </div>
                 `;
                 jobsList.appendChild(card);
