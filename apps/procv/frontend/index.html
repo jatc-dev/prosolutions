@@ -7,11 +7,14 @@
       (function () {
         try {
           var preference = 'system';
+          var themeCookie = document.cookie.split('; ').find(function (part) { return part.indexOf('prosolutions_theme=') === 0; });
+          var cookiePreference = themeCookie ? themeCookie.split('=').slice(1).join('=') : '';
+          if (cookiePreference === 'light' || cookiePreference === 'dark') preference = cookiePreference;
           var saved = localStorage.getItem('theme-storage');
           if (saved) {
             var parsed = JSON.parse(saved);
             var stored = parsed && parsed.state && (parsed.state.preference || parsed.state.theme);
-            if (stored === 'light' || stored === 'dark') preference = stored;
+            if (!cookiePreference && (stored === 'light' || stored === 'dark')) preference = stored;
           }
           var dark =
             preference === 'dark' ||
