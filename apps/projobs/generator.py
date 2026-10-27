@@ -686,7 +686,7 @@ def jobs_to_json_script(jobs: list[dict]) -> str:
 def render_job_card(job: dict) -> str:
     salary_text = ""
     if job.get("salary") and job["salary"].get("raw"):
-        salary_text = "💰 " + job["salary"]["raw"]
+        salary_text = '<svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10h.01M18 14h.01"/></svg> ' + escape_html(job["salary"]["raw"])
 
     experience_text = ""
     if job.get("experience") and job["experience"] != "no-especificado":
@@ -717,8 +717,8 @@ def render_job_card(job: dict) -> str:
             '            <span class="badge">Fuente: <a href="' + source_url + '" target="_blank" rel="noopener noreferrer">' + source_name + '</a></span>\n'
             '            <h2 class="job-title">' + escape_html(job['title']) + '</h2>\n'
             '            <div class="job-info">\n'
-            '                🏢 <strong>' + escape_html(job['company']) + '</strong>\n'
-            '                &nbsp;|&nbsp; 📍 ' + escape_html(job['location']) + '\n'
+            '                <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg> <strong>' + escape_html(job['company']) + '</strong>\n'
+            '                &nbsp;|&nbsp; <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> ' + escape_html(job['location']) + '\n'
             + (f" · {escape_html(job['country'])}" if job['country'] != job['location'] else "")
             + (f" · {salary_text}" if salary_text else "")
             + experience_text
@@ -730,7 +730,7 @@ def render_job_card(job: dict) -> str:
             '            </div>\n'
             '            <div class="job-actions">\n'
             '                <a href="' + job_url + '" class="btn" data-i18n="viewJob" data-action="apply" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" target="_blank" rel="noopener sponsored">Ver oferta</a>\n'
-            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob">♡ Guardar</button>\n'
+            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg> Guardar</button>\n'
             '            </div>\n'
             '        </article>\n    ')
 
@@ -743,7 +743,7 @@ def render_filters_html() -> str:
     return f'''
     <div class="filters-panel">
         <div class="filters-header">
-            <h3 data-i18n="filtersTitle">🔍 Filtros de búsqueda</h3>
+            <h3 data-i18n="filtersTitle"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg> Filtros de búsqueda</h3>
             <button type="button" id="resetFilters" class="btn-reset">
                 <span data-i18n="resetFilters">Limpiar filtros</span>
             </button>
@@ -867,6 +867,11 @@ CSS_STYLES = """
         .job-card:hover { transform: translateY(-2px); }
         .job-title { font-size: 1.2rem; font-weight: 600; color: #3f6ff5; margin: 0 0 6px 0; }
         .job-info { color: #64748b; font-size: 0.9rem; margin-bottom: 14px; }
+        .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .search-field { position: relative; display: block; width: 100%; }
+        .search-field-icon { position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: #64748b; }
+        .search-field .search-input { padding-left: 48px; }
+        .mobile-menu-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .job-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
         .job-tags .badge { font-size: 0.75rem; }
         .btn {
@@ -1197,7 +1202,7 @@ def render_page(jobs: list[dict]) -> str:
                 <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-pill" data-i18n="active">Activo</span></a>
                 <a href="{CORE_URL}#planes"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><span aria-hidden="true">☰</span></button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg></button>
         </div>
@@ -1286,8 +1291,8 @@ def render_page(jobs: list[dict]) -> str:
 
 JS_CODE = f'''<script>
 const COPY = {{
-  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', saveJob: '♡ Guardar', savedJob: '✓ Guardado', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
-  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', saveJob: '♡ Save', savedJob: '✓ Saved', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
+  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: 'Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: 'Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda.', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', saveJob: '♡ Guardar', savedJob: '✓ Guardado', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
+  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: 'Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: 'Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search.', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', saveJob: '♡ Save', savedJob: '✓ Saved', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
 }};
 let locale = localStorage.getItem('projobs-locale');
 if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
@@ -1529,7 +1534,7 @@ function escapeHtml(text) {{
             const isOpen = menu.classList.toggle('mobile-open');
             button.setAttribute('aria-expanded', String(isOpen));
             button.setAttribute('aria-label', isOpen ? (locale === 'es' ? 'Cerrar menú' : 'Close menu') : (locale === 'es' ? 'Abrir menú' : 'Open menu'));
-            button.querySelector('span').textContent = isOpen ? '×' : '☰';
+            button.innerHTML = isOpen ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
         }});
         document.addEventListener('keydown', event => {{
             if (event.key === 'Escape') {{
@@ -1537,13 +1542,13 @@ function escapeHtml(text) {{
                 const button = document.getElementById('mobileMenuToggle');
                 button.setAttribute('aria-expanded', 'false');
                 button.setAttribute('aria-label', locale === 'es' ? 'Abrir menú' : 'Open menu');
-                button.querySelector('span').textContent = '☰';
+                button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
             }}
         }});
 
         document.getElementById('languageToggle').addEventListener('click', () => {{
             locale = locale === 'es' ? 'en' : 'es';
-            localStorage.setItem('projobs-locale', locale);
+            persistLocale(locale);
             applyLocale();
         }});
         function applyTheme(isDark) {{
