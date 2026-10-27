@@ -58,6 +58,15 @@ def test_normalize_job_accepts_common_publication_date_fields_and_trims_values()
     assert result["company"] == "Example Co"
     assert result["url"] == "https://jobs.example/backend"
     assert result["date_published"] == "2026-10-17T12:00:00Z"
+    tracked = normalize_job({
+        "title": "Backend Engineer",
+        "company_name": "Example Co",
+        "location": "Remote",
+        "url": "https://jobs.example/backend?utm_source=newsletter",
+    }, "TestSource")
+    assert tracked is not None
+    assert result["id"] == tracked["id"]
+    assert len(result["id"]) == 24
 
 
 def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
