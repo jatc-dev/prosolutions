@@ -17,11 +17,30 @@ concurrency:
 
 jobs:
   transfer:
-    if: ${{ inputs.confirm_target == 'proidentity' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Require explicit target confirmation
+        env:
+          CONFIRM_TARGET: ${{ inputs.confirm_target }}
+        run: |
+          if [[ "$CONFIRM_TARGET" != "proidentity" ]]; then
+            echo "Transfer not authorized: type exactly 'proidentity' in confirm_target." >&2
+            exit 1
+          fi
+      - name: Verify required repository secrets are configured
+        env:
+          SUPABASE_IDENTITY_URL: ${{ secrets.SUPABASE_IDENTITY_URL }}
+          NEON_IDENTITY_URL: ${{ secrets.NEON_IDENTITY_URL }}
+          NEON_IDENTITY_RUNTIME_URL: ${{ secrets.NEON_IDENTITY_RUNTIME_URL }}
+        run: |
+          for name in SUPABASE_IDENTITY_URL NEON_IDENTITY_URL NEON_IDENTITY_RUNTIME_URL; do
+            if [[ -z "${!name}" ]]; then
+              echo "Required repository secret $name is missing or empty." >&2
+              exit 1
+            fi
+          done
       - name: Install PostgreSQL client tools
         run: |
           sudo apt-get update
