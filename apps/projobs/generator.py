@@ -539,23 +539,29 @@ def fetch_remotive() -> list[dict]:
 
 
 def fetch_jobicy() -> list[dict]:
-    """Worldwide remote roles from Jobicy's public remote-jobs API."""
-    data = fetch_json("https://jobicy.com/api/v2/remote-jobs?count=50")
-    if not data:
+    """Worldwide remote roles from Jobicy's current public jobs API."""
+    data = fetch_json("https://jobicy.com/api/jobs?count=200")
+    if not data or data.get("success") is False:
         return []
     result = []
-    for item in data.get("jobs", [])[:50]:
+    for item in data.get("jobs", [])[:200]:
+        job_types = item.get("jobType") or []
+        industries = item.get("jobIndustry") or []
+        salary = item.get("salary")
+        if not salary and (item.get("salaryMin") or item.get("salaryMax")):
+            salary = " - ".join(str(value) for value in (item.get("salaryMin"), item.get("salaryMax")) if value)
+            salary = (salary + " " + str(item.get("salaryCurrency") or "")).strip()
         job = {
             "title": item.get("jobTitle"),
             "company_name": item.get("companyName"),
             "location": item.get("jobGeo") or "Worldwide remote",
-            "url": item.get("url") or item.get("jobUrl"),
-            "category": item.get("jobIndustry"),
-            "job_type": item.get("jobType"),
-            "remote": item.get("isRemote", True),
+            "url": item.get("url"),
+            "category": industries[0] if isinstance(industries, list) and industries else industries,
+            "job_type": job_types[0] if isinstance(job_types, list) and job_types else job_types,
+            "remote": True,
             "date_published": item.get("pubDate"),
-            "description": item.get("jobDescription") or "",
-            "salary": item.get("annualSalary") or item.get("salary"),
+            "description": item.get("jobExcerpt") or item.get("jobDescription") or "",
+            "salary": salary,
         }
         normalized = normalize_job(job, "Jobicy")
         if normalized:
@@ -564,28 +570,47 @@ def fetch_jobicy() -> list[dict]:
 
 
 def fetch_himalayas() -> list[dict]:
-    """Fetch remote roles from Himalayas' public jobs API."""
-    data = fetch_json("https://himalayas.app/jobs/api?limit=50")
-    if not data:
-        return []
-    items = data.get("jobs", []) if isinstance(data, dict) else data
+    """Fetch several cursor pages from Himalayas' public jobs API (max 20 per page)."""
     result = []
-    for item in items[:50] if isinstance(items, list) else []:
-        job = {
-            "title": item.get("title"),
-            "company_name": item.get("companyName") or item.get("company"),
-            "location": item.get("location") or "Worldwide remote",
-            "url": item.get("applicationLink") or item.get("url"),
-            "category": item.get("categories") or item.get("category"),
-            "job_type": item.get("employmentType") or item.get("jobType"),
-            "remote": True,
-            "date_published": item.get("pubDate") or item.get("publishedAt"),
-            "description": item.get("description") or "",
-            "salary": item.get("salary"),
-        }
-        normalized = normalize_job(job, "Himalayas")
-        if normalized:
-            result.append(normalized)
+    cursor = ""
+    for _ in range(5):
+        url = "https://himalayas.app/jobs/api?limit=20"
+        if cursor:
+            url += "&cursor=" + urllib.parse.quote(cursor, safe="")
+        data = fetch_json(url)
+        if not data or not isinstance(data, dict):
+            break
+        items = data.get("jobs", [])
+        if not isinstance(items, list) or not items:
+            break
+        for item in items:
+            restrictions = item.get("locationRestrictions") or []
+            location = item.get("location") or (
+                ", ".join(str(value) for value in restrictions[:3])
+                if restrictions else "Worldwide remote"
+            )
+            salary = item.get("salary")
+            if not salary and (item.get("minSalary") or item.get("maxSalary")):
+                salary = " - ".join(str(value) for value in (item.get("minSalary"), item.get("maxSalary")) if value)
+                salary = (salary + " " + str(item.get("currency") or "")).strip()
+            job = {
+                "title": item.get("title"),
+                "company_name": item.get("companyName") or item.get("company"),
+                "location": location,
+                "url": item.get("applicationLink"),
+                "category": (item.get("categories") or item.get("parentCategories") or [""])[0],
+                "job_type": item.get("employmentType") or "full-time",
+                "remote": True,
+                "date_published": item.get("pubDate") or item.get("publishedAt"),
+                "description": item.get("excerpt") or item.get("description") or "",
+                "salary": salary,
+            }
+            normalized = normalize_job(job, "Himalayas")
+            if normalized:
+                result.append(normalized)
+        cursor = data.get("nextCursor") or ""
+        if not cursor:
+            break
     return result
 
 
