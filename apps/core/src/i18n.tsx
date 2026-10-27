@@ -245,14 +245,39 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
+const SHARED_LOCALE_COOKIE = "prosolutions_locale";
+
+function readSharedLocale(): Locale | null {
+  try {
+    const entry = document.cookie.split("; ").find((part) => part.startsWith(`${SHARED_LOCALE_COOKIE}=`));
+    const value = entry?.split("=").slice(1).join("=");
+    return value === "en" || value === "es" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSharedLocale(locale: Locale) {
+  try {
+    const sharedDomain = window.location.hostname === "prosolutions.page" || window.location.hostname.endsWith(".prosolutions.page");
+    const domain = sharedDomain ? "; Domain=.prosolutions.page" : "";
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${SHARED_LOCALE_COOKIE}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax${domain}${secure}`;
+  } catch {
+    // Local preference remains available when cookies are disabled.
+  }
+}
+
 function getInitialLocale(): Locale {
+  const shared = readSharedLocale();
+  if (shared) return shared;
   try {
     const saved = window.localStorage.getItem("prosolutions-core-locale");
     if (saved === "en" || saved === "es") return saved;
-    return window.navigator.language.toLowerCase().startsWith("en") ? "en" : "es";
   } catch {
-    return "es";
+    // Fall through to the system language.
   }
+  return window.navigator.language?.toLowerCase().startsWith("en") ? "en" : "es";
 }
 
 export function CoreLocaleProvider({ children }: { children: ReactNode }) {
@@ -289,6 +314,7 @@ export function CoreLocaleProvider({ children }: { children: ReactNode }) {
     } catch {
       // Language switching remains available when browser storage is disabled.
     }
+    writeSharedLocale(locale);
   }, [locale]);
 
   const value = useMemo(() => ({ locale, setLocale, copy: messages[locale] }), [locale]);

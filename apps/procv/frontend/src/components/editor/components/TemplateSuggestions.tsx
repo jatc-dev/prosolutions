@@ -1,4 +1,5 @@
 import React from 'react';
+import { Lightbulb } from 'lucide-react';
 import { SectionType } from '../../../types';
 import { useCVEditorStore } from '../../../stores/cvEditorStore';
 
@@ -31,8 +32,9 @@ export const TemplateSuggestions: React.FC<TemplateSuggestionsProps> = ({ sectio
   return (
     <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200">
-          💡 Plantillas para {getSectionTitle(section)}
+        <h4 className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
+          <Lightbulb className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+          Plantillas para {getSectionTitle(section)}
         </h4>
         <span className="text-xs text-blue-600 dark:text-blue-300">
           {Object.keys(sectionTemplates).length} plantillas disponibles

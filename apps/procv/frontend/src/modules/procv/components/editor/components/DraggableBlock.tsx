@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Award, Briefcase, GraduationCap, Languages, Link2, Zap, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CVData, ExperienceItem, EducationItem, SkillItem, LanguageItem, CertificateItem, LinkItem } from "../../../../../shared/types";
 
@@ -7,13 +8,13 @@ export interface DraggableBlockProps {
   onAdd: (type: DraggableBlockProps["type"]) => void;
 }
 
-const blockConfig: Record<DraggableBlockProps["type"], { icon: string; labelKey: string; descKey: string }> = {
-  experience: { icon: "💼", labelKey: "block.experience", descKey: "block.experienceDesc" },
-  education: { icon: "🎓", labelKey: "block.education", descKey: "block.educationDesc" },
-  skills: { icon: "⚡", labelKey: "block.skills", descKey: "block.skillsDesc" },
-  languages: { icon: "🌐", labelKey: "block.languages", descKey: "block.languagesDesc" },
-  certificates: { icon: "🏆", labelKey: "block.certificates", descKey: "block.certificatesDesc" },
-  links: { icon: "🔗", labelKey: "block.links", descKey: "block.linksDesc" },
+const blockConfig: Record<DraggableBlockProps["type"], { icon: LucideIcon; labelKey: string; descKey: string }> = {
+  experience: { icon: Briefcase, labelKey: "block.experience", descKey: "block.experienceDesc" },
+  education: { icon: GraduationCap, labelKey: "block.education", descKey: "block.educationDesc" },
+  skills: { icon: Zap, labelKey: "block.skills", descKey: "block.skillsDesc" },
+  languages: { icon: Languages, labelKey: "block.languages", descKey: "block.languagesDesc" },
+  certificates: { icon: Award, labelKey: "block.certificates", descKey: "block.certificatesDesc" },
+  links: { icon: Link2, labelKey: "block.links", descKey: "block.linksDesc" },
 };
 
 export function DraggableBlock({ type, onAdd }: DraggableBlockProps) {
@@ -34,7 +35,7 @@ export function DraggableBlock({ type, onAdd }: DraggableBlockProps) {
           : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
       }`}
     >
-      <span className="text-2xl mr-3 flex-shrink-0">{config.icon}</span>
+      <config.icon className="mr-3 h-5 w-5 flex-shrink-0 text-slate-500 dark:text-slate-400" strokeWidth={1.8} aria-hidden="true" />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
           {t(config.labelKey)}

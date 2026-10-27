@@ -66,7 +66,7 @@ export function PortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} />
+      <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={user ? { name: user.name, email: user.email } : null} onSignOut={user ? logout : undefined} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-12 sm:px-8">
         {loading ? <div className="py-20 text-center text-slate-500">Cargando tu portal...</div> : error ? (
           <section className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm dark:border-rose-900 dark:bg-slate-900">
@@ -85,8 +85,7 @@ export function PortalPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {user?.role === "admin" && <a href="/admin/access" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-200 dark:hover:bg-brand-950/40">Administrar accesos</a>}
-                <button type="button" onClick={logout}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900">Cerrar sesión</button>
+
               </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BarChart3, FileText, Folder, Mail, Palette, Settings, ShieldCheck, Users, Wrench } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../services/api";
 
@@ -1374,7 +1375,7 @@ export function PlatformSettings() {
       id: "general",
       label: t("admin.platformSettings.tabsShort.general"),
       title: t("admin.platformSettings.tabs.general"),
-      icon: "⚙️",
+      icon: Settings,
       settings: generalSettings,
       renderFunction: renderSettingInput
     },
@@ -1382,7 +1383,7 @@ export function PlatformSettings() {
       id: "branding",
       label: t("admin.platformSettings.tabsShort.branding"),
       title: t("admin.platformSettings.tabs.branding"),
-      icon: "🎨",
+      icon: Palette,
       settings: brandingSettings,
       renderFunction: renderBrandingInput
     },
@@ -1390,7 +1391,7 @@ export function PlatformSettings() {
       id: "security",
       label: t("admin.platformSettings.tabsShort.security"),
       title: t("admin.platformSettings.tabs.security"),
-      icon: "🔐",
+      icon: ShieldCheck,
       settings: securitySettings,
       renderFunction: renderSecurityInput
     },
@@ -1398,7 +1399,7 @@ export function PlatformSettings() {
       id: "email",
       label: t("admin.platformSettings.tabsShort.email"),
       title: t("admin.platformSettings.tabs.email"),
-      icon: "📧",
+      icon: Mail,
       settings: emailSettings,
       renderFunction: renderEmailInput
     },
@@ -1406,7 +1407,7 @@ export function PlatformSettings() {
       id: "files",
       label: t("admin.platformSettings.tabsShort.files"),
       title: t("admin.platformSettings.tabs.files"),
-      icon: "📁",
+      icon: Folder,
       settings: fileSettings,
       renderFunction: renderFileInput
     },
@@ -1414,7 +1415,7 @@ export function PlatformSettings() {
       id: "cv",
       label: t("admin.platformSettings.tabsShort.cv"),
       title: t("admin.platformSettings.tabs.cv"),
-      icon: "📄",
+      icon: FileText,
       settings: cvSettings,
       renderFunction: renderCvInput
     },
@@ -1422,7 +1423,7 @@ export function PlatformSettings() {
       id: "users",
       label: t("admin.platformSettings.tabsShort.users"),
       title: t("admin.platformSettings.tabs.users"),
-      icon: "👥",
+      icon: Users,
       settings: userSettings,
       renderFunction: renderUserInput
     },
@@ -1430,7 +1431,7 @@ export function PlatformSettings() {
       id: "analytics",
       label: t("admin.platformSettings.tabsShort.analytics"),
       title: t("admin.platformSettings.tabs.analytics"),
-      icon: "📈",
+      icon: BarChart3,
       settings: analyticsSettings,
       renderFunction: renderAnalyticsInput
     },
@@ -1438,7 +1439,7 @@ export function PlatformSettings() {
       id: "backup",
       label: t("admin.platformSettings.tabsShort.backup"),
       title: t("admin.platformSettings.tabs.backup"),
-      icon: "🔧",
+      icon: Wrench,
       settings: backupSettings,
       renderFunction: renderBackupInput
     }
@@ -1502,7 +1503,7 @@ export function PlatformSettings() {
                     : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
                 }`}
               >
-                <span className="text-lg">{tab.icon}</span>
+                <tab.icon className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -1538,7 +1539,7 @@ export function PlatformSettings() {
           {activeTabData && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <span className="text-2xl">{activeTabData.icon}</span>
+                <activeTabData.icon className="h-6 w-6 text-slate-600" strokeWidth={1.8} aria-hidden="true" />
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900">{activeTabData.title}</h2>
                   <p className="text-slate-600 text-sm">

@@ -22,14 +22,20 @@ i18n
   .use(initReactI18next) // Pass i18n down to react-i18next
   .init({
     resources,
-    fallbackLng: 'en', // Fallback language (Spanish)
+    fallbackLng: 'es',
+    supportedLngs: ['en', 'es'],
     debug: import.meta.env.DEV,
 
     // Language detection options
     detection: {
-      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
+      // An explicit platform-wide choice wins; otherwise retain this browser's
+      // ProCV choice, then follow the system language.
+      order: ['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
       lookupQuerystring: 'lang',
-      caches: ['localStorage'],
+      lookupCookie: 'prosolutions_locale',
+      cookieDomain: '.prosolutions.page',
+      cookieOptions: { path: '/', sameSite: 'lax', secure: true },
+      caches: ['cookie', 'localStorage'],
       lookupLocalStorage: 'i18nextLng',
     },
 
@@ -49,7 +55,20 @@ function syncDocumentLanguage(language: string) {
   }
 }
 
-i18n.on('languageChanged', syncDocumentLanguage);
+i18n.on('languageChanged', (language) => {
+  syncDocumentLanguage(language);
+  const locale = language.split('-')[0];
+  if (locale !== 'en' && locale !== 'es') return;
+  try {
+    localStorage.setItem('i18nextLng', locale);
+    const host = window.location.hostname;
+    const domain = host === 'prosolutions.page' || host.endsWith('.prosolutions.page') ? '; Domain=.prosolutions.page' : '';
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `prosolutions_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax${domain}${secure}`;
+  } catch {
+    // Keep the active language even when persistence is unavailable.
+  }
+});
 syncDocumentLanguage(i18n.resolvedLanguage || i18n.language);
 
 export default i18n;

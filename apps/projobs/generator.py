@@ -686,7 +686,7 @@ def jobs_to_json_script(jobs: list[dict]) -> str:
 def render_job_card(job: dict) -> str:
     salary_text = ""
     if job.get("salary") and job["salary"].get("raw"):
-        salary_text = "💰 " + job["salary"]["raw"]
+        salary_text = '<svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10h.01M18 14h.01"/></svg> ' + escape_html(job["salary"]["raw"])
 
     experience_text = ""
     if job.get("experience") and job["experience"] != "no-especificado":
@@ -717,8 +717,8 @@ def render_job_card(job: dict) -> str:
             '            <span class="badge">Fuente: <a href="' + source_url + '" target="_blank" rel="noopener noreferrer">' + source_name + '</a></span>\n'
             '            <h2 class="job-title">' + escape_html(job['title']) + '</h2>\n'
             '            <div class="job-info">\n'
-            '                🏢 <strong>' + escape_html(job['company']) + '</strong>\n'
-            '                &nbsp;|&nbsp; 📍 ' + escape_html(job['location']) + '\n'
+            '                <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg> <strong>' + escape_html(job['company']) + '</strong>\n'
+            '                &nbsp;|&nbsp; <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> ' + escape_html(job['location']) + '\n'
             + (f" · {escape_html(job['country'])}" if job['country'] != job['location'] else "")
             + (f" · {salary_text}" if salary_text else "")
             + experience_text
@@ -730,7 +730,7 @@ def render_job_card(job: dict) -> str:
             '            </div>\n'
             '            <div class="job-actions">\n'
             '                <a href="' + job_url + '" class="btn" data-i18n="viewJob" data-action="apply" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" target="_blank" rel="noopener sponsored">Ver oferta</a>\n'
-            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob">♡ Guardar</button>\n'
+            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg><span data-i18n="saveJob">Guardar</span></button>\n'
             '            </div>\n'
             '        </article>\n    ')
 
@@ -743,7 +743,7 @@ def render_filters_html() -> str:
     return f'''
     <div class="filters-panel">
         <div class="filters-header">
-            <h3 data-i18n="filtersTitle">🔍 Filtros de búsqueda</h3>
+            <h3 data-i18n="filtersTitle"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg> Filtros de búsqueda</h3>
             <button type="button" id="resetFilters" class="btn-reset">
                 <span data-i18n="resetFilters">Limpiar filtros</span>
             </button>
@@ -752,10 +752,9 @@ def render_filters_html() -> str:
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="countryFilter" data-i18n="country">País</label>
-                <input id="countryFilter" type="search" list="countryOptions" autocomplete="off"
-                       data-i18n-placeholder="allCountries" placeholder="Todos los países"
-                       aria-label="País" />
-                <datalist id="countryOptions"></datalist>
+                <select id="countryFilter" aria-label="País">
+                    <option value="" data-i18n="allCountries">Todos los países</option>
+                </select>
             </div>
             <div class="filter-group">
                 <label for="sectorFilter" data-i18n="sector">Sector</label>
@@ -868,6 +867,16 @@ CSS_STYLES = """
         .job-card:hover { transform: translateY(-2px); }
         .job-title { font-size: 1.2rem; font-weight: 600; color: #3f6ff5; margin: 0 0 6px 0; }
         .job-info { color: #64748b; font-size: 0.9rem; margin-bottom: 14px; }
+        .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .search-field { position: relative; display: block; width: 100%; }
+        .search-field-icon { position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: #64748b; }
+        .search-field .search-input { padding-left: 48px; }
+        .mobile-menu-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .search-field { position: relative; display: block; width: 100%; }
+        .search-field-icon { position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: #64748b; }
+        .search-field .search-input { padding-left: 48px; }
+        .mobile-menu-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .job-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
         .job-tags .badge { font-size: 0.75rem; }
         .btn {
@@ -950,6 +959,7 @@ CSS_STYLES = """
         .language-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
         .theme-toggle { border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; color: #334155; padding: 9px 11px; font: inherit; font-size: 16px; cursor: pointer; }
         .theme-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .theme-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         /* Navegación del ecosistema ProSolutions */
@@ -1083,6 +1093,15 @@ CSS_STYLES = """
         .pro-footer-bottom { margin-top: 48px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         html.dark .pro-nav { background: rgba(15,23,42,.92); border-color: #334155; }
+        html.dark .projobs-profile-menu summary { border-color: #475569 !important; }
+        html.dark .projobs-profile-menu [data-profile-dropdown] { background: #111827 !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        html.dark .projobs-profile-menu [data-profile-identity] { border-color: #334155 !important; }
+        html.dark .projobs-profile-menu [data-profile-email] { color: #94a3b8 !important; }
+        .projobs-profile-menu summary::-webkit-details-marker { display: none; }
+        .projobs-profile-menu summary:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+        .projobs-profile-menu [data-profile-account]:hover, .projobs-profile-menu [data-projobs-logout]:hover { background: #f1f5f9 !important; }
+        html.dark .projobs-profile-menu [data-profile-account]:hover { background: #1e293b !important; }
+        html.dark .projobs-profile-menu [data-projobs-logout]:hover { background: #3f1d2a !important; }
         html.dark .mobile-menu-toggle { background: #1e293b; border-color: #475569; color: #e2e8f0; }
         html.dark .pro-links { border-color: #334155; }
         html.dark .pro-wordmark { color: #f8fafc; }
@@ -1138,6 +1157,38 @@ def render_page(jobs: list[dict]) -> str:
     page = f'''<!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>
+      // Set the platform language before the generated page renders.
+      (function () {{
+        try {{
+          var entry = document.cookie.split('; ').find(function (part) {{ return part.indexOf('prosolutions_locale=') === 0; }});
+          var shared = entry ? entry.split('=').slice(1).join('=') : '';
+          var saved = localStorage.getItem('projobs-locale');
+          var locale = shared === 'en' || shared === 'es' ? shared : (saved === 'en' || saved === 'es' ? saved : '');
+          if (!locale) locale = (navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'es';
+          document.documentElement.lang = locale;
+        }} catch (error) {{
+          document.documentElement.lang = (navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'es';
+        }}
+      }})();
+    </script>
+    <script>
+      (function () {{
+        try {{
+          var cookie = document.cookie.split('; ').find(function (part) {{ return part.indexOf('prosolutions_theme=') === 0; }});
+          var preference = cookie ? cookie.split('=').slice(1).join('=') : '';
+          if (preference !== 'dark' && preference !== 'light') {{
+            var saved = JSON.parse(localStorage.getItem('theme-storage') || 'null');
+            preference = saved && saved.state && saved.state.preference;
+          }}
+          var dark = preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        }} catch (error) {{
+          /* Use CSS defaults if storage is unavailable. */
+        }}
+      }})();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">{SITE_TITLE}</title>
@@ -1171,9 +1222,9 @@ def render_page(jobs: list[dict]) -> str:
                 <a href="{SITE_URL}" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-pill" data-i18n="active">Activo</span></a>
                 <a href="{CORE_URL}#planes"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><span aria-hidden="true">☰</span></button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg></button>
         </div>
     </nav>
 
@@ -1186,8 +1237,11 @@ def render_page(jobs: list[dict]) -> str:
     </header>
 
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-input"
-               data-i18n-placeholder="searchPlaceholder" placeholder="🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+        <label class="search-field" for="searchInput">
+            <svg class="inline-icon search-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input type="text" id="searchInput" class="search-input"
+                   data-i18n-placeholder="searchPlaceholder" placeholder="Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...">
+        </label>
     </div>
 
     {filters_html}
@@ -1205,7 +1259,7 @@ def render_page(jobs: list[dict]) -> str:
     {jobs_json}
 
     <div id="noResults" class="no-results">
-        <p data-i18n="noMatches">No se encontraron ofertas que coincidan con tu búsqueda. 🔍</p>
+        <p data-i18n="noMatches">No se encontraron ofertas que coincidan con tu búsqueda.</p>
         <p data-i18n="adjustFilters">Intenta ajustar los filtros o prueba con otras palabras clave.</p>
     </div>
 
@@ -1260,14 +1314,27 @@ def render_page(jobs: list[dict]) -> str:
 
 JS_CODE = f'''<script>
 const COPY = {{
-  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: '🔍 Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: '🔍 Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda. 🔍', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', saveJob: '♡ Guardar', savedJob: '✓ Guardado', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
-  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: '🔍 Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: '🔍 Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search. 🔍', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', saveJob: '♡ Save', savedJob: '✓ Saved', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
+  es: {{ pageTitle: 'ProJobs | Encuentra tu próxima oportunidad', title: 'Encuentra tu próxima oportunidad', heroEyebrow: 'Oportunidades para tu siguiente paso', resultsTitle: 'Ofertas para explorar', resultsDescription: 'Oportunidades de distintas fuentes, con filtros para encontrar el puesto adecuado.', jobsAvailable: 'ofertas disponibles', madeForProfessionals: 'Hecho para profesionales tech', description: 'Encuentra empleo en tecnología, administración, ventas, salud, educación y más. Actualizado diariamente.', home: 'ProSolutions', footerHome: 'Inicio', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', lastUpdated: 'Última actualización:', searchPlaceholder: 'Buscar por tecnología, puesto o empresa (ej. Python, React, Senior)...', filtersTitle: 'Filtros de búsqueda', resetFilters: 'Limpiar filtros', country: 'País', allCountries: 'Todos los países', sector: 'Sector', allSectors: 'Todos los sectores', modality: 'Modalidad', all: 'Todas', remote: 'Remoto', onsite: 'Presencial', hybrid: 'Híbrido', contractType: 'Tipo de contrato', permanent: 'Indefinido', temporary: 'Temporal', internship: 'Prácticas', freelance: 'Freelance', schedule: 'Jornada', fullTime: 'Completa', partTime: 'Parcial', experience: 'Experiencia', anyLevel: 'Cualquier nivel', junior: 'Junior', mid: 'Medio', senior: 'Senior', unspecified: 'No especificado', noMatches: 'No se encontraron ofertas que coincidan con tu búsqueda.', adjustFilters: 'Intenta ajustar los filtros o prueba con otras palabras clave.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', jobsToday: 'Total de ofertas cargadas hoy:', developedBy: 'Un producto desarrollado por', ecosystemNav: 'Navegación del ecosistema ProSolutions', source: 'Fuente', viewJob: 'Ver oferta completa', saveJob: 'Guardar', savedJob: 'Guardado', activeCount: n => `${{n}} activo${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Tecnología y Datos', finanzas: 'Administración, Finanzas y Contabilidad', ventas: 'Ventas, Marketing y Atención al Cliente', ingenieria: 'Ingeniería, Industria y Mantenimiento', salud: 'Salud y Ciencias de la Vida', educacion: 'Educación y Formación', logistica: 'Logística, Transporte y Operaciones', construccion: 'Construcción y Oficios', hosteleria: 'Hostelería, Turismo y Restauración', 'recursos-humanos': 'Recursos Humanos y Servicios Profesionales', 'sector-publico': 'Sector Público y Organizaciones Sociales', otras: 'Otras Áreas y Ofertas' }} }},
+  en: {{ pageTitle: 'ProJobs | Find your next opportunity', title: 'Find your next opportunity', heroEyebrow: 'Opportunities for your next step', resultsTitle: 'Explore job listings', resultsDescription: 'Opportunities from multiple sources, with filters to find the right role.', jobsAvailable: 'available jobs', madeForProfessionals: 'Made for tech professionals', description: 'Find jobs in technology, administration, sales, healthcare, education, and more. Updated daily.', home: 'ProSolutions', footerHome: 'Home', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', lastUpdated: 'Last updated:', searchPlaceholder: 'Search by technology, role, or company (e.g. Python, React, Senior)...', filtersTitle: 'Search filters', resetFilters: 'Clear filters', country: 'Country', allCountries: 'All countries', sector: 'Industry', allSectors: 'All industries', modality: 'Work setup', all: 'All', remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid', contractType: 'Contract type', permanent: 'Permanent', temporary: 'Temporary', internship: 'Internship', freelance: 'Freelance', schedule: 'Schedule', fullTime: 'Full-time', partTime: 'Part-time', experience: 'Experience', anyLevel: 'Any level', junior: 'Junior', mid: 'Mid-level', senior: 'Senior', unspecified: 'Unspecified', noMatches: 'No jobs match your search.', adjustFilters: 'Try adjusting the filters or searching for different keywords.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', jobsToday: 'Jobs loaded today:', developedBy: 'A product by', ecosystemNav: 'ProSolutions ecosystem navigation', source: 'Source', viewJob: 'View full listing', saveJob: 'Save', savedJob: 'Saved', activeCount: n => `${{n}} active filter${{n === 1 ? '' : 's'}}`, sectors: {{ tecnologia: 'Technology and Data', finanzas: 'Administration, Finance and Accounting', ventas: 'Sales, Marketing and Customer Service', ingenieria: 'Engineering, Industry and Maintenance', salud: 'Healthcare and Life Sciences', educacion: 'Education and Training', logistica: 'Logistics, Transport and Operations', construccion: 'Construction and Trades', hosteleria: 'Hospitality, Tourism and Food Service', 'recursos-humanos': 'Human Resources and Professional Services', 'sector-publico': 'Public Sector and Nonprofits', otras: 'Other Areas and Jobs' }} }}
 }};
-let locale = localStorage.getItem('projobs-locale');
+function readSharedLocale() {{
+  const entry = document.cookie.split('; ').find(part => part.startsWith('prosolutions_locale='));
+  const value = entry ? entry.split('=').slice(1).join('=') : '';
+  return value === 'en' || value === 'es' ? value : null;
+}}
+function persistLocale(value) {{
+  try {{ localStorage.setItem('projobs-locale', value); }} catch {{ /* storage unavailable */ }}
+  const host = window.location.hostname;
+  const domain = host === 'prosolutions.page' || host.endsWith('.prosolutions.page') ? '; Domain=.prosolutions.page' : '';
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = 'prosolutions_locale=' + value + '; Path=/; Max-Age=31536000; SameSite=Lax' + domain + secure;
+}}
+let locale = readSharedLocale() || localStorage.getItem('projobs-locale');
 if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
 const copy = () => COPY[locale];
 function applyLocale() {{
   const text = copy();
+  persistLocale(locale);
   document.documentElement.lang = locale;
   document.querySelectorAll('[data-i18n]').forEach(el => {{ el.textContent = text[el.dataset.i18n]; }});
   document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', text[el.dataset.i18nAria]));
@@ -1342,18 +1409,17 @@ function escapeHtml(text) {{
         // ISO 3166-1 codes: expose every country/territory even if no jobs are listed there.
         const WORLD_COUNTRY_CODES = ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"];
         function populateCountries() {{
-            const selectedCode = activeFilters.country || '';
+            const selectedCode = activeFilters.country || countryFilter.value || '';
             const countries = [...new Set([
                 'REMOTE', ...WORLD_COUNTRY_CODES,
-                ...allJobs.map(job => job.country).filter(Boolean)
+                ...allJobs.map(job => job.country).filter(Boolean),
+                ...allJobs.flatMap(job => Array.isArray(job.countries) ? job.countries : [])
             ])].sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
-            document.getElementById('countryOptions').innerHTML = countries
-                .map(country => {{
-                    const label = countryLabel(country);
-                    return `<option value="${{escapeHtml(label)}}" label="${{escapeHtml(label)}}" data-country-code="${{escapeHtml(country)}}"></option>`;
-                }})
-                .join('');
-            countryFilter.value = selectedCode ? countryLabel(selectedCode) : '';
+            countryFilter.replaceChildren(new Option(copy().allCountries, ''));
+            countries.forEach(country => {{
+                countryFilter.add(new Option(countryLabel(country), country));
+            }});
+            countryFilter.value = countries.includes(selectedCode) ? selectedCode : '';
         }}
         populateCountries();
 
@@ -1405,10 +1471,10 @@ function escapeHtml(text) {{
                     <span class="badge">${{copy().source}}: <a href="${{sourceUrls[job.source] || 'https://projobs.prosolutions.page/'}}" target="_blank" rel="noopener noreferrer">${{escapeHtml(job.source || 'ProJobs')}}</a></span>
                     <h2 class="job-title">${{escapeHtml(jobTitle)}}</h2>
                     <div class="job-info">
-                        🏢 <strong>${{escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}}</strong>
-                        &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location || (locale === 'es' ? 'Ubicación no especificada' : 'Location not specified'))}}
+                        <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg> <strong>${{escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}}</strong>
+                        &nbsp;|&nbsp; <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> ${{escapeHtml(job.location || (locale === 'es' ? 'Ubicación no especificada' : 'Location not specified'))}}
                         ${{job.country && job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
-                        ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
+                        ${{job.salary?.raw ? `· <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 10h.01M18 14h.01"/></svg> ${{escapeHtml(job.salary.raw)}}` : ''}}
                         ${{job.experience && job.experience !== 'no-especificado' ? `· ${{labelFor(job.experience)}}` : ''}}
                     </div>
                     <div class="job-tags">
@@ -1425,7 +1491,7 @@ function escapeHtml(text) {{
                            data-job-id="${{escapeHtml(jobId)}}" data-job-url="${{escapeHtml(jobUrl)}}"
                            data-job-title="${{escapeHtml(jobTitle)}}" data-company="${{escapeHtml(company)}}"
                            aria-label="${{locale === 'es' ? 'Guardar empleo' : 'Save job'}}"
-                           aria-pressed="false">${{copy().saveJob}}</button>
+                           aria-pressed="false"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg><span>${{copy().saveJob}}</span></button>
                     </div>
                 `;
                 jobsList.appendChild(card);
@@ -1434,18 +1500,7 @@ function escapeHtml(text) {{
         }}
 
         function applyFilters() {{
-            const countryInput = countryFilter.value.trim().toLocaleLowerCase();
-            const matchedJobCountry = allJobs.find(job =>
-                String(job.country || '').toLocaleLowerCase() === countryInput
-                || countryLabel(job.country).toLocaleLowerCase() === countryInput
-            );
-            const matchedWorldCode = WORLD_COUNTRY_CODES.find(code =>
-                code.toLocaleLowerCase() === countryInput
-                || countryLabel(code).toLocaleLowerCase() === countryInput
-            );
-            const country = matchedJobCountry
-                ? matchedJobCountry.country
-                : (matchedWorldCode || (countryInput ? countryFilter.value : ''));
+            const country = countryFilter.value.trim().toUpperCase();
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
@@ -1515,7 +1570,7 @@ function escapeHtml(text) {{
             const isOpen = menu.classList.toggle('mobile-open');
             button.setAttribute('aria-expanded', String(isOpen));
             button.setAttribute('aria-label', isOpen ? (locale === 'es' ? 'Cerrar menú' : 'Close menu') : (locale === 'es' ? 'Abrir menú' : 'Open menu'));
-            button.querySelector('span').textContent = isOpen ? '×' : '☰';
+            button.innerHTML = isOpen ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
         }});
         document.addEventListener('keydown', event => {{
             if (event.key === 'Escape') {{
@@ -1523,13 +1578,13 @@ function escapeHtml(text) {{
                 const button = document.getElementById('mobileMenuToggle');
                 button.setAttribute('aria-expanded', 'false');
                 button.setAttribute('aria-label', locale === 'es' ? 'Abrir menú' : 'Open menu');
-                button.querySelector('span').textContent = '☰';
+                button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
             }}
         }});
 
         document.getElementById('languageToggle').addEventListener('click', () => {{
             locale = locale === 'es' ? 'en' : 'es';
-            localStorage.setItem('projobs-locale', locale);
+            persistLocale(locale);
             applyLocale();
         }});
         function applyTheme(isDark) {{
@@ -1539,21 +1594,28 @@ function escapeHtml(text) {{
             const label = isDark
                 ? (locale === 'es' ? 'Activar modo claro' : 'Switch to light mode')
                 : (locale === 'es' ? 'Activar modo oscuro' : 'Switch to dark mode');
-            button.textContent = isDark ? '☀️' : '🌙';
+            button.innerHTML = isDark
+                ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>'
+                : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg>';
             button.setAttribute('aria-label', label);
             button.title = label;
         }}
         let isDark = false;
         try {{
+            const themeCookie = document.cookie.split('; ').find(part => part.startsWith('prosolutions_theme='));
+            const cookiePreference = themeCookie ? themeCookie.split('=').slice(1).join('=') : '';
             const savedTheme = JSON.parse(localStorage.getItem('theme-storage') || 'null')?.state?.preference;
-            isDark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            const preference = (cookiePreference === 'dark' || cookiePreference === 'light') ? cookiePreference : savedTheme;
+            isDark = preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         }} catch {{
             isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }}
         applyTheme(isDark);
         document.getElementById('themeToggle').addEventListener('click', () => {{
             isDark = !isDark;
-            try {{ localStorage.setItem('theme-storage', JSON.stringify({{ state: {{ preference: isDark ? 'dark' : 'light' }} }})); }} catch {{ /* storage unavailable */ }}
+            const preference = isDark ? 'dark' : 'light';
+            try {{ localStorage.setItem('theme-storage', JSON.stringify({{ state: {{ preference }} }})); }} catch {{ /* storage unavailable */ }}
+            document.cookie = 'prosolutions_theme=' + preference + '; Domain=.prosolutions.page; Path=/; Max-Age=31536000; SameSite=Lax; Secure';
             applyTheme(isDark);
         }});
         applyLocale();

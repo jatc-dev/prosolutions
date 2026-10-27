@@ -41,6 +41,14 @@ if (!existsSync(generatedIndex)) {
 
 const { readFile } = await import("node:fs/promises");
 const html = await readFile(generatedIndex, "utf8");
+for (const file of ["mi-cuenta.html", "privacidad.html"]) {
+  const page = await readFile(path.join(root, file), "utf8");
+  for (const required of ["prosolutions_locale=", 'id="languageToggle"']) {
+    if (!page.includes(required)) {
+      throw new Error(`[projobs] ${file} no mantiene el idioma compartido: falta ${required}. Build cancelado.`);
+    }
+  }
+}
 for (const required of [
   'class="pro-nav"',
   'https://prosolutions.page',
@@ -53,6 +61,9 @@ for (const required of [
   'class="results-heading"',
   'class="pro-footer-bottom"',
   'pro-active-pill',
+  'prosolutions_locale=',
+  'class="inline-icon"',
+  'class="language-toggle"',
   'Encuentra tu próxima oportunidad',
 ]) {
   if (!html.includes(required)) {

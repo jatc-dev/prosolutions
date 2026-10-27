@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>
+      (function () {
+        try {
+          const entry = document.cookie.split("; ").find(part => part.startsWith("prosolutions_locale="));
+          const shared = entry ? entry.split("=").slice(1).join("=") : "";
+          const saved = localStorage.getItem("projobs-locale");
+          const locale = shared === "en" || shared === "es" ? shared : (saved === "en" || saved === "es" ? saved : ((navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es"));
+          document.documentElement.lang = locale;
+        } catch { document.documentElement.lang = (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es"; }
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Política de Privacidad | Empleos Tech Remotos</title>
@@ -41,6 +52,7 @@
         .pro-footer-bottom { margin-top: 36px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; font-size: 12px; color: #64748b; }
         @media (min-width: 640px) { .pro-footer-bottom { flex-direction: row; justify-content: space-between; text-align: left; } }
         .pro-footer-bottom a { color: #334155; font-weight: 700; }
+        .mobile-menu-toggle svg, .theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .language-toggle { border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; color: #334155; padding: 9px 13px; font: inherit; font-weight: 700; cursor: pointer; }
         .language-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
         .language-toggle:focus-visible { outline: 3px solid rgba(63,111,245,.35); outline-offset: 2px; }
@@ -123,9 +135,9 @@
                 <a href="https://projobs.prosolutions.page/" class="active" aria-current="page"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg><span>ProJobs</span><span class="pro-active-pill" data-i18n="active">Activo</span></a>
                 <a href="https://prosolutions.page#planes"><svg class="pro-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span data-i18n="plans">Planes Premium</span></a>
             </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><span aria-hidden="true">☰</span></button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="projobs-mobile-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
             <button class="language-toggle" id="languageToggle" type="button" aria-label="Cambiar idioma a inglés">EN</button>
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro">🌙</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" title="Activar modo oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg></button>
         </div>
     </nav>
 
@@ -186,10 +198,23 @@
       es: { ecosystemNav: 'Navegación del ecosistema ProSolutions', home: 'ProSolutions', footerHome: 'Inicio', madeForProfessionals: 'Hecho para profesionales tech', plans: 'Planes Premium', active: 'Activo', createCv: 'Crear mi CV Gratis', backToJobs: '← Volver al Portal de Empleos', privacyTitle: 'Política de Privacidad', privacyIntro: 'En Empleos Tech Remotos, la privacidad de nuestros visitantes es una prioridad.', cookiesTitle: 'Uso de Cookies y Redes de Anuncios', cookiesText: 'Este sitio web puede utilizar cookies para mejorar la experiencia del usuario y mostrar publicidad personalizada a través de proveedores de terceros, como Google AdSense.', adsText: 'Los proveedores de terceros, incluido Google, utilizan cookies para mostrar anuncios basados en las visitas anteriores del usuario a este sitio web o a otros sitios web.', thirdPartyTitle: 'Enlaces de Afiliados y Terceros', thirdPartyText: 'Nuestro portal contiene enlaces a plataformas externas de empleo y servicios para profesionales. No nos hacemos responsables de los contenidos o las prácticas de privacidad de dichos sitios web.', footerAbout: 'El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo remoto con ProJobs.', ecosystem: 'Ecosistema', legal: 'Legal', privacy: 'Privacidad', terms: 'Términos', developedBy: 'Un producto desarrollado por' },
       en: { ecosystemNav: 'ProSolutions ecosystem navigation', home: 'ProSolutions', footerHome: 'Home', madeForProfessionals: 'Made for tech professionals', plans: 'Premium plans', active: 'Active', createCv: 'Create my free CV', backToJobs: '← Back to job listings', privacyTitle: 'Privacy Policy', privacyIntro: 'At Remote Tech Jobs, our visitors’ privacy is a priority.', cookiesTitle: 'Cookies and Advertising Networks', cookiesText: 'This website may use cookies to improve the user experience and display personalized advertising through third-party providers such as Google AdSense.', adsText: 'Third-party providers, including Google, use cookies to show ads based on your previous visits to this website or other websites.', thirdPartyTitle: 'Affiliate and Third-Party Links', thirdPartyText: 'Our portal contains links to external job platforms and professional services. We are not responsible for the content or privacy practices of those websites.', footerAbout: 'The professional tech tools ecosystem. Build an ATS-optimized resume with ProCV and find your next remote job with ProJobs.', ecosystem: 'Ecosystem', legal: 'Legal', privacy: 'Privacy', terms: 'Terms', developedBy: 'A product by' }
     };
-    let locale = localStorage.getItem('projobs-locale');
+    function readSharedLocale() {
+      const entry = document.cookie.split('; ').find(part => part.startsWith('prosolutions_locale='));
+      const value = entry ? entry.split('=').slice(1).join('=') : '';
+      return value === 'en' || value === 'es' ? value : null;
+    }
+    function persistLocale(value) {
+      try { localStorage.setItem('projobs-locale', value); } catch { /* storage unavailable */ }
+      const host = window.location.hostname;
+      const domain = host === 'prosolutions.page' || host.endsWith('.prosolutions.page') ? '; Domain=.prosolutions.page' : '';
+      const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = 'prosolutions_locale=' + value + '; Path=/; Max-Age=31536000; SameSite=Lax' + domain + secure;
+    }
+    let locale = readSharedLocale() || localStorage.getItem('projobs-locale');
     if (locale !== 'en' && locale !== 'es') locale = navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es';
     function applyLocale() {
       const copy = COPY[locale];
+      persistLocale(locale);
       document.documentElement.lang = locale;
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = copy[el.dataset.i18n]);
       document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', copy[el.dataset.i18nAria]));
@@ -205,14 +230,17 @@
       document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
       const button = document.getElementById('themeToggle');
       const label = isDark ? (locale === 'es' ? 'Activar modo claro' : 'Switch to light mode') : (locale === 'es' ? 'Activar modo oscuro' : 'Switch to dark mode');
-      button.textContent = isDark ? '☀️' : '🌙';
+      button.innerHTML = isDark ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg>';
       button.setAttribute('aria-label', label);
       button.title = label;
     }
     let isDark = false;
     try {
+      const themeCookie = document.cookie.split('; ').find(part => part.startsWith('prosolutions_theme='));
+      const cookiePreference = themeCookie ? themeCookie.split('=').slice(1).join('=') : '';
       const savedTheme = JSON.parse(localStorage.getItem('theme-storage') || 'null')?.state?.preference;
-      isDark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const preference = cookiePreference === 'dark' || cookiePreference === 'light' ? cookiePreference : savedTheme;
+      isDark = preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     } catch {
       isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
@@ -222,7 +250,7 @@
       const isOpen = menu.classList.toggle('mobile-open');
       button.setAttribute('aria-expanded', String(isOpen));
       button.setAttribute('aria-label', isOpen ? (locale === 'es' ? 'Cerrar menú' : 'Close menu') : (locale === 'es' ? 'Abrir menú' : 'Open menu'));
-      button.querySelector('span').textContent = isOpen ? '×' : '☰';
+      button.innerHTML = isOpen ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
@@ -230,17 +258,21 @@
         const button = document.getElementById('mobileMenuToggle');
         button.setAttribute('aria-expanded', 'false');
         button.setAttribute('aria-label', locale === 'es' ? 'Abrir menú' : 'Open menu');
-        button.querySelector('span').textContent = '☰';
+        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
       }
     });
     document.getElementById('themeToggle').addEventListener('click', () => {
       isDark = !isDark;
-      try { localStorage.setItem('theme-storage', JSON.stringify({ state: { preference: isDark ? 'dark' : 'light' } })); } catch { /* storage unavailable */ }
+      const preference = isDark ? 'dark' : 'light';
+      try { localStorage.setItem('theme-storage', JSON.stringify({ state: { preference } })); } catch { /* storage unavailable */ }
+      const host = window.location.hostname;
+      const domain = host === 'prosolutions.page' || host.endsWith('.prosolutions.page') ? '; Domain=.prosolutions.page' : '';
+      document.cookie = 'prosolutions_theme=' + preference + '; Path=/; Max-Age=31536000; SameSite=Lax' + domain + (window.location.protocol === 'https:' ? '; Secure' : '');
       applyTheme(isDark);
     });
     document.getElementById('languageToggle').addEventListener('click', () => {
       locale = locale === 'es' ? 'en' : 'es';
-      localStorage.setItem('projobs-locale', locale);
+      persistLocale(locale);
       applyLocale();
     });
     applyLocale();
