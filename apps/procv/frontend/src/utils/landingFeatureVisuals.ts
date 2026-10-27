@@ -1,10 +1,12 @@
+import { BarChart3, Bot, FileText, Pencil, Save, ShieldCheck, Smartphone, Sparkles, Upload, Zap, type LucideIcon } from "lucide-react";
+
 interface LandingFeatureVisualInput {
   title: string;
   description: string;
 }
 
 interface LandingFeatureVisual {
-  icon: string;
+  icon: LucideIcon;
   iconContainerClass: string;
   borderHoverClass: string;
 }
@@ -28,17 +30,17 @@ const VISUAL_PALETTE = [
   },
 ];
 
-function resolveIcon(text: string): string {
-  if (/(export|descarga|download|pdf|xml|json)/i.test(text)) return "📤";
-  if (/(editor|edita|edit|resume|curriculum|cv)/i.test(text)) return "✏️";
-  if (/(template|plantilla|design|diseño|diseno|layout)/i.test(text)) return "📄";
-  if (/(contact|correo|email|phone|telefono|whatsapp)/i.test(text)) return "📱";
-  if (/(auto.?save|autoguard|save|guardado)/i.test(text)) return "💾";
-  if (/(ai|ia|inteligencia|assistant|asistente)/i.test(text)) return "🤖";
-  if (/(secure|security|seguridad|privacy|privacidad)/i.test(text)) return "🔒";
-  if (/(analytics|analit|metrics|metricas|insight|data|datos)/i.test(text)) return "📊";
-  if (/(fast|speed|rapid|rápid|rendimiento|performance)/i.test(text)) return "⚡";
-  return "✨";
+function resolveIcon(text: string): LucideIcon {
+  if (/(export|descarga|download|pdf|xml|json)/i.test(text)) return Upload;
+  if (/(editor|edita|edit|resume|curriculum|cv)/i.test(text)) return Pencil;
+  if (/(template|plantilla|design|diseño|diseno|layout)/i.test(text)) return FileText;
+  if (/(contact|correo|email|phone|telefono|whatsapp)/i.test(text)) return Smartphone;
+  if (/(auto.?save|autoguard|save|guardado)/i.test(text)) return Save;
+  if (/(ai|ia|inteligencia|assistant|asistente)/i.test(text)) return Bot;
+  if (/(secure|security|seguridad|privacy|privacidad)/i.test(text)) return ShieldCheck;
+  if (/(analytics|analit|metrics|metricas|insight|data|datos)/i.test(text)) return BarChart3;
+  if (/(fast|speed|rapid|rápid|rendimiento|performance)/i.test(text)) return Zap;
+  return Sparkles;
 }
 
 export function getLandingFeatureVisual(feature: LandingFeatureVisualInput, index: number): LandingFeatureVisual {
