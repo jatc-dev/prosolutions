@@ -752,10 +752,9 @@ def render_filters_html() -> str:
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="countryFilter" data-i18n="country">País</label>
-                <input id="countryFilter" type="search" list="countryOptions" autocomplete="off"
-                       data-i18n-placeholder="allCountries" placeholder="Todos los países"
-                       aria-label="País" />
-                <datalist id="countryOptions"></datalist>
+                <select id="countryFilter" aria-label="País">
+                    <option value="" data-i18n="allCountries">Todos los países</option>
+                </select>
             </div>
             <div class="filter-group">
                 <label for="sectorFilter" data-i18n="sector">Sector</label>
@@ -1342,18 +1341,17 @@ function escapeHtml(text) {{
         // ISO 3166-1 codes: expose every country/territory even if no jobs are listed there.
         const WORLD_COUNTRY_CODES = ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"];
         function populateCountries() {{
-            const selectedCode = activeFilters.country || '';
+            const selectedCode = activeFilters.country || countryFilter.value || '';
             const countries = [...new Set([
                 'REMOTE', ...WORLD_COUNTRY_CODES,
-                ...allJobs.map(job => job.country).filter(Boolean)
+                ...allJobs.map(job => job.country).filter(Boolean),
+                ...allJobs.flatMap(job => Array.isArray(job.countries) ? job.countries : [])
             ])].sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
-            document.getElementById('countryOptions').innerHTML = countries
-                .map(country => {{
-                    const label = countryLabel(country);
-                    return `<option value="${{escapeHtml(label)}}" label="${{escapeHtml(label)}}" data-country-code="${{escapeHtml(country)}}"></option>`;
-                }})
-                .join('');
-            countryFilter.value = selectedCode ? countryLabel(selectedCode) : '';
+            countryFilter.replaceChildren(new Option(copy().allCountries, ''));
+            countries.forEach(country => {{
+                countryFilter.add(new Option(countryLabel(country), country));
+            }});
+            countryFilter.value = countries.includes(selectedCode) ? selectedCode : '';
         }}
         populateCountries();
 
@@ -1434,18 +1432,7 @@ function escapeHtml(text) {{
         }}
 
         function applyFilters() {{
-            const countryInput = countryFilter.value.trim().toLocaleLowerCase();
-            const matchedJobCountry = allJobs.find(job =>
-                String(job.country || '').toLocaleLowerCase() === countryInput
-                || countryLabel(job.country).toLocaleLowerCase() === countryInput
-            );
-            const matchedWorldCode = WORLD_COUNTRY_CODES.find(code =>
-                code.toLocaleLowerCase() === countryInput
-                || countryLabel(code).toLocaleLowerCase() === countryInput
-            );
-            const country = matchedJobCountry
-                ? matchedJobCountry.country
-                : (matchedWorldCode || (countryInput ? countryFilter.value : ''));
+            const country = countryFilter.value.trim().toUpperCase();
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
@@ -1545,15 +1532,20 @@ function escapeHtml(text) {{
         }}
         let isDark = false;
         try {{
+            const themeCookie = document.cookie.split('; ').find(part => part.startsWith('prosolutions_theme='));
+            const cookiePreference = themeCookie ? themeCookie.split('=').slice(1).join('=') : '';
             const savedTheme = JSON.parse(localStorage.getItem('theme-storage') || 'null')?.state?.preference;
-            isDark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            const preference = (cookiePreference === 'dark' || cookiePreference === 'light') ? cookiePreference : savedTheme;
+            isDark = preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         }} catch {{
             isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }}
         applyTheme(isDark);
         document.getElementById('themeToggle').addEventListener('click', () => {{
             isDark = !isDark;
-            try {{ localStorage.setItem('theme-storage', JSON.stringify({{ state: {{ preference: isDark ? 'dark' : 'light' }} }})); }} catch {{ /* storage unavailable */ }}
+            const preference = isDark ? 'dark' : 'light';
+            try {{ localStorage.setItem('theme-storage', JSON.stringify({{ state: {{ preference }} }})); }} catch {{ /* storage unavailable */ }}
+            document.cookie = 'prosolutions_theme=' + preference + '; Domain=.prosolutions.page; Path=/; Max-Age=31536000; SameSite=Lax; Secure';
             applyTheme(isDark);
         }});
         applyLocale();
