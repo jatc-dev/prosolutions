@@ -136,6 +136,10 @@
         toggle.textContent = locale === "es" ? "EN" : "ES";
         toggle.setAttribute("aria-label", t("languageLabel"));
         toggle.title = t("languageLabel");
+        document.title = locale === "es" ? "Mi cuenta | ProJobs" : "My account | ProJobs";
+        if (window.proJobsAuth && !window.proJobsAuth.isAuthenticated()) {
+          document.getElementById("account-user").textContent = t("signInProfile");
+        }
         persistLocale(locale);
       }
 
