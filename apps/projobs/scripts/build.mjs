@@ -53,6 +53,9 @@ for (const required of [
   'class="results-heading"',
   'class="pro-footer-bottom"',
   'pro-active-pill',
+  'prosolutions_locale=',
+  'class="inline-icon"',
+  'class="language-toggle"',
   'Encuentra tu próxima oportunidad',
 ]) {
   if (!html.includes(required)) {
