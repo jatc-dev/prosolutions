@@ -66,6 +66,10 @@ def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
     assert normalize_country("España") == "ES"
     assert normalize_country("Remote - UK") == "GB"
     assert normalize_country("Worldwide") == "REMOTE"
+    assert normalize_country("Worldwide remote") == "REMOTE"
+    assert normalize_country("Berlin") == "DE"
+    assert normalize_country("Bogota") == "CO"
+    assert normalize_country("Toronto") == "CA"
 
 
 def test_normalize_job_rejects_non_http_urls_after_trimming():
