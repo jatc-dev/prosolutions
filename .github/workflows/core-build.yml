@@ -43,6 +43,28 @@ jobs:
         run: node --check apps/projobs/auth.js
       - name: Build Core and shared UI
         run: npm run build:core
+        env:
+          VITE_ADSENSE_CLIENT: ca-pub-3956322934366702
+      - name: Verify published AdSense assets
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+
+          const expectedAdsTxt = "google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0";
+          const sourceAdsTxt = readFileSync("apps/core/public/ads.txt", "utf8").trim();
+          const builtAdsTxt = readFileSync("apps/core/dist/ads.txt", "utf8").trim();
+          const html = readFileSync("apps/core/dist/index.html", "utf8");
+
+          if (sourceAdsTxt !== expectedAdsTxt) throw new Error("apps/core/public/ads.txt has an unexpected publisher line");
+          if (builtAdsTxt !== expectedAdsTxt) throw new Error("Vite did not publish the expected /ads.txt file");
+          if (!html.includes("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3956322934366702")) {
+            throw new Error("Built ProSolutions HTML is missing the configured AdSense loader");
+          }
+          if (!html.includes('crossorigin="anonymous"')) throw new Error("AdSense loader must use crossorigin=anonymous");
+          if (html.includes("%VITE_ADSENSE_CLIENT%")) throw new Error("AdSense client placeholder was not substituted during build");
+
+          console.log("ProSolutions ads.txt and global AdSense loader verified in dist/");
+          NODE
 
   projobs-build:
     name: ProJobs (generator + static build)
