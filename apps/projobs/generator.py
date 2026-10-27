@@ -1329,68 +1329,113 @@ function escapeHtml(text) {{
             return country;
         }}
 
+        // ISO 3166-1 codes: expose every country/territory even if no jobs are listed there.
+        const WORLD_COUNTRY_CODES = ["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"];
         function populateCountries() {{
-            const selected = countryFilter.value;
-            const countries = [...new Set(allJobs.map(j => j.country).filter(Boolean))]
-                .sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
+            const selectedCode = activeFilters.country || '';
+            const countries = [...new Set([
+                'REMOTE', ...WORLD_COUNTRY_CODES,
+                ...allJobs.map(job => job.country).filter(Boolean)
+            ])].sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), locale));
             document.getElementById('countryOptions').innerHTML = countries
-                .map(country => `<option value="${{escapeHtml(country)}}" label="${{escapeHtml(countryLabel(country))}}"></option>`)
+                .map(country => {{
+                    const label = countryLabel(country);
+                    return `<option value="${{escapeHtml(label)}}" label="${{escapeHtml(label)}}" data-country-code="${{escapeHtml(country)}}"></option>`;
+                }})
                 .join('');
-            countryFilter.value = selected;
+            countryFilter.value = selectedCode ? countryLabel(selectedCode) : '';
         }}
         populateCountries();
 
+        function stableJobId(job) {{
+            if (job.id) return String(job.id);
+            const input = String(job.url || job.title || '');
+            let hash = 2166136261;
+            for (let i = 0; i < input.length; i++) {{
+                hash ^= input.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }}
+            return (hash >>> 0).toString(16).padStart(8, '0');
+        }}
+
         function renderJobs() {{
-            jobsList.innerHTML = '';
+            jobsList.replaceChildren();
             if (totalJobsEl) totalJobsEl.textContent = filteredJobs.length;
             if (filteredJobs.length === 0) {{
                 jobsList.style.display = 'none';
                 noResults.style.display = 'block';
+                window.dispatchEvent(new CustomEvent('projobs:jobs-rendered'));
                 return;
             }}
             jobsList.style.display = '';
             noResults.style.display = 'none';
             filteredJobs.forEach(job => {{
+                const jobId = stableJobId(job);
+                const jobUrl = String(job.url || '');
+                const jobTitle = String(job.title || '');
+                const company = String(job.company || '');
+                const sourceUrls = {{
+                    'Arbeitnow': 'https://www.arbeitnow.com/',
+                    'Remotive': 'https://remotive.com/',
+                    'Jobicy': 'https://jobicy.com/',
+                    'Himalayas': 'https://himalayas.app/',
+                    'RemoteOK': 'https://remoteok.com/'
+                }};
                 const card = document.createElement('article');
                 card.className = 'job-card';
-                card.dataset.country = job.country;
-                card.dataset.sector = job.sector;
-                card.dataset.modality = job.modality;
-                card.dataset.contract = job.contract_type;
-                card.dataset.jobtype = job.job_type;
-                card.dataset.experience = job.experience;
-                card.dataset.date = job.date_published;
+                card.dataset.jobId = jobId;
+                card.dataset.country = job.country || '';
+                card.dataset.sector = job.sector || '';
+                card.dataset.modality = job.modality || '';
+                card.dataset.contract = job.contract_type || '';
+                card.dataset.jobtype = job.job_type || '';
+                card.dataset.experience = job.experience || '';
+                card.dataset.date = job.date_published || '';
                 card.innerHTML = `
-                    <span class="badge">${{copy().source}}: ${{escapeHtml(job.source)}}</span>
-                    <h2 class="job-title">${{escapeHtml(job.title)}}</h2>
+                    <span class="badge">${{copy().source}}: <a href="${{sourceUrls[job.source] || 'https://projobs.prosolutions.page/'}}" target="_blank" rel="noopener noreferrer">${{escapeHtml(job.source || 'ProJobs')}}</a></span>
+                    <h2 class="job-title">${{escapeHtml(jobTitle)}}</h2>
                     <div class="job-info">
-                        🏢 <strong>${{escapeHtml(job.company)}}</strong>
-                        &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location)}}
-                        ${{job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
+                        🏢 <strong>${{escapeHtml(company || (locale === 'es' ? 'Empresa no especificada' : 'Company not specified'))}}</strong>
+                        &nbsp;|&nbsp; 📍 ${{escapeHtml(job.location || (locale === 'es' ? 'Ubicación no especificada' : 'Location not specified'))}}
+                        ${{job.country && job.country !== job.location ? `· ${{escapeHtml(countryLabel(job.country))}}` : ''}}
                         ${{job.salary?.raw ? `· ${{escapeHtml(job.salary.raw)}}` : ''}}
-                        ${{job.experience && job.experience !== 'no-especificado'
-                          ? `· ${{labelFor(job.experience)}}`
-                          : ''}}
+                        ${{job.experience && job.experience !== 'no-especificado' ? `· ${{labelFor(job.experience)}}` : ''}}
                     </div>
                     <div class="job-tags">
-                        <span class="badge">${{labelFor(job.modality)}}</span>
-                        <span class="badge">${{labelFor(job.contract_type)}}</span>
-                        <span class="badge">${{copy().sectors[job.sector] || job.sector}}</span>
+                        <span class="badge">${{labelFor(job.modality || 'no-especificado')}}</span>
+                        <span class="badge">${{labelFor(job.contract_type || 'no-especificado')}}</span>
+                        <span class="badge">${{copy().sectors[job.sector] || escapeHtml(job.sector || 'otras')}}</span>
                     </div>
-                    <a href="${{escapeHtml(job.url)}}" class="btn" target="_blank"
-                       rel="noopener sponsored">${{copy().viewJob}}</a>
+                    <div class="job-actions">
+                        <a href="${{escapeHtml(jobUrl)}}" class="btn" data-i18n="viewJob"
+                           data-action="apply" data-job-id="${{escapeHtml(jobId)}}"
+                           data-job-url="${{escapeHtml(jobUrl)}}" data-job-title="${{escapeHtml(jobTitle)}}"
+                           data-company="${{escapeHtml(company)}}" target="_blank" rel="noopener sponsored">${{copy().viewJob}}</a>
+                        <button type="button" class="btn-save" data-action="save-job"
+                           data-job-id="${{escapeHtml(jobId)}}" data-job-url="${{escapeHtml(jobUrl)}}"
+                           data-job-title="${{escapeHtml(jobTitle)}}" data-company="${{escapeHtml(company)}}"
+                           aria-label="${{locale === 'es' ? 'Guardar empleo' : 'Save job'}}"
+                           aria-pressed="false">${{copy().saveJob}}</button>
+                    </div>
                 `;
                 jobsList.appendChild(card);
             }});
+            window.dispatchEvent(new CustomEvent('projobs:jobs-rendered'));
         }}
 
         function applyFilters() {{
             const countryInput = countryFilter.value.trim().toLocaleLowerCase();
-            const matchedCountry = allJobs.find(job =>
-                String(job.country || '') === countryFilter.value
+            const matchedJobCountry = allJobs.find(job =>
+                String(job.country || '').toLocaleLowerCase() === countryInput
                 || countryLabel(job.country).toLocaleLowerCase() === countryInput
             );
-            const country = matchedCountry ? matchedCountry.country : countryFilter.value;
+            const matchedWorldCode = WORLD_COUNTRY_CODES.find(code =>
+                code.toLocaleLowerCase() === countryInput
+                || countryLabel(code).toLocaleLowerCase() === countryInput
+            );
+            const country = matchedJobCountry
+                ? matchedJobCountry.country
+                : (matchedWorldCode || (countryInput ? countryFilter.value : ''));
             const sector = sectorFilter.value;
             const modality = modalityFilter.value;
             const contract = contractFilter.value;
