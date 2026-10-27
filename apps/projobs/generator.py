@@ -222,6 +222,40 @@ def _country_key(value: str) -> str:
     )
 
 
+# Arbeitnow and some aggregators often return a city instead of a country.
+# Map common city-only locations to ISO codes; explicit source country fields always win.
+CITY_COUNTRY_ALIASES = {
+    "berlin": "DE", "munich": "DE", "munchen": "DE", "hamburg": "DE",
+    "frankfurt": "DE", "cologne": "DE", "koln": "DE", "stuttgart": "DE",
+    "dusseldorf": "DE", "dortmund": "DE", "leipzig": "DE", "dresden": "DE",
+    "hanover": "DE", "hannover": "DE", "nuremberg": "DE", "nurnberg": "DE",
+    "london": "GB", "manchester": "GB", "birmingham": "GB", "edinburgh": "GB",
+    "new york": "US", "san francisco": "US", "los angeles": "US", "seattle": "US",
+    "austin": "US", "chicago": "US", "boston": "US", "denver": "US",
+    "toronto": "CA", "vancouver": "CA", "montreal": "CA", "ottawa": "CA",
+    "sydney": "AU", "melbourne": "AU", "brisbane": "AU", "perth": "AU",
+    "paris": "FR", "lyon": "FR", "amsterdam": "NL", "rotterdam": "NL",
+    "madrid": "ES", "barcelona": "ES", "valencia": "ES", "lisbon": "PT",
+    "lisboa": "PT", "porto": "PT", "rome": "IT", "roma": "IT", "milan": "IT",
+    "milano": "IT", "dublin": "IE", "zurich": "CH", "geneva": "CH",
+    "vienna": "AT", "wien": "AT", "prague": "CZ", "warsaw": "PL",
+    "krakow": "PL", "copenhagen": "DK", "stockholm": "SE", "oslo": "NO",
+    "helsinki": "FI", "brussels": "BE", "bruges": "BE", "athens": "GR",
+    "bucharest": "RO", "budapest": "HU", "istanbul": "TR", "tel aviv": "IL",
+    "dubai": "AE", "abu dhabi": "AE", "singapore": "SG", "tokyo": "JP",
+    "osaka": "JP", "seoul": "KR", "taipei": "TW", "hong kong": "HK",
+    "bangalore": "IN", "bengaluru": "IN", "mumbai": "IN", "delhi": "IN",
+    "jakarta": "ID", "manila": "PH", "bangkok": "TH", "kuala lumpur": "MY",
+    "lagos": "NG", "nairobi": "KE", "cape town": "ZA", "johannesburg": "ZA",
+    "sao paulo": "BR", "são paulo": "BR", "rio de janeiro": "BR",
+    "mexico city": "MX", "bogota": "CO", "bogotá": "CO", "medellin": "CO",
+    "medellín": "CO", "buenos aires": "AR", "santiago": "CL", "lima": "PE",
+    "quito": "EC", "montevideo": "UY", "panama city": "PA",
+}
+
+
+def normalize_country(location: str | None) -> str:
+    """Devuelve un código ISO estable para países reconocidos y un fallback limpio."""
 def normalize_country(location: str | None) -> str:
     """Devuelve un código ISO estable para países reconocidos y un fallback limpio."""
     if not location or not str(location).strip():
@@ -229,11 +263,13 @@ def normalize_country(location: str | None) -> str:
 
     raw = str(location).strip()
     parts = [part.strip() for part in raw.split(",") if part.strip()]
-    # Prefer a recognized country at the end of a city/country location.
+    # Prefer explicit country names/codes at the end of a location.
     for candidate in reversed(parts or [raw]):
         key = _country_key(candidate)
         if key in COUNTRY_ALIASES:
             return COUNTRY_ALIASES[key]
+        if key in CITY_COUNTRY_ALIASES:
+            return CITY_COUNTRY_ALIASES[key]
         # Handles values such as "Remote - US" and "Remote (UK)".
         suffix = candidate.rsplit("-", 1)[-1].strip(" ()")
         suffix_key = _country_key(suffix)
@@ -243,6 +279,8 @@ def normalize_country(location: str | None) -> str:
     key = _country_key(raw)
     if key in COUNTRY_ALIASES:
         return COUNTRY_ALIASES[key]
+    if key in CITY_COUNTRY_ALIASES:
+        return CITY_COUNTRY_ALIASES[key]
     # Keep unfamiliar locations useful, but normalize whitespace and casing.
     return " ".join(parts[-1].split()).title() if parts else raw.title()
 
