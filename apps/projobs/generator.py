@@ -1155,6 +1155,21 @@ def render_page(jobs: list[dict]) -> str:
 <html lang="es">
 <head>
     <script>
+      // Set the platform language before the generated page renders.
+      (function () {{
+        try {{
+          var entry = document.cookie.split('; ').find(function (part) {{ return part.indexOf('prosolutions_locale=') === 0; }});
+          var shared = entry ? entry.split('=').slice(1).join('=') : '';
+          var saved = localStorage.getItem('projobs-locale');
+          var locale = shared === 'en' || shared === 'es' ? shared : (saved === 'en' || saved === 'es' ? saved : '');
+          if (!locale) locale = (navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'es';
+          document.documentElement.lang = locale;
+        }} catch (error) {{
+          document.documentElement.lang = (navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'es';
+        }}
+      }})();
+    </script>
+    <script>
       (function () {{
         try {{
           var cookie = document.cookie.split('; ').find(function (part) {{ return part.indexOf('prosolutions_theme=') === 0; }});
