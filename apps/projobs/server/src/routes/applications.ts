@@ -5,6 +5,8 @@ import {
   listApplications,
   removeApplication,
   StoreNotConfiguredError,
+  updateApplicationStatus,
+  type ApplicationStatus,
 } from '../data/projobs-store.js';
 
 const router = Router();
@@ -80,6 +82,23 @@ router.get('/', proJobsAuthMiddleware, async (req: ProJobsAuthRequest, res) => {
   } catch (error) {
     return handleStoreError(error, res);
   }
+});
+
+/** PATCH /api/applications/:jobId/status — actualiza el seguimiento manual del usuario. */
+router.patch('/:jobId/status', proJobsAuthMiddleware, async (req: ProJobsAuthRequest, res) => {
+  if (!req.userId) return res.status(401).json({ message: 'Sesión inválida.' });
+  const jobId = req.params.jobId;
+  const status = req.body?.status as ApplicationStatus;
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+  const allowed = new Set<ApplicationStatus>(['redirected_to_employer','applied','interview','rejected','offer','withdrawn']);
+  if (!jobId || jobId.length > 512 || !allowed.has(status) || note.length > 1000) {
+    return res.status(400).json({ message: 'Estado o nota de seguimiento inválidos.' });
+  }
+  try {
+    const application = await updateApplicationStatus(req.userId, jobId, status, note);
+    if (!application) return res.status(404).json({ message: 'La oferta no está en tu historial.' });
+    return res.json({ message: 'Seguimiento actualizado.', application });
+  } catch (error) { return handleStoreError(error, res); }
 });
 
 /** DELETE /api/applications/:jobId — elimina una actividad del historial del usuario autenticado. */
