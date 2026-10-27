@@ -6,6 +6,8 @@ import { config } from './config.js';
 import { proJobsAuthMiddleware } from './middleware/auth.js';
 import applicationsRoutes from './routes/applications.js';
 import savedJobsRoutes from './routes/saved-jobs.js';
+import jobAlertsRoutes from './routes/job-alerts.js';
+import careerProgressRoutes from './routes/career-progress.js';
 
 export function createApp() {
   const app = express();
@@ -45,6 +47,8 @@ export function createApp() {
   // Protected personal routes
   app.use('/api/applications', applicationsRoutes);
   app.use('/api/saved-jobs', savedJobsRoutes);
+  app.use('/api/job-alerts', jobAlertsRoutes);
+  app.use('/api/career/progress', careerProgressRoutes);
 
   // This service is API-only; the frontend is deployed separately.
   app.use((_req, res) => {
