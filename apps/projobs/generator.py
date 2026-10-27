@@ -1082,6 +1082,15 @@ CSS_STYLES = """
         .pro-footer-bottom { margin-top: 48px; }
         html.dark body { background: #0b1220; color: #e2e8f0; }
         html.dark .pro-nav { background: rgba(15,23,42,.92); border-color: #334155; }
+        html.dark .projobs-profile-menu summary { border-color: #475569 !important; }
+        html.dark .projobs-profile-menu [data-profile-dropdown] { background: #111827 !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        html.dark .projobs-profile-menu [data-profile-identity] { border-color: #334155 !important; }
+        html.dark .projobs-profile-menu [data-profile-email] { color: #94a3b8 !important; }
+        .projobs-profile-menu summary::-webkit-details-marker { display: none; }
+        .projobs-profile-menu summary:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+        .projobs-profile-menu [data-profile-account]:hover, .projobs-profile-menu [data-projobs-logout]:hover { background: #f1f5f9 !important; }
+        html.dark .projobs-profile-menu [data-profile-account]:hover { background: #1e293b !important; }
+        html.dark .projobs-profile-menu [data-projobs-logout]:hover { background: #3f1d2a !important; }
         html.dark .mobile-menu-toggle { background: #1e293b; border-color: #475569; color: #e2e8f0; }
         html.dark .pro-links { border-color: #334155; }
         html.dark .pro-wordmark { color: #f8fafc; }
@@ -1137,6 +1146,23 @@ def render_page(jobs: list[dict]) -> str:
     page = f'''<!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>
+      (function () {{
+        try {{
+          var cookie = document.cookie.split('; ').find(function (part) {{ return part.indexOf('prosolutions_theme=') === 0; }});
+          var preference = cookie ? cookie.split('=').slice(1).join('=') : '';
+          if (preference !== 'dark' && preference !== 'light') {{
+            var saved = JSON.parse(localStorage.getItem('theme-storage') || 'null');
+            preference = saved && saved.state && saved.state.preference;
+          }}
+          var dark = preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        }} catch (error) {{
+          /* Use CSS defaults if storage is unavailable. */
+        }}
+      }})();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">{SITE_TITLE}</title>
