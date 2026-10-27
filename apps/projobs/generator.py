@@ -212,6 +212,7 @@ COUNTRY_ALIASES = {
     "za": "ZA", "south africa": "ZA",
     "remote": "REMOTE", "remoto": "REMOTE", "worldwide": "REMOTE",
     "anywhere": "REMOTE", "global": "REMOTE", "remote worldwide": "REMOTE",
+    "worldwide remote": "REMOTE", "remote - worldwide": "REMOTE",
     "latin america": "REMOTE", "latam": "REMOTE", "multiple locations": "REMOTE",
 }
 
