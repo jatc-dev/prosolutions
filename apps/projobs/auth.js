@@ -311,7 +311,7 @@
         const jobUrl = btn.dataset.jobUrl || "";
         const jobTitle = btn.dataset.jobTitle || "";
         const company = btn.dataset.company || "";
-        const originalLabel = btn.textContent;
+        const originalMarkup = btn.innerHTML;
         btn.setAttribute("aria-busy", "true");
         btn.disabled = true;
         try {
@@ -330,11 +330,11 @@
             return;
           }
           if (!response.ok) throw new Error(data.message || "Save failed");
-          btn.textContent = document.documentElement.lang === "en" ? "✓ Saved" : "✓ Guardado";
+          btn.innerHTML = '<svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>' + (document.documentElement.lang === "en" ? "Saved" : "Guardado") + '</span>';
           btn.setAttribute("aria-pressed", "true");
         } catch (error) {
           alert(document.documentElement.lang === "en" ? "Could not save this job. Please try again." : "No se pudo guardar el empleo. Intenta de nuevo.");
-          btn.textContent = originalLabel;
+          btn.innerHTML = originalMarkup;
         } finally {
           btn.disabled = false;
           btn.removeAttribute("aria-busy");
