@@ -39,7 +39,7 @@ def ad_block(placement: str) -> str:
     if ADSENSE_CLIENT:
         return (
             '<ins class="adsbygoogle" '
-            'style="display:block" '
+            'style="display:block;min-height:90px" '
             'data-ad-client="' + ADSENSE_CLIENT + '" '
             'data-ad-format="fluid" '
             'data-full-width-responsive="true" '

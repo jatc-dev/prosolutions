@@ -29,7 +29,7 @@ export function AdSlot({ placement = "default", slot, format = "auto", className
     return (
       <ins
         className={cn("adsbygoogle block", className)}
-        style={{ display: "block" }}
+        style={{ display: "block", minHeight: "90px" }}
         data-ad-client={client}
         data-ad-slot={slot}
         data-ad-format={format}
