@@ -81,6 +81,19 @@ def test_normalize_country_uses_stable_iso_codes_for_common_aliases():
     assert normalize_country("Toronto") == "CA"
 
 
+def test_normalize_job_preserves_multi_country_remote_eligibility():
+    result = normalize_job({
+        "title": "Remote Engineer",
+        "company_name": "Example Co",
+        "location": "US, CA",
+        "country_codes": ["US", "CA", "US"],
+        "url": "https://jobs.example/remote-engineer",
+    }, "TestSource")
+    assert result is not None
+    assert result["country"] == "US"
+    assert result["countries"] == ["US", "CA"]
+
+
 def test_normalize_job_rejects_non_http_urls_after_trimming():
     job = {"title": "Engineer", "url": " javascript:alert(1) "}
     assert normalize_job(job, "TestSource") is None
