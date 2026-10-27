@@ -15,6 +15,28 @@ export function HomePage() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
 
+  // Preserve the requesting first-party module after central authentication.
+  // Exact-origin allowlisting prevents open redirects to untrusted sites.
+  const getPostLoginDestination = () => {
+    const fallback = new URL("/dashboard", window.location.origin).toString();
+    const requested = new URLSearchParams(window.location.search).get("redirect_uri");
+    if (!requested) return fallback;
+
+    try {
+      const destination = new URL(requested);
+      const allowedOrigins = new Set([
+        "https://projobs.prosolutions.page",
+        "https://procv.prosolutions.page",
+      ]);
+      if (destination.protocol !== "https:" || !allowedOrigins.has(destination.origin)) {
+        return fallback;
+      }
+      return destination.toString();
+    } catch {
+      return fallback;
+    }
+  };
+
   const handleLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoginError(null);
@@ -53,7 +75,7 @@ export function HomePage() {
       // Keep the short-lived access token in this origin's session only.
       // The refresh cookie is shared by the platform's first-party subdomains.
       sessionStorage.setItem("pro_identity_token", data.accessToken);
-      window.location.assign("/dashboard");
+      window.location.assign(getPostLoginDestination());
     } catch {
       setLoginError(copy.auth.loginError);
     } finally {
