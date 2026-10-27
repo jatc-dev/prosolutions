@@ -402,6 +402,7 @@ def normalize_job(job: dict, source: str) -> dict | None:
     salary = normalize_salary(job.get("salary"))
 
     result = {
+        "id": hashlib.sha256(canonical_url(url).encode("utf-8")).hexdigest()[:24],
         "title": title.strip(),
         "company": company.strip(),
         "location": location.strip(),
