@@ -1455,7 +1455,7 @@ function escapeHtml(text) {{
             }};
 
             filteredJobs = allJobs.filter(job => {{
-                if (country && job.country !== country) return false;
+                if (country && job.country !== country && job.country !== 'REMOTE' && !(job.countries || []).includes(country)) return false;
                 if (sector && job.sector !== sector) return false;
                 if (modality && job.modality !== modality) return false;
                 if (contract && job.contract_type !== contract) return false;
