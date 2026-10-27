@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>
+      (function () {
+        try {
+          const entry = document.cookie.split("; ").find(part => part.startsWith("prosolutions_locale="));
+          const shared = entry ? entry.split("=").slice(1).join("=") : "";
+          const saved = localStorage.getItem("projobs-locale");
+          const locale = shared === "en" || shared === "es" ? shared : (saved === "en" || saved === "es" ? saved : ((navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es"));
+          document.documentElement.lang = locale;
+        } catch { document.documentElement.lang = (navigator.language || "").toLowerCase().startsWith("en") ? "en" : "es"; }
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Política de Privacidad | Empleos Tech Remotos</title>
