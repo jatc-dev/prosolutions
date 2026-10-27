@@ -360,7 +360,7 @@
           if (data.events?.length) {
             progressContent.append(element("h3", "", t("progressRecent")));
             const list = element("div", "progress-events");
-            data.events.forEach(event => list.append(element("p", "", [event.job_id, event.previous_status || "—", "→", event.new_status, event.note].filter(Boolean).join(" · "))));
+            data.events.forEach(event => list.append(element("p", "", [event.job_title || event.job_id, event.company, event.previous_status || "—", "→", event.new_status, event.note].filter(Boolean).join(" · "))));
             progressContent.append(list);
           } else progressContent.append(element("p", "small", t("progressNoEvents")));
         } catch (error) { emptyState(progressContent, t("progressLoadFailed"), error.message || t("tryAgain")); }
