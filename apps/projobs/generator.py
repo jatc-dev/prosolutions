@@ -730,7 +730,7 @@ def render_job_card(job: dict) -> str:
             '            </div>\n'
             '            <div class="job-actions">\n'
             '                <a href="' + job_url + '" class="btn" data-i18n="viewJob" data-action="apply" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" target="_blank" rel="noopener sponsored">Ver oferta</a>\n'
-            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg> Guardar</button>\n'
+            '                <button type="button" class="btn-save" data-action="save-job" data-job-id="' + job_id + '" data-job-url="' + job_url + '" data-job-title="' + job_title + '" data-company="' + company + '" aria-label="Guardar empleo" data-i18n="saveJob"><svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg><span data-i18n="saveJob">Guardar</span></button>\n'
             '            </div>\n'
             '        </article>\n    ')
 
