@@ -90,6 +90,13 @@ jobs:
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"ProfessionalProfile\" (id,\"userId\",skills,experience,education,links,\"createdAt\",\"updatedAt\") VALUES ('test-profile-1','test-user-1',jsonb_build_array('sql'),'[]'::jsonb,'[]'::jsonb,'{}'::jsonb,'2026-01-01 00:00:00','2026-01-01 00:00:00')"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"ModuleAccess\" (id,\"userId\",module,\"grantedAt\",active) VALUES ('test-module-access-1','test-user-1','PROCV','2026-01-01 00:00:00',true)"
           psql "$SUPABASE_IDENTITY_URL" -v ON_ERROR_STOP=1 -c "INSERT INTO public.\"AuditLog\" (id,\"userId\",action,resource,\"details\",\"createdAt\") VALUES ('test-audit-1','test-user-1','migration-test','User','{}'::jsonb,'2026-01-01 00:00:00')"
+      - name: Verify transfer refuses identical source and target endpoints
+        run: |
+          if SUPABASE_IDENTITY_URL="$NEON_IDENTITY_URL" bash scripts/maintenance/migrate-proidentity-data-to-neon.sh >/tmp/proidentity-same-endpoint.log 2>&1; then
+            echo 'Transfer unexpectedly accepted identical source and target endpoints.' >&2
+            exit 1
+          fi
+          grep -q 'Source and target resolve to the same PostgreSQL endpoint and database' /tmp/proidentity-same-endpoint.log
       - name: Verify transfer refuses an unsafe runtime role
         run: |
           psql "postgresql://postgres:postgres@localhost:5432/proidentity" -v ON_ERROR_STOP=1 -c 'ALTER ROLE proidentity_login SUPERUSER BYPASSRLS'
