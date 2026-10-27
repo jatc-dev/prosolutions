@@ -109,22 +109,6 @@ export async function listSavedSearches(userId: string) {
 export async function removeSavedSearch(userId: string, id: string) {
   return withUserTransaction(userId, async c => (await c.query('DELETE FROM public.projobs_saved_searches WHERE id=$1 RETURNING id', [id])).rowCount! > 0);
 }
-export async function listEnabledAlertSearches() {
-  // Internal delivery worker only; caller must authorize with the dedicated alert-worker secret.
-  const q = await getPool().query(
-    `SELECT s.id,s.user_id,s.name,s.filters,s.frequency,s.last_notified_at
-     FROM public.projobs_saved_searches s WHERE s.enabled=true
-     AND (s.last_notified_at IS NULL OR
-       (s.frequency='daily' AND s.last_notified_at < now()-interval '24 hours') OR
-       (s.frequency='weekly' AND s.last_notified_at < now()-interval '7 days'))
-     ORDER BY s.created_at ASC LIMIT 500`,
-  );
-  return q.rows;
-}
-export async function markAlertNotified(id: string) {
-  const q = await getPool().query('UPDATE public.projobs_saved_searches SET last_notified_at=now(),updated_at=now() WHERE id=$1', [id]);
-  return (q.rowCount || 0) > 0;
-}
 export async function getCareerProgress(userId: string) {
   return withUserTransaction(userId, async c => {
     const [applications, saved, events] = await Promise.all([
