@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Award, BriefcaseBusiness, GraduationCap, Languages, Link2, Zap, type LucideIcon } from "lucide-react";
+import { Award, Briefcase, GraduationCap, Languages, Link2, Zap, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CVData, ExperienceItem, EducationItem, SkillItem, LanguageItem, CertificateItem, LinkItem } from "../../../../../shared/types";
 
@@ -9,7 +9,7 @@ export interface DraggableBlockProps {
 }
 
 const blockConfig: Record<DraggableBlockProps["type"], { icon: LucideIcon; labelKey: string; descKey: string }> = {
-  experience: { icon: BriefcaseBusiness, labelKey: "block.experience", descKey: "block.experienceDesc" },
+  experience: { icon: Briefcase, labelKey: "block.experience", descKey: "block.experienceDesc" },
   education: { icon: GraduationCap, labelKey: "block.education", descKey: "block.educationDesc" },
   skills: { icon: Zap, labelKey: "block.skills", descKey: "block.skillsDesc" },
   languages: { icon: Languages, labelKey: "block.languages", descKey: "block.languagesDesc" },
