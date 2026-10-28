@@ -1,8 +1,9 @@
 # ProSolutions interface and route audit
 
-**Status:** Initial evidence-based inventory; not a complete dead-code determination. **Date:** 2026-10-28.
+**Status:** Initial evidence-based inventory with first cleanup/recovery batch deployed; remaining items require targeted route and end-to-end verification. **Date:** 2026-10-28.
 
 ## Executive summary
+
 The monorepo centralised authentication in ProSolutions Core, but parts of the former ProCV landing architecture remain. The goal is to remove confirmed dead code while preserving working routes, module functionality, content, production data, and migration history.
 
 ## Initial findings
@@ -10,32 +11,49 @@ The monorepo centralised authentication in ProSolutions Core, but parts of the f
 | Area | Evidence | Preliminary status | Recommendation | Risk |
 |---|---|---|---|---|
 | ProCV auth/account routes | apps/procv/frontend/src/App.tsx redirects /login, /auth, /auth/callback, /register, /forgot-password, /reset-password, and /verify-email to Core | Intentional compatibility redirects | Preserve until inbound links and redirect behavior are tested | High |
-| ProCV public root | apps/procv/frontend/src/pages/HomePage.tsx still contains a module-presentation/login surface, while central login is in Core | Overlapping public experience | Decide whether root should be a short product landing, lightweight handoff, or redirect to a Core product detail page | Medium |
-| Free editor CTA | ProCV HomePage links to /editor-free, but App.tsx has no matching route and wildcard redirects to / | Potentially broken/stale route | Trace intended behavior and either implement it or point CTA to a valid destination | High |
-| Landing Features admin | LandingPageManagement.tsx, /admin/landing route, and AdminLayout navigation still exist | Existing capability | Preserve until a replacement and data continuity are verified | Medium |
-| Landing Features data path | useLandingFeatures.ts and LandingFeaturesGrid.tsx have no external consumers found in code search; GET /api/public/landing-features and PlatformSetting keys landing_features_en/es remain | Likely orphan UI/hook plus live legacy API/data | Verify references and inspect saved values before removal; preserve admin/data until migration | Medium |
-| Core module catalog | apps/core/src/pages/HomePage.tsx contains module cards; apps/core/src/components/Modules.tsx is imported by apps/core/src/pages/LandingPage.tsx, but Core App.tsx routes only to HomePage and does not import LandingPage | Likely unreachable legacy landing page and its dependent sections | Verify Render rewrite/static entry configuration and external deep links; decide whether to restore LandingPage as canonical home or remove its unused page/components after review | Medium |
+| ProCV public root | apps/procv/frontend/src/pages/HomePage.tsx still contains a module-presentation/login surface, while central login is in Core | Overlapping public experience | Keep the legacy root only while checking inbound links; central public landing and login are now separate | Medium |
+| Free editor CTA | ProCV HomePage links to /editor-free; a compatibility route now redirects to /editor | Fixed in PR #85 and deployed | Keep alias until external links have been checked; /editor is the canonical editor route | Low/medium |
+| Landing Features admin | LandingPageManagement.tsx, /admin/landing route, and AdminLayout navigation still exist | Existing capability; still needed as temporary source of truth | Preserve until central catalog editing and data migration are production-verified | Medium |
+| Landing Features data path | Public endpoint GET /api/public/landing-features and PlatformSetting keys landing_features_en/es remain. The unused visual grid and hook had no runtime consumers | Legacy API/data retained; orphan UI removed in PR #87 | Keep the API and settings until migration/rollback is proven; do not drop production content | Medium |
+| Core module catalog | Core App routes / to LandingPage and /login to HomePage; LandingPage composes Hero, Modules, Premium and AdsSection | Canonical public landing is now wired and deployed in PR #86 | Keep one public module catalog on Core landing; login remains focused | Low |
+| Module descriptions | PR #88 connects Core's ProCV card to the existing public ProCV API with static localized fallback; ProJobs remains localized static copy | Compatibility bridge deployed; central CRUD not implemented | Follow ADR_PROSOLUTIONS_MODULE_CATALOG.md before expanding admin/catalog schema | Medium |
+| CORS | PR #88 configures explicit first-party origin allowlist on ProCV backend and Core API base URL | Configuration updated; services deployed live | Verify actual browser preflight/request behavior from each production origin and monitor blocked origins | Medium |
 | Marketing vs entitlements | ProCV has feature-flags.ts and monetization FeatureGate, while public catalog also calls copy 'features' | Distinct concepts | Keep marketing copy separate from access-control and subscription logic | High |
 | Shared UI | Core and ProCV both import @prosolutions/ui | Shared implementation exists | Audit exports and duplication before moving more code | Low/medium |
 
-## Complete the inventory
+## Changes completed and deployment evidence
+
+- PR #84 merged: initial architecture/interface audit documentation.
+- PR #85 merged: `/editor-free` compatibility route redirects to `/editor`.
+- PR #86 merged and deployed: Core `/` is the public landing; `/login` remains the focused central login.
+- PR #87 merged and deployed: removed only the unused `LandingFeaturesGrid.tsx`, `useLandingFeatures.ts`, and `landingFeatureVisuals.ts`; retained admin UI, public endpoint, and database settings.
+- PR #88 merged and deployed: Core fetches admin-managed ProCV feature titles/descriptions for the selected locale and keeps localized fallback copy. Render reported the Core static site, ProCV backend, and ProCV frontend deployments as `live` on commit `3e72b1c5f6ebbc944d4a4ea18bfadf59c0cd3684`.
+- Render environment variables were explicitly updated: Core `VITE_PROCV_API_BASE_URL` points to the ProCV API, and ProCV backend `CORS_ORIGIN` lists the first-party production origins.
+- Read-only Neon verification confirms `landing_features_en` and `landing_features_es` are public JSON arrays with five entries each; all ten entries have non-empty titles and descriptions. No production data was modified.
+- Runtime logs confirm the ProCV backend started and its deployment became live. An external live HTTP/browser request could not be executed from the available validation environment; browser-side rendering and CORS behavior still require a real browser smoke test.
+
+## Remaining inventory
+
 1. Compare all route declarations against Link, navigate, and window.location destinations.
 2. Trace page/component/hook imports, dynamic imports, API consumers, admin nav, and shared package exports.
 3. Check stale locale keys, assets, styles, feature flags, and links.
-4. Specifically verify whether apps/core/src/pages/LandingPage.tsx is unreachable: it composes Hero, Modules, Premium, and AdsSection, but apps/core/src/App.tsx currently routes / to HomePage and has no LandingPage route/import.
-5. Search current imports for LandingFeaturesGrid/useLandingFeatures; code search found only the component's own declaration and the hook-to-grid type import, so treat both as strong unused candidates, not automatic deletion approvals.
-6. Classify each item as active, intentional compatibility redirect, duplicated, unreachable candidate, or safe to remove after validation.
-7. A zero-reference result alone is not sufficient if dynamic routing, hosting rewrites, or external links may exist.
+4. Test `/`, `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/editor`, and legacy redirects in an authenticated browser session where appropriate.
+5. Verify the Core page renders the API-backed ProCV features in Spanish and English; verify static fallback when the API fails.
+6. Verify CORS from all first-party origins and ensure an unlisted origin does not receive an allow-origin header.
+7. Add automated route/navigation checks for critical public, login, dashboard, and admin flows.
+8. Continue the duplicate catalog sweep only after the canonical landing and editor are confirmed in browser testing.
 
 ## Recommended order
+
 1. Keep the merged ProCV loading/redirect fix stable and confirm its Render deployment.
-2. Resolve the /editor-free behavior.
+2. Resolve the `/editor-free` behavior.
 3. Make Core the canonical public platform landing and module catalog.
 4. Recover and centralise bilingual module content, preserving ProCV's existing copy.
 5. Remove duplicate presentation code only after the canonical implementation is deployed.
 6. Finish the unused-route/component sweep and add regression checks.
 
 ## Safety constraints
+
 - Do not delete Prisma migration history.
 - Do not drop or rewrite production rows as part of UI cleanup.
 - Do not change authentication or redirect allowlists without end-to-end tests.
