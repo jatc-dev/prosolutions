@@ -8,17 +8,25 @@ on:
 permissions:
   contents: write # Necesario para commitear la actualización diaria
 
+# Do not cancel an in-flight job that may already be generating and committing data.
+concurrency:
+  group: projobs-catalog-update
+  cancel-in-progress: false
+
 jobs:
   update-jobs:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Descargar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          cache: pip
+          cache-dependency-path: apps/projobs/requirements.txt
 
       # apps/projobs es un submódulo del monorepo: sus scripts corren desde su carpeta
       - name: Ejecutar generador de ofertas
