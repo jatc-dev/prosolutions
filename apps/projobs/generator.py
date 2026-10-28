@@ -424,19 +424,19 @@ def normalize_sector(category: str | None, *extra_fields) -> str:
             return SECTOR_MAP[key]
     text = " ".join(values).lower()
     rules = (
-        (("software", "developer", "engineer", "programming", "devops", "data science", "machine learning", "cybersecurity", "cloud engineer"), "tecnologia"),
-        (("accountant", "accounting", "finance", "financial", "payroll", "bookkeeping"), "finanzas"),
-        (("sales", "business development", "account executive", "commercial"), "ventas"),
+        (("software", "developer", "entwickler", "softwareentwickler", "engineer", "ingenieur", "programming", "programmierer", "devops", "data science", "machine learning", "cybersecurity", "cloud engineer", "informatik"), "tecnologia"),
+        (("accountant", "accounting", "finance", "financial", "payroll", "bookkeeping", "buchhaltung", "finanzen"), "finanzas"),
+        (("sales", "business development", "account executive", "commercial", "vertrieb", "verkauf"), "ventas"),
         (("marketing", "seo", "social media", "content marketing", "brand manager"), "marketing"),
-        (("customer service", "customer support", "call center", "client support"), "atencion-cliente"),
-        (("nurse", "healthcare", "medical", "doctor", "clinical", "pharmacy"), "salud"),
-        (("teacher", "education", "instructor", "tutor", "curriculum"), "educacion"),
-        (("human resources", "recruiter", "talent acquisition", "hr manager"), "recursos-humanos"),
-        (("logistics", "supply chain", "warehouse", "transport", "fleet"), "logistica"),
-        (("construction", "electrician", "plumber", "carpenter"), "construccion"),
-        (("hotel", "hospitality", "restaurant", "chef", "tourism"), "hosteleria"),
+        (("customer service", "customer support", "call center", "client support", "kundenservice", "kundenbetreuung", "kundendienst"), "atencion-cliente"),
+        (("nurse", "healthcare", "medical", "doctor", "clinical", "pharmacy", "pflege", "gesundheit", "medizin"), "salud"),
+        (("teacher", "education", "instructor", "tutor", "curriculum", "lehrer", "bildung", "ausbildung"), "educacion"),
+        (("human resources", "recruiter", "talent acquisition", "hr manager", "personalwesen", "personalreferent"), "recursos-humanos"),
+        (("logistics", "supply chain", "warehouse", "transport", "fleet", "logistik", "lager"), "logistica"),
+        (("construction", "electrician", "plumber", "carpenter", "bau", "handwerk"), "construccion"),
+        (("hotel", "hospitality", "restaurant", "chef", "tourism", "gastronomie", "hotellerie"), "hosteleria"),
         (("legal", "lawyer", "attorney", "consultant", "consulting"), "servicios-profesionales"),
-        (("administrative", "administrator", "office assistant", "data entry"), "administracion"),
+        (("administrative", "administrator", "office assistant", "data entry", "verwaltung", "büroassistenz", "sachbearbeiter"), "administracion"),
         (("mechanical engineer", "civil engineer", "manufacturing", "quality engineer"), "ingenieria"),
     )
     for keywords, sector in rules:
