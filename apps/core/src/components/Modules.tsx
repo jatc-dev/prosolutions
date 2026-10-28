@@ -1,4 +1,5 @@
 import { ArrowRight, Briefcase, Check, FileText, Layers } from "lucide-react";
+import { useEffect, useState } from "react";
 import { APP_URLS } from "@prosolutions/ui";
 import { cn } from "@prosolutions/ui";
 import { useCoreLocale, type CoreCopy } from "../i18n";
@@ -9,6 +10,7 @@ interface ModuleCard {
   tagline: string;
   description: string;
   features: string[];
+  featureDescriptions?: Record<string, string>;
   ctaLabel: string;
   ctaHref: string;
   icon: typeof FileText;
@@ -87,7 +89,14 @@ function ModuleCardView({ module }: { module: ModuleCard }) {
           {module.features.map((feature) => (
             <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200">
               <Check className={cn("mt-0.5 h-4 w-4 shrink-0", module.checkClass)} strokeWidth={3} />
-              {feature}
+              <span className="min-w-0">
+                <span>{feature}</span>
+                {module.featureDescriptions?.[feature] ? (
+                  <span className="mt-1 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    {module.featureDescriptions[feature]}
+                  </span>
+                ) : null}
+              </span>
             </li>
           ))}
         </ul>
@@ -133,11 +142,75 @@ function ComingSoonCard({ copy }: { copy: CoreCopy["modules"] }) {
   );
 }
 
+interface PublicLandingFeature {
+  id: string;
+  title: string;
+  description: string;
+}
+
+const PROCV_API_BASE_URL =
+  import.meta.env.VITE_PROCV_API_BASE_URL || "https://procvbkn.onrender.com/api";
+
+function isPublicLandingFeature(value: unknown): value is PublicLandingFeature {
+  if (!value || typeof value !== "object") return false;
+  const feature = value as Record<string, unknown>;
+  return (
+    typeof feature.id === "string" &&
+    typeof feature.title === "string" &&
+    feature.title.trim().length > 0 &&
+    typeof feature.description === "string" &&
+    feature.description.trim().length > 0
+  );
+}
+
 export function Modules() {
-  const { copy } = useCoreLocale();
+  const { copy, locale } = useCoreLocale();
+  const [procvFeatures, setProcvFeatures] = useState<PublicLandingFeature[]>([]);
+
+  // Temporary compatibility bridge: keep the existing ProCV admin editor as the
+  // source of truth while showing its public, sanitized content in the Core catalog.
+  // Static localized copy remains visible if the ProCV API is unavailable.
+  useEffect(() => {
+    let cancelled = false;
+    const language = locale === "es" ? "es" : "en";
+
+    fetch(`${PROCV_API_BASE_URL}/public/landing-features?lang=${language}`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Landing features unavailable");
+        return response.json() as Promise<unknown>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setProcvFeatures(Array.isArray(data) ? data.filter(isPublicLandingFeature) : []);
+      })
+      .catch(() => {
+        if (!cancelled) setProcvFeatures([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
   const modules = MODULES.map((module) => {
     const localized = module.id === "procv" ? copy.modules.procv : copy.modules.projobs;
-    return { ...module, ...localized, ctaLabel: localized.cta, features: [...localized.features] };
+    const configuredFeatures = module.id === "procv" ? procvFeatures : [];
+    const features = configuredFeatures.length
+      ? configuredFeatures.map((feature) => feature.title)
+      : [...localized.features];
+    const featureDescriptions = configuredFeatures.length
+      ? Object.fromEntries(configuredFeatures.map((feature) => [feature.title, feature.description]))
+      : undefined;
+
+    return {
+      ...module,
+      ...localized,
+      ctaLabel: localized.cta,
+      features,
+      featureDescriptions,
+    };
   });
 
   return (
