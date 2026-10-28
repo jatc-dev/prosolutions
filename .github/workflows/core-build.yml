@@ -56,7 +56,7 @@ jobs:
               - 'packages/ui/**'
               - 'package.json'
               - 'package-lock.json'
-              - 'apps/core/**'
+              - '.github/workflows/core-build.yml'
 
   core-build:
     needs: detect-changes
