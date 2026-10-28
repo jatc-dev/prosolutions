@@ -7,20 +7,30 @@ on:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
       - ".github/workflows/postgres-migration-readiness.yml"
+      - "package.json"
+      - "package-lock.json"
   push:
     branches: [main]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
       - ".github/workflows/postgres-migration-readiness.yml"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: postgres-migration-readiness-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fresh-database-migrations:
     name: Fresh ProIdentity and ProCV databases
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -51,6 +61,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install monorepo dependencies
         run: npm ci
