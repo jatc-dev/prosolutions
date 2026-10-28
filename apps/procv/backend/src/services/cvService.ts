@@ -1,6 +1,25 @@
 import prisma from '../prismaClient';
 import { cache } from '../utils/cache';
 
+// Retry a single time only for transient PostgreSQL connection closures.
+// This helper is used only by idempotent, read-only queries.
+async function retryTransientRead<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const isTransientConnectionClosure =
+      /connection.*closed|closed.*connection|kind:\s*Closed|connection reset|server closed the connection unexpectedly/i.test(message);
+
+    if (!isTransientConnectionClosure) {
+      throw error;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    return operation();
+  }
+}
+
 /**
  * Service layer for CV operations
  * Separates business logic from controller logic
@@ -52,17 +71,19 @@ export class CVService {
     }
 
     // If not in cache, fetch from database with pagination
-    const [cvs, totalCount] = await prisma.$transaction([
-      prisma.cV.findMany({
-        where: { userId },
-        orderBy: { updatedAt: 'desc' },
-        skip,
-        take: validatedLimit,
-      }),
-      prisma.cV.count({
-        where: { userId },
-      }),
-    ]);
+    const [cvs, totalCount] = await retryTransientRead(() =>
+      prisma.$transaction([
+        prisma.cV.findMany({
+          where: { userId },
+          orderBy: { updatedAt: 'desc' },
+          skip,
+          take: validatedLimit,
+        }),
+        prisma.cV.count({
+          where: { userId },
+        }),
+      ]),
+    );
 
     // Store in cache for 30 seconds
     cache.set(cacheKey, { cvs, totalCount }, 30);
