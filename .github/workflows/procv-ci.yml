@@ -90,7 +90,7 @@ jobs:
   # Backend: migraciones sobre Postgres de CI, lint, tests y compilacion.
   backend-test:
     needs: detect-changes
-    if: always() && (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.procv == 'true')
+    if: (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.procv == 'true')
     name: Backend (migrate, lint, tests, build)
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -297,7 +297,8 @@ jobs:
     name: Docker build (backend, frontend)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: [backend-test, frontend-test]
+    needs: [detect-changes, backend-test, frontend-test]
+    if: (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.procv == 'true')
 
     steps:
       - name: Checkout code
