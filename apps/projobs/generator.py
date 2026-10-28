@@ -345,18 +345,18 @@ def normalize_experience(level: str | None) -> str:
 
 def infer_experience(title: str, description: str = "") -> str:
     title_text = str(title or "").lower()
-    if re.search(r"\\b(junior|entry[- ]level|graduate|new grad|trainee|apprentice|intern)\\b", title_text):
+    if re.search(r"\b(junior|entry[- ]level|graduate|new grad|trainee|apprentice|intern)\b", title_text):
         return "junior"
-    if re.search(r"\\b(mid[- ]level|intermediate)\\b", title_text):
+    if re.search(r"\b(mid[- ]level|intermediate)\b", title_text):
         return "medio"
-    if re.search(r"\\b(senior|lead|principal|staff engineer|director|head of|chief|vp|vice president)\\b", title_text):
+    if re.search(r"\b(senior|lead|principal|staff engineer|director|head of|chief|vp|vice president)\b", title_text):
         return "senior"
     text = (title_text + " " + str(description or "").lower())
-    if re.search(r"\\b(5\\+|6\\+|7\\+|8\\+|10\\+)\\s*years?\\b", text):
+    if re.search(r"\b(5\+|6\+|7\+|8\+|10\+)\s*years?\b", text):
         return "senior"
-    if re.search(r"\\b(2[-–]4|3[-–]5)\\s*years?\\b", text):
+    if re.search(r"\b(2[-–]4|3[-–]5)\s*years?\b", text):
         return "medio"
-    if re.search(r"\\b(0[-–]2|1[-–]2)\\s*years?\\b", text):
+    if re.search(r"\b(0[-–]2|1[-–]2)\s*years?\b", text):
         return "junior"
     return "no-especificado"
 
@@ -366,20 +366,20 @@ def infer_employment_terms(title: str, job_type: str, contract_type: str) -> tup
     normalized_type = normalize_job_type(job_type)
     normalized_contract = normalize_contract_type(contract_type or job_type)
     if normalized_type == "no-especificado":
-        if re.search(r"\\b(full[- ]?time|vollzeit)\\b", text):
+        if re.search(r"\b(full[- ]?time|vollzeit)\b", text):
             normalized_type = "completa"
-        elif re.search(r"\\b(part[- ]?time|teilzeit|minijob|nebenjob)\\b", text):
+        elif re.search(r"\b(part[- ]?time|teilzeit|minijob|nebenjob)\b", text):
             normalized_type = "parcial"
     if normalized_contract == "no-especificado":
-        if re.search(r"\\b(freelance|freiberuflich)\\b", text):
+        if re.search(r"\b(freelance|freiberuflich)\b", text):
             normalized_contract = "freelance"
-        elif re.search(r"\\b(internship|intern|praktikum|praktikant)\\b", text):
+        elif re.search(r"\b(internship|intern|praktikum|praktikant)\b", text):
             normalized_contract = "prácticas"
-        elif re.search(r"\\b(part[- ]?time|teilzeit|minijob|nebenjob)\\b", text):
+        elif re.search(r"\b(part[- ]?time|teilzeit|minijob|nebenjob)\b", text):
             normalized_contract = "parcial"
-        elif re.search(r"\\b(full[- ]?time|vollzeit)\\b", text):
+        elif re.search(r"\b(full[- ]?time|vollzeit)\b", text):
             normalized_contract = "indefinido"
-        elif re.search(r"\\b(contract|temporary|befristet)\\b", text):
+        elif re.search(r"\b(contract|temporary|befristet)\b", text):
             normalized_contract = "temporal"
     return normalized_type, normalized_contract
 
