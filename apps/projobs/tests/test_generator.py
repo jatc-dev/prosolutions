@@ -11,6 +11,8 @@ from generator import (
     normalize_contract_type,
     normalize_job_type,
     normalize_experience,
+    infer_experience,
+    infer_employment_terms,
     normalize_salary,
     normalize_sector,
     is_valid_url,
@@ -183,3 +185,8 @@ assert normalize_job_type("part_time") == "parcial"
 assert normalize_sector(["software-development"]) == "tecnologia"
 assert normalize_sector(None, ["marketing"]) == "marketing"
 print("  ✓ ProJobs catalog regression cases OK")
+assert infer_experience("Senior Engineer") == "senior"
+assert infer_experience("Junior Developer") == "junior"
+assert infer_employment_terms("Flexible Nebenjob", "no-especificado", "no-especificado") == ("parcial", "parcial")
+assert infer_employment_terms("Freelance Writer", "no-especificado", "no-especificado") == ("no-especificado", "freelance")
+print("  ✓ ProJobs employment/experience inference OK")
