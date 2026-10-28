@@ -167,3 +167,18 @@ print("  ✓ deduplicate_jobs OK")
 print("\n" + "=" * 60)
 print("TODAS LAS PRUEBAS PASARON")
 print("=" * 60)
+
+# Regression cases for real-world API values that previously broke catalogue filters.
+assert normalize_country("Berlin") == "DE"
+assert normalize_country("Bochum") == "DE"
+assert normalize_country("Homeoffice") == "REMOTE"
+assert normalize_country("Worldwide") == "REMOTE"
+assert normalize_country("a city not in the country map") == "UNKNOWN"
+assert normalize_modality(True) == "remoto"
+assert normalize_contract_type("full_time") == "indefinido"
+assert normalize_contract_type("part_time") == "parcial"
+assert normalize_job_type("full_time") == "completa"
+assert normalize_job_type("part_time") == "parcial"
+assert normalize_sector(["software-development"]) == "tecnologia"
+assert normalize_sector(None, ["marketing"]) == "marketing"
+print("  ✓ ProJobs catalog regression cases OK")
