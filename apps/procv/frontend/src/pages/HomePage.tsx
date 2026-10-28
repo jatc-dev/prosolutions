@@ -28,28 +28,14 @@ export function HomePage() {
   };
 
   // Do not flash the sign-in screen while the existing central session is being restored.
-  if (loading) {
+  // Keep a single neutral loading state while restoring the session or redirecting
+  // an authenticated user to the dashboard; never render an intermediate welcome page.
+  if (loading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 dark:bg-slate-950 dark:text-slate-300">
         <div className="text-center" role="status" aria-live="polite">
           <BrandLogo variant="large" className="mx-auto mb-4" />
           <p>{t("common.loading")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-        <div className="text-center">
-          <BrandLogo variant="large" className="mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-            {t("auth.welcomeBack")}
-          </h2>
-          <p className="text-slate-600 dark:text-slate-300">
-            {t("auth.redirecting")}
-          </p>
         </div>
       </div>
     );
