@@ -211,6 +211,7 @@ COUNTRY_ALIASES = {
     "vn": "VN", "vietnam": "VN",
     "za": "ZA", "south africa": "ZA",
     "remote": "REMOTE", "remoto": "REMOTE", "worldwide": "REMOTE",
+    "homeoffice": "REMOTE", "remote job": "REMOTE", "remote anywhere": "REMOTE",
     "anywhere": "REMOTE", "global": "REMOTE", "remote worldwide": "REMOTE",
     "worldwide remote": "REMOTE", "remote - worldwide": "REMOTE",
     "latin america": "REMOTE", "latam": "REMOTE", "multiple locations": "REMOTE",
@@ -226,7 +227,8 @@ def _country_key(value: str) -> str:
 # Arbeitnow and some aggregators often return a city instead of a country.
 # Map common city-only locations to ISO codes; explicit source country fields always win.
 CITY_COUNTRY_ALIASES = {
-    "berlin": "DE", "munich": "DE", "munchen": "DE", "hamburg": "DE",
+    "berlin": "DE", "munich": "DE", "munchen": "DE", "münchen": "DE", "hamburg": "DE",
+    "bochum": "DE", "hattingen": "DE", "langenfeld": "DE", "velbert": "DE", "wülfrath": "DE", "wulfrath": "DE", "ratingen": "DE", "monheim am rhein": "DE", "essen": "DE", "kassel": "DE", "bremen": "DE", "homeoffice": "REMOTE", "remote job": "REMOTE",
     "frankfurt": "DE", "cologne": "DE", "koln": "DE", "stuttgart": "DE",
     "dusseldorf": "DE", "dortmund": "DE", "leipzig": "DE", "dresden": "DE",
     "hanover": "DE", "hannover": "DE", "nuremberg": "DE", "nurnberg": "DE",
@@ -282,60 +284,63 @@ def normalize_country(location: str | None) -> str:
         return COUNTRY_ALIASES[key]
     if key in CITY_COUNTRY_ALIASES:
         return CITY_COUNTRY_ALIASES[key]
-    # Keep unfamiliar locations useful, but normalize whitespace and casing.
-    return " ".join(parts[-1].split()).title() if parts else raw.title()
+    # Never present an unrecognized city/neighborhood as if it were a country.
+    return "UNKNOWN"
 
 
 def normalize_modality(remote_value: any) -> str:
-    if remote_value is True or remote_value == "remote":
+    if remote_value is True:
         return "remoto"
     if isinstance(remote_value, str):
+        value = remote_value.strip().lower().replace("_", "-")
         return {
-            "remote": "remoto",
-            "on-site": "presencial",
-            "hybrid": "híbrido",
-            "remoto": "remoto",
-            "presencial": "presencial",
-            "híbrido": "híbrido",
-            "hibrido": "híbrido",
-        }.get(remote_value.lower(), "no-especificado")
+            "true": "remoto", "remote": "remoto", "fully-remote": "remoto",
+            "on-site": "presencial", "onsite": "presencial", "office": "presencial",
+            "hybrid": "híbrido", "remoto": "remoto", "presencial": "presencial",
+            "híbrido": "híbrido", "hibrido": "híbrido",
+        }.get(value, "no-especificado")
     return "no-especificado"
 
 
 def normalize_contract_type(job_type: str | None) -> str:
     if not job_type:
         return "no-especificado"
+    value = str(job_type).strip().lower().replace("_", "-").replace(" ", "-")
     mapping = {
-        "full-time": "indefinido",
-        "part-time": "parcial",
-        "contract": "temporal",
-        "freelance": "freelance",
-        "internship": "prácticas",
-        "indefinido": "indefinido",
-        "temporal": "temporal",
-        "prácticas": "prácticas",
-        "practicas": "prácticas",
+        "full-time": "indefinido", "fulltime": "indefinido", "permanent": "indefinido",
+        "part-time": "parcial", "parttime": "parcial", "contract": "temporal",
+        "contractor": "temporal", "temporary": "temporal", "fixed-term": "temporal",
+        "freelance": "freelance", "internship": "prácticas", "intern": "prácticas",
+        "apprenticeship": "prácticas", "indefinido": "indefinido",
+        "temporal": "temporal", "prácticas": "prácticas", "practicas": "prácticas",
+        "parcial": "parcial", "completa": "indefinido",
     }
-    return mapping.get(job_type.lower(), job_type.lower())
+    return mapping.get(value, value)
 
 
 def normalize_job_type(job_type: str | None) -> str:
     if not job_type:
         return "no-especificado"
-    mapping = {"full-time": "completa", "part-time": "parcial",
-               "completa": "completa", "parcial": "parcial"}
-    return mapping.get(job_type.lower(), job_type.lower())
+    value = str(job_type).strip().lower().replace("_", "-").replace(" ", "-")
+    mapping = {
+        "full-time": "completa", "fulltime": "completa",
+        "part-time": "parcial", "parttime": "parcial",
+        "completa": "completa", "parcial": "parcial",
+    }
+    return mapping.get(value, value)
 
 
 def normalize_experience(level: str | None) -> str:
     if not level:
         return "no-especificado"
+    value = str(level).strip().lower().replace("_", "-")
     mapping = {
-        "entry": "junior", "mid": "medio", "senior": "senior",
-        "lead": "senior", "executive": "senior",
-        "junior": "junior", "medio": "medio", "senior": "senior",
+        "entry": "junior", "entry-level": "junior", "junior": "junior",
+        "mid": "medio", "mid-level": "medio", "intermediate": "medio", "medio": "medio",
+        "senior": "senior", "lead": "senior", "executive": "senior",
+        "principal": "senior", "director": "senior",
     }
-    return mapping.get(level.lower(), "no-especificado")
+    return mapping.get(value, "no-especificado")
 
 
 def normalize_salary(salary: str | None) -> dict | None:
@@ -363,12 +368,39 @@ def normalize_published_date(job: dict) -> str:
 
 
 def normalize_sector(category: str | None, *extra_fields) -> str:
+    values = []
     for value in (category, *extra_fields):
         if not value:
             continue
-        mapped = SECTOR_MAP.get(str(value).lower())
-        if mapped:
-            return mapped
+        if isinstance(value, (list, tuple, set)):
+            values.extend(str(item) for item in value if item)
+        else:
+            values.append(str(value))
+    # Prefer explicit provider categories/tags over text classification.
+    for value in values:
+        key = value.strip().lower().replace("_", "-").replace(" ", "-")
+        if key in SECTOR_MAP:
+            return SECTOR_MAP[key]
+    text = " ".join(values).lower()
+    rules = (
+        (("software", "developer", "engineer", "programming", "devops", "data science", "machine learning", "cybersecurity", "cloud engineer"), "tecnologia"),
+        (("accountant", "accounting", "finance", "financial", "payroll", "bookkeeping"), "finanzas"),
+        (("sales", "business development", "account executive", "commercial"), "ventas"),
+        (("marketing", "seo", "social media", "content marketing", "brand manager"), "marketing"),
+        (("customer service", "customer support", "call center", "client support"), "atencion-cliente"),
+        (("nurse", "healthcare", "medical", "doctor", "clinical", "pharmacy"), "salud"),
+        (("teacher", "education", "instructor", "tutor", "curriculum"), "educacion"),
+        (("human resources", "recruiter", "talent acquisition", "hr manager"), "recursos-humanos"),
+        (("logistics", "supply chain", "warehouse", "transport", "fleet"), "logistica"),
+        (("construction", "electrician", "plumber", "carpenter"), "construccion"),
+        (("hotel", "hospitality", "restaurant", "chef", "tourism"), "hosteleria"),
+        (("legal", "lawyer", "attorney", "consultant", "consulting"), "servicios-profesionales"),
+        (("administrative", "administrator", "office assistant", "data entry"), "administracion"),
+        (("mechanical engineer", "civil engineer", "manufacturing", "quality engineer"), "ingenieria"),
+    )
+    for keywords, sector in rules:
+        if any(keyword in text for keyword in keywords):
+            return sector
     return "otras"
 
 
@@ -399,8 +431,11 @@ def normalize_job(job: dict, source: str) -> dict | None:
         job.get("category"),
         job.get("tags"),
         job.get("tags_raw"),
+        title,
+        job.get("description"),
     )
-    remote = job.get("remote", False)
+    remote_only_sources = {"Remotive", "Jobicy", "Himalayas", "RemoteOK"}
+    remote = job.get("remote", source in remote_only_sources)
     modality = normalize_modality(remote)
     contract_type = normalize_contract_type(
         job.get("job_type") or job.get("contract_type"))
