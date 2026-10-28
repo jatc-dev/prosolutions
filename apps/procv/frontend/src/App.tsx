@@ -106,6 +106,8 @@ export default function App() {
             <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route path="/dashboard" element={<PrivateRoute><WorkspacePage /></PrivateRoute>} />
             <Route path="/editor" element={<CVEditorPage />} />
+            {/* Backward-compatible URL used by the public "try for free" CTA. */}
+            <Route path="/editor-free" element={<Navigate to="/editor" replace />} />
             <Route path="/editor/:cvId" element={<CVEditorPage />} />
             <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
