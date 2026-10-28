@@ -50,6 +50,7 @@ jobs:
               - 'packages/ui/**'
               - 'package.json'
               - 'package-lock.json'
+              - '.github/workflows/core-build.yml'
             projobs:
               - 'apps/projobs/**'
               - 'packages/ui/**'
