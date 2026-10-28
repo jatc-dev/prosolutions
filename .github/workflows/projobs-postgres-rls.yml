@@ -1,17 +1,37 @@
 name: ProJobs PostgreSQL RLS isolation
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/projobs/server/sql/**'
+      - 'apps/projobs/server/prisma/**'
+      - 'apps/projobs/server/package.json'
+      - 'apps/projobs/server/package-lock.json'
+      - 'docs/architecture/PROJOBS_POSTGRES_RLS_POC.md'
+      - '.github/workflows/projobs-postgres-rls.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'apps/projobs/server/sql/poc/**'
+      - 'apps/projobs/server/sql/**'
+      - 'apps/projobs/server/prisma/**'
+      - 'apps/projobs/server/package.json'
+      - 'apps/projobs/server/package-lock.json'
       - 'docs/architecture/PROJOBS_POSTGRES_RLS_POC.md'
       - '.github/workflows/projobs-postgres-rls.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: projobs-postgres-rls-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   postgres-rls:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
