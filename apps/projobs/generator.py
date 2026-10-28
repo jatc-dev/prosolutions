@@ -228,7 +228,7 @@ def _country_key(value: str) -> str:
 # Map common city-only locations to ISO codes; explicit source country fields always win.
 CITY_COUNTRY_ALIASES = {
     "berlin": "DE", "munich": "DE", "munchen": "DE", "münchen": "DE", "hamburg": "DE",
-    "bochum": "DE", "hattingen": "DE", "langenfeld": "DE", "velbert": "DE", "wülfrath": "DE", "wulfrath": "DE", "ratingen": "DE", "monheim am rhein": "DE", "essen": "DE", "kassel": "DE", "bremen": "DE", "homeoffice": "REMOTE", "remote job": "REMOTE",
+    "bochum": "DE", "frankfurt am main": "DE", "hattingen": "DE", "langenfeld": "DE", "velbert": "DE", "wülfrath": "DE", "wulfrath": "DE", "ratingen": "DE", "monheim am rhein": "DE", "essen": "DE", "kassel": "DE", "bremen": "DE", "homeoffice": "REMOTE", "remote job": "REMOTE",
     "frankfurt": "DE", "cologne": "DE", "koln": "DE", "stuttgart": "DE",
     "dusseldorf": "DE", "dortmund": "DE", "leipzig": "DE", "dresden": "DE",
     "hanover": "DE", "hannover": "DE", "nuremberg": "DE", "nurnberg": "DE",
