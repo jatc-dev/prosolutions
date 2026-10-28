@@ -343,6 +343,47 @@ def normalize_experience(level: str | None) -> str:
     return mapping.get(value, "no-especificado")
 
 
+def infer_experience(title: str, description: str = "") -> str:
+    title_text = str(title or "").lower()
+    if re.search(r"\\b(junior|entry[- ]level|graduate|new grad|trainee|apprentice|intern)\\b", title_text):
+        return "junior"
+    if re.search(r"\\b(mid[- ]level|intermediate)\\b", title_text):
+        return "medio"
+    if re.search(r"\\b(senior|lead|principal|staff engineer|director|head of|chief|vp|vice president)\\b", title_text):
+        return "senior"
+    text = (title_text + " " + str(description or "").lower())
+    if re.search(r"\\b(5\\+|6\\+|7\\+|8\\+|10\\+)\\s*years?\\b", text):
+        return "senior"
+    if re.search(r"\\b(2[-–]4|3[-–]5)\\s*years?\\b", text):
+        return "medio"
+    if re.search(r"\\b(0[-–]2|1[-–]2)\\s*years?\\b", text):
+        return "junior"
+    return "no-especificado"
+
+
+def infer_employment_terms(title: str, job_type: str, contract_type: str) -> tuple[str, str]:
+    text = str(title or "").lower()
+    normalized_type = normalize_job_type(job_type)
+    normalized_contract = normalize_contract_type(contract_type or job_type)
+    if normalized_type == "no-especificado":
+        if re.search(r"\\b(full[- ]?time|vollzeit)\\b", text):
+            normalized_type = "completa"
+        elif re.search(r"\\b(part[- ]?time|teilzeit|minijob|nebenjob)\\b", text):
+            normalized_type = "parcial"
+    if normalized_contract == "no-especificado":
+        if re.search(r"\\b(freelance|freiberuflich)\\b", text):
+            normalized_contract = "freelance"
+        elif re.search(r"\\b(internship|intern|praktikum|praktikant)\\b", text):
+            normalized_contract = "prácticas"
+        elif re.search(r"\\b(part[- ]?time|teilzeit|minijob|nebenjob)\\b", text):
+            normalized_contract = "parcial"
+        elif re.search(r"\\b(full[- ]?time|vollzeit)\\b", text):
+            normalized_contract = "indefinido"
+        elif re.search(r"\\b(contract|temporary|befristet)\\b", text):
+            normalized_contract = "temporal"
+    return normalized_type, normalized_contract
+
+
 def normalize_salary(salary: str | None) -> dict | None:
     if not salary:
         return None
@@ -437,10 +478,24 @@ def normalize_job(job: dict, source: str) -> dict | None:
     remote_only_sources = {"Remotive", "Jobicy", "Himalayas", "RemoteOK"}
     remote = job.get("remote", source in remote_only_sources)
     modality = normalize_modality(remote)
-    contract_type = normalize_contract_type(
-        job.get("job_type") or job.get("contract_type"))
-    job_type = normalize_job_type(job.get("job_type"))
-    experience = normalize_experience(job.get("experience_level"))
+    raw_job_type = job.get("job_type") or job.get("employment_type") or job.get("employmentType") or ""
+    raw_contract_type = job.get("contract_type") or raw_job_type
+    job_type = normalize_job_type(raw_job_type)
+    contract_type = normalize_contract_type(raw_contract_type)
+    job_type, contract_type = infer_employment_terms(title, job_type, contract_type)
+    experience = normalize_experience(
+        job.get("experience_level") or job.get("seniority") or job.get("experience")
+    )
+    if experience == "no-especificado":
+        experience = infer_experience(title, job.get("description", ""))
+    if modality == "no-especificado":
+        modality_text = (title + " " + location).lower()
+        if re.search(r"\\b(hybrid|híbrido|hibrido)\\b", modality_text):
+            modality = "híbrido"
+        elif re.search(r"\\b(remote|remoto|homeoffice|home office|work from home|teletrabajo)\\b", modality_text):
+            modality = "remoto"
+        elif re.search(r"\\b(on-site|onsite|presencial|vor ort)\\b", modality_text):
+            modality = "presencial"
     salary = normalize_salary(job.get("salary"))
 
     result = {
