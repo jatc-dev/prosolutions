@@ -265,7 +265,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [detect-changes, backend-test, frontend-test]
-    if: (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.procv == 'true')
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.procv == 'true') && needs.backend-test.result == 'success' && needs.frontend-test.result == 'success'
 
     permissions:
       # Reemplaza (no se suma) al permissions del workflow: hay que repetir
