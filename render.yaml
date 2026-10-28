@@ -73,6 +73,8 @@ services:
         value: https://identity.prosolutions.page/api/auth
       - key: VITE_PROCV_URL
         value: https://procv.prosolutions.page
+      - key: VITE_PROCV_API_BASE_URL
+        value: https://procvbkn.onrender.com/api
       - key: VITE_ADSENSE_CLIENT
         value: ca-pub-3956322934366702
 
@@ -113,6 +115,8 @@ services:
         value: https://identity.prosolutions.page
       - key: FRONTEND_URL
         value: https://procv.prosolutions.page
+      - key: CORS_ORIGIN
+        value: https://procv.prosolutions.page,https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_DATABASE_URL
