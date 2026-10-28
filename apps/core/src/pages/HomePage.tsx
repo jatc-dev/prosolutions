@@ -115,87 +115,10 @@ export function HomePage() {
 
       <main className="relative py-12 px-4 md:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Column: Platform Presentation & Modules */}
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800 dark:text-slate-100 leading-tight">
-                  {copy.home.title}
-                </h1>
-                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {copy.home.subtitle}
-                </p>
-              </div>
-
-              {/* Module 1: ProCV */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-brand-500/50 transition-colors">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2-11-6z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                      {copy.home.moduleProcv.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                      {copy.home.moduleProcv.badge}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                  {copy.home.moduleProcv.description}
-                </p>
-                <a
-                  href="https://procv.prosolutions.page"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-600 dark:border-brand-400 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
-                >
-                  {copy.home.moduleProcv.action}
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
-              </div>
-
-              {/* Module 2: ProJobs */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-cyan-500/50 transition-colors">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                      {copy.home.moduleProjobs.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                      {copy.home.moduleProjobs.badge}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                  {copy.home.moduleProjobs.description}
-                </p>
-                <a
-                  href="https://projobs.prosolutions.page"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-slate-800 border border-cyan-600 dark:border-cyan-400 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors"
-                >
-                  {copy.home.moduleProjobs.action}
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-
+          <div className="flex justify-center">
+            {/* Product marketing belongs on the public landing page, not the login form. */}
             {/* Right Column: Login Form */}
-            <div className="lg:sticky lg:top-24">
+            <div className="w-full max-w-md">
               <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-8 dark:bg-slate-900 shadow-lg dark:shadow-black/30 max-w-md w-full">
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
