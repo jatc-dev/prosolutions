@@ -6,12 +6,13 @@ import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { PortalPage } from "./pages/PortalPage";
 import { AdminAccessPage } from "./pages/AdminAccessPage";
+import { LandingPage } from "./pages/LandingPage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<HomePage />} />
         <Route path="/auth/callback" element={<HomePage />} />
         <Route path="/dashboard" element={<PortalPage />} />
