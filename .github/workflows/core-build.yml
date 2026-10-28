@@ -63,6 +63,7 @@ jobs:
     if: needs.detect-changes.outputs.core == 'true'
     name: Core (TypeScript + Vite build)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -74,8 +75,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install workspace dependencies
         run: npm ci
-      - name: Validate ProJobs auth client syntax
-        run: node --check apps/projobs/auth.js
       - name: Build Core and shared UI
         run: npm run build:core
         env:
@@ -106,6 +105,7 @@ jobs:
     if: needs.detect-changes.outputs.projobs == 'true'
     name: ProJobs (generator + static build)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -114,11 +114,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: apps/projobs/server/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Validate ProJobs auth client syntax
+        run: node --check apps/projobs/auth.js
       - name: Compile ProJobs generator
         run: python -m py_compile apps/projobs/generator.py
       - name: Run ProJobs generator tests
