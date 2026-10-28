@@ -29,7 +29,6 @@ RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Copiar Prisma y dist compilado desde la etapa builder
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
@@ -42,5 +41,6 @@ ENV NODE_ENV=production
 # No establecer PORT aquí para permitir que Render lo asigne.
 EXPOSE 10000
 
-# Ejecutar migraciones antes de iniciar el servidor para no servir un esquema incompleto.
-CMD ["sh", "-c", "node scripts/migrate-production.mjs && exec node dist/index.js"]
+# Las migraciones de producción se ejecutan como tarea administrativa explícita,
+# no con el usuario de runtime al iniciar cada instancia.
+CMD ["node", "dist/index.js"]
