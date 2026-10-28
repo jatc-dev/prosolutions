@@ -88,9 +88,24 @@ export function createApp() {
   );
   app.use(compression());
   app.use(cookieParser());
+  const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+  const allowedCorsOrigins = new Set([config.frontendUrl, ...configuredCorsOrigins]);
+
   app.use(
     cors({
-      origin: config.isProduction ? config.frontendUrl : true,
+      origin: config.isProduction
+        ? (origin, callback) => {
+            // Allow server-to-server requests and exact configured first-party origins only.
+            if (!origin || allowedCorsOrigins.has(origin)) {
+              callback(null, true);
+              return;
+            }
+            callback(null, false);
+          }
+        : true,
       credentials: true,
     }),
   );
