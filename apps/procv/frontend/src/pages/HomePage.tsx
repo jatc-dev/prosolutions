@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "../components/BrandLogo";
@@ -13,7 +13,7 @@ const IDENTITY_URL =
 export function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -26,6 +26,18 @@ export function HomePage() {
     const redirectUri = encodeURIComponent(window.location.origin + "/auth/callback");
     window.location.href = `${IDENTITY_URL}?redirect_uri=${redirectUri}`;
   };
+
+  // Do not flash the sign-in screen while the existing central session is being restored.
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 dark:bg-slate-950 dark:text-slate-300">
+        <div className="text-center" role="status" aria-live="polite">
+          <BrandLogo variant="large" className="mx-auto mb-4" />
+          <p>{t("common.loading")}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return (
