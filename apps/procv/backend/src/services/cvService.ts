@@ -9,13 +9,15 @@ async function retryTransientRead<T>(operation: () => Promise<T>): Promise<T> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const isTransientConnectionClosure =
-      /connection.*closed|closed.*connection|kind:\s*Closed|connection reset|server closed the connection unexpectedly/i.test(message);
+      /connection.*closed|closed.*connection|kind:\s*Closed|connection reset|server closed the connection unexpectedly/i.test(
+        message,
+      );
 
     if (!isTransientConnectionClosure) {
       throw error;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 200));
     return operation();
   }
 }
