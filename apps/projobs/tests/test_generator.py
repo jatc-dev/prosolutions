@@ -171,6 +171,7 @@ print("=" * 60)
 # Regression cases for real-world API values that previously broke catalogue filters.
 assert normalize_country("Berlin") == "DE"
 assert normalize_country("Bochum") == "DE"
+assert normalize_country("Frankfurt Am Main") == "DE"
 assert normalize_country("Homeoffice") == "REMOTE"
 assert normalize_country("Worldwide") == "REMOTE"
 assert normalize_country("a city not in the country map") == "UNKNOWN"
