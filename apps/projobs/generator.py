@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import json
 import hashlib
 import os
+import re
 import sys
 import unicodedata
 import urllib.request
