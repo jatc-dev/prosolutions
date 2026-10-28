@@ -88,9 +88,9 @@ export function createApp() {
   );
   app.use(compression());
   app.use(cookieParser());
-  const configuredCorsOrigins = (process.env.CORS_ORIGIN || "")
-    .split(",")
-    .map((origin) => origin.trim())
+  const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(origin => origin.trim())
     .filter(Boolean);
   const allowedCorsOrigins = new Set([config.frontendUrl, ...configuredCorsOrigins]);
 
