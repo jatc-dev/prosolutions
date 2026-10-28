@@ -25,8 +25,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-          cache: pip
-          cache-dependency-path: apps/projobs/requirements.txt
 
       # apps/projobs es un submódulo del monorepo: sus scripts corren desde su carpeta
       - name: Ejecutar generador de ofertas
