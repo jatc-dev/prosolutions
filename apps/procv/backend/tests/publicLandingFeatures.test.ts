@@ -80,9 +80,7 @@ describe('public Landing Features endpoint', () => {
       ]),
     });
 
-    const response = await fetch(
-      `${baseUrl}/api/public/landing-features?lang=es-CO`,
-    );
+    const response = await fetch(`${baseUrl}/api/public/landing-features?lang=es-CO`);
 
     expect(response.status).toBe(200);
     expect(findUnique).toHaveBeenCalledWith({ where: { key: 'landing_features_es' } });
@@ -113,16 +111,12 @@ describe('public Landing Features endpoint', () => {
       value: '{not valid json',
     });
 
-    const malformedResponse = await fetch(
-      `${baseUrl}/api/public/landing-features?lang=en`,
-    );
+    const malformedResponse = await fetch(`${baseUrl}/api/public/landing-features?lang=en`);
     expect(malformedResponse.status).toBe(200);
     expect(await malformedResponse.json()).toEqual([]);
 
     findUnique.mockRejectedValueOnce(new Error('database unavailable'));
-    const unavailableResponse = await fetch(
-      `${baseUrl}/api/public/landing-features?lang=en`,
-    );
+    const unavailableResponse = await fetch(`${baseUrl}/api/public/landing-features?lang=en`);
     expect(unavailableResponse.status).toBe(200);
     expect(await unavailableResponse.json()).toEqual([]);
   });
