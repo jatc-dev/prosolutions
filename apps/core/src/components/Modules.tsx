@@ -22,15 +22,14 @@ interface ModuleCard {
   status?: string;
 }
 
-const MODULES: ModuleCard[] = [
+type ModuleDefinition = Omit<ModuleCard, "tagline" | "description" | "features" | "featureDescriptions" | "ctaLabel">;
+
+// Keep only stable presentation metadata here. User-facing copy lives in the
+// locale dictionaries; ProCV feature details may be overridden by its public API.
+const MODULES: ModuleDefinition[] = [
   {
     id: "procv",
     name: "ProCV",
-    tagline: "Hojas de vida profesionales",
-    description:
-      "Crea, edita y descarga tu hoja vida con plantillas disenadas para superar filtros ATS.",
-    features: ["Plantillas optimizadas para ATS", "Exportacion a PDF, JSON y XML", "Edicion en tiempo real"],
-    ctaLabel: "Ir a ProCV",
     ctaHref: APP_URLS.procvLogin,
     icon: FileText,
     iconWrapClass: "bg-brand-100 text-brand-600 ring-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:ring-brand-800",
@@ -43,11 +42,6 @@ const MODULES: ModuleCard[] = [
   {
     id: "projobs",
     name: "ProJobs",
-    tagline: "Empleos tech remotos",
-    description:
-      "Vacantes tech remotas curadas, con filtros por stack y busqueda en vivo para encontrar tu proximimo rol.",
-    features: ["Vacantes tech remotas", "Filtros por stack y busqueda", "Listado actualizado a diario"],
-    ctaLabel: "Explorar Vacantes",
     ctaHref: APP_URLS.projobs,
     icon: Briefcase,
     iconWrapClass: "bg-emerald-100 text-emerald-600 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:ring-emerald-800",
