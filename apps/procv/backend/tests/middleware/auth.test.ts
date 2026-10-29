@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response as ExpressResponse } from 'express';
 import jwt from 'jsonwebtoken';
 import { authMiddleware, AuthRequest } from '../../src/middleware/auth';
 
@@ -6,6 +6,30 @@ jest.mock('jsonwebtoken', () => ({
   __esModule: true,
   default: { verify: jest.fn() },
 }));
+
+const originalFetch = globalThis.fetch;
+
+let introspectionResponse: { valid: boolean; userId?: string; email?: string; role?: string; modules?: string[]; reason?: string } | null = null;
+let introspectionShouldThrow = false;
+
+function setIntrospectionResponse(response: { valid: boolean; userId?: string; email?: string; role?: string; modules?: string[]; reason?: string } | null, shouldThrow = false) {
+  introspectionResponse = response;
+  introspectionShouldThrow = shouldThrow;
+}
+
+async function mockFetch(input: RequestInfo | URL, init?: RequestInit): Promise<globalThis.Response> {
+  const url = String(input);
+  if (url.includes('/api/auth/introspect')) {
+    if (introspectionShouldThrow) {
+      throw new Error('introspection service unavailable');
+    }
+    return new Response(JSON.stringify(introspectionResponse ?? { valid: false, reason: 'not_configured' }), {
+      status: introspectionResponse ? 200 : 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return originalFetch(input, init);
+}
 
 interface MockResponse {
   statusCode: number;
@@ -35,9 +59,27 @@ function mockRequest(token = 'signed-token'): AuthRequest {
 }
 
 describe('ProCV Identity authorization middleware', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-user-2',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV', 'PROJOBS'],
+    });
+    introspectionShouldThrow = false;
+  });
 
-  it('rejects a valid Identity token without PROCV entitlement', () => {
+  afterAll(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  beforeAll(() => {
+    globalThis.fetch = mockFetch;
+  });
+
+  it('rejects a valid Identity token without PROCV entitlement', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
       sub: 'identity-user-1',
       email: 'user@example.test',
@@ -45,10 +87,17 @@ describe('ProCV Identity authorization middleware', () => {
       modules: ['PROJOBS'],
       jti: 'test-jti-1',
     });
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROJOBS'],
+    });
     const res = mockResponse();
     const next = jest.fn();
 
-    authMiddleware(mockRequest(), res as unknown as Response, next);
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
 
     expect(jwt.verify).toHaveBeenCalledWith('signed-token', expect.any(String), {
       issuer: expect.any(String),
@@ -62,7 +111,7 @@ describe('ProCV Identity authorization middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('rejects a valid Identity token missing jti', () => {
+  it('rejects a valid Identity token missing jti', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
       sub: 'identity-user-1',
       email: 'user@example.test',
@@ -72,14 +121,58 @@ describe('ProCV Identity authorization middleware', () => {
     const res = mockResponse();
     const next = jest.fn();
 
-    authMiddleware(mockRequest(), res as unknown as Response, next);
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
 
     expect(res.statusCode).toBe(401);
     expect(res.body).toEqual({ message: 'Session token missing jti' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('accepts an Identity token with PROCV entitlement and exposes the subject', () => {
+  it('rejects a session revoked by ProIdentity introspection', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV'],
+      jti: 'test-jti-1',
+    });
+    setIntrospectionResponse({ valid: false, reason: 'session_revoked' });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({
+      message: 'Session revoked or expired',
+      reason: 'session_revoked',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('rejects when introspection service is unavailable (fail closed)', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV'],
+      jti: 'test-jti-1',
+    });
+    setIntrospectionResponse(null, true);
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({
+      message: 'Session revoked or expired',
+      reason: expect.stringContaining('introspection_error'),
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('accepts an Identity token with PROCV entitlement and exposes the subject', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
       sub: 'identity-user-2',
       email: 'user@example.test',
@@ -90,19 +183,19 @@ describe('ProCV Identity authorization middleware', () => {
     const req = mockRequest();
     const next = jest.fn();
 
-    authMiddleware(req, mockResponse() as unknown as Response, next);
+    await authMiddleware(req, mockResponse() as unknown as ExpressResponse, next);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(req.userId).toBe('identity-user-2');
     expect(req.modules).toEqual(['PROCV', 'PROJOBS']);
   });
 
-  it('rejects missing bearer tokens', () => {
+  it('rejects missing bearer tokens', async () => {
     const req = { headers: {} } as unknown as AuthRequest;
     const res = mockResponse();
     const next = jest.fn();
 
-    authMiddleware(req, res as unknown as Response, next);
+    await authMiddleware(req, res as unknown as ExpressResponse, next);
 
     expect(res.statusCode).toBe(401);
     expect(next).not.toHaveBeenCalled();

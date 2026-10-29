@@ -4,23 +4,67 @@ import jwt from 'jsonwebtoken';
 import { createApp } from './index.js';
 import { config } from './config.js';
 
+// Mock fetch for ProIdentity introspection calls.
+// Tests control the introspection response via setIntrospectionResponse.
+let introspectionResponse: { valid: boolean; userId?: string; email?: string; role?: string; modules?: string[]; reason?: string } | null = null;
+let introspectionShouldThrow = false;
+
+const originalFetch = globalThis.fetch;
+
+function setIntrospectionResponse(response: { valid: boolean; userId?: string; email?: string; role?: string; modules?: string[]; reason?: string } | null, shouldThrow = false) {
+  introspectionResponse = response;
+  introspectionShouldThrow = shouldThrow;
+}
+
+async function mockFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = String(input);
+  if (url.includes('/api/auth/introspect')) {
+    if (introspectionShouldThrow) {
+      throw new Error('introspection service unavailable');
+    }
+    return new Response(JSON.stringify(introspectionResponse ?? { valid: false, reason: 'not_configured' }), {
+      status: introspectionResponse ? 200 : 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return originalFetch(input, init);
+}
+
+function createToken(modules: string[], email?: string, jti?: string, sub = 'synthetic-test-user') {
+  return jwt.sign({ modules, email, jti: jti || 'test-jti-' + Math.random().toString(36).slice(2) }, config.jwtSecret, {
+    subject: sub,
+    issuer: config.issuer,
+    audience: config.audience,
+    expiresIn: '5m',
+  });
+}
+
 test('ProJobs auth and safe persistence fallback', async (t) => {
+  // Install fetch mock before creating the server so middleware uses it.
+  (globalThis as any).fetch = mockFetch;
+
+  // Default: introspection returns valid for all tests unless overridden.
+  setIntrospectionResponse({
+    valid: true,
+    userId: 'synthetic-test-user',
+    email: 'synthetic@example.com',
+    role: 'user',
+    modules: ['PROJOBS'],
+  });
+
   const server = createApp().listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => server.once('listening', resolve));
   const address = server.address();
   if (!address || typeof address === 'string') throw Error('No test port');
 
   const base = `http://127.0.0.1:${address.port}`;
-  const token = (modules: string[], email?: string, jti?: string) =>
-    jwt.sign({ modules, email, jti: jti || 'test-jti-' + Math.random().toString(36).slice(2) }, config.jwtSecret, {
-      subject: 'synthetic-test-user',
-      issuer: config.issuer,
-      audience: config.audience,
-      expiresIn: '5m',
-    });
   t.after(() => new Promise<void>((resolve, reject) =>
     server.close((error) => error ? reject(error) : resolve()),
   ));
+
+  await t.after(() => {
+    (globalThis as any).fetch = originalFetch;
+  });
 
   await t.test('health endpoint', async () => {
     const response = await fetch(`${base}/health`);
@@ -44,11 +88,28 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
     })).status, 401),
   );
 
-  await t.test('missing PROJOBS entitlement is rejected', async () =>
-    assert.equal((await fetch(`${base}/api/saved-jobs`, {
-      headers: { Authorization: `Bearer ${token(['PROCV'])}` },
-    })).status, 403),
-  );
+  await t.test('missing PROJOBS entitlement is rejected', async () => {
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'synthetic-test-user',
+      email: 'synthetic@example.com',
+      role: 'user',
+      modules: ['PROCV'],
+    });
+    try {
+      assert.equal((await fetch(`${base}/api/saved-jobs`, {
+        headers: { Authorization: `Bearer ${createToken(['PROCV'])}` },
+      })).status, 403);
+    } finally {
+      setIntrospectionResponse({
+        valid: true,
+        userId: 'synthetic-test-user',
+        email: 'synthetic@example.com',
+        role: 'user',
+        modules: ['PROJOBS'],
+      });
+    }
+  });
 
   await t.test('new personal endpoints require authentication', async () => {
     assert.equal((await fetch(`${base}/api/job-alerts`)).status, 401);
@@ -59,7 +120,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   await t.test('application tracking rejects unsupported status before persistence', async () => {
     const response = await fetch(`${base}/api/applications/test-job/status`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token(['PROJOBS'])}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${createToken(['PROJOBS'])}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'hired-instantly' }),
     });
     assert.equal(response.status, 400);
@@ -68,7 +129,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   await t.test('alert creation rejects empty filters before persistence', async () => {
     const response = await fetch(`${base}/api/job-alerts`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token(['PROJOBS'], 'synthetic@example.com')}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${createToken(['PROJOBS'], 'synthetic@example.com')}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Test alert', frequency: 'daily', filters: {} }),
     });
     assert.equal(response.status, 400);
@@ -86,10 +147,62 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
     })).status, 401);
   });
 
+  await t.test('introspection session revoked is rejected', async () => {
+    setIntrospectionResponse({ valid: false, reason: 'session_revoked' });
+    try {
+      assert.equal((await fetch(`${base}/api/saved-jobs`, {
+        headers: { Authorization: `Bearer ${createToken(['PROJOBS'])}` },
+      })).status, 401);
+    } finally {
+      setIntrospectionResponse({
+        valid: true,
+        userId: 'synthetic-test-user',
+        email: 'synthetic@example.com',
+        role: 'user',
+        modules: ['PROJOBS'],
+      });
+    }
+  });
+
+  await t.test('introspection session not found is rejected', async () => {
+    setIntrospectionResponse({ valid: false, reason: 'session_not_found' });
+    try {
+      assert.equal((await fetch(`${base}/api/saved-jobs`, {
+        headers: { Authorization: `Bearer ${createToken(['PROJOBS'])}` },
+      })).status, 401);
+    } finally {
+      setIntrospectionResponse({
+        valid: true,
+        userId: 'synthetic-test-user',
+        email: 'synthetic@example.com',
+        role: 'user',
+        modules: ['PROJOBS'],
+      });
+    }
+  });
+
+  await t.test('introspection service unavailable fails closed', async () => {
+    setIntrospectionResponse(null, true);
+    try {
+      assert.equal((await fetch(`${base}/api/saved-jobs`, {
+        headers: { Authorization: `Bearer ${createToken(['PROJOBS'])}` },
+      })).status, 401);
+    } finally {
+      setIntrospectionResponse({
+        valid: true,
+        userId: 'synthetic-test-user',
+        email: 'synthetic@example.com',
+        role: 'user',
+        modules: ['PROJOBS'],
+      });
+      introspectionShouldThrow = false;
+    }
+  });
+
   await t.test('unconfigured database returns safe 503', async () => {
     if (config.databaseUrl) return;
     const response = await fetch(`${base}/api/saved-jobs`, {
-      headers: { Authorization: `Bearer ${token(['PROJOBS'])}` },
+      headers: { Authorization: `Bearer ${createToken(['PROJOBS'])}` },
     });
     assert.equal(response.status, 503);
     assert.equal((await response.json()).code, 'PROJOBS_PERSISTENCE_NOT_CONFIGURED');
@@ -160,14 +273,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
     await t.test('persistence: create, list, update, and delete application', async () => {
       const user = 'persistence-test-app-user';
       const jobId = 'persistence-test-app-job-1';
-      const token = (modules: string[], sub: string) =>
-        jwt.sign({ modules, email: `${sub}@example.test`, jti: 'persistence-app-jti-' + sub }, config.jwtSecret, {
-          subject: sub,
-          issuer: config.issuer,
-          audience: config.audience,
-          expiresIn: '5m',
-        });
-      const auth = { Authorization: `Bearer ${token(['PROJOBS'], user)}` };
+      const auth = { Authorization: `Bearer ${createToken(['PROJOBS'], user)}` };
 
       // Create application
       const createResp = await fetch(`${base}/api/applications`, {

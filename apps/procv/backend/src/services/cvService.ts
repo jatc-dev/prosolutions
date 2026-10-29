@@ -73,7 +73,7 @@ export class CVService {
     }
 
     // If not in cache, fetch from database with pagination
-    const [cvs, totalCount] = await retryTransientRead(() =>
+    const result = await retryTransientRead(() =>
       prisma.$transaction([
         prisma.cV.findMany({
           where: { userId },
@@ -86,6 +86,7 @@ export class CVService {
         }),
       ]),
     );
+    const [cvs, totalCount] = result as [Array<{ id: string; userId: string; title: string; template: string; data: string; createdAt: Date; updatedAt: Date; }>, number];
 
     // Store in cache for 30 seconds
     cache.set(cacheKey, { cvs, totalCount }, 30);

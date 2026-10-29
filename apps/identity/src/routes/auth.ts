@@ -11,6 +11,7 @@ import {
   verifyEmail,
   resendVerification,
 } from '../controllers/authController';
+import { introspectToken } from '../controllers/introspectController';
 import {
   refreshLimiter,
   authLimiter,
@@ -25,6 +26,7 @@ router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.post('/refresh', refreshLimiter, refreshToken);
 router.post('/logout', logout);
+router.post('/introspect', introspectToken);
 router.get('/me', identityMiddleware, me);
 router.put('/profile', identityMiddleware, updateProfile);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
