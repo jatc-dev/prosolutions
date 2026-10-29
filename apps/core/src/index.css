@@ -4,63 +4,68 @@
 
 :root {
   color-scheme: light;
-  --ui-bg: #f8fafc;
-  --ui-surface: #ffffff;
-  --ui-surface-soft: #f1f5f9;
-  --ui-border: #cbd5e1;
-  --ui-border-strong: #94a3b8;
-  --ui-text: #0f172a;
-  --ui-text-muted: #475569;
-  --ui-accent: #4338ca;
-  --ui-accent-hover: #3730a3;
-  --ui-accent-soft: #eef2ff;
-  --ui-focus: #4338ca;
-  --ui-success: #047857;
-  --ui-warning: #92400e;
-  --ui-danger: #b91c1c;
+  --ui-bg: #F5F6FA;
+  --ui-surface: #FBFBFD;
+  --ui-surface-soft: #ECEEF4;
+  --ui-border: rgba(35, 43, 67, 0.09);
+  --ui-border-strong: rgba(35, 43, 67, 0.15);
+  --ui-text: #242631;
+  --ui-text-muted: #707586;
+  --ui-accent: #5865B8;
+  --ui-accent-hover: #4855A5;
+  --ui-accent-soft: #E9ECFC;
+  --ui-focus: #5865B8;
+  --ui-success: #33866A;
+  --ui-warning: #A87535;
+  --ui-danger: #C05B68;
   --ui-radius-sm: 0.625rem;
-  --ui-radius-md: 0.875rem;
-  --ui-radius-lg: 1rem;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
-  --ui-shadow-md: 0 10px 24px -16px rgba(15, 23, 42, 0.35);
+  --ui-radius-md: 1rem;
+  --ui-radius-lg: 1.5rem;
+  --ui-shadow-sm: 0 2px 4px rgba(28, 35, 62, 0.02), 0 12px 36px rgba(28, 35, 62, 0.035);
+  --ui-shadow-md: 0 12px 40px rgba(28, 35, 62, 0.07);
+  --ui-card-glass: rgba(255, 255, 255, 0.78);
+  --ui-nav-glass: rgba(245, 246, 250, 0.82);
+  --ui-blur: 24px;
 }
 
 .dark {
   color-scheme: dark;
-  --ui-bg: #080d1a;
-  --ui-surface: #111827;
-  --ui-surface-soft: #172033;
-  --ui-border: #64748b;
-  --ui-border-strong: #64748b;
-  --ui-text: #f1f5f9;
-  --ui-text-muted: #c0ccdc;
-  --ui-accent: #a5b4fc;
-  --ui-accent-hover: #c7d2fe;
-  --ui-accent-soft: #252b50;
-  --ui-focus: #a5b4fc;
-  --ui-success: #6ee7b7;
-  --ui-warning: #fcd34d;
-  --ui-danger: #fca5a5;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
-  --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
+  --ui-bg: #101116;
+  --ui-surface: #1C1E28;
+  --ui-surface-soft: #252733;
+  --ui-border: rgba(231, 233, 255, 0.09);
+  --ui-border-strong: rgba(231, 233, 255, 0.15);
+  --ui-text: #F1F1F6;
+  --ui-text-muted: #A2A5B5;
+  --ui-accent: #A3ACF5;
+  --ui-accent-hover: #BBC2FF;
+  --ui-accent-soft: rgba(132, 144, 240, 0.14);
+  --ui-focus: #A3ACF5;
+  --ui-success: #7BC9A7;
+  --ui-warning: #E3B978;
+  --ui-danger: #F09AA5;
+  --ui-shadow-sm: 0 1px 0 rgba(255, 255, 255, 0.025), 0 16px 48px rgba(0, 0, 0, 0.16);
+  --ui-shadow-md: 0 16px 56px rgba(0, 0, 0, 0.28);
+  --ui-card-glass: rgba(31, 33, 45, 0.70);
+  --ui-nav-glass: rgba(16, 17, 22, 0.82);
 }
 
 @layer base {
   h1, h2, h3, h4 {
     color: var(--ui-text);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.035em;
   }
 
   h1 {
     font-size: clamp(1.875rem, 2.5vw, 3rem);
     line-height: 1.1;
-    font-weight: 800;
+    font-weight: 650;
   }
 
   h2 {
     font-size: clamp(1.375rem, 1.9vw, 2rem);
     line-height: 1.2;
-    font-weight: 750;
+    font-weight: 650;
   }
 
   h3 {
@@ -96,12 +101,14 @@
   .ui-surface {
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
-    background: var(--ui-surface);
+    background: var(--ui-card-glass);
     box-shadow: var(--ui-shadow-sm);
+    -webkit-backdrop-filter: blur(var(--ui-blur)) saturate(135%);
+    backdrop-filter: blur(var(--ui-blur)) saturate(135%);
   }
 
   .ui-card {
-    @apply ui-surface p-6;
+    @apply ui-surface p-7;
   }
 
   .ui-muted {
@@ -113,7 +120,12 @@
   }
 
   .ui-glass-card {
-    @apply rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/80;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-card-glass);
+    box-shadow: var(--ui-shadow-sm);
+    -webkit-backdrop-filter: blur(24px) saturate(135%);
+    backdrop-filter: blur(24px) saturate(135%);
   }
 
   .ui-halo {
@@ -132,8 +144,34 @@
 
 body {
   font-family: "Manrope", "Segoe UI", Inter, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: var(--ui-bg);
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(112, 124, 220, 0.055), transparent 42%),
+    var(--ui-bg);
   color: var(--ui-text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Shared premium surfaces used across Core and shared UI components. */
+.pro-header-glass {
+  background: var(--ui-nav-glass) !important;
+  border-color: var(--ui-border) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+}
+
+.pro-header-glass .pro-header-inner {
+  min-height: 76px;
+}
+
+.pro-header-glass [aria-current="page"] {
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+}
+
+@media (min-width: 768px) {
+  .ui-card { padding: 1.75rem; }
 }
 
 /* Utility: hide scrollbar while keeping scroll available */
