@@ -14,11 +14,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 shadow-sm shadow-brand-500/30 hover:shadow-brand-500/40",
+    "bg-brand-600 text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 shadow-sm shadow-brand-500/10 hover:shadow-brand-500/15 rounded-full px-5",
   secondary:
-    "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700",
+    "bg-slate-100/80 text-slate-900 hover:bg-slate-200 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 rounded-full",
   outline:
-    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
+    "border border-slate-300/70 bg-white/70 text-slate-700 hover:bg-white dark:border-slate-600/60 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 rounded-full backdrop-blur-md",
   ghost:
     "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white",
   danger:
@@ -56,7 +56,7 @@ export function Button({
       type={type}
       disabled={buttonDisabled}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-[-0.015em] transition-all duration-200 hover:-translate-y-px active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
         variantStyles[variant],
         sizeStyles[size],
         isFullWidth ? "w-full" : "",
