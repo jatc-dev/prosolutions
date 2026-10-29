@@ -73,7 +73,7 @@ export function Premium() {
               )}
             >
               {plan.highlight ? (
-                <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-gradient-to-r from-brand-600 to-cyan-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+                <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-gradient-to-r from-brand-600 to-blue-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
                   <Crown className="h-3 w-3" />
                   {copy.plans.popular}
                 </span>
