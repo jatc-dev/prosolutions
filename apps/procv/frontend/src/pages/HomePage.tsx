@@ -96,10 +96,10 @@ export function HomePage() {
               </div>
 
               {/* Module 2: ProJobs */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-cyan-500/50 transition-colors">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-blue-500/50 transition-colors">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -119,7 +119,7 @@ export function HomePage() {
                   href="https://projobs.prosolutions.page"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-slate-800 border border-cyan-600 dark:border-cyan-400 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors"
+                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                 >
                   {t("home.moduleProjobs.action")}
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
