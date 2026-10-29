@@ -44,7 +44,7 @@ export const tokens = {
       elevated: "#eef2fa",
       raised: "#e5edff",
       inset: "#dce4f0",
-      dark: "#20304a",
+      dark: "#111827",
       darkElevated: "#1b2638",
       darkRaised: "#25334a",
       darkInset: "#111827",
