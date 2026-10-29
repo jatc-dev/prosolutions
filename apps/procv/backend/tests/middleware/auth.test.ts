@@ -43,6 +43,7 @@ describe('ProCV Identity authorization middleware', () => {
       email: 'user@example.test',
       role: 'user',
       modules: ['PROJOBS'],
+      jti: 'test-jti-1',
     });
     const res = mockResponse();
     const next = jest.fn();
@@ -61,12 +62,30 @@ describe('ProCV Identity authorization middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it('rejects a valid Identity token missing jti', () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV'],
+    });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    authMiddleware(mockRequest(), res as unknown as Response, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({ message: 'Session token missing jti' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('accepts an Identity token with PROCV entitlement and exposes the subject', () => {
     (jwt.verify as jest.Mock).mockReturnValue({
       sub: 'identity-user-2',
       email: 'user@example.test',
       role: 'user',
       modules: ['PROCV', 'PROJOBS'],
+      jti: 'test-jti-2',
     });
     const req = mockRequest();
     const next = jest.fn();

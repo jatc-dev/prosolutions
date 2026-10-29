@@ -32,14 +32,15 @@ export function proJobsAuthMiddleware(
       email?: string;
       role?: string;
       modules?: string[];
+      jti?: string;
     };
 
-    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+    if (!payload.sub) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
+    if (!payload.jti) {
+      return res.status(401).json({ message: 'Session token missing jti' });
     }
 
     req.userId = payload.sub;
@@ -85,12 +86,15 @@ export function optionalProJobsAuth(
       email?: string;
       role?: string;
       modules?: string[];
+      jti?: string;
     };
 
-    req.userId = payload.sub;
-    req.email = payload.email;
-    req.role = payload.role;
-    req.modules = payload.modules;
+    if (payload.sub && payload.jti) {
+      req.userId = payload.sub;
+      req.email = payload.email;
+      req.role = payload.role;
+      req.modules = payload.modules;
+    }
   } catch {
     // Ignore invalid tokens for optional auth; continue as anonymous
   }

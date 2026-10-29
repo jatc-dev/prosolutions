@@ -19,17 +19,22 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
 
   try {
     const payload = jwt.verify(token, config.jwtSecret, {
-      issuer: config.identityUrl,
+      issuer: config.issuer,
       audience: 'prosolutions-api',
     }) as {
       sub: string;
       email?: string;
       role?: string;
       modules?: string[];
+      jti?: string;
     };
 
     if (!payload.sub) {
       return res.status(401).json({ message: 'Invalid Identity subject' });
+    }
+
+    if (!payload.jti) {
+      return res.status(401).json({ message: 'Session token missing jti' });
     }
 
     const modules = Array.isArray(payload.modules) ? payload.modules : [];

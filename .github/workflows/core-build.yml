@@ -97,6 +97,9 @@ jobs:
         run: npm run build --workspace=@prosolutions/projobs
         env:
           PROJOBS_SKIP_FETCH: "1"
+      - name: Validate ProJobs embedded JavaScript
+        run: node scripts/validate-projobs-js.mjs apps/projobs/dist/index.html
+
       - name: Validate embedded localization scripts
         run: |
           node --input-type=module <<'NODE'
@@ -112,56 +115,4 @@ jobs:
             new Function(html.slice(start + "<script>".length, end));
             console.log(`${file}: localization script syntax OK`);
           }
-          NODE
-
-      - name: Validate JavaScript syntax and escapeHtml in ProJobs index.html
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
-
-          const html = readFileSync("apps/projobs/dist/index.html", "utf8");
-
-          // Extraer solo bloques <script> ejecutables (sin atributos: sin src, type, id, async, defer).
-          const scriptRegex = /<script\s*>([\s\S]*?)<\/script>/g;
-          let match;
-          let blockCount = 0;
-          let escapeHtmlDefined = false;
-          let escapeHtmlUsed = false;
-
-          while ((match = scriptRegex.exec(html)) !== null) {
-            const block = match[1].trim();
-            blockCount++;
-
-            // Validar sintaxis JavaScript de cada bloque de forma independiente.
-            // Compilar por separado evita falsos errores por declaraciones const/let repetidas
-            // entre bloques independientes que no comparten scope.
-            new Function(block);
-
-            // Verificar que escapeHtml esté definida como función (límite de palabra evita
-            // falsos positivos como escapeHtmlFoo)
-            if (/function\s+escapeHtml\b\s*\(/.test(block)) {
-              escapeHtmlDefined = true;
-            }
-
-            // Verificar que escapeHtml se utilice realmente
-            if (/escapeHtml\s*\(/.test(block)) {
-              escapeHtmlUsed = true;
-            }
-          }
-
-          if (!blockCount) {
-            throw new Error("No se encontró ningún bloque <script> ejecutable en dist/index.html");
-          }
-
-          console.log(`Encontrados ${blockCount} bloque(s) de JavaScript ejecutable en dist/index.html`);
-
-          if (!escapeHtmlDefined) {
-            throw new Error("escapeHtml no está definida como función en el JavaScript embebido");
-          }
-
-          if (!escapeHtmlUsed) {
-            throw new Error("escapeHtml está definida pero no se invoca en el JavaScript embebido");
-          }
-
-          console.log("dist/index.html: JavaScript sintaxis y escapeHtml OK");
           NODE

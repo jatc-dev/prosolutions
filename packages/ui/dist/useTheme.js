@@ -1,7 +1,35 @@
 import { useCallback, useEffect, useState } from "react";
 /** Clave y formato compartidos con apps/procv y apps/core para una preferencia unificada. */
 const STORAGE_KEY = "theme-storage";
+const THEME_COOKIE = "prosolutions_theme";
+function readCookiePreference() {
+    try {
+        const entry = document.cookie.split("; ").find((part) => part.startsWith(THEME_COOKIE + "="));
+        const value = entry?.split("=").slice(1).join("=");
+        return value === "light" || value === "dark" ? value : null;
+    }
+    catch {
+        return null;
+    }
+}
+function persistPreference(preference) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { preference } }));
+    }
+    catch {
+        /* ignore */
+    }
+    if (preference === "light" || preference === "dark") {
+        document.cookie = THEME_COOKIE + "=" + preference + "; Domain=.prosolutions.page; Path=/; Max-Age=31536000; SameSite=Lax; Secure";
+    }
+    else {
+        document.cookie = THEME_COOKIE + "=; Domain=.prosolutions.page; Path=/; Max-Age=0; SameSite=Lax; Secure";
+    }
+}
 function readPreference() {
+    const cookiePreference = readCookiePreference();
+    if (cookiePreference)
+        return cookiePreference;
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -34,7 +62,7 @@ export function useTheme() {
         setResolved(next);
         applyTheme(next);
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { preference } }));
+            persistPreference(preference);
         }
         catch {
             /* ignore */

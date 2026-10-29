@@ -121,3 +121,47 @@ services:
         sync: false
       - key: DIRECT_DATABASE_URL
         sync: false
+
+  - type: web
+    name: projobs-frontend
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./apps/projobs/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_IDENTITY_API_URL
+        value: https://identity.prosolutions.page/api/auth
+      - key: VITE_PROSOLUTIONS_URL
+        value: https://prosolutions.page
+      - key: VITE_PROCV_URL
+        value: https://procv.prosolutions.page
+
+  - type: web
+    name: projobs-api
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./apps/projobs/server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: IDENTITY_JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: IDENTITY_URL
+        value: https://identity.prosolutions.page
+      - key: IDENTITY_ISSUER
+        value: https://identity.prosolutions.page
+      - key: IDENTITY_AUDIENCE
+        value: prosolutions-api
+      - key: CORS_ORIGIN
+        value: https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page
