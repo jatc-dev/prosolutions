@@ -149,10 +149,6 @@ jobs:
         working-directory: apps/procv/backend
         run: npm run lint
 
-      - name: Diagnose public Landing Features tests
-        working-directory: apps/procv/backend
-        run: timeout 90s npm test -- --runInBand --coverage=false --verbose --detectOpenHandles --runTestsByPath tests/publicLandingFeatures.test.ts
-
       - name: Run tests
         working-directory: apps/procv/backend
         run: npm test -- --coverage --watchAll=false
