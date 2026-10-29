@@ -57,10 +57,12 @@ class Cache {
 
 export const cache = new Cache();
 
-// Start periodic cleanup every 5 minutes
-setInterval(
+// Start periodic cleanup every 5 minutes. Do not keep short-lived processes
+// (including Jest workers and one-off scripts) alive solely for this timer.
+const cleanupInterval = setInterval(
   () => {
     cache.cleanup();
   },
   5 * 60 * 1000,
 );
+cleanupInterval.unref();
