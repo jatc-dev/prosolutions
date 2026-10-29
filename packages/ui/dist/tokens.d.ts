@@ -9,16 +9,16 @@
 export declare const tokens: {
     readonly color: {
         readonly primary: {
-            readonly 50: "#eff6ff";
-            readonly 100: "#dbe5ff";
-            readonly 200: "#b7cbff";
-            readonly 300: "#8db3ff";
-            readonly 400: "#648aff";
-            readonly 500: "#3f6ff5";
-            readonly 600: "#2e5bf0";
-            readonly 700: "#244bd9";
-            readonly 800: "#1c3db3";
-            readonly 900: "#132f8c";
+            readonly 50: "#e5edff";
+            readonly 100: "#dce8ff";
+            readonly 200: "#b9d0ff";
+            readonly 300: "#93b5ff";
+            readonly 400: "#73a0ff";
+            readonly 500: "#3563e9";
+            readonly 600: "#264fc7";
+            readonly 700: "#203f9f";
+            readonly 800: "#1d347d";
+            readonly 900: "#172554";
         };
         readonly secondary: {
             readonly 50: "#e0f7ff";
@@ -34,38 +34,38 @@ export declare const tokens: {
         };
         readonly surface: {
             readonly base: "#ffffff";
-            readonly elevated: "#f8fafc";
-            readonly raised: "#f1f5f9";
-            readonly inset: "#f0f2f5";
-            readonly dark: "#0f172a";
-            readonly darkElevated: "#0b1120";
-            readonly darkRaised: "#0c1526";
-            readonly darkInset: "#0a0f1c";
+            readonly elevated: "#eef2fa";
+            readonly raised: "#e5edff";
+            readonly inset: "#dce4f0";
+            readonly dark: "#111827";
+            readonly darkElevated: "#1b2638";
+            readonly darkRaised: "#25334a";
+            readonly darkInset: "#111827";
         };
         readonly text: {
-            readonly primary: "#0f172a";
-            readonly secondary: "#475569";
-            readonly muted: "#64748b";
+            readonly primary: "#20304a";
+            readonly secondary: "#52617a";
+            readonly muted: "#52617a";
             readonly inverted: "#ffffff";
             readonly onPrimary: "#ffffff";
             readonly onSecondary: "#ffffff";
         };
         readonly border: {
-            readonly light: "#e2e8f0";
-            readonly medium: "#cbd5e1";
-            readonly dark: "#94a3b8";
-            readonly darkSurface: "#1e293b";
-            readonly focus: "#3f6ff5";
+            readonly light: "#dce4f0";
+            readonly medium: "#aab8ca";
+            readonly dark: "#71839b";
+            readonly darkSurface: "#34445c";
+            readonly focus: "#3563e9";
         };
         readonly state: {
-            readonly success: "#10b981";
-            readonly warning: "#f59e0b";
-            readonly error: "#ef4444";
-            readonly info: "#3f6ff5";
-            readonly successBg: "#ecfdf5";
-            readonly warningBg: "#fffbeb";
-            readonly errorBg: "#fef2f2";
-            readonly infoBg: "#eff6ff";
+            readonly success: "#087f72";
+            readonly warning: "#975900";
+            readonly error: "#c7364f";
+            readonly info: "#3563e9";
+            readonly successBg: "#e6f7f3";
+            readonly warningBg: "#fff4db";
+            readonly errorBg: "#ffebef";
+            readonly infoBg: "#e5edff";
         };
     };
     readonly font: {

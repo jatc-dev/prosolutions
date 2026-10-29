@@ -11,11 +11,13 @@ import {
   verifyEmail,
   resendVerification,
 } from '../controllers/authController';
+import { introspectToken } from '../controllers/introspectController';
 import {
   refreshLimiter,
   authLimiter,
   verificationLimiter,
   passwordResetLimiter,
+  introspectLimiter,
 } from '../middleware/rateLimiter';
 import { identityMiddleware } from '../middleware/auth';
 
@@ -25,6 +27,7 @@ router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.post('/refresh', refreshLimiter, refreshToken);
 router.post('/logout', logout);
+router.post('/introspect', introspectLimiter, introspectToken);
 router.get('/me', identityMiddleware, me);
 router.put('/profile', identityMiddleware, updateProfile);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);

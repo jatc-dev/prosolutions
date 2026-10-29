@@ -12,8 +12,8 @@ export function Card({ children, padding = "md", variant = "default", className,
         lg: "p-8",
     };
     const variantStyles = {
-        default: "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
-        elevated: "border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-lg",
+        default: "border border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95",
+        elevated: "border border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700/90 dark:bg-slate-900/95 dark:shadow-lg",
         outlined: "border-2 border-slate-300 bg-transparent dark:border-slate-600 dark:bg-transparent",
     };
     return (_jsx("div", { ...props, className: cn("rounded-xl", paddingStyles[padding], variantStyles[variant], className), children: children }));

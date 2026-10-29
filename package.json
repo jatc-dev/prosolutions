@@ -20,7 +20,9 @@
     "build:core": "npm run build:ui && npm --prefix apps/core run build"
   },
   "dependencies": {
-    "@supabase/server": "^1.9.2"
+    "@supabase/server": "^1.9.2",
+    "@types/pg": "8.23.1",
+    "pg": "8.23.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
