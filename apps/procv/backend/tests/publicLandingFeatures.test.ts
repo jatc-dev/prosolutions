@@ -31,9 +31,14 @@ describe('public Landing Features endpoint', () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve, reject) => {
+    const closed = new Promise<void>((resolve, reject) => {
       server.close(error => (error ? reject(error) : resolve()));
     });
+
+    // Node fetch keeps HTTP connections alive; explicitly close remaining
+    // sockets so Jest cannot hang while waiting for the server to drain.
+    server.closeAllConnections();
+    await closed;
   });
 
   beforeEach(() => {
