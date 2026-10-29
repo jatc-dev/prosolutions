@@ -26,16 +26,16 @@ export function Card({
   };
 
   const variantStyles: Record<string, string> = {
-    default: "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+    default: "border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/70",
     elevated:
-      "border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-lg",
+      "border border-slate-200/70 bg-white/80 shadow-[0_2px_4px_rgba(28,35,62,0.02),0_12px_36px_rgba(28,35,62,0.035)] backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/70 dark:shadow-[0_16px_48px_rgba(0,0,0,0.16)]",
     outlined: "border-2 border-slate-300 bg-transparent dark:border-slate-600 dark:bg-transparent",
   };
 
   return (
     <div
       {...props}
-      className={cn("rounded-xl", paddingStyles[padding], variantStyles[variant], className)}
+      className={cn("rounded-2xl transition-[transform,box-shadow,border-color] duration-300 hover:border-slate-300/70 dark:hover:border-slate-600/70", paddingStyles[padding], variantStyles[variant], className)}
     >
       {children}
     </div>
