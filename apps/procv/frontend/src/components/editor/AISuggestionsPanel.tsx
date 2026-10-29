@@ -345,7 +345,7 @@ export function AISuggestionsPanel({
   const jobCategories = analyzeJobTitle(jobTitle, language);
 
   return (
-    <div className={`rounded-lg border border-slate-200 bg-gradient-to-r from-blue-50 to-blue-50 p-3 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800 ${className}`}>
+    <div className={`rounded-lg border border-slate-200 bg-gradient-to-r from-blue-50 to-white p-3 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800 ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
