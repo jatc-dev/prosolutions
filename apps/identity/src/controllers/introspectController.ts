@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import prisma from '../prismaClient';
-import { logger } from '../utils/logger';
 
 export interface IntrospectResponse {
   valid: boolean;
@@ -59,11 +58,6 @@ export async function introspectToken(req: Request, res: Response) {
     }
 
     if (session.userId !== payload.sub) {
-      logger.warn('Introspection: jti/sub mismatch', {
-        jti: payload.jti,
-        tokenSub: payload.sub,
-        sessionUserId: session.userId,
-      });
       return res.status(401).json({
         valid: false,
         reason: 'session_mismatch',
@@ -116,10 +110,7 @@ export async function introspectToken(req: Request, res: Response) {
       role: payload.role,
       modules: payload.modules,
     } as IntrospectResponse);
-  } catch (error: unknown) {
-    logger.warn('Introspection: token verification failed', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
     return res.status(401).json({
       valid: false,
       reason: 'token_invalid',
