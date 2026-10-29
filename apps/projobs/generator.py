@@ -888,11 +888,11 @@ CSS_STYLES = """
         .alert-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }
         .alert-tools input,.alert-tools select { border:1px solid #aab8ca; border-radius:9px; padding:8px 10px; background:#fff; color:#20304a; min-width:130px; }
         .alert-tools input { flex:1; }
-        .btn-alert { border:1px solid #c7d2fe; border-radius:9px; padding:9px 12px; background:#e5edff; color:#264fc7; font-weight:700; cursor:pointer; }
+        .btn-alert { border:1px solid #aab8ca; border-radius:9px; padding:9px 12px; background:#e5edff; color:#264fc7; font-weight:700; cursor:pointer; }
         .job-match-badge { display:inline-flex; gap:5px; align-items:center; padding:4px 8px; border-radius:999px; font-size:.78rem; font-weight:750; background:#ecfdf5; color:#047857; }
         .job-badges { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-bottom:10px; }
         .job-badges .badge { margin:0; }
-        .job-actions .btn-secondary { background:#f5f7fc; color:#264fc7; border:1px solid #c7d2fe; }
+        .job-actions .btn-secondary { background:#f5f7fc; color:#264fc7; border:1px solid #aab8ca; }
         html.dark .job-actions .btn-secondary { background:#25334a; color:#b2c0d4; border-color:#52627a; }
         .job-quality-note { color:#64748b; font-size:.78rem; }
         .salary-undisclosed { color:#64748b; font-size:.78rem; }
@@ -1096,7 +1096,7 @@ CSS_STYLES = """
         .results-count { flex: 0 0 auto; color: #475569; font-size: .85rem; font-weight: 700; }
         #jobsList { max-width: 80rem; margin: 0 auto; padding: 0 16px 32px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
         .job-card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; margin: 0; padding: 22px; border: 1px solid #dce4f0; border-radius: 18px; box-shadow: 0 2px 8px rgba(15,23,42,.025); transition: border-color .18s ease,box-shadow .18s ease,transform .18s ease; }
-        .job-card:hover { transform: translateY(-2px); border-color: #c7d2fe; box-shadow: 0 12px 28px rgba(15,23,42,.07); }
+        .job-card:hover { transform: translateY(-2px); border-color: #73a0ff; box-shadow: 0 12px 28px rgba(15,23,42,.07); }
         .job-title { color: #25334a; font-size: 1.12rem; line-height: 1.35; }
         .job-info { margin-bottom: 10px; color: #64748b; line-height: 1.7; }
         .job-tags { margin: 0 0 18px; }
@@ -1144,7 +1144,7 @@ CSS_STYLES = """
         html.dark .results-heading p, html.dark .results-count { color: #94a3b8; }
         html.dark .job-title { color: #f1f5f9; }
         html.dark .job-tags .badge { background: #25334a; color: #aab8ca; }
-        html.dark .job-card > .badge { background: #1e1b4b; color: #c7d2fe; }
+        html.dark .job-card > .badge { background: #25334a; color: #b2c0d4; }
         html.dark .pro-footer { background: #111827; border-color: #34445c; }
         html.dark .pro-footer h4, html.dark .pro-footer-about, html.dark .pro-footer-bottom { color: #94a3b8; }
         html.dark .pro-footer a, html.dark .pro-footer-bottom a { color: #aab8ca; }
