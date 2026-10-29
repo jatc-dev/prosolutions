@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section id="inicio" className="relative overflow-hidden">
       <div className="ui-halo left-[-6rem] top-[-4rem]" aria-hidden="true" />
-      <div className="ui-halo right-[-8rem] top-24 bg-cyan-400/20 dark:bg-cyan-500/10" aria-hidden="true" />
+      <div className="ui-halo right-[-8rem] top-24 bg-blue-400/20 dark:bg-blue-500/10" aria-hidden="true" />
 
       <div className="ui-container relative py-20 md:py-28">
         <div className="mx-auto max-w-3xl text-center animate-fade-up">
