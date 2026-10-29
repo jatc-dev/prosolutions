@@ -97,7 +97,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<RedirectToCentralLogin />} />
-            <Route path="/auth/callback" element={<RedirectToCentralLogin />} />
+            <Route path="/auth/callback" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<RedirectToCentralLogin />} />
             <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
             <Route path="/forgot-password" element={<RedirectToProsolutions path="/forgot-password" />} />
