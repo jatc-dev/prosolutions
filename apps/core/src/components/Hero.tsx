@@ -31,7 +31,7 @@ export function Hero() {
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href={APP_URLS.procvLogin}
+              href={`${APP_URLS.procv.replace(/\\/+$/, "")}/dashboard`}
               target="_blank"
               rel="noreferrer"
               className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 text-base font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 hover:shadow-brand-600/40 active:scale-[0.99] sm:w-auto dark:bg-brand-500 dark:hover:bg-brand-400"
