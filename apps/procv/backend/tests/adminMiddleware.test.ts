@@ -3,20 +3,13 @@ import jwt from 'jsonwebtoken';
 import { config } from '../src/config';
 import { requireAdmin } from '../src/middleware/admin';
 
-const signToken = (
-  claims: Record<string, unknown> = {},
-  options: jwt.SignOptions = {},
-) =>
-  jwt.sign(
-    { sub: 'test-user', ...claims },
-    config.jwtSecret,
-    {
-      issuer: config.identityUrl,
-      audience: 'prosolutions-api',
-      expiresIn: '5m',
-      ...options,
-    },
-  );
+const signToken = (claims: Record<string, unknown> = {}, options: jwt.SignOptions = {}) =>
+  jwt.sign({ sub: 'test-user', ...claims }, config.jwtSecret, {
+    issuer: config.identityUrl,
+    audience: 'prosolutions-api',
+    expiresIn: '5m',
+    ...options,
+  });
 
 function invoke(authorization?: string) {
   const req = {
@@ -67,11 +60,11 @@ describe('requireAdmin authorization boundary', () => {
   });
 
   it('returns 401 when a verified token has no subject', () => {
-    const token = jwt.sign(
-      { role: 'admin', modules: ['PROCV'] },
-      config.jwtSecret,
-      { issuer: config.identityUrl, audience: 'prosolutions-api', expiresIn: '5m' },
-    );
+    const token = jwt.sign({ role: 'admin', modules: ['PROCV'] }, config.jwtSecret, {
+      issuer: config.identityUrl,
+      audience: 'prosolutions-api',
+      expiresIn: '5m',
+    });
     const { status, json, next } = invoke(`Bearer ${token}`);
 
     expect(status).toHaveBeenCalledWith(401);
