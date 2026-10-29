@@ -4,7 +4,7 @@ import { Crown, Sparkles } from "lucide-react";
 
 export function PremiumBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-600 to-cyan-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-brand-600 to-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
       <Crown className="h-3 w-3" aria-hidden="true" />
       Premium
     </span>
@@ -25,7 +25,7 @@ export function UpgradeBanner({ featureKey, className = "" }: UpgradeBannerProps
       className={`flex flex-wrap items-center justify-between gap-3 rounded-card border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-950/30 ${className}`}
     >
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white shadow-sm">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-blue-500 text-white shadow-sm">
           <Sparkles className="h-4 w-4" aria-hidden="true" />
         </span>
         <div>
