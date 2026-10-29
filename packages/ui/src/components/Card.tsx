@@ -26,9 +26,9 @@ export function Card({
   };
 
   const variantStyles: Record<string, string> = {
-    default: "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+    default: "border border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95",
     elevated:
-      "border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-lg",
+      "border border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700/90 dark:bg-slate-900/95 dark:shadow-lg",
     outlined: "border-2 border-slate-300 bg-transparent dark:border-slate-600 dark:bg-transparent",
   };
 
