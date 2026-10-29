@@ -113,7 +113,12 @@
   }
 
   .ui-glass-card {
-    @apply rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/80;
+    border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+    border-radius: var(--ui-radius-lg);
+    background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+    box-shadow: var(--ui-shadow-sm);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 
   .ui-halo {
