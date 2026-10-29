@@ -4,20 +4,20 @@
 
 :root {
   color-scheme: light;
-  --ui-bg: #f8fafc;
+  --ui-bg: #f5f7fc;
   --ui-surface: #ffffff;
-  --ui-surface-soft: #f1f5f9;
-  --ui-border: #cbd5e1;
-  --ui-border-strong: #94a3b8;
-  --ui-text: #0f172a;
-  --ui-text-muted: #475569;
-  --ui-accent: #4338ca;
-  --ui-accent-hover: #3730a3;
-  --ui-accent-soft: #eef2ff;
-  --ui-focus: #4338ca;
-  --ui-success: #047857;
-  --ui-warning: #92400e;
-  --ui-danger: #b91c1c;
+  --ui-surface-soft: #eef2fa;
+  --ui-border: #dce4f0;
+  --ui-border-strong: #aab8ca;
+  --ui-text: #20304a;
+  --ui-text-muted: #52617a;
+  --ui-accent: #3563e9;
+  --ui-accent-hover: #264fc7;
+  --ui-accent-soft: #e5edff;
+  --ui-focus: #1769aa;
+  --ui-success: #087f72;
+  --ui-warning: #975900;
+  --ui-danger: #c7364f;
   --ui-radius-sm: 0.625rem;
   --ui-radius-md: 0.875rem;
   --ui-radius-lg: 1rem;
@@ -33,20 +33,20 @@
 
 .dark {
   color-scheme: dark;
-  --ui-bg: #080d1a;
-  --ui-surface: #111827;
-  --ui-surface-soft: #172033;
-  --ui-border: #64748b;
-  --ui-border-strong: #64748b;
-  --ui-text: #f1f5f9;
-  --ui-text-muted: #c0ccdc;
-  --ui-accent: #a5b4fc;
-  --ui-accent-hover: #c7d2fe;
-  --ui-accent-soft: #252b50;
-  --ui-focus: #a5b4fc;
-  --ui-success: #6ee7b7;
-  --ui-warning: #fcd34d;
-  --ui-danger: #fca5a5;
+  --ui-bg: #111827;
+  --ui-surface: #1b2638;
+  --ui-surface-soft: #25334a;
+  --ui-border: #34445c;
+  --ui-border-strong: #52627a;
+  --ui-text: #f1f5fc;
+  --ui-text-muted: #b2c0d4;
+  --ui-accent: #73a0ff;
+  --ui-accent-hover: #93b5ff;
+  --ui-accent-soft: #2b4165;
+  --ui-focus: #93b5ff;
+  --ui-success: #56d6b0;
+  --ui-warning: #ffc56b;
+  --ui-danger: #ff8293;
   --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
   --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
 }
@@ -128,6 +128,15 @@
 
   .ui-muted {
     color: var(--ui-text-muted);
+  }
+
+  .ui-glass-card {
+    border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+    border-radius: var(--ui-radius-lg);
+    background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+    box-shadow: var(--ui-shadow-sm);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 
   .ui-error-state {

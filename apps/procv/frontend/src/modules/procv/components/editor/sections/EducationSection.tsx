@@ -644,8 +644,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 
                     {education.activities.map((activity, activityIndex) => (
                       <div key={activityIndex} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mt-1">
-                          <span className="text-xs font-medium text-purple-600">{activityIndex + 1}</span>
+                        <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
+                          <span className="text-xs font-medium text-blue-600">{activityIndex + 1}</span>
                         </div>
                         <div className="flex-1">
                           <TextareaField

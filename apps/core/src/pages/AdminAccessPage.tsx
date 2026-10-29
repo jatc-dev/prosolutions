@@ -214,7 +214,7 @@ export function AdminAccessPage() {
                   <p className="mt-1 text-xs text-slate-500">ID: {user.id}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className={`rounded-full px-3 py-1 ${user.role === "admin" ? "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"}`}>{user.role}</span>
+                  <span className={`rounded-full px-3 py-1 ${user.role === "admin" ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-200" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"}`}>{user.role}</span>
                   <span className={`rounded-full px-3 py-1 ${user.isActive ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200" : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200"}`}>{user.isActive ? "Cuenta activa" : "Cuenta desactivada"}</span>
                   <span className={`rounded-full px-3 py-1 ${user.emailVerified ? "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200" : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"}`}>{user.emailVerified ? "Correo verificado" : "Correo pendiente"}</span>
                 </div>
