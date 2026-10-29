@@ -19,7 +19,18 @@ PR #88 restores continuity: Core reads the existing public ProCV endpoint and fa
 5. **Migration:** Treat the ProCV `PlatformSetting` arrays as the source of truth until a verified migration is ready. Migration must be idempotent, preserve IDs/order/Spanish and English copy, and include a reconciliation report. Do not delete the legacy settings or editor until read-after-write, public rendering, rollback, and admin authorization are verified in production. **Important legacy-editor caveat:** `LandingPageManagement.tsx` currently combines English and Spanish entries by array index rather than matching stable IDs, and synthesizes a timestamp ID if both sides lack one. The migration must compare both raw locale arrays independently, reconcile by stable ID where possible, preserve each locale's original order, and report unmatched/duplicate IDs; do not use the editor's combined array as the sole migration input.
 6. **Public API:** Return only explicitly published, public fields. Validate and sanitize localized strings, URLs, order, and visibility. Support locale fallback (requested locale -> English -> safe static fallback). Malformed records must not break the full catalog.
 7. **Access control:** Marketing copy is descriptive only. Feature flags, roles, subscription checks, and entitlements remain in their existing enforcement paths. Public read must not expose internal settings; write/publish operations require server-side authorization.
-8. **Quality gates:** Add automated tests for public retrieval, locale fallback, ordering, visibility, malformed records, unauthorized writes, and route/CTA destinations. Test CORS from each first-party public origin and reject unlisted browser origins.
+8. **Quality gates:** Add automated tests for public retrieval, locale fallback, ordering, visibility, malformed content, unauthorized writes, and route/CTA destinations. Test CORS from each first-party public origin and reject unlisted browser origins.
+
+## Authorization boundary review (2026-10-28)
+
+Repository review confirms a reusable authorization pattern but not yet a complete central catalog backend:
+
+- ProCV's `requireAdmin` middleware verifies the Identity-issued JWT signature with the configured issuer and audience, then requires both the `PROCV` module grant and `role === "admin"`. This is server-side enforcement for ProCV admin routes; the frontend's `AdminRoute` is not a security boundary by itself.
+- ProIdentity's module-access service currently enumerates `PROCV` and `PROJOBS` as available modules and intentionally does not grant future modules simply because a user has the admin role.
+- Core's `/admin/access` page is a client UI for ProIdentity account/module administration. It does not itself provide a server-side catalog persistence API.
+- Therefore, central catalog writes must use a backend that validates Identity-issued claims and an explicit platform-admin permission server-side. Do not treat a frontend role check, a module grant alone, or the marketing catalog as a source of authorization. Decide whether to extend an existing backend or deploy a dedicated catalog API only after comparing ownership, database boundaries, and Render operational cost.
+
+This review is a repository/code inspection only. It does not prove production JWT configuration or live admin behavior; those require authenticated integration tests.
 
 ## Consequences
 
