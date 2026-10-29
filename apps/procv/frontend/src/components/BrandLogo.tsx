@@ -64,14 +64,14 @@ function BrandLogoComponent({
         className={`${current.wrap} relative overflow-hidden border border-slate-200/80 bg-gradient-to-br from-white to-slate-50 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-800`}
       >
         <span
-          className="absolute right-2 top-2 rounded-full bg-cyan-500/70 blur-[1px]"
+          className="absolute right-2 top-2 rounded-full bg-blue-500/70 blur-[1px]"
           style={{ width: dotSize, height: dotSize }}
           aria-hidden="true"
         />
 
         <div className={`leading-tight font-black tracking-tight ${current.title}`}>
           <span className="text-slate-500 dark:text-slate-300">Pro</span>
-          <span className="text-brand-600 dark:text-cyan-300">CV</span>
+          <span className="text-brand-600 dark:text-blue-300">CV</span>
         </div>
 
         {showSubtitle && (
