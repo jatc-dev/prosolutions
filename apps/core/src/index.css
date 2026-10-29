@@ -109,7 +109,7 @@
   }
 
   .ui-gradient-text {
-    @apply bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 bg-clip-text text-transparent dark:from-brand-400 dark:via-cyan-300 dark:to-cyan-200;
+    @apply bg-gradient-to-r from-brand-600 via-brand-500 to-blue-500 bg-clip-text text-transparent dark:from-brand-400 dark:via-blue-300 dark:to-blue-200;
   }
 
   .ui-glass-card {
