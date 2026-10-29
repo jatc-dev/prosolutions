@@ -880,7 +880,7 @@ CSS_STYLES = """
         .search-field-icon { position: absolute; left: 18px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: #64748b; }
         .search-field .search-input { padding-left: 48px; }
         .match-panel { max-width: 78rem; margin: 0 auto 22px; padding: 18px 22px; display: grid; grid-template-columns: minmax(220px,1fr) minmax(260px,1fr); gap: 8px 20px; align-items: center; border: 1px solid #dbeafe; border-radius: 16px; background: #f8fbff; }
-        .match-panel h2 { margin: 0 0 4px; font-size: 1rem; color: #1e3a8a; }
+        .match-panel h2 { margin: 0 0 4px; font-size: 1rem; color: #264fc7; }
         .match-panel p { margin: 0; font-size: .88rem; color: #64748b; }
         .match-input-wrap { display:flex; gap:10px; align-items:center; border:1px solid #aab8ca; border-radius:10px; background:white; padding:0 12px; }
         .match-input-wrap input { width:100%; min-width:0; border:0; outline:none; padding:12px 0; background:transparent; color:#20304a; }
@@ -893,13 +893,13 @@ CSS_STYLES = """
         .job-badges { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-bottom:10px; }
         .job-badges .badge { margin:0; }
         .job-actions .btn-secondary { background:#f5f7fc; color:#264fc7; border:1px solid #c7d2fe; }
-        html.dark .job-actions .btn-secondary { background:#1e1b4b; color:#c7d2fe; border-color:#4338ca; }
+        html.dark .job-actions .btn-secondary { background:#25334a; color:#b2c0d4; border-color:#52627a; }
         .job-quality-note { color:#64748b; font-size:.78rem; }
         .salary-undisclosed { color:#64748b; font-size:.78rem; }
         html.dark .match-panel { background:#111827; border-color:#34445c; }
-        html.dark .match-panel h2 { color:#c7d2fe; }
+        html.dark .match-panel h2 { color:#b2c0d4; }
         html.dark .match-input-wrap,html.dark .match-input-wrap input,html.dark .alert-tools input,html.dark .alert-tools select { background:#111827; color:#dce4f0; border-color:#475569; }
-        html.dark .btn-alert { background:#1e1b4b; color:#c7d2fe; border-color:#4338ca; }
+        html.dark .btn-alert { background:#25334a; color:#b2c0d4; border-color:#52627a; }
         @media(max-width:720px) { .match-panel { grid-template-columns:1fr; margin-left:12px; margin-right:12px; padding:16px; } .small-note { grid-column:auto; } }
         .mobile-menu-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .inline-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -910,7 +910,7 @@ CSS_STYLES = """
         .job-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
         .job-tags .badge { font-size: 0.75rem; }
         .btn {
-            display: inline-block; background: #10b981; color: white;
+            display: inline-block; background: #3563e9; color: white;
             padding: 10px 20px; text-decoration: none; border-radius: 6px;
             font-size: 0.9rem; font-weight: 600;
         }
@@ -1101,16 +1101,16 @@ CSS_STYLES = """
         .job-info { margin-bottom: 10px; color: #64748b; line-height: 1.7; }
         .job-tags { margin: 0 0 18px; }
         .job-tags .badge { margin: 0; border-radius: 999px; background: #f1f5f9; color: #475569; font-weight: 650; }
-        .job-card > .badge { border-radius: 999px; background: #e5edff; color: #4338ca; }
+        .job-card > .badge { border-radius: 999px; background: #e5edff; color: #264fc7; }
         .btn { margin-top: auto; border-radius: 10px; background: #3563e9; padding: 11px 16px; }
-        .btn:hover { background: #4338ca; }
+        .btn:hover { background: #264fc7; }
         .job-actions { display: flex; width: 100%; align-items: center; gap: 10px; margin-top: auto; }
         .job-actions .btn { display: inline-flex; align-items: center; justify-content: center; flex: 1; margin-top: 0; text-decoration: none; }
         .btn-save { min-height: 42px; padding: 10px 14px; border: 1px solid #aab8ca; border-radius: 10px; background: #fff; color: #34445c; font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
-        .btn-save:hover { border-color: #818cf8; background: #e5edff; color: #264fc7; }
+        .btn-save:hover { border-color: #3563e9; background: #e5edff; color: #264fc7; }
         .btn-save:focus-visible { outline: 2px solid #3563e9; outline-offset: 2px; }
         html.dark .btn-save { background: #25334a; border-color: #475569; color: #dce4f0; }
-        html.dark .btn-save:hover { background: #1d347d; border-color: #3563e9; color: #dce8ff; }
+        html.dark .btn-save:hover { background: #2b4165; border-color: #73a0ff; color: #f1f5fc; }
         @media (max-width: 420px) { .job-actions { flex-direction: column; align-items: stretch; } .job-actions .btn, .btn-save { width: 100%; } }
 
         .no-results { max-width: 80rem; margin: 0 auto 32px; padding: 44px 20px; border: 1px dashed #aab8ca; border-radius: 18px; background: #fff; }
