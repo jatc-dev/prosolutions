@@ -121,7 +121,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-900/85",
+        "sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-colors dark:border-slate-700/80 dark:bg-slate-900/90",
         className
       )}
     >
