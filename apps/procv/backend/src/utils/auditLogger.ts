@@ -1,5 +1,4 @@
 import { ProCVTransaction, withAdminContext, withUserContext } from '../dbContext';
-import { logger } from './logger';
 
 interface AuditLogData {
   actorId: string;
@@ -11,30 +10,32 @@ interface AuditLogData {
   userAgent?: string;
 }
 
+/**
+ * Persist an audit event and propagate failures to the caller.
+ *
+ * Audit failures must not be silently converted into success. Callers that
+ * require atomic business + audit writes should pass both operations through
+ * the same transaction context; this helper preserves fail-closed behavior
+ * until those call sites are consolidated.
+ */
 async function writeAuditLog(data: AuditLogData, isAdmin: boolean): Promise<void> {
-  try {
-    const write = async (tx: ProCVTransaction) =>
-      tx.auditLog.create({
-        data: {
-          userId: data.actorId,
-          action: data.action,
-          resourceType: data.resourceType,
-          resourceId: data.resourceId,
-          details: data.details ? JSON.stringify(data.details) : undefined,
-          ipAddress: data.ipAddress,
-          userAgent: data.userAgent,
-        },
-      });
-
-    if (isAdmin) {
-      await withAdminContext(data.actorId, write);
-    } else {
-      await withUserContext(data.actorId, write);
-    }
-  } catch (error) {
-    logger.error('Failed to create audit log', {
-      error: error instanceof Error ? error.message : String(error),
+  const write = async (tx: ProCVTransaction) =>
+    tx.auditLog.create({
+      data: {
+        userId: data.actorId,
+        action: data.action,
+        resourceType: data.resourceType,
+        resourceId: data.resourceId,
+        details: data.details ? JSON.stringify(data.details) : undefined,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+      },
     });
+
+  if (isAdmin) {
+    await withAdminContext(data.actorId, write);
+  } else {
+    await withUserContext(data.actorId, write);
   }
 }
 
