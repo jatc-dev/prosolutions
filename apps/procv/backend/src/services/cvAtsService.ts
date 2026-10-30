@@ -129,14 +129,16 @@ export class CVAtsService {
         throw new Error('CV not found');
       }
 
-      return tx.$queryRaw<Array<{
-        id: string;
-        cvId: string;
-        jobDescription: string;
-        analysis: string;
-        tailoring: string;
-        createdAt: Date;
-      }>>`
+      return tx.$queryRaw<
+        Array<{
+          id: string;
+          cvId: string;
+          jobDescription: string;
+          analysis: string;
+          tailoring: string;
+          createdAt: Date;
+        }>
+      >`
         SELECT "id", "cvId", "jobDescription", "analysis", "tailoring", "createdAt"
         FROM "CVAtsAnalysis"
         WHERE "cvId" = ${cvId}
