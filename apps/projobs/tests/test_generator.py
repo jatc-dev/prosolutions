@@ -190,3 +190,24 @@ assert infer_experience("Junior Developer") == "junior"
 assert infer_employment_terms("Flexible Nebenjob", "no-especificado", "no-especificado") == ("parcial", "parcial")
 assert infer_employment_terms("Freelance Writer", "no-especificado", "no-especificado") == ("no-especificado", "freelance")
 print("  ✓ ProJobs employment/experience inference OK")
+
+
+# Regression tests: modality inferred from title/location when source flags are absent.
+hybrid_job = {
+    "title": "Hybrid Product Manager",
+    "company": "Example",
+    "location": "Berlin",
+    "url": "https://example.com/jobs/hybrid-product-manager",
+}
+hybrid_result = normalize_job(hybrid_job, "Generic")
+assert hybrid_result["modality"] == "híbrido", hybrid_result["modality"]
+
+remote_job = {
+    "title": "Remote Backend Engineer",
+    "company": "Example",
+    "location": "Worldwide",
+    "url": "https://example.com/jobs/remote-backend-engineer",
+}
+remote_result = normalize_job(remote_job, "Generic")
+assert remote_result["modality"] == "remoto", remote_result["modality"]
+print("  ✓ Modality inference from title/location OK")
