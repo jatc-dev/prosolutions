@@ -109,11 +109,11 @@ SECTOR_MAP = {
     "design-ux": "tecnologia",
     "data": "tecnologia",
     "product": "tecnologia",
-    "customer-support": "atencion-cliente",
+    "customer-support": "ventas",
     "finance": "finanzas",
     "hr": "recursos-humanos",
     "operations": "logistica",
-    "admin": "administracion",
+    "admin": "finanzas",
     # Identidades: claves del SECTOR_TAXONOMY mapeadas a sí mismas
     "tecnologia": "tecnologia",
     "finanzas": "finanzas",
