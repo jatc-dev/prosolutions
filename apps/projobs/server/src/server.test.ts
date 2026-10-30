@@ -4,7 +4,36 @@ import jwt from 'jsonwebtoken';
 import { createApp } from './index.js';
 import { config } from './config.js';
 
+// Mock ProIdentity introspection so tests never call the live identity service.
+const originalFetch = globalThis.fetch;
+let introspectionOverride: Record<string, unknown> | null = null;
+async function mockFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = String(input);
+  if (url.includes('/api/auth/introspect')) {
+    if (introspectionOverride) {
+      return new Response(JSON.stringify(introspectionOverride), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const headers = init?.headers as Record<string, string> | undefined;
+    const rawAuth = headers?.authorization || headers?.Authorization || '';
+    const rawToken = rawAuth.replace(/^Bearer\\s+/i, '');
+    const payload = jwt.decode(rawToken) as { sub?: string; modules?: string[]; email?: string } | null;
+    if (!payload?.sub) {
+      return new Response(JSON.stringify({ valid: false, reason: 'token_invalid' }), {
+        status: 401, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({
+      valid: true, userId: payload.sub, email: payload.email,
+      role: 'user', modules: payload.modules || [],
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+  return originalFetch(input, init);
+}
+
 test('ProJobs auth and safe persistence fallback', async (t) => {
+  globalThis.fetch = mockFetch;
   const server = createApp().listen(0, '127.0.0.1');
   await new Promise<void>((resolve) => server.once('listening', resolve));
   const address = server.address();
@@ -12,7 +41,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
 
   const base = `http://127.0.0.1:${address.port}`;
   const token = (modules: string[], email?: string) =>
-    jwt.sign({ modules, email }, config.jwtSecret, {
+    jwt.sign({ modules, email, jti: 'synthetic-test-jti' }, config.jwtSecret, {
       subject: 'synthetic-test-user',
       issuer: config.issuer,
       audience: config.audience,
@@ -21,6 +50,7 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
   t.after(() => new Promise<void>((resolve, reject) =>
     server.close((error) => error ? reject(error) : resolve()),
   ));
+  t.after(() => { globalThis.fetch = originalFetch; });
 
   await t.test('health endpoint', async () => {
     const response = await fetch(`${base}/health`);
@@ -43,6 +73,19 @@ test('ProJobs auth and safe persistence fallback', async (t) => {
       headers: { Authorization: 'Bearer invalid' },
     })).status, 401),
   );
+
+  await t.test('revoked ProIdentity session is rejected', async () => {
+    introspectionOverride = { valid: false, reason: 'session_revoked' };
+    try {
+      const response = await fetch(`${base}/api/saved-jobs`, {
+        headers: { Authorization: `Bearer ${token(['PROJOBS'])}` },
+      });
+      assert.equal(response.status, 401);
+      assert.equal((await response.json()).reason, 'session_revoked');
+    } finally {
+      introspectionOverride = null;
+    }
+  });
 
   await t.test('missing PROJOBS entitlement is rejected', async () =>
     assert.equal((await fetch(`${base}/api/saved-jobs`, {
