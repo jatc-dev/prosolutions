@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
-import prisma from '../prismaClient';
+import { withAdminContext } from '../dbContext';
 import { logger } from '../utils/logger';
 import { AuditLogger } from '../utils/auditLogger';
 
@@ -11,14 +11,17 @@ export async function getAuditLogs(req: Request, res: Response) {
     const limit = parseInt(req.query.limit as string) || 50;
     const skip = (page - 1) * limit;
 
-    const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.auditLog.count(),
-    ]);
+    const adminUser = (req as any).user;
+    const [logs, total] = await withAdminContext(adminUser.id, tx =>
+      Promise.all([
+        tx.auditLog.findMany({
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        tx.auditLog.count(),
+      ]),
+    );
 
     return res.json({
       logs,
@@ -40,9 +43,10 @@ export async function getAuditLogs(req: Request, res: Response) {
 // Platform Settings Management
 export async function getPlatformSettings(req: Request, res: Response) {
   try {
-    const settings = await prisma.platformSetting.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const adminUser = (req as any).user;
+    const settings = await withAdminContext(adminUser.id, tx =>
+      tx.platformSetting.findMany({ orderBy: { createdAt: 'desc' } }),
+    );
 
     return res.json(settings);
   } catch (error) {
@@ -63,20 +67,22 @@ export async function updatePlatformSetting(req: Request, res: Response) {
       return res.status(400).json({ message: 'Value is required' });
     }
 
-    const setting = await prisma.platformSetting.upsert({
-      where: { key },
-      update: {
-        value: String(value),
-        updatedBy: adminUser.id,
-      },
-      create: {
-        key,
-        value: String(value),
-        type: 'string',
-        category: 'general',
-        updatedBy: adminUser.id,
-      },
-    });
+    const setting = await withAdminContext(adminUser.id, tx =>
+      tx.platformSetting.upsert({
+        where: { key },
+        update: {
+          value: String(value),
+          updatedBy: adminUser.id,
+        },
+        create: {
+          key,
+          value: String(value),
+          type: 'string',
+          category: 'general',
+          updatedBy: adminUser.id,
+        },
+      }),
+    );
 
     // Log the action
     await AuditLogger.logAdminAction(
@@ -158,45 +164,45 @@ export async function bulkUpdatePlatformSettings(req: Request, res: Response) {
       return res.status(400).json({ message: 'Settings must be an array' });
     }
 
-    const results = [];
-
-    for (const setting of settings) {
-      const {
-        key,
-        value,
-        category = 'general',
-        type = 'string',
-        description,
-        isPublic = false,
-      } = setting;
-
-      if (!key || value === undefined) {
-        continue; // Skip invalid entries
-      }
-
-      const updatedSetting = await prisma.platformSetting.upsert({
-        where: { key },
-        update: {
-          value: String(value),
-          type,
-          category,
-          description,
-          isPublic,
-          updatedBy: adminUser.id,
-        },
-        create: {
+    const results = await withAdminContext(adminUser.id, async tx => {
+      const updated: unknown[] = [];
+      for (const setting of settings) {
+        const {
           key,
-          value: String(value),
-          type,
-          category,
+          value,
+          category = 'general',
+          type = 'string',
           description,
-          isPublic,
-          updatedBy: adminUser.id,
-        },
-      });
+          isPublic = false,
+        } = setting;
 
-      results.push(updatedSetting);
-    }
+        if (!key || value === undefined) {
+          continue;
+        }
+
+        updated.push(await tx.platformSetting.upsert({
+          where: { key },
+          update: {
+            value: String(value),
+            type,
+            category,
+            description,
+            isPublic,
+            updatedBy: adminUser.id,
+          },
+          create: {
+            key,
+            value: String(value),
+            type,
+            category,
+            description,
+            isPublic,
+            updatedBy: adminUser.id,
+          },
+        }));
+      }
+      return updated;
+    });
 
     // Log the bulk update action
     await AuditLogger.logAdminAction(
@@ -223,17 +229,18 @@ export async function deletePlatformSetting(req: Request, res: Response) {
     const { key } = req.params;
     const adminUser = (req as any).user;
 
-    const setting = await prisma.platformSetting.findUnique({
-      where: { key },
+    const setting = await withAdminContext(adminUser.id, async tx => {
+      const existing = await tx.platformSetting.findUnique({ where: { key } });
+      if (!existing) {
+        return null;
+      }
+      await tx.platformSetting.delete({ where: { key } });
+      return existing;
     });
 
     if (!setting) {
       return res.status(404).json({ message: 'Setting not found' });
     }
-
-    await prisma.platformSetting.delete({
-      where: { key },
-    });
 
     // Log the action
     await AuditLogger.logAdminAction(
@@ -255,15 +262,18 @@ export async function deletePlatformSetting(req: Request, res: Response) {
   }
 }
 
-export async function getSystemStats(_req: Request, res: Response) {
+export async function getSystemStats(req: Request, res: Response) {
   try {
-    const [ownerRows, totalCVs] = await Promise.all([
-      prisma.$queryRaw<Array<{ count: number }>>`
-        SELECT COUNT(DISTINCT "userId")::int AS count
-        FROM "CV"
-      `,
-      prisma.cV.count(),
-    ]);
+    const adminUser = (req as any).user;
+    const [ownerRows, totalCVs] = await withAdminContext(adminUser.id, tx =>
+      Promise.all([
+        tx.$queryRaw<Array<{ count: number }>>`
+          SELECT COUNT(DISTINCT "userId")::int AS count
+          FROM "CV"
+        `,
+        tx.cV.count(),
+      ]),
+    );
 
     return res.json({
       stats: {
@@ -288,10 +298,13 @@ export async function getChartData(req: Request, res: Response) {
     startDate.setDate(startDate.getDate() - (days - 1));
     startDate.setHours(0, 0, 0, 0);
 
-    const cvs = await prisma.cV.findMany({
-      where: { createdAt: { gte: startDate, lte: endDate } },
-      select: { userId: true, createdAt: true },
-    });
+    const adminUser = (req as any).user;
+    const cvs = await withAdminContext(adminUser.id, tx =>
+      tx.cV.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { userId: true, createdAt: true },
+      }),
+    );
 
     const cvCounts: Record<string, number> = {};
     const ownersByDate: Record<string, Set<string>> = {};
