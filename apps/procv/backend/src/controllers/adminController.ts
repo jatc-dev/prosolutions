@@ -180,26 +180,28 @@ export async function bulkUpdatePlatformSettings(req: Request, res: Response) {
           continue;
         }
 
-        updated.push(await tx.platformSetting.upsert({
-          where: { key },
-          update: {
-            value: String(value),
-            type,
-            category,
-            description,
-            isPublic,
-            updatedBy: adminUser.id,
-          },
-          create: {
-            key,
-            value: String(value),
-            type,
-            category,
-            description,
-            isPublic,
-            updatedBy: adminUser.id,
-          },
-        }));
+        updated.push(
+          await tx.platformSetting.upsert({
+            where: { key },
+            update: {
+              value: String(value),
+              type,
+              category,
+              description,
+              isPublic,
+              updatedBy: adminUser.id,
+            },
+            create: {
+              key,
+              value: String(value),
+              type,
+              category,
+              description,
+              isPublic,
+              updatedBy: adminUser.id,
+            },
+          }),
+        );
       }
       return updated;
     });
