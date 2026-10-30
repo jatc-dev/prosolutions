@@ -7,9 +7,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
 TO procv_app;
 
--- Render connects as procv_runtime; the backend assumes procv_app inside each
--- transaction. CI provisions a NOLOGIN procv_runtime role to validate this grant.
-GRANT procv_app TO procv_runtime;
+-- Both historical ProCV login roles may be configured by Render. Grant the
+-- restricted policy role to each so either DATABASE_URL role can SET ROLE.
+-- The CI fixture creates both roles; production already contains both.
+GRANT procv_app TO procv_login, procv_runtime;
 
 ALTER TABLE "CV" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "CV" FORCE ROW LEVEL SECURITY;
