@@ -13,7 +13,7 @@ import { monitorRequests, healthCheck } from './utils/monitoring';
 import { config } from './config';
 import cvRoutes from './routes/cv';
 import adminRoutes from './routes/admin';
-import prisma from './prismaClient';
+import { withPublicContext } from './dbContext';
 import { logger } from './utils/logger';
 
 function normalizePublicLang(input?: string): 'en' | 'es' {
@@ -134,9 +134,9 @@ export function createApp() {
       const featuresKey = `landing_features_${lang}`;
 
       // Get saved features from settings
-      const setting = await prisma.platformSetting.findUnique({
-        where: { key: featuresKey },
-      });
+      const setting = await withPublicContext(tx =>
+        tx.platformSetting.findFirst({ where: { key: featuresKey, isPublic: true } }),
+      );
 
       if (setting && setting.isPublic) {
         const parsed = JSON.parse(setting.value);

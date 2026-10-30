@@ -107,7 +107,8 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
   try {
     const payload = jwt.verify(token, config.jwtSecret, {
       issuer: config.issuer,
-      audience: 'prosolutions-api',
+      audience: config.identityAudience,
+      algorithms: ['HS256'],
     }) as {
       sub: string;
       email?: string;
@@ -116,11 +117,11 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
       jti?: string;
     };
 
-    if (!payload.sub) {
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
       return res.status(401).json({ message: 'Invalid Identity subject' });
     }
 
-    if (!payload.jti) {
+    if (typeof payload.jti !== 'string' || !payload.jti.trim()) {
       return res.status(401).json({ message: 'Session token missing jti' });
     }
 
