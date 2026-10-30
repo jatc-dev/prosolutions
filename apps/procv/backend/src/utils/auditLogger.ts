@@ -1,4 +1,4 @@
-import prisma from '../prismaClient';
+import { withAdminContext } from '../dbContext';
 import { logger } from './logger';
 
 interface AuditLogData {
@@ -15,17 +15,19 @@ interface AuditLogData {
 export class AuditLogger {
   static async log(data: AuditLogData): Promise<void> {
     try {
-      await prisma.auditLog.create({
-        data: {
-          userId: data.actorId,
-          action: data.action,
-          resourceType: data.resourceType,
-          resourceId: data.resourceId,
-          details: data.details ? JSON.stringify(data.details) : undefined,
-          ipAddress: data.ipAddress,
-          userAgent: data.userAgent,
-        },
-      });
+      await withAdminContext(data.actorId, tx =>
+        tx.auditLog.create({
+          data: {
+            userId: data.actorId,
+            action: data.action,
+            resourceType: data.resourceType,
+            resourceId: data.resourceId,
+            details: data.details ? JSON.stringify(data.details) : undefined,
+            ipAddress: data.ipAddress,
+            userAgent: data.userAgent,
+          },
+        }),
+      );
     } catch (error) {
       logger.error('Failed to create audit log', {
         error: error instanceof Error ? error.message : String(error),
