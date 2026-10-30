@@ -1,4 +1,4 @@
-import { withAdminContext, withUserContext } from '../dbContext';
+import { ProCVTransaction, withAdminContext, withUserContext } from '../dbContext';
 import { logger } from './logger';
 
 interface AuditLogData {
@@ -13,7 +13,7 @@ interface AuditLogData {
 
 async function writeAuditLog(data: AuditLogData, isAdmin: boolean): Promise<void> {
   try {
-    const write = (tx: Parameters<Parameters<typeof withUserContext>[1]>[0]) =>
+    const write = async (tx: ProCVTransaction) =>
       tx.auditLog.create({
         data: {
           userId: data.actorId,
