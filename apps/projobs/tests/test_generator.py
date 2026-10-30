@@ -211,3 +211,14 @@ remote_job = {
 remote_result = normalize_job(remote_job, "Generic")
 assert remote_result["modality"] == "remoto", remote_result["modality"]
 print("  ✓ Modality inference from title/location OK")
+
+
+onsite_job = {
+    "title": "On-site Data Analyst",
+    "company": "Example",
+    "location": "Berlin",
+    "url": "https://example.com/jobs/onsite-data-analyst",
+}
+onsite_result = normalize_job(onsite_job, "Generic")
+assert onsite_result["modality"] == "presencial", onsite_result["modality"]
+print("  ✓ On-site modality inference from title/location OK")
