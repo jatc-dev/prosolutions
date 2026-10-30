@@ -1,125 +1,63 @@
 import type { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { config } from '../src/config';
+import { authMiddleware } from '../src/middleware/auth';
 import { requireAdmin } from '../src/middleware/admin';
 
-const signToken = (claims: Record<string, unknown> = {}, options: jwt.SignOptions = {}) =>
-  jwt.sign({ sub: 'test-user', ...claims }, config.jwtSecret, {
-    issuer: config.identityUrl,
-    audience: 'prosolutions-api',
-    expiresIn: '5m',
-    ...options,
-  });
+jest.mock('../src/middleware/auth', () => ({
+  authMiddleware: jest.fn(),
+}));
 
-function invoke(authorization?: string) {
-  const req = {
-    headers: authorization ? { authorization } : {},
-  } as Request;
+const mockedAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;
+
+function invoke(role: string | null) {
+  const req = { headers: { authorization: 'Bearer test-token' } } as unknown as Request;
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
   const res = { status, json } as unknown as Response;
   const next = jest.fn() as NextFunction;
 
-  const result = requireAdmin(req, res, next);
-  return { req, status, json, next, result };
+  mockedAuthMiddleware.mockImplementation((_request, _response, authNext) => {
+    if (role !== null) {
+      const authenticated = _request as any;
+      authenticated.userId = 'identity-admin-1';
+      authenticated.email = 'admin@example.test';
+      authenticated.role = role;
+      authNext();
+    }
+    return Promise.resolve();
+  });
+
+  requireAdmin(req, res, next);
+  return { req, status, json, next };
 }
 
 describe('requireAdmin authorization boundary', () => {
-  it('returns 401 when the bearer token is missing', () => {
-    const { status, json, next } = invoke();
+  beforeEach(() => jest.clearAllMocks());
 
-    expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: 'Authorization header missing' });
-    expect(next).not.toHaveBeenCalled();
-  });
+  it('delegates JWT and session validation to the shared Identity middleware', () => {
+    const { req, status, next } = invoke('admin');
 
-  it('returns 401 for an invalid token', () => {
-    const { status, json, next } = invoke('Bearer not-a-valid-token');
-
-    expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('returns 401 for a token with the wrong issuer or audience', () => {
-    const token = signToken({}, { issuer: 'https://untrusted.example', audience: 'other-api' });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
-    expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('returns 401 for an expired token', () => {
-    const token = signToken({}, { expiresIn: -1 });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
-    expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('returns 401 when a verified token has no subject', () => {
-    const token = jwt.sign({ role: 'admin', modules: ['PROCV'] }, config.jwtSecret, {
-      issuer: config.identityUrl,
-      audience: 'prosolutions-api',
-      expiresIn: '5m',
+    expect(mockedAuthMiddleware).toHaveBeenCalledTimes(1);
+    expect(status).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+    expect((req as any).user).toEqual({
+      id: 'identity-admin-1',
+      email: 'admin@example.test',
+      role: 'admin',
     });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
-    expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: 'Invalid identity subject' });
-    expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 403 when the token does not grant ProCV module access', () => {
-    const token = signToken({ role: 'admin', modules: ['PROJOBS'] });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
-    expect(status).toHaveBeenCalledWith(403);
-    expect(json).toHaveBeenCalledWith({ message: 'ProCV module access required' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('returns 403 when the token has ProCV access but is not an admin', () => {
-    const token = signToken({ role: 'user', modules: ['PROCV'] });
-    const { status, json, next } = invoke(`Bearer ${token}`);
+  it('rejects a valid ProCV session without the admin role', () => {
+    const { status, json, next } = invoke('user');
 
     expect(status).toHaveBeenCalledWith(403);
     expect(json).toHaveBeenCalledWith({ message: 'Admin access required' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('continues only when the signed token has a subject, admin role, and ProCV grant', () => {
-    const token = signToken({
-      sub: 'platform-admin-test',
-      email: 'admin@example.test',
-      role: 'admin',
-      modules: ['PROCV'],
-    });
-    const { req, next, status } = invoke(`Bearer ${token}`);
+  it('does not continue when shared authentication rejects the request', () => {
+    const { status, next } = invoke(null);
 
-    expect(next).toHaveBeenCalledTimes(1);
     expect(status).not.toHaveBeenCalled();
-    expect((req as any).user).toEqual({
-      id: 'platform-admin-test',
-      email: 'admin@example.test',
-      role: 'admin',
-    });
-  });
-
-  it('does not treat client-supplied role headers as authorization', () => {
-    const req = {
-      headers: { 'x-role': 'admin', 'x-is-admin': 'true' },
-    } as unknown as Request;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const res = { status, json } as unknown as Response;
-    const next = jest.fn() as NextFunction;
-
-    requireAdmin(req, res, next);
-
-    expect(status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
 });
