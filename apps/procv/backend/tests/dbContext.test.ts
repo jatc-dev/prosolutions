@@ -71,8 +71,8 @@ describe('ProCV transaction database context', () => {
       .fn()
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ current_role: 'procv_login' }]);
-    mockedPrisma.$transaction.mockImplementation(async (callback: (client: { $queryRaw: typeof queryRaw }) => unknown) =>
-      callback({ $queryRaw }),
+    mockedPrisma.$transaction.mockImplementation(
+      async (callback: (client: { $queryRaw: typeof queryRaw }) => unknown) => callback({ $queryRaw }),
     );
 
     await expect(withUserContext('identity-user-a', async () => 'nope')).rejects.toThrow(
