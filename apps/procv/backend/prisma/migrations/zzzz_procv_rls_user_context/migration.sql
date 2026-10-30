@@ -1,21 +1,7 @@
 -- Enforce user-scoped access in the database, not only in Express filters.
--- Every backend data operation must run through dbContext.ts, which sets
--- procv.user_id / procv.is_admin transaction-locally and assumes procv_app.
+-- The restricted procv_app role is provisioned by the deployment/CI environment;
+-- the Render login receives membership separately during the production rollout.
 BEGIN;
-
--- Fresh CI databases do not provision Render's runtime login role. Create the
--- non-login policy role everywhere, but grant it to the Render login only when
--- that login exists. Production already has procv_runtime.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_app') THEN
-    CREATE ROLE procv_app NOLOGIN;
-  END IF;
-
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_runtime') THEN
-    GRANT procv_app TO procv_runtime;
-  END IF;
-END $$;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
@@ -36,56 +22,36 @@ DROP POLICY IF EXISTS "CV_app_access" ON "CV";
 DROP POLICY IF EXISTS "CV_user_isolation" ON "CV";
 CREATE POLICY "CV_user_isolation" ON "CV"
   FOR ALL TO procv_app
-  USING (
-    current_setting('procv.is_admin', true) = 'true'
-    OR "userId" = NULLIF(current_setting('procv.user_id', true), '')
-  )
-  WITH CHECK (
-    current_setting('procv.is_admin', true) = 'true'
-    OR "userId" = NULLIF(current_setting('procv.user_id', true), '')
-  );
+  USING (current_setting('procv.is_admin', true) = 'true'
+    OR "userId" = NULLIF(current_setting('procv.user_id', true), ''))
+  WITH CHECK (current_setting('procv.is_admin', true) = 'true'
+    OR "userId" = NULLIF(current_setting('procv.user_id', true), ''));
 
 DROP POLICY IF EXISTS "CVVersion_app_access" ON "CVVersion";
 DROP POLICY IF EXISTS "CVVersion_user_isolation" ON "CVVersion";
 CREATE POLICY "CVVersion_user_isolation" ON "CVVersion"
   FOR ALL TO procv_app
-  USING (
-    current_setting('procv.is_admin', true) = 'true'
-    OR EXISTS (
-      SELECT 1 FROM "CV" cv
-      WHERE cv."id" = "CVVersion"."cvId"
-        AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
-    )
-  )
-  WITH CHECK (
-    current_setting('procv.is_admin', true) = 'true'
-    OR EXISTS (
-      SELECT 1 FROM "CV" cv
-      WHERE cv."id" = "CVVersion"."cvId"
-        AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
-    )
-  );
+  USING (current_setting('procv.is_admin', true) = 'true' OR EXISTS (
+    SELECT 1 FROM "CV" cv WHERE cv."id" = "CVVersion"."cvId"
+      AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
+  ))
+  WITH CHECK (current_setting('procv.is_admin', true) = 'true' OR EXISTS (
+    SELECT 1 FROM "CV" cv WHERE cv."id" = "CVVersion"."cvId"
+      AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
+  ));
 
 DROP POLICY IF EXISTS "CVAtsAnalysis_app_access" ON "CVAtsAnalysis";
 DROP POLICY IF EXISTS "CVAtsAnalysis_user_isolation" ON "CVAtsAnalysis";
 CREATE POLICY "CVAtsAnalysis_user_isolation" ON "CVAtsAnalysis"
   FOR ALL TO procv_app
-  USING (
-    current_setting('procv.is_admin', true) = 'true'
-    OR EXISTS (
-      SELECT 1 FROM "CV" cv
-      WHERE cv."id" = "CVAtsAnalysis"."cvId"
-        AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
-    )
-  )
-  WITH CHECK (
-    current_setting('procv.is_admin', true) = 'true'
-    OR EXISTS (
-      SELECT 1 FROM "CV" cv
-      WHERE cv."id" = "CVAtsAnalysis"."cvId"
-        AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
-    )
-  );
+  USING (current_setting('procv.is_admin', true) = 'true' OR EXISTS (
+    SELECT 1 FROM "CV" cv WHERE cv."id" = "CVAtsAnalysis"."cvId"
+      AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
+  ))
+  WITH CHECK (current_setting('procv.is_admin', true) = 'true' OR EXISTS (
+    SELECT 1 FROM "CV" cv WHERE cv."id" = "CVAtsAnalysis"."cvId"
+      AND cv."userId" = NULLIF(current_setting('procv.user_id', true), '')
+  ));
 
 DROP POLICY IF EXISTS "AuditLog_app_access" ON "AuditLog";
 DROP POLICY IF EXISTS "AuditLog_admin_access" ON "AuditLog";
@@ -106,8 +72,7 @@ DROP POLICY IF EXISTS "PlatformSetting_app_access" ON "PlatformSetting";
 DROP POLICY IF EXISTS "PlatformSetting_public_read" ON "PlatformSetting";
 DROP POLICY IF EXISTS "PlatformSetting_admin_access" ON "PlatformSetting";
 CREATE POLICY "PlatformSetting_public_read" ON "PlatformSetting"
-  FOR SELECT TO procv_app
-  USING ("isPublic" = true);
+  FOR SELECT TO procv_app USING ("isPublic" = true);
 CREATE POLICY "PlatformSetting_admin_access" ON "PlatformSetting"
   FOR ALL TO procv_app
   USING (current_setting('procv.is_admin', true) = 'true')

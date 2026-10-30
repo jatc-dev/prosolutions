@@ -60,10 +60,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
 
-      - name: Create isolated module databases
+      - name: Create isolated module databases and restricted ProCV role
         run: |
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE proidentity'
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE procv'
+          psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_app NOLOGIN'
 
       - name: Apply ProIdentity Prisma migration history to an empty database
         env:
