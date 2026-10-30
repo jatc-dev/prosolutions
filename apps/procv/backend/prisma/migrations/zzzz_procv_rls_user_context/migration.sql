@@ -3,6 +3,19 @@
 -- procv.user_id / procv.is_admin transaction-locally and assumes procv_app.
 BEGIN;
 
+-- CI databases start empty, while production already has this restricted role.
+-- Create it only when absent; existing production role attributes are untouched.
+DO $
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_app') THEN
+    CREATE ROLE procv_app NOLOGIN;
+  END IF;
+END $;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
+TO procv_app;
+
 ALTER TABLE "CV" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "CV" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "CVVersion" ENABLE ROW LEVEL SECURITY;
