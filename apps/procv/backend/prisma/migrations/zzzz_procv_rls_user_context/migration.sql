@@ -3,17 +3,19 @@
 -- procv.user_id / procv.is_admin transaction-locally and assumes procv_app.
 BEGIN;
 
--- CI databases start empty, while production already has this restricted role.
--- Create it only when absent; existing production role attributes are untouched.
+-- Fresh CI databases do not provision Render's runtime login role. Create the
+-- non-login policy role everywhere, but grant it to the Render login only when
+-- that login exists. Production already has procv_runtime.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_app') THEN
     CREATE ROLE procv_app NOLOGIN;
   END IF;
-END $$;
 
--- The Render connection logs in as procv_runtime; dbContext assumes procv_app.
-GRANT procv_app TO procv_runtime;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_runtime') THEN
+    GRANT procv_app TO procv_runtime;
+  END IF;
+END $$;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
@@ -88,6 +90,7 @@ CREATE POLICY "CVAtsAnalysis_user_isolation" ON "CVAtsAnalysis"
 DROP POLICY IF EXISTS "AuditLog_app_access" ON "AuditLog";
 DROP POLICY IF EXISTS "AuditLog_admin_access" ON "AuditLog";
 DROP POLICY IF EXISTS "AuditLog_user_read_insert" ON "AuditLog";
+DROP POLICY IF EXISTS "AuditLog_user_insert" ON "AuditLog";
 CREATE POLICY "AuditLog_admin_access" ON "AuditLog"
   FOR ALL TO procv_app
   USING (current_setting('procv.is_admin', true) = 'true')

@@ -1,4 +1,4 @@
-import { withAdminContext } from '../dbContext';
+import { withUserContext } from '../dbContext';
 import { logger } from './logger';
 
 interface AuditLogData {
@@ -15,7 +15,7 @@ interface AuditLogData {
 export class AuditLogger {
   static async log(data: AuditLogData): Promise<void> {
     try {
-      await withAdminContext(data.actorId, tx =>
+      await withUserContext(data.actorId, tx =>
         tx.auditLog.create({
           data: {
             userId: data.actorId,
