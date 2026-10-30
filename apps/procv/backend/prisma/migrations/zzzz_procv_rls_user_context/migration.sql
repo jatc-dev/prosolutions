@@ -5,12 +5,12 @@ BEGIN;
 
 -- CI databases start empty, while production already has this restricted role.
 -- Create it only when absent; existing production role attributes are untouched.
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_app') THEN
     CREATE ROLE procv_app NOLOGIN;
   END IF;
-END $;
+END $$;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
