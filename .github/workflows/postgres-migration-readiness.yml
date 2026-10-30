@@ -65,6 +65,7 @@ jobs:
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE proidentity'
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE procv'
           psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_app NOLOGIN'
+          psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_login NOLOGIN'
           psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_runtime NOLOGIN'
 
       - name: Apply ProIdentity Prisma migration history to an empty database
