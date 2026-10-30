@@ -12,6 +12,9 @@ BEGIN
   END IF;
 END $$;
 
+-- The Render connection logs in as procv_runtime; dbContext assumes procv_app.
+GRANT procv_app TO procv_runtime;
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "CV", "CVVersion", "CVAtsAnalysis", "AuditLog", "PlatformSetting"
 TO procv_app;
