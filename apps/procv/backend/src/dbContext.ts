@@ -38,10 +38,7 @@ export function withUserContext<T>(userId: string, operation: ContextOperation<T
   return withContext(userId, false, operation);
 }
 
-export function withAdminContext<T>(
-  userId: string,
-  operation: ContextOperation<T>,
-): Promise<T> {
+export function withAdminContext<T>(userId: string, operation: ContextOperation<T>): Promise<T> {
   return withContext(userId, true, operation);
 }
 
