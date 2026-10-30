@@ -491,11 +491,11 @@ def normalize_job(job: dict, source: str) -> dict | None:
         experience = infer_experience(title, job.get("description", ""))
     if modality == "no-especificado":
         modality_text = (title + " " + location).lower()
-        if re.search(r"\b(hybrid|híbrido|hibrido)\\b", modality_text):
+        if re.search(r"\b(hybrid|híbrido|hibrido)\b", modality_text):
             modality = "híbrido"
-        elif re.search(r"\b(remote|remoto|homeoffice|home office|work from home|teletrabajo)\\b", modality_text):
+        elif re.search(r"\b(remote|remoto|homeoffice|home office|work from home|teletrabajo)\b", modality_text):
             modality = "remoto"
-        elif re.search(r"\b(on-site|onsite|presencial|vor ort)\\b", modality_text):
+        elif re.search(r"\b(on-site|onsite|presencial|vor ort)\b", modality_text):
             modality = "presencial"
     salary = normalize_salary(job.get("salary"))
 
