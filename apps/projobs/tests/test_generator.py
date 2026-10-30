@@ -186,6 +186,8 @@ assert normalize_sector(["software-development"]) == "tecnologia"
 assert normalize_sector(None, ["marketing"]) == "ventas"
 assert normalize_sector("administration") == "finanzas"
 assert normalize_sector("customer-service") == "ventas"
+assert normalize_sector("customer-support") == "ventas"
+assert normalize_sector("admin") == "finanzas"
 assert normalize_sector("legal") == "recursos-humanos"
 print("  ✓ ProJobs catalog regression cases OK")
 assert infer_experience("Senior Engineer") == "senior"
