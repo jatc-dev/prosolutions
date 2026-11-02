@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import prisma from '../prismaClient';
+import { signProCVDatabaseContextToken } from '../services/tokenService';
 
 export interface IntrospectResponse {
   valid: boolean;
@@ -9,6 +10,7 @@ export interface IntrospectResponse {
   email?: string;
   role?: string;
   modules?: string[];
+  dbContextToken?: string;
   reason?: string;
 }
 
@@ -101,6 +103,12 @@ export async function introspectToken(req: Request, res: Response) {
       email: user.email,
       role: user.role,
       modules: user.moduleAccess.map(access => access.module),
+      dbContextToken: signProCVDatabaseContextToken({
+        sub: user.id,
+        jti: session.jti,
+        role: user.role,
+        modules: user.moduleAccess.map(access => access.module),
+      }),
     } as IntrospectResponse);
   } catch {
     return res.status(401).json({ valid: false, reason: 'token_invalid' });
