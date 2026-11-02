@@ -1,4 +1,4 @@
-import prisma from '../prismaClient';
+import { withUserContext } from '../dbContext';
 import { ATSAnalysisResult, ATSService, ATSTailoringResult } from './atsService';
 import { randomUUID } from 'crypto';
 
@@ -85,7 +85,7 @@ export class CVAtsService {
     data: unknown,
     jobDescription: string,
   ) {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
+    const cv = await withUserContext(userId, tx => tx.cV.findFirst({ where: { id: cvId, userId } }));
     if (!cv) {
       throw new Error('CV not found');
     }
@@ -97,7 +97,7 @@ export class CVAtsService {
 
     const generatedId = randomUUID();
 
-    const rows = (await (prisma.$queryRawUnsafe as any)(
+    const rows = (await withUserContext(userId, tx => (tx.$queryRawUnsafe as any)(
       `
       INSERT INTO "CVAtsAnalysis" ("id", "cvId", "jobDescription", "analysis", "tailoring", "cvSnapshot", "createdAt")
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -109,7 +109,7 @@ export class CVAtsService {
       JSON.stringify(analysis),
       JSON.stringify(tailoring),
       JSON.stringify(sourceData || {}),
-    )) as Array<{ id: string; createdAt: Date }>;
+    ))) as Array<{ id: string; createdAt: Date }>;
     const saved = rows[0];
 
     if (!saved) {
@@ -129,12 +129,12 @@ export class CVAtsService {
     userId: string,
     limit: number = 12,
   ): Promise<CVAtsHistoryResponse> {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } });
+    const cv = await withUserContext(userId, tx => tx.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } }));
     if (!cv) {
       throw new Error('CV not found');
     }
 
-    const rows = (await (prisma.$queryRawUnsafe as any)(
+    const rows = (await withUserContext(userId, tx => (tx.$queryRawUnsafe as any)(
       `
       SELECT "id", "cvId", "jobDescription", "analysis", "tailoring", "createdAt"
       FROM "CVAtsAnalysis"
@@ -144,7 +144,7 @@ export class CVAtsService {
       `,
       cvId,
       Math.max(1, Math.min(limit, 30)),
-    )) as Array<{
+    ))) as Array<{
       id: string;
       cvId: string;
       jobDescription: string;
