@@ -27,6 +27,7 @@ END $preflight$;
 -- separately through a secret-safe operator channel; this migration never
 -- inserts or exposes signing material.
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pgjwt WITH SCHEMA public;
 CREATE SCHEMA IF NOT EXISTS procv_private;
 REVOKE ALL ON SCHEMA procv_private FROM PUBLIC;
