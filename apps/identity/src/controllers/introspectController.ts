@@ -12,15 +12,19 @@ export interface IntrospectResponse {
   reason?: string;
 }
 
-export async function introspectToken(req: Request, res: Response) {
-  let token: string | undefined;
+const SESSION_IDLE_TIMEOUT =
+  (process.env.SESSION_IDLE_TIMEOUT_MINUTES
+    ? Number(process.env.SESSION_IDLE_TIMEOUT_MINUTES)
+    : 30) * 60 * 1000;
 
+export async function introspectToken(req: Request, res: Response) {
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.replace('Bearer ', '');
-  } else if (req.body?.token) {
-    token = req.body.token as string;
-  }
+  const token =
+    authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : typeof req.body?.token === 'string'
+        ? req.body.token
+        : undefined;
 
   if (!token) {
     return res.status(400).json({ valid: false, reason: 'token_missing' });
@@ -30,72 +34,60 @@ export async function introspectToken(req: Request, res: Response) {
     const payload = jwt.verify(token, config.jwtSecret, {
       issuer: config.issuer,
       audience: config.audience,
-    }) as {
-      sub: string;
-      email?: string;
-      role?: string;
-      modules?: string[];
-      jti?: string;
-      exp?: number;
-    };
+    }) as { sub: string; jti?: string };
 
     if (!payload.sub || !payload.jti) {
-      return res.status(401).json({
-        valid: false,
-        reason: 'token_invalid',
-      } as IntrospectResponse);
+      return res.status(401).json({ valid: false, reason: 'token_invalid' });
     }
 
     const session = await prisma.session.findUnique({
       where: { jti: payload.jti },
     });
 
-    if (!session) {
-      return res.status(401).json({
-        valid: false,
-        reason: 'session_not_found',
-      } as IntrospectResponse);
+    if (!session || session.userId !== payload.sub) {
+      return res.status(401).json({ valid: false, reason: 'session_not_found_or_mismatch' });
     }
-
-    if (session.userId !== payload.sub) {
-      return res.status(401).json({
-        valid: false,
-        reason: 'session_mismatch',
-      } as IntrospectResponse);
-    }
-
     if (session.revokedAt) {
-      return res.status(401).json({
-        valid: false,
-        reason: 'session_revoked',
-      } as IntrospectResponse);
-    }
-
-    if (session.expiresAt < new Date()) {
-      return res.status(401).json({
-        valid: false,
-        reason: 'session_expired',
-      } as IntrospectResponse);
+      return res.status(401).json({ valid: false, reason: 'session_revoked' });
     }
 
     const now = new Date();
-    const idleMs = now.getTime() - session.lastAccessedAt.getTime();
-    const SESSION_IDLE_TIMEOUT =
-      (process.env.SESSION_IDLE_TIMEOUT_MINUTES
-        ? Number(process.env.SESSION_IDLE_TIMEOUT_MINUTES)
-        : 30) *
-      60 *
-      1000;
-
-    if (idleMs > SESSION_IDLE_TIMEOUT) {
+    if (session.expiresAt <= now) {
+      return res.status(401).json({ valid: false, reason: 'session_expired' });
+    }
+    if (now.getTime() - session.lastAccessedAt.getTime() > SESSION_IDLE_TIMEOUT) {
       await prisma.session.update({
         where: { id: session.id },
         data: { revokedAt: now },
       });
-      return res.status(401).json({
-        valid: false,
-        reason: 'session_timed_out',
-      } as IntrospectResponse);
+      return res.status(401).json({ valid: false, reason: 'session_timed_out' });
+    }
+
+    // Never authorize from role/modules embedded in an access token. They may
+    // be stale after an administrator changes a user's role or module grants.
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        moduleAccess: {
+          where: {
+            active: true,
+            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+          },
+          select: { module: true },
+        },
+      },
+    });
+
+    if (!user || !user.isActive) {
+      await prisma.session.update({
+        where: { id: session.id },
+        data: { revokedAt: now },
+      });
+      return res.status(401).json({ valid: false, reason: 'user_inactive_or_missing' });
     }
 
     await prisma.session.update({
@@ -105,15 +97,12 @@ export async function introspectToken(req: Request, res: Response) {
 
     return res.json({
       valid: true,
-      userId: payload.sub,
-      email: payload.email,
-      role: payload.role,
-      modules: payload.modules,
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      modules: user.moduleAccess.map(access => access.module),
     } as IntrospectResponse);
   } catch {
-    return res.status(401).json({
-      valid: false,
-      reason: 'token_invalid',
-    } as IntrospectResponse);
+    return res.status(401).json({ valid: false, reason: 'token_invalid' });
   }
 }
