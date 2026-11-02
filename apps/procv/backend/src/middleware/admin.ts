@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import { runWithIdentityToken } from '../identityContext';
 
 interface IdentityAdminClaims {
   sub: string;
@@ -13,6 +14,7 @@ interface IntrospectionResult {
   email?: string;
   role?: string;
   modules?: string[];
+  dbContextToken?: string;
 }
 
 const INTROSPECTION_TIMEOUT_MS = Number(process.env.INTROSPECTION_TIMEOUT_MS) || 5000;
@@ -64,7 +66,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     // ProIdentity's live database state so role downgrades and module revokes
     // take effect immediately instead of waiting for JWT expiry.
     const identity = await introspectCurrentIdentity(token);
-    if (!identity?.valid || identity.userId !== decoded.sub) {
+    if (!identity?.valid || identity.userId !== decoded.sub || typeof identity.dbContextToken !== 'string' || !identity.dbContextToken.trim()) {
       return res.status(401).json({ message: 'Session revoked, expired, or unavailable' });
     }
     if (!Array.isArray(identity.modules) || !identity.modules.includes('PROCV')) {
@@ -79,7 +81,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
       email: identity.email ?? '',
       role: identity.role,
     };
-    return next();
+    return runWithIdentityToken(identity.dbContextToken, () => next());
   } catch (error) {
     logger.warn('Identity admin token rejected', {
       error: error instanceof Error ? error.message : String(error),
