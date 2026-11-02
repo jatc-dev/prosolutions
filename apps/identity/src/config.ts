@@ -93,9 +93,20 @@ function getJwtSecret(): string {
   return secret || 'change-me-for-development-only';
 }
 
+function getProCVDatabaseJwtSecret(): string {
+  const secret = process.env.PROCV_DATABASE_JWT_SECRET;
+  if (getEnvironment() === 'production') {
+    if (!secret || secret.length < 32) {
+      throw new Error('PROCV_DATABASE_JWT_SECRET must be set and at least 32 characters in production');
+    }
+  }
+  return secret || 'change-me-procv-database-secret-in-development';
+}
+
 export const config = {
   port: getPort(),
   jwtSecret: getJwtSecret(),
+  procvDatabaseJwtSecret: getProCVDatabaseJwtSecret(),
   jwtExpiresIn: process.env.IDENTITY_JWT_EXPIRES_IN || '15m',
   jwtRefreshExpiresIn: process.env.IDENTITY_JWT_REFRESH_EXPIRES_IN || '7d',
   issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
