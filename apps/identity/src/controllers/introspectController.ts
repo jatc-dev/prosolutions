@@ -36,6 +36,7 @@ export async function introspectToken(req: Request, res: Response) {
     const payload = jwt.verify(token, config.jwtSecret, {
       issuer: config.issuer,
       audience: config.audience,
+      algorithms: ['HS256'],
     }) as { sub: string; jti?: string };
 
     if (!payload.sub || !payload.jti) {
