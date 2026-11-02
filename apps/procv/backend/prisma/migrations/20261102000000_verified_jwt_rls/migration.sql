@@ -1,7 +1,7 @@
 -- Existing permissive policies from legacy deployments must be reviewed and
 -- removed before this migration. Never stack restrictive policies beside an
 -- old USING (true) policy: PostgreSQL combines permissive policies with OR.
-DO $
+DO $preflight$
 DECLARE
   legacy_count integer;
 BEGIN
@@ -20,7 +20,7 @@ BEGIN
   IF legacy_count > 0 THEN
     RAISE EXCEPTION 'Legacy permissive ProCV RLS policies detected. Remove and review them before applying verified-context policies.';
   END IF;
-END $;
+END $preflight$;
 
 -- ProCV row ownership and administrator access are derived only from a
 -- short-lived ProIdentity-signed database assertion. The key is provisioned
