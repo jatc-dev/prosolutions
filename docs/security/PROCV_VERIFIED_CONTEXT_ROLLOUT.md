@@ -60,3 +60,34 @@ Implementation work is isolated on `security/procv-rls-verified-jwt-context-2026
 6. Only then consider production migration and deployment.
 
 No production database, environment variable, or Render service has been changed by this work. The new production config intentionally fails closed until PROCV_DATABASE_JWT_SECRET is set.
+
+
+## Isolated Neon proof run — 2026-11-02
+
+Branch: `br-solitary-unit-b5ep69a2` in the staging project. No production branch was used.
+
+The ProCV tables were created on this isolated branch from the current Prisma model shape, then the SQL in `20261102000000_verified_jwt_rls/migration.sql` was applied directly in a Neon transaction. This was a database-policy proof, not a Prisma migration-runner deployment; the Prisma migration history was not marked as deployed.
+
+Verified observations:
+
+- `CV`, `CVVersion`, `CVAtsAnalysis`, `AuditLog`, and `PlatformSetting` all report RLS enabled and FORCE RLS enabled.
+- Policy counts are respectively 1, 1, 1, 4, and 2.
+- All five protected tables are owned by `neondb_owner`, not an application role.
+- `procv_app_stage` and `procv_admin_app_stage` are NOLOGIN and NOBYPASSRLS.
+- The app roles can execute the verifier functions but cannot SELECT the private signing-key table.
+- `procv_runtime_stage` can SET ROLE to `procv_app_stage`; the temporary membership granted to `neondb_owner` solely to simulate this role switch was revoked and verified absent afterwards.
+- With signed test assertions, user A saw only A's CV, versions, ATS analysis, and audit rows; user B saw only B's corresponding rows.
+- Both ordinary users saw only the public platform setting. A signed admin assertion saw both users' rows and both public/private platform settings.
+- With no database assertion, forged legacy `procv.user_id` and `procv.is_admin` GUCs did not create an identity or admin privilege; protected CV count was zero.
+- Assertions with wrong issuer, wrong audience, expired `exp`, or missing `PROCV` module failed closed.
+- The first verifier attempt exposed a JSON/JSONB operator bug; it was corrected in the migration and applied function, after which the valid test assertion resolved the expected subject.
+
+Limitations of this proof:
+
+- Tests used the isolated branch's existing test key and synthetic signed assertions. They did not use a token issued by the live ProIdentity service or the future `PROCV_DATABASE_JWT_SECRET`.
+- Neon could not authenticate a direct `procv_runtime_stage` connection because that role has no password configured. Role switching was simulated from the branch owner after a temporary membership grant, then that grant was revoked. The actual runtime login connection still needs a credential-safe test.
+- Write/insert/delete adversarial tests were not executed; the SQL safety gate blocked those mutation attempts. The policies include `WITH CHECK` and mutation predicates, but those paths are not counted as proven.
+- The SQL was applied directly to the isolated branch after manually creating the schema tables. It has not been run through `prisma migrate deploy`.
+- No TypeScript build, lint, Jest suite, or live ProIdentity-to-ProCV end-to-end test was run.
+
+Therefore this proof demonstrates row visibility isolation for SELECT and signed-context verification in PostgreSQL, but does not satisfy the full release gate. Keep the PR draft and do not deploy.
