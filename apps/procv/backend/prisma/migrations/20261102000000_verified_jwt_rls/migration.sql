@@ -1,3 +1,27 @@
+-- Existing permissive policies from legacy deployments must be reviewed and
+-- removed before this migration. Never stack restrictive policies beside an
+-- old USING (true) policy: PostgreSQL combines permissive policies with OR.
+DO $
+DECLARE
+  legacy_count integer;
+BEGIN
+  SELECT count(*)::integer INTO legacy_count
+  FROM pg_policy p
+  JOIN pg_class c ON c.oid = p.polrelid
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public'
+    AND c.relname IN ('CV', 'CVVersion', 'CVAtsAnalysis', 'AuditLog', 'PlatformSetting')
+    AND (
+      p.polname LIKE '%_app_access'
+      OR pg_get_expr(p.polqual, p.polrelid) IN ('true', '(true)')
+      OR pg_get_expr(p.polwithcheck, p.polrelid) IN ('true', '(true)')
+    );
+
+  IF legacy_count > 0 THEN
+    RAISE EXCEPTION 'Legacy permissive ProCV RLS policies detected. Remove and review them before applying verified-context policies.';
+  END IF;
+END $;
+
 -- ProCV row ownership and administrator access are derived only from a
 -- short-lived ProIdentity-signed database assertion. The key is provisioned
 -- separately through a secret-safe operator channel; this migration never
