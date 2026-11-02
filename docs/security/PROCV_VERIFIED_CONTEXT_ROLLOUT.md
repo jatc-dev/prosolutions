@@ -105,3 +105,7 @@ A read-only inspection of the current production branch found five legacy permis
 `CV_app_access`, `CVVersion_app_access`, `CVAtsAnalysis_app_access`, `AuditLog_app_access`, and `PlatformSetting_app_access`. Each has `USING (true)` and `WITH CHECK (true)`.
 
 Because permissive PostgreSQL policies combine with OR, the verified-context policies cannot safely be layered on top of these. The migration preflight intentionally aborts when it detects these policies. Production has not been changed. A separately reviewed policy-replacement migration and explicit production rollout approval are still required.
+
+## Unit test maintenance
+
+The ProCV auth/admin middleware and public landing-settings unit tests were updated to reflect the live introspection response contract, required database assertion, configured JWT audience, and RLS transaction helper. These test files were not executed because this connected session has no repository build/test runner and network access to install dependencies is unavailable. Treat the updated tests as unverified until `npm test`, `npm run build`, and `npm run lint` pass in a controlled staging worktree.
