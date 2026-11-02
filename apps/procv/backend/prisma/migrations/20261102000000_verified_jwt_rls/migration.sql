@@ -1,6 +1,37 @@
--- Existing permissive policies from legacy deployments must be reviewed and
--- removed before this migration. Never stack restrictive policies beside an
--- old USING (true) policy: PostgreSQL combines permissive policies with OR.
+-- Replace the known legacy allow-all policies. With RLS enabled and no
+-- policy, PostgreSQL denies access by default, so a partial migration fails
+-- closed rather than preserving the old cross-user access.
+DO $legacy_policy_cleanup$
+DECLARE
+  legacy_policy record;
+  using_expression text;
+  check_expression text;
+BEGIN
+  FOR legacy_policy IN
+    SELECT n.nspname, c.relname, p.polname, p.polrelid, p.polqual, p.polwithcheck
+    FROM pg_policy p
+    JOIN pg_class c ON c.oid = p.polrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relname IN ('CV', 'CVVersion', 'CVAtsAnalysis', 'AuditLog', 'PlatformSetting')
+      AND p.polname LIKE '%_app_access'
+  LOOP
+    using_expression := pg_get_expr(legacy_policy.polqual, legacy_policy.polrelid);
+    check_expression := pg_get_expr(legacy_policy.polwithcheck, legacy_policy.polrelid);
+    IF COALESCE(using_expression, '') NOT IN ('true', '(true)')
+       OR COALESCE(check_expression, '') NOT IN ('true', '(true)')
+    THEN
+      RAISE EXCEPTION 'Refusing to replace non-allow-all legacy policy % on %.%',
+        legacy_policy.polname, legacy_policy.nspname, legacy_policy.relname;
+    END IF;
+    EXECUTE format('DROP POLICY %I ON %I.%I',
+      legacy_policy.polname, legacy_policy.nspname, legacy_policy.relname);
+  END LOOP;
+END
+$legacy_policy_cleanup$;
+
+-- Keep a preflight for any other permissive policy that was not explicitly
+-- identified and reviewed above. Never stack permissive policies with OR.
 DO $preflight$
 DECLARE
   legacy_count integer;
