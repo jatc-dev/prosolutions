@@ -96,7 +96,7 @@ export class CVService {
   static async exportCVToPDF(cvId: string, userId: string) {
     const cacheKey = `cv_export_${cvId}_user_${userId}`;
     const cached = cache.get<any>(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cached) return cached;
     const cv = await withUserContext(userId, tx =>
       tx.cV.findFirst({ where: { id: cvId, userId } }),
     );
@@ -109,7 +109,7 @@ export class CVService {
   static async getCVVersions(cvId: string, userId: string) {
     const cacheKey = `cv_versions_${cvId}_user_${userId}`;
     const cached = cache.get<any[]>(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cached) return cached;
     const versions = await withUserContext(userId, async tx => {
       const cv = await tx.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } });
       if (!cv) throw new Error('CV not found');
