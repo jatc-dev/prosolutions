@@ -10,6 +10,17 @@ jest.mock('../src/prismaClient', () => ({
   },
 }));
 
+jest.mock('../src/dbContext', () => ({
+  withPublicContext: jest.fn(async (operation: (tx: any) => unknown) =>
+    operation({
+      platformSetting: {
+        findUnique: (...args: any[]) =>
+          jest.requireMock('../src/prismaClient').default.platformSetting.findUnique(...args),
+      },
+    }),
+  ),
+}));
+
 import { createApp } from '../src/app';
 import prisma from '../src/prismaClient';
 
