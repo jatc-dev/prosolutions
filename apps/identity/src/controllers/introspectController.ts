@@ -93,10 +93,20 @@ export async function introspectToken(req: Request, res: Response) {
       return res.status(401).json({ valid: false, reason: 'user_inactive_or_missing' });
     }
 
-    await prisma.session.update({
-      where: { id: session.id },
+    // Touch only a still-active session. If it was revoked or expired after
+    // the initial read, do not mint a database assertion from stale state.
+    const touched = await prisma.session.updateMany({
+      where: {
+        id: session.id,
+        userId: payload.sub,
+        revokedAt: null,
+        expiresAt: { gt: now },
+      },
       data: { lastAccessedAt: now },
     });
+    if (touched.count !== 1) {
+      return res.status(401).json({ valid: false, reason: 'session_revoked_or_expired' });
+    }
 
     return res.json({
       valid: true,
