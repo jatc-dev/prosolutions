@@ -59,4 +59,4 @@ Implementation work is isolated on `security/procv-rls-verified-jwt-context-2026
 5. Obtain explicit production-change approval, confirm a usable backup/restore path, and prepare a tested rollback.
 6. Only then consider production migration and deployment.
 
-No production database, environment variable, or Render service has been changed by this work.
+No production database, environment variable, or Render service has been changed by this work. The new production config intentionally fails closed until PROCV_DATABASE_JWT_SECRET is set.
