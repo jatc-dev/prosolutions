@@ -76,7 +76,7 @@ BEGIN
      OR NULLIF(v_payload->>'role', '') IS NULL
      OR NULLIF(v_payload->>'exp', '') IS NULL
      OR (v_payload->>'exp')::bigint <= extract(epoch FROM statement_timestamp())::bigint
-     OR NOT COALESCE((v_payload->'modules') ? 'PROCV', false)
+     OR NOT COALESCE(((v_payload::jsonb)->'modules') ? 'PROCV', false)
   THEN
     RETURN NULL;
   END IF;
