@@ -18,6 +18,7 @@ async function introspectSession(token: string): Promise<{
   email?: string;
   role?: string;
   modules?: string[];
+  dbContextToken?: string;
   reason?: string;
 }> {
   const controller = new AbortController();
@@ -60,6 +61,7 @@ async function introspectSession(token: string): Promise<{
       email?: string;
       role?: string;
       modules?: string[];
+      dbContextToken?: string;
       reason?: string;
     };
   } catch (error: unknown) {
@@ -92,6 +94,10 @@ function validateIntrospectionContract(
 
   if (!Array.isArray(introspection.modules)) {
     return { valid: false, reason: 'introspection_invalid_modules' };
+  }
+
+  if (typeof introspection.dbContextToken !== 'string' || !introspection.dbContextToken.trim()) {
+    return { valid: false, reason: 'introspection_missing_database_context' };
   }
 
   return { valid: true };
@@ -146,7 +152,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.role = introspection.role;
     req.modules = modules;
 
-    return next();
+    return runWithIdentityToken(introspection.dbContextToken as string, () => next());
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
