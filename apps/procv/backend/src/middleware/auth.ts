@@ -114,7 +114,8 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
   try {
     const payload = jwt.verify(token, config.jwtSecret, {
       issuer: config.issuer,
-      audience: 'prosolutions-api',
+      audience: config.audience,
+      algorithms: ['HS256'],
     }) as {
       sub: string;
       email?: string;
