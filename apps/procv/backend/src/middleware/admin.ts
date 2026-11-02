@@ -52,7 +52,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
   const token = authHeader.slice(7);
   try {
     const decoded = jwt.verify(token, config.jwtSecret, {
-      issuer: config.identityUrl,
+      issuer: config.issuer,
       audience: 'prosolutions-api',
     }) as IdentityAdminClaims;
 
