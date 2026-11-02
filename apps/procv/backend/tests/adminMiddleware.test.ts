@@ -3,13 +3,25 @@ import jwt from 'jsonwebtoken';
 import { config } from '../src/config';
 import { requireAdmin } from '../src/middleware/admin';
 
+type LiveIdentity = {
+  valid: boolean;
+  userId?: string;
+  email?: string;
+  role?: string;
+  modules?: string[];
+  dbContextToken?: string;
+};
+
 const signToken = (claims: Record<string, unknown> = {}, options: jwt.SignOptions = {}) =>
   jwt.sign({ sub: 'test-user', ...claims }, config.jwtSecret, {
-    issuer: config.identityUrl,
-    audience: 'prosolutions-api',
+    issuer: config.issuer,
+    audience: config.audience,
     expiresIn: '5m',
     ...options,
   });
+
+const originalFetch = globalThis.fetch;
+let liveIdentity: LiveIdentity;
 
 function invoke(authorization?: string) {
   const req = {
@@ -25,90 +37,121 @@ function invoke(authorization?: string) {
 }
 
 describe('requireAdmin authorization boundary', () => {
-  it('returns 401 when the bearer token is missing', () => {
-    const { status, json, next } = invoke();
+  beforeAll(() => {
+    globalThis.fetch = jest.fn(async () => new Response(JSON.stringify(liveIdentity), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as typeof fetch;
+  });
 
+  afterAll(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    liveIdentity = {
+      valid: true,
+      userId: 'test-user',
+      email: 'admin@example.test',
+      role: 'admin',
+      modules: ['PROCV'],
+      dbContextToken: 'signed-database-context',
+    };
+  });
+
+  it('returns 401 when the bearer token is missing', async () => {
+    const { status, json, next, result } = invoke();
+    await result;
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({ message: 'Authorization header missing' });
     expect(next).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('returns 401 for an invalid token', () => {
-    const { status, json, next } = invoke('Bearer not-a-valid-token');
-
+  it('returns 401 for an invalid token', async () => {
+    const { status, json, next, result } = invoke('Bearer not-a-valid-token');
+    await result;
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 401 for a token with the wrong issuer or audience', () => {
+  it('returns 401 for a token with the wrong issuer or audience', async () => {
     const token = signToken({}, { issuer: 'https://untrusted.example', audience: 'other-api' });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 401 for an expired token', () => {
+  it('returns 401 for an expired token', async () => {
     const token = signToken({}, { expiresIn: -1 });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({ message: 'Invalid or expired token' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 401 when a verified token has no subject', () => {
+  it('returns 401 for a verified token with no subject', async () => {
     const token = jwt.sign({ role: 'admin', modules: ['PROCV'] }, config.jwtSecret, {
-      issuer: config.identityUrl,
-      audience: 'prosolutions-api',
+      issuer: config.issuer,
+      audience: config.audience,
       expiresIn: '5m',
     });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({ message: 'Invalid identity subject' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 403 when the token does not grant ProCV module access', () => {
-    const token = signToken({ role: 'admin', modules: ['PROJOBS'] });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
+  it('returns 403 when live ProIdentity state has no ProCV module grant', async () => {
+    liveIdentity.modules = ['PROJOBS'];
+    const token = signToken({ role: 'admin', modules: ['PROCV'] });
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(status).toHaveBeenCalledWith(403);
     expect(json).toHaveBeenCalledWith({ message: 'ProCV module access required' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('returns 403 when the token has ProCV access but is not an admin', () => {
-    const token = signToken({ role: 'user', modules: ['PROCV'] });
-    const { status, json, next } = invoke(`Bearer ${token}`);
-
+  it('returns 403 when live ProIdentity state is not admin', async () => {
+    liveIdentity.role = 'user';
+    const token = signToken({ role: 'admin', modules: ['PROCV'] });
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(status).toHaveBeenCalledWith(403);
     expect(json).toHaveBeenCalledWith({ message: 'Admin access required' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('continues only when the signed token has a subject, admin role, and ProCV grant', () => {
-    const token = signToken({
-      sub: 'platform-admin-test',
-      email: 'admin@example.test',
-      role: 'admin',
-      modules: ['PROCV'],
-    });
-    const { req, next, status } = invoke(`Bearer ${token}`);
-
+  it('uses live ProIdentity state rather than stale role/module claims in the access JWT', async () => {
+    const token = signToken({ role: 'user', modules: ['PROJOBS'] });
+    const { req, next, status, result } = invoke(`Bearer ${token}`);
+    await result;
     expect(next).toHaveBeenCalledTimes(1);
     expect(status).not.toHaveBeenCalled();
     expect((req as any).user).toEqual({
-      id: 'platform-admin-test',
+      id: 'test-user',
       email: 'admin@example.test',
       role: 'admin',
     });
   });
 
-  it('does not treat client-supplied role headers as authorization', () => {
+  it('fails closed when introspection does not provide a database assertion', async () => {
+    liveIdentity.dbContextToken = undefined;
+    const token = signToken();
+    const { status, json, next, result } = invoke(`Bearer ${token}`);
+    await result;
+    expect(status).toHaveBeenCalledWith(401);
+    expect(json).toHaveBeenCalledWith({ message: 'Session revoked, expired, or unavailable' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('does not treat client-supplied role headers as authorization', async () => {
     const req = {
       headers: { 'x-role': 'admin', 'x-is-admin': 'true' },
     } as unknown as Request;
@@ -117,8 +160,7 @@ describe('requireAdmin authorization boundary', () => {
     const res = { status, json } as unknown as Response;
     const next = jest.fn() as NextFunction;
 
-    requireAdmin(req, res, next);
-
+    await requireAdmin(req, res, next);
     expect(status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
