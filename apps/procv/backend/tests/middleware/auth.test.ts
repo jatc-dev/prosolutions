@@ -1,6 +1,7 @@
 import { Response as ExpressResponse } from 'express';
 import jwt from 'jsonwebtoken';
 import { authMiddleware, AuthRequest } from '../../src/middleware/auth';
+import { config } from '../../src/config';
 
 jest.mock('jsonwebtoken', () => ({
   __esModule: true,
@@ -15,6 +16,7 @@ type IntrospectionResponse = {
   email?: string;
   role?: string;
   modules?: string[];
+  dbContextToken?: string;
   reason?: string;
 };
 
@@ -97,6 +99,7 @@ describe('ProCV Identity authorization middleware', () => {
       email: 'user@example.test',
       role: 'user',
       modules: ['PROCV', 'PROJOBS'],
+      dbContextToken: 'signed-database-context',
     });
     introspectionShouldThrow = false;
     introspectionShouldTimeout = false;
@@ -142,6 +145,7 @@ describe('ProCV Identity authorization middleware', () => {
       email: 'user@example.test',
       role: 'user',
       modules: ['PROJOBS'],
+      dbContextToken: 'signed-database-context',
     });
     const res = mockResponse();
     const next = jest.fn();
@@ -150,7 +154,9 @@ describe('ProCV Identity authorization middleware', () => {
 
     expect(jwt.verify).toHaveBeenCalledWith('signed-token', expect.any(String), {
       issuer: expect.any(String),
-      audience: 'prosolutions-api',
+      issuer: config.issuer,
+      audience: config.audience,
+      algorithms: ['HS256'],
     });
     expect(res.statusCode).toBe(403);
     expect(res.body).toEqual({
