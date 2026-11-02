@@ -55,7 +55,8 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
   try {
     const decoded = jwt.verify(token, config.jwtSecret, {
       issuer: config.issuer,
-      audience: 'prosolutions-api',
+      audience: config.audience,
+      algorithms: ['HS256'],
     }) as IdentityAdminClaims;
 
     if (!decoded.sub) {
