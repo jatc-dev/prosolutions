@@ -1,54 +1,59 @@
 import { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
-import prisma from '../prismaClient';
+import { withAdminContext } from '../dbContext';
 import { logger } from '../utils/logger';
-import { AuditLogger } from '../utils/auditLogger';
+
+function adminId(req: Request): string {
+  const id = (req as any).user?.id;
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('Verified administrator identity is missing');
+  }
+  return id;
+}
+
+function auditData(req: Request, adminUserId: string, action: string, resourceType: string, resourceId?: string, details?: Record<string, unknown>) {
+  return {
+    userId: adminUserId,
+    action,
+    resourceType,
+    resourceId,
+    details: details ? JSON.stringify(details) : undefined,
+    ipAddress: req.ip || req.socket.remoteAddress,
+    userAgent: req.headers['user-agent'],
+  };
+}
 
 export async function getAuditLogs(req: Request, res: Response) {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 50;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 50));
     const skip = (page - 1) * limit;
-
-    const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.auditLog.count(),
-    ]);
-
+    const result = await withAdminContext(adminId(req), async tx => {
+      const [logs, total] = await Promise.all([
+        tx.auditLog.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
+        tx.auditLog.count(),
+      ]);
+      return { logs, total };
+    });
     return res.json({
-      logs,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      logs: result.logs,
+      pagination: { page, limit, total: result.total, pages: Math.ceil(result.total / limit) },
     });
   } catch (error) {
-    logger.error('Get audit logs error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Get audit logs error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
-// Platform Settings Management
 export async function getPlatformSettings(req: Request, res: Response) {
   try {
-    const settings = await prisma.platformSetting.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const settings = await withAdminContext(adminId(req), tx =>
+      tx.platformSetting.findMany({ orderBy: { createdAt: 'desc' } }),
+    );
     return res.json(settings);
   } catch (error) {
-    logger.error('Get platform settings error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Get platform settings error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
@@ -57,94 +62,49 @@ export async function updatePlatformSetting(req: Request, res: Response) {
   try {
     const { key } = req.params;
     const { value } = req.body;
-    const adminUser = (req as any).user;
+    const id = adminId(req);
+    if (value === undefined) return res.status(400).json({ message: 'Value is required' });
 
-    if (value === undefined) {
-      return res.status(400).json({ message: 'Value is required' });
-    }
-
-    const setting = await prisma.platformSetting.upsert({
-      where: { key },
-      update: {
-        value: String(value),
-        updatedBy: adminUser.id,
-      },
-      create: {
-        key,
-        value: String(value),
-        type: 'string',
-        category: 'general',
-        updatedBy: adminUser.id,
-      },
+    const setting = await withAdminContext(id, async tx => {
+      const updated = await tx.platformSetting.upsert({
+        where: { key },
+        update: { value: String(value), updatedBy: id },
+        create: { key, value: String(value), type: 'string', category: 'general', updatedBy: id },
+      });
+      await tx.auditLog.create({
+        data: auditData(req, id, 'update', 'platform_setting', key, { newValue: value }),
+      });
+      return updated;
     });
-
-    // Log the action
-    await AuditLogger.logAdminAction(
-      adminUser.id,
-      adminUser.email,
-      'update',
-      'platform_setting',
-      key,
-      { newValue: value },
-      req,
-    );
-
     return res.json(setting);
   } catch (error) {
-    logger.error('Update platform setting error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Update platform setting error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
-// Logo Upload Handler
 export async function uploadLogo(req: Request, res: Response) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
     const uploadDir = path.join(__dirname, '../../uploads/logos');
     const tempPath = req.file.path;
-    const targetFilename =
-      'logo-' +
-      Date.now() +
-      '-' +
-      Math.round(Math.random() * 1e9) +
-      path.extname(req.file.originalname);
-    const targetPath = path.join(uploadDir, targetFilename);
-
-    // Ensure upload directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    const extension = path.extname(req.file.originalname).toLowerCase();
+    if (!['.png', '.jpg', '.jpeg', '.webp', '.svg'].includes(extension)) {
+      return res.status(400).json({ message: 'Unsupported image extension' });
     }
-
-    // Move file from temp to final location
+    const targetFilename = `logo-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+    const targetPath = path.join(uploadDir, targetFilename);
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     fs.renameSync(tempPath, targetPath);
 
-    const logoUrl = `/uploads/logos/${targetFilename}`;
-    const adminUser = (req as any).user;
-
-    // Log the upload action
-    await AuditLogger.logAdminAction(
-      adminUser.id,
-      adminUser.email,
-      'upload',
-      'logo',
-      undefined,
-      { filename: targetFilename, size: req.file.size },
-      req,
-    );
-
-    return res.json({
-      message: 'Logo uploaded successfully',
-      logoUrl,
-    });
+    const id = adminId(req);
+    await withAdminContext(id, tx => tx.auditLog.create({
+      data: auditData(req, id, 'upload', 'logo', undefined, { filename: targetFilename, size: req.file!.size }),
+    }));
+    return res.json({ message: 'Logo uploaded successfully', logoUrl: `/uploads/logos/${targetFilename}` });
   } catch (error) {
-    logger.error('Upload logo error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Upload logo error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
@@ -152,68 +112,31 @@ export async function uploadLogo(req: Request, res: Response) {
 export async function bulkUpdatePlatformSettings(req: Request, res: Response) {
   try {
     const { settings } = req.body;
-    const adminUser = (req as any).user;
+    const id = adminId(req);
+    if (!Array.isArray(settings)) return res.status(400).json({ message: 'Settings must be an array' });
 
-    if (!Array.isArray(settings)) {
-      return res.status(400).json({ message: 'Settings must be an array' });
-    }
-
-    const results = [];
-
-    for (const setting of settings) {
-      const {
-        key,
-        value,
-        category = 'general',
-        type = 'string',
-        description,
-        isPublic = false,
-      } = setting;
-
-      if (!key || value === undefined) {
-        continue; // Skip invalid entries
+    const results = await withAdminContext(id, async tx => {
+      const updated = [];
+      for (const setting of settings) {
+        const {
+          key, value, category = 'general', type = 'string',
+          description, isPublic = false,
+        } = setting;
+        if (!key || value === undefined) continue;
+        updated.push(await tx.platformSetting.upsert({
+          where: { key },
+          update: { value: String(value), type, category, description, isPublic, updatedBy: id },
+          create: { key, value: String(value), type, category, description, isPublic, updatedBy: id },
+        }));
       }
-
-      const updatedSetting = await prisma.platformSetting.upsert({
-        where: { key },
-        update: {
-          value: String(value),
-          type,
-          category,
-          description,
-          isPublic,
-          updatedBy: adminUser.id,
-        },
-        create: {
-          key,
-          value: String(value),
-          type,
-          category,
-          description,
-          isPublic,
-          updatedBy: adminUser.id,
-        },
+      await tx.auditLog.create({
+        data: auditData(req, id, 'bulk_update', 'platform_settings', undefined, { updatedCount: updated.length }),
       });
-
-      results.push(updatedSetting);
-    }
-
-    // Log the bulk update action
-    await AuditLogger.logAdminAction(
-      adminUser.id,
-      adminUser.email,
-      'bulk_update',
-      'platform_settings',
-      undefined,
-      { updatedCount: results.length },
-      req,
-    );
-
+      return updated;
+    });
     return res.json({ settings: results });
   } catch (error) {
-    logger.error('Bulk update platform settings error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Bulk update platform settings error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
@@ -221,66 +144,45 @@ export async function bulkUpdatePlatformSettings(req: Request, res: Response) {
 export async function deletePlatformSetting(req: Request, res: Response) {
   try {
     const { key } = req.params;
-    const adminUser = (req as any).user;
-
-    const setting = await prisma.platformSetting.findUnique({
-      where: { key },
+    const id = adminId(req);
+    const deleted = await withAdminContext(id, async tx => {
+      const setting = await tx.platformSetting.findUnique({ where: { key } });
+      if (!setting) return false;
+      await tx.platformSetting.delete({ where: { key } });
+      await tx.auditLog.create({
+        data: auditData(req, id, 'delete', 'platform_setting', key, { deletedValue: setting.value }),
+      });
+      return true;
     });
-
-    if (!setting) {
-      return res.status(404).json({ message: 'Setting not found' });
-    }
-
-    await prisma.platformSetting.delete({
-      where: { key },
-    });
-
-    // Log the action
-    await AuditLogger.logAdminAction(
-      adminUser.id,
-      adminUser.email,
-      'delete',
-      'platform_setting',
-      key,
-      { deletedValue: setting.value },
-      req,
-    );
-
+    if (!deleted) return res.status(404).json({ message: 'Setting not found' });
     return res.status(204).send();
   } catch (error) {
-    logger.error('Delete platform setting error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Delete platform setting error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
-export async function getSystemStats(_req: Request, res: Response) {
+export async function getSystemStats(req: Request, res: Response) {
   try {
-    const [ownerRows, totalCVs] = await Promise.all([
-      prisma.$queryRaw<Array<{ count: number }>>`
-        SELECT COUNT(DISTINCT "userId")::int AS count
-        FROM "CV"
-      `,
-      prisma.cV.count(),
-    ]);
-
-    return res.json({
-      stats: {
-        cvOwnerCount: Number(ownerRows[0]?.count ?? 0),
-        totalCVs,
-      },
+    const stats = await withAdminContext(adminId(req), async tx => {
+      const [ownerRows, totalCVs] = await Promise.all([
+        tx.$queryRaw<Array<{ count: number }>>`
+          SELECT COUNT(DISTINCT "userId")::int AS count FROM "CV"
+        `,
+        tx.cV.count(),
+      ]);
+      return { cvOwnerCount: Number(ownerRows[0]?.count ?? 0), totalCVs };
     });
+    return res.json({ stats });
   } catch (error) {
-    logger.error('Get system stats error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Get system stats error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
 export async function getChartData(req: Request, res: Response) {
   try {
+    const id = adminId(req);
     const requestedDays = Number.parseInt(req.query.days as string, 10) || 30;
     const days = Math.min(90, Math.max(7, requestedDays));
     const endDate = new Date();
@@ -288,10 +190,10 @@ export async function getChartData(req: Request, res: Response) {
     startDate.setDate(startDate.getDate() - (days - 1));
     startDate.setHours(0, 0, 0, 0);
 
-    const cvs = await prisma.cV.findMany({
+    const cvs = await withAdminContext(id, tx => tx.cV.findMany({
       where: { createdAt: { gte: startDate, lte: endDate } },
       select: { userId: true, createdAt: true },
-    });
+    }));
 
     const cvCounts: Record<string, number> = {};
     const ownersByDate: Record<string, Set<string>> = {};
@@ -313,17 +215,9 @@ export async function getChartData(req: Request, res: Response) {
       cvData.push(cvCounts[dateStr] ?? 0);
       ownerData.push(ownersByDate[dateStr]?.size ?? 0);
     }
-
-    return res.json({
-      charts: {
-        cvOwnerActivity: { labels, data: ownerData },
-        cvCreation: { labels, data: cvData },
-      },
-    });
+    return res.json({ charts: { cvOwnerActivity: { labels, data: ownerData }, cvCreation: { labels, data: cvData } } });
   } catch (error) {
-    logger.error('Get chart data error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Get chart data error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
