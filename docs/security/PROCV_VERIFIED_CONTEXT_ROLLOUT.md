@@ -91,3 +91,10 @@ Limitations of this proof:
 - No TypeScript build, lint, Jest suite, or live ProIdentity-to-ProCV end-to-end test was run.
 
 Therefore this proof demonstrates row visibility isolation for SELECT and signed-context verification in PostgreSQL, but does not satisfy the full release gate. Keep the PR draft and do not deploy.
+
+Additional verifier hardening during the proof:
+
+- The verifier now requires `iat`, rejects issue times more than five seconds in the future, and rejects assertions whose `exp - iat` exceeds 60 seconds.
+- A correctly signed 60-second assertion was accepted after this change; a correctly signed 300-second assertion was rejected.
+- A valid admin assertion resolved the expected subject and `current_is_admin() = true`.
+- The temporary owner-to-runtime role membership used for the SELECT simulation was revoked after the second test pass; verification confirmed it no longer exists.
