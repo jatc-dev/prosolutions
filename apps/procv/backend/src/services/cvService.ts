@@ -43,7 +43,7 @@ export class CVService {
   static async getCVByIdAndUserId(cvId: string, userId: string) {
     const cacheKey = `cv_${cvId}_user_${userId}`;
     const cached = cache.get<any>(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cached) return cached;
     const cv = await withUserContext(userId, tx =>
       tx.cV.findFirst({ where: { id: cvId, userId } }),
     );
