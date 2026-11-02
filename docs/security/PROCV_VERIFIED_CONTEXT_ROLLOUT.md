@@ -98,3 +98,10 @@ Additional verifier hardening during the proof:
 - A correctly signed 60-second assertion was accepted after this change; a correctly signed 300-second assertion was rejected.
 - A valid admin assertion resolved the expected subject and `current_is_admin() = true`.
 - The temporary owner-to-runtime role membership used for the SELECT simulation was revoked after the second test pass; verification confirmed it no longer exists.
+
+## Production preflight (read-only)
+
+A read-only inspection of the current production branch found five legacy permissive policies:
+`CV_app_access`, `CVVersion_app_access`, `CVAtsAnalysis_app_access`, `AuditLog_app_access`, and `PlatformSetting_app_access`. Each has `USING (true)` and `WITH CHECK (true)`.
+
+Because permissive PostgreSQL policies combine with OR, the verified-context policies cannot safely be layered on top of these. The migration preflight intentionally aborts when it detects these policies. Production has not been changed. A separately reviewed policy-replacement migration and explicit production rollout approval are still required.
