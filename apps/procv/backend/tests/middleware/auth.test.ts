@@ -402,6 +402,34 @@ describe('ProCV Identity authorization middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it('rejects introspection without a signed database context assertion', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV'],
+      jti: 'test-jti-1',
+    });
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-user-1',
+      email: 'user@example.test',
+      role: 'user',
+      modules: ['PROCV'],
+    });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({
+      message: 'Session revoked or expired',
+      reason: 'introspection_missing_database_context',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('rejects missing bearer tokens', async () => {
     const req = { headers: {} } as unknown as AuthRequest;
     const res = mockResponse();
