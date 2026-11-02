@@ -74,8 +74,11 @@ BEGIN
      OR NULLIF(v_payload->>'sub', '') IS NULL
      OR NULLIF(v_payload->>'jti', '') IS NULL
      OR NULLIF(v_payload->>'role', '') IS NULL
+     OR NULLIF(v_payload->>'iat', '') IS NULL
      OR NULLIF(v_payload->>'exp', '') IS NULL
+     OR (v_payload->>'iat')::bigint > extract(epoch FROM statement_timestamp())::bigint + 5
      OR (v_payload->>'exp')::bigint <= extract(epoch FROM statement_timestamp())::bigint
+     OR (v_payload->>'exp')::bigint - (v_payload->>'iat')::bigint > 60
      OR NOT COALESCE(((v_payload::jsonb)->'modules') ? 'PROCV', false)
   THEN
     RETURN NULL;
