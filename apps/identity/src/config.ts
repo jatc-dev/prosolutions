@@ -99,6 +99,13 @@ function getProCVDatabaseJwtSecret(): string {
     if (!secret || secret.length < 32) {
       throw new Error('PROCV_DATABASE_JWT_SECRET must be set and at least 32 characters in production');
     }
+    const normalized = secret.toLowerCase();
+    if (['change-me', 'secret', 'password', '123456', 'jwt-secret'].some(value => normalized.includes(value))) {
+      throw new Error('PROCV_DATABASE_JWT_SECRET appears to be a weak/default value');
+    }
+    if (secret === process.env.IDENTITY_JWT_SECRET || secret === process.env.JWT_SECRET) {
+      throw new Error('PROCV_DATABASE_JWT_SECRET must be different from the access-token signing secret');
+    }
   }
   return secret || 'change-me-procv-database-secret-in-development';
 }
