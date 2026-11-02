@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { runWithIdentityToken } from '../identityContext';
 
 export interface AuthRequest extends Request {
   userId?: string;
