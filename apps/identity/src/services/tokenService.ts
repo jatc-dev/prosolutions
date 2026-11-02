@@ -72,8 +72,9 @@ export function signProCVDatabaseContextToken(payload: {
       role: payload.role,
       modules: payload.modules,
     },
-    config.jwtSecret,
+    config.procvDatabaseJwtSecret,
     {
+      algorithm: 'HS256',
       issuer: config.issuer,
       audience: 'procv-database',
       expiresIn: 60,
