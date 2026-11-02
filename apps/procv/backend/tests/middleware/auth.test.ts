@@ -153,7 +153,6 @@ describe('ProCV Identity authorization middleware', () => {
     await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
 
     expect(jwt.verify).toHaveBeenCalledWith('signed-token', expect.any(String), {
-      issuer: expect.any(String),
       issuer: config.issuer,
       audience: config.audience,
       algorithms: ['HS256'],
