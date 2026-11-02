@@ -56,8 +56,8 @@ export function signAccessToken(payload: {
 /**
  * Short-lived assertion for PostgreSQL row-level security. It is minted only
  * after live session/user/module checks in the introspection endpoint.
- * The database has a separately provisioned copy of IDENTITY_JWT_SECRET in a
- * private schema and accepts only this dedicated audience.
+ * The database has a separately provisioned copy of PROCV_DATABASE_JWT_SECRET
+ * in a private schema and accepts only this dedicated audience.
  */
 export function signProCVDatabaseContextToken(payload: {
   sub: string;
