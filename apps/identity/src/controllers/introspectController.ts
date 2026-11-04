@@ -14,11 +14,6 @@ export interface IntrospectResponse {
   reason?: string;
 }
 
-const SESSION_IDLE_TIMEOUT =
-  (process.env.SESSION_IDLE_TIMEOUT_MINUTES
-    ? Number(process.env.SESSION_IDLE_TIMEOUT_MINUTES)
-    : 30) * 60 * 1000;
-
 export async function introspectToken(req: Request, res: Response) {
   const authHeader = req.headers.authorization;
   const token =
@@ -58,7 +53,7 @@ export async function introspectToken(req: Request, res: Response) {
     if (session.expiresAt <= now) {
       return res.status(401).json({ valid: false, reason: 'session_expired' });
     }
-    if (now.getTime() - session.lastAccessedAt.getTime() > SESSION_IDLE_TIMEOUT) {
+    if (now.getTime() - session.lastAccessedAt.getTime() > config.sessionIdleTimeoutMs) {
       await prisma.session.update({
         where: { id: session.id },
         data: { revokedAt: now },
