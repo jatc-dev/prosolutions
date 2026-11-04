@@ -4,6 +4,19 @@ function getEnvironment() {
   return process.env.NODE_ENV === 'production' ? 'production' : 'development';
 }
 
+export function getSessionIdleTimeoutMs(rawValue = process.env.SESSION_IDLE_TIMEOUT_MINUTES): number {
+  if (rawValue === undefined) {
+    return 30 * 60 * 1000;
+  }
+
+  const minutes = Number(rawValue);
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    throw new Error('SESSION_IDLE_TIMEOUT_MINUTES must be a finite number greater than zero');
+  }
+
+  return minutes * 60 * 1000;
+}
+
 function getPort(): number {
   const rawPort = process.env.PORT;
   const parsed = rawPort ? Number(rawPort) : 4001;
@@ -111,6 +124,7 @@ function getProCVDatabaseJwtSecret(): string {
 }
 
 export const config = {
+  sessionIdleTimeoutMs: getSessionIdleTimeoutMs(),
   port: getPort(),
   jwtSecret: getJwtSecret(),
   procvDatabaseJwtSecret: getProCVDatabaseJwtSecret(),
