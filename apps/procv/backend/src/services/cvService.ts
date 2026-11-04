@@ -1,5 +1,6 @@
-import prisma from '../prismaClient';
+import { withUserContext } from '../dbContext';
 import { cache } from '../utils/cache';
+import { writeAuditLog } from '../utils/auditLogger';
 
 // Retry a single time only for transient PostgreSQL connection closures.
 // This helper is used only by idempotent, read-only queries.
@@ -74,17 +75,17 @@ export class CVService {
 
     // If not in cache, fetch from database with pagination
     const result = await retryTransientRead(() =>
-      prisma.$transaction([
-        prisma.cV.findMany({
-          where: { userId },
-          orderBy: { updatedAt: 'desc' },
-          skip,
-          take: validatedLimit,
-        }),
-        prisma.cV.count({
-          where: { userId },
-        }),
-      ]),
+      withUserContext(userId, async tx =>
+        Promise.all([
+          tx.cV.findMany({
+            where: { userId },
+            orderBy: { updatedAt: 'desc' },
+            skip,
+            take: validatedLimit,
+          }),
+          tx.cV.count({ where: { userId } }),
+        ]),
+      ),
     );
     const [cvs, totalCount] = result as [
       Array<{
@@ -124,9 +125,9 @@ export class CVService {
     }
 
     // If not in cache, fetch from database
-    const cv = await prisma.cV.findFirst({
-      where: { id: cvId, userId },
-    });
+    const cv = await withUserContext(userId, tx =>
+      tx.cV.findFirst({ where: { id: cvId, userId } }),
+    );
 
     // Store in cache for 60 seconds
     cache.set(cacheKey, cv, 60);
@@ -138,13 +139,22 @@ export class CVService {
    * Note: This invalidates relevant cache entries
    */
   static async createCV(userId: string, title: string, template: string, data: unknown) {
-    const cv = await prisma.cV.create({
-      data: {
-        userId,
-        title,
-        template: template || 'sidebar',
-        data: JSON.stringify(data ?? {}),
-      },
+    const cv = await withUserContext(userId, async tx => {
+      const created = await tx.cV.create({
+        data: {
+          userId,
+          title,
+          template: template || 'sidebar',
+          data: JSON.stringify(data ?? {}),
+        },
+      });
+      await writeAuditLog(tx, {
+        actorId: userId,
+        action: 'create',
+        resourceType: 'cv',
+        resourceId: created.id,
+      });
+      return created;
     });
 
     // Invalidate user's CVs cache
@@ -164,26 +174,34 @@ export class CVService {
     template?: string,
     data?: unknown,
   ) {
-    const existing = await prisma.cV.findFirst({ where: { id: cvId, userId } });
-    if (!existing) {
-      throw new Error('CV not found');
-    }
+    const updated = await withUserContext(userId, async tx => {
+      const existing = await tx.cV.findFirst({ where: { id: cvId, userId } });
+      if (!existing) {
+        throw new Error('CV not found');
+      }
 
-    const updated = await prisma.cV.update({
-      where: { id: cvId },
-      data: {
-        title: title ?? existing.title,
-        template: template ?? existing.template,
-        data: JSON.stringify(data ?? JSON.parse(existing.data ?? '{}')),
-      },
-    });
+      const saved = await tx.cV.update({
+        where: { id: cvId },
+        data: {
+          title: title ?? existing.title,
+          template: template ?? existing.template,
+          data: JSON.stringify(data ?? JSON.parse(existing.data ?? '{}')),
+        },
+      });
 
-    // Create version snapshot
-    await prisma.cVVersion.create({
-      data: {
-        cvId: updated.id,
-        snapshot: JSON.stringify(JSON.parse(updated.data ?? '{}')),
-      },
+      await tx.cVVersion.create({
+        data: {
+          cvId: saved.id,
+          snapshot: JSON.stringify(JSON.parse(existing.data ?? '{}')),
+        },
+      });
+      await writeAuditLog(tx, {
+        actorId: userId,
+        action: 'update',
+        resourceType: 'cv',
+        resourceId: saved.id,
+      });
+      return saved;
     });
 
     // Invalidate relevant cache entries
@@ -200,16 +218,25 @@ export class CVService {
    * Note: This invalidates relevant cache entries
    */
   static async deleteCV(cvId: string, userId: string) {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
-    if (!cv) {
-      throw new Error('CV not found');
-    }
-
-    await prisma.cV.delete({ where: { id: cvId } });
+    await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
+      await tx.cV.delete({ where: { id: cvId } });
+      await writeAuditLog(tx, {
+        actorId: userId,
+        action: 'delete',
+        resourceType: 'cv',
+        resourceId: cvId,
+      });
+    });
 
     // Invalidate relevant cache entries
     cache.deleteByPrefix(`user_cvs_${userId}_page_`);
     cache.delete(`cv_${cvId}_user_${userId}`);
+    cache.delete(`cv_export_${cvId}_user_${userId}`);
+    cache.delete(`cv_versions_${cvId}_user_${userId}`);
   }
 
   /**
@@ -232,7 +259,9 @@ export class CVService {
       return cached;
     }
 
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
+    const cv = await withUserContext(userId, tx =>
+      tx.cV.findFirst({ where: { id: cvId, userId } }),
+    );
     if (!cv) {
       throw new Error('CV not found');
     }
@@ -267,14 +296,15 @@ export class CVService {
       return cached;
     }
 
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
-    if (!cv) {
-      throw new Error('CV not found');
-    }
-
-    const versions = await prisma.cVVersion.findMany({
-      where: { cvId },
-      orderBy: { createdAt: 'desc' },
+    const versions = await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
+      return tx.cVVersion.findMany({
+        where: { cvId },
+        orderBy: { createdAt: 'desc' },
+      });
     });
 
     // Store in cache for 60 seconds
@@ -287,19 +317,32 @@ export class CVService {
    * Note: This invalidates relevant cache entries
    */
   static async restoreCVVersion(cvId: string, userId: string, versionId: string) {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
-    if (!cv) {
-      throw new Error('CV not found');
-    }
+    const updated = await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
 
-    const version = await prisma.cVVersion.findFirst({ where: { id: versionId, cvId: cvId } });
-    if (!version) {
-      throw new Error('Version not found');
-    }
+      const version = await tx.cVVersion.findFirst({ where: { id: versionId, cvId } });
+      if (!version) {
+        throw new Error('Version not found');
+      }
 
-    const updated = await prisma.cV.update({
-      where: { id: cvId },
-      data: { data: version.snapshot },
+      await tx.cVVersion.create({
+        data: { cvId, snapshot: JSON.stringify(JSON.parse(cv.data ?? '{}')) },
+      });
+      const restored = await tx.cV.update({
+        where: { id: cvId },
+        data: { data: version.snapshot },
+      });
+      await writeAuditLog(tx, {
+        actorId: userId,
+        action: 'restore_version',
+        resourceType: 'cv',
+        resourceId: cvId,
+        details: { versionId },
+      });
+      return restored;
     });
 
     // Invalidate relevant cache entries

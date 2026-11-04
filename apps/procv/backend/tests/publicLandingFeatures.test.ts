@@ -1,19 +1,15 @@
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 
-jest.mock('../src/prismaClient', () => ({
-  __esModule: true,
-  default: {
-    platformSetting: {
-      findUnique: jest.fn(),
-    },
-  },
+const mockFindFirst = jest.fn();
+jest.mock('../src/dbContext', () => ({
+  withPublicContext: (operation: (tx: unknown) => Promise<unknown>) =>
+    operation({ platformSetting: { findFirst: mockFindFirst } }),
 }));
 
 import { createApp } from '../src/app';
-import prisma from '../src/prismaClient';
 
-const findUnique = prisma.platformSetting.findUnique as jest.Mock;
+const findFirst = mockFindFirst as jest.Mock;
 
 describe('public Landing Features endpoint', () => {
   let server: Server;
@@ -46,7 +42,7 @@ describe('public Landing Features endpoint', () => {
   });
 
   it('defaults to English and returns only public feature fields', async () => {
-    findUnique.mockResolvedValue({
+    findFirst.mockResolvedValue({
       key: 'landing_features_en',
       isPublic: true,
       value: JSON.stringify([
@@ -62,7 +58,9 @@ describe('public Landing Features endpoint', () => {
     const response = await fetch(`${baseUrl}/api/public/landing-features`);
 
     expect(response.status).toBe(200);
-    expect(findUnique).toHaveBeenCalledWith({ where: { key: 'landing_features_en' } });
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { key: 'landing_features_en', isPublic: true },
+    });
     expect(await response.json()).toEqual([
       {
         id: 'cv-builder',
@@ -73,7 +71,7 @@ describe('public Landing Features endpoint', () => {
   });
 
   it('normalizes regional Spanish locales and filters malformed entries', async () => {
-    findUnique.mockResolvedValue({
+    findFirst.mockResolvedValue({
       key: 'landing_features_es',
       isPublic: true,
       value: JSON.stringify([
@@ -88,20 +86,16 @@ describe('public Landing Features endpoint', () => {
     const response = await fetch(`${baseUrl}/api/public/landing-features?lang=es-CO`);
 
     expect(response.status).toBe(200);
-    expect(findUnique).toHaveBeenCalledWith({ where: { key: 'landing_features_es' } });
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { key: 'landing_features_es', isPublic: true },
+    });
     expect(await response.json()).toEqual([
       { id: 'cv', title: 'Crear CV', description: 'Crea tu hoja de vida.' },
     ]);
   });
 
   it('does not return settings marked as non-public', async () => {
-    findUnique.mockResolvedValue({
-      key: 'landing_features_en',
-      isPublic: false,
-      value: JSON.stringify([
-        { id: 'private', title: 'Internal copy', description: 'Not public.' },
-      ]),
-    });
+    findFirst.mockResolvedValue(null);
 
     const response = await fetch(`${baseUrl}/api/public/landing-features?lang=en`);
 
@@ -110,7 +104,7 @@ describe('public Landing Features endpoint', () => {
   });
 
   it('fails closed with an empty array when the setting is malformed or storage fails', async () => {
-    findUnique.mockResolvedValueOnce({
+    findFirst.mockResolvedValueOnce({
       key: 'landing_features_en',
       isPublic: true,
       value: '{not valid json',
@@ -120,7 +114,7 @@ describe('public Landing Features endpoint', () => {
     expect(malformedResponse.status).toBe(200);
     expect(await malformedResponse.json()).toEqual([]);
 
-    findUnique.mockRejectedValueOnce(new Error('database unavailable'));
+    findFirst.mockRejectedValueOnce(new Error('database unavailable'));
     const unavailableResponse = await fetch(`${baseUrl}/api/public/landing-features?lang=en`);
     expect(unavailableResponse.status).toBe(200);
     expect(await unavailableResponse.json()).toEqual([]);

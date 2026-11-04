@@ -1,6 +1,7 @@
-import prisma from '../prismaClient';
+import { withUserContext } from '../dbContext';
 import { ATSAnalysisResult, ATSService, ATSTailoringResult } from './atsService';
 import { randomUUID } from 'crypto';
+import { writeAuditLog } from '../utils/auditLogger';
 
 export interface CVAtsHistoryItem {
   id: string;
@@ -85,32 +86,33 @@ export class CVAtsService {
     data: unknown,
     jobDescription: string,
   ) {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId } });
-    if (!cv) {
-      throw new Error('CV not found');
-    }
+    const savedResult = await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
 
-    const sourceData =
-      data && typeof data === 'object' ? data : parseJSON<Record<string, unknown>>(cv.data, {});
-    const analysis = ATSService.analyzeCV(sourceData, jobDescription);
-    const tailoring = ATSService.tailorCV(sourceData, jobDescription);
+      const sourceData =
+        data && typeof data === 'object' ? data : parseJSON<Record<string, unknown>>(cv.data, {});
+      const analysis = ATSService.analyzeCV(sourceData, jobDescription);
+      const tailoring = ATSService.tailorCV(sourceData, jobDescription);
+      const generatedId = randomUUID();
 
-    const generatedId = randomUUID();
-
-    const rows = (await (prisma.$queryRawUnsafe as any)(
-      `
-      INSERT INTO "CVAtsAnalysis" ("id", "cvId", "jobDescription", "analysis", "tailoring", "cvSnapshot", "createdAt")
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
-      RETURNING "id", "createdAt"
-      `,
-      generatedId,
-      cvId,
-      jobDescription,
-      JSON.stringify(analysis),
-      JSON.stringify(tailoring),
-      JSON.stringify(sourceData || {}),
-    )) as Array<{ id: string; createdAt: Date }>;
-    const saved = rows[0];
+      const rows = await tx.$queryRaw<Array<{ id: string; createdAt: Date }>>`
+        INSERT INTO "CVAtsAnalysis" ("id", "cvId", "jobDescription", "analysis", "tailoring", "cvSnapshot", "createdAt")
+        VALUES (${generatedId}, ${cvId}, ${jobDescription}, ${JSON.stringify(analysis)}, ${JSON.stringify(tailoring)}, ${JSON.stringify(sourceData || {})}, NOW())
+        RETURNING "id", "createdAt"
+      `;
+      await writeAuditLog(tx, {
+        actorId: userId,
+        action: 'create',
+        resourceType: 'cv_ats_analysis',
+        resourceId: rows[0]?.id,
+        details: { cvId },
+      });
+      return { saved: rows[0], analysis, tailoring };
+    });
+    const { saved, analysis, tailoring } = savedResult;
 
     if (!saved) {
       throw new Error('Failed to persist ATS analysis');
@@ -129,29 +131,29 @@ export class CVAtsService {
     userId: string,
     limit: number = 12,
   ): Promise<CVAtsHistoryResponse> {
-    const cv = await prisma.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } });
-    if (!cv) {
-      throw new Error('CV not found');
-    }
+    const rows = await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
 
-    const rows = (await (prisma.$queryRawUnsafe as any)(
-      `
-      SELECT "id", "cvId", "jobDescription", "analysis", "tailoring", "createdAt"
-      FROM "CVAtsAnalysis"
-      WHERE "cvId" = $1
-      ORDER BY "createdAt" DESC
-      LIMIT $2
-      `,
-      cvId,
-      Math.max(1, Math.min(limit, 30)),
-    )) as Array<{
-      id: string;
-      cvId: string;
-      jobDescription: string;
-      analysis: string;
-      tailoring: string;
-      createdAt: Date;
-    }>;
+      return tx.$queryRaw<
+        Array<{
+          id: string;
+          cvId: string;
+          jobDescription: string;
+          analysis: string;
+          tailoring: string;
+          createdAt: Date;
+        }>
+      >`
+        SELECT "id", "cvId", "jobDescription", "analysis", "tailoring", "createdAt"
+        FROM "CVAtsAnalysis"
+        WHERE "cvId" = ${cvId}
+        ORDER BY "createdAt" DESC
+        LIMIT ${Math.max(1, Math.min(limit, 30))}
+      `;
+    });
 
     const history = rows.map((row: any, index: number) => mapHistoryItem(row, rows[index + 1]));
 

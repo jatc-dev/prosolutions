@@ -150,6 +150,7 @@ describe('ProCV Identity authorization middleware', () => {
     expect(jwt.verify).toHaveBeenCalledWith('signed-token', expect.any(String), {
       issuer: expect.any(String),
       audience: 'prosolutions-api',
+      algorithms: ['HS256'],
     });
     expect(res.statusCode).toBe(403);
     expect(res.body).toEqual({
