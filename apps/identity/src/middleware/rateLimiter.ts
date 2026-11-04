@@ -73,3 +73,9 @@ export const passwordResetLimiter = createRateLimiter({
   message: 'Too many password reset requests. Please try again in 15 minutes.',
   skipSuccessful: true,
 });
+
+export const introspectLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: isDevelopment ? 1000 : 100,
+  message: 'Demasiadas solicitudes de introspección. Intenta de nuevo en 1 hora.',
+});

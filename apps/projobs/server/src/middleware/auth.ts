@@ -10,6 +10,8 @@ export interface ProJobsAuthRequest extends Request {
 }
 
 const REQUIRED_MODULE = 'PROJOBS';
+const INTROSPECTION_TIMEOUT_MS =
+  Number(process.env.INTROSPECTION_TIMEOUT_MS) || 5000;
 
 async function introspectSession(token: string): Promise<{
   valid: boolean;
@@ -19,6 +21,9 @@ async function introspectSession(token: string): Promise<{
   modules?: string[];
   reason?: string;
 }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), INTROSPECTION_TIMEOUT_MS);
+
   try {
     const response = await fetch(`${config.identityUrl}/api/auth/introspect`, {
       method: 'POST',
@@ -26,13 +31,31 @@ async function introspectSession(token: string): Promise<{
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return { valid: false, reason: `introspection_${response.status}` };
     }
 
-    const body = (await response.json()) as {
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      return { valid: false, reason: 'introspection_invalid_json' };
+    }
+
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      typeof (body as Record<string, unknown>).valid !== 'boolean'
+    ) {
+      return { valid: false, reason: 'introspection_malformed' };
+    }
+
+    return body as {
       valid: boolean;
       userId?: string;
       email?: string;
@@ -40,13 +63,39 @@ async function introspectSession(token: string): Promise<{
       modules?: string[];
       reason?: string;
     };
-    return body;
   } catch (error: unknown) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { valid: false, reason: 'introspection_timeout' };
+    }
     return {
       valid: false,
       reason: `introspection_error: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
+}
+
+function validateIntrospectionContract(
+  introspection: { valid: boolean; userId?: string; modules?: string[]; reason?: string },
+  jwtSub: string,
+): { valid: boolean; reason?: string } {
+  if (!introspection.valid) {
+    return { valid: false, reason: introspection.reason || 'introspection_invalid' };
+  }
+
+  if (typeof introspection.userId !== 'string' || !introspection.userId.trim()) {
+    return { valid: false, reason: 'introspection_missing_userid' };
+  }
+
+  if (introspection.userId !== jwtSub) {
+    return { valid: false, reason: 'introspection_userid_mismatch' };
+  }
+
+  if (!Array.isArray(introspection.modules)) {
+    return { valid: false, reason: 'introspection_invalid_modules' };
+  }
+
+  return { valid: true };
 }
 
 export async function proJobsAuthMiddleware(
@@ -82,16 +131,15 @@ export async function proJobsAuthMiddleware(
     }
 
     const introspection = await introspectSession(token);
-    if (!introspection.valid) {
+    const contract = validateIntrospectionContract(introspection, payload.sub);
+    if (!contract.valid) {
       return res.status(401).json({
         message: 'Session revoked or expired',
-        reason: introspection.reason,
+        reason: contract.reason,
       });
     }
 
-    const modules = Array.isArray(introspection.modules)
-      ? introspection.modules
-      : (Array.isArray(payload.modules) ? payload.modules : []);
+    const modules = introspection.modules as string[];
     if (!modules.includes(REQUIRED_MODULE)) {
       return res.status(403).json({
         message: 'ProJobs module access required',
@@ -99,9 +147,9 @@ export async function proJobsAuthMiddleware(
       });
     }
 
-    req.userId = introspection.userId || payload.sub;
-    req.email = introspection.email || payload.email;
-    req.role = introspection.role || payload.role;
+    req.userId = introspection.userId;
+    req.email = introspection.email;
+    req.role = introspection.role;
     req.modules = modules;
 
     return next();
@@ -134,18 +182,20 @@ export async function optionalProJobsAuth(
       jti?: string;
     };
 
-    if (payload.sub && payload.jti) {
-      const introspection = await introspectSession(token);
-      if (introspection.valid) {
-        req.userId = introspection.userId || payload.sub;
-        req.email = introspection.email || payload.email;
-        req.role = introspection.role || payload.role;
-        req.modules =
-          Array.isArray(introspection.modules)
-            ? introspection.modules
-            : (Array.isArray(payload.modules) ? payload.modules : []);
-      }
+    if (!payload.sub || !payload.jti) {
+      return next();
     }
+
+    const introspection = await introspectSession(token);
+    const contract = validateIntrospectionContract(introspection, payload.sub);
+    if (!contract.valid) {
+      return next();
+    }
+
+    req.userId = introspection.userId;
+    req.email = introspection.email;
+    req.role = introspection.role;
+    req.modules = introspection.modules as string[];
   } catch {
     // Ignore invalid tokens for optional auth; continue as anonymous
   }
