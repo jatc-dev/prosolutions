@@ -9,12 +9,18 @@ export function getSessionIdleTimeoutMs(rawValue = process.env.SESSION_IDLE_TIME
     return 30 * 60 * 1000;
   }
 
-  const minutes = Number(rawValue);
-  if (!Number.isFinite(minutes) || minutes <= 0) {
+  const normalized = rawValue.trim();
+  if (!/^(?:\\d+(?:\\.\\d*)?|\\.\\d+)$/.test(normalized)) {
     throw new Error('SESSION_IDLE_TIMEOUT_MINUTES must be a finite number greater than zero');
   }
 
-  return minutes * 60 * 1000;
+  const minutes = Number(normalized);
+  const timeoutMs = minutes * 60 * 1000;
+  if (!Number.isFinite(minutes) || minutes <= 0 || !Number.isFinite(timeoutMs)) {
+    throw new Error('SESSION_IDLE_TIMEOUT_MINUTES must be a finite number greater than zero');
+  }
+
+  return timeoutMs;
 }
 
 function getPort(): number {
