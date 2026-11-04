@@ -12,7 +12,7 @@ test('converts a valid positive minute value to milliseconds', () => {
 });
 
 test('rejects an empty, non-numeric, zero, or negative timeout', () => {
-  for (const value of ['', 'not-a-number', 'NaN', 'Infinity', '0', '-1']) {
+  for (const value of ['', 'not-a-number', 'NaN', 'Infinity', '1e308', '0x10', '0', '-1']) {
     assert.throws(
       () => getSessionIdleTimeoutMs(value),
       /SESSION_IDLE_TIMEOUT_MINUTES must be a finite number greater than zero/,
