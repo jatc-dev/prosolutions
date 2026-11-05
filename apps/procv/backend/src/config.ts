@@ -33,17 +33,17 @@ function getFrontendUrl(isProduction: boolean): string {
 }
 
 function getDatabaseUrl(isProduction: boolean): string {
-  const dbUrl = process.env.DATABASE_URL;
+  const dbUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 
   if (!dbUrl) {
     if (isProduction) {
-      throw new Error('DATABASE_URL must be set in production environment');
+      throw new Error('DIRECT_DATABASE_URL or DATABASE_URL must be set in production environment');
     }
     return 'postgresql://postgres:postgres@localhost:5432/procvplatform?schema=public';
   }
 
   if (isProduction && !(dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://'))) {
-    throw new Error('DATABASE_URL must be a PostgreSQL connection string in production');
+    throw new Error('Database URL must be a PostgreSQL connection string in production');
   }
 
   return dbUrl;
