@@ -45,6 +45,14 @@ function encodeContext(
   };
   const payload = JSON.stringify(context);
   const signature = createHmac('sha256', signingKey()).update(payload, 'utf8').digest('hex');
+  console.log('[DEBUG introspect] encodeContext:', {
+    role,
+    sub: userId,
+    kid: context.kid,
+    payload,
+    signature: signature.substring(0, 16) + '...',
+    keyLength: signingKey().length,
+  });
   return { payload, signature };
 }
 
@@ -70,6 +78,13 @@ export function createDbContext(
     // All state is transaction-local. The signature makes freely-settable GUCs
     // untrusted; PostgreSQL validates them against its private key table in RLS.
     const { payload, signature } = encodeContext(role, userId);
+    console.log('[DEBUG introspect] withContext setting GUCs:', {
+      role,
+      userId,
+      databaseRole,
+      payloadPrefix: payload.substring(0, 80) + '...',
+      signaturePrefix: signature.substring(0, 16) + '...',
+    });
     return databaseClient.$transaction(async tx => {
       await tx.$queryRaw`SELECT set_config('role', ${databaseRole}, true)`;
       await tx.$queryRaw`
