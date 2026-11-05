@@ -17,7 +17,7 @@ async function mockFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     }
     const headers = init?.headers as Record<string, string> | undefined;
     const rawAuth = headers?.authorization || headers?.Authorization || '';
-    const rawToken = rawAuth.replace(/^Bearer\\s+/i, '');
+    const rawToken = rawAuth.replace(/^Bearer\s+/i, '');
     const payload = jwt.decode(rawToken) as { sub?: string; modules?: string[]; email?: string } | null;
     if (!payload?.sub) {
       return new Response(JSON.stringify({ valid: false, reason: 'token_invalid' }), {
