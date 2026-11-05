@@ -25,6 +25,9 @@ const AuditLogs = lazy(() => import("./pages/admin/AuditLogs").then((m) => ({ de
 const LandingPageManagement = lazy(() =>
   import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
 );
+const TemplatesGallery = lazy(() =>
+  import("./modules/landing/pages/TemplatesGallery").then((m) => ({ default: m.TemplatesGallery }))
+);
 
 function RedirectToProsolutions({ path }: { path: string }) {
   useEffect(() => {
@@ -104,6 +107,7 @@ export default function App() {
             <Route path="/reset-password" element={<RedirectToProsolutions path="/reset-password" />} />
             <Route path="/verify-email" element={<RedirectToProsolutions path="/verify-email" />} />
             <Route path="/landing" element={<Navigate to="/" replace />} />
+            <Route path="/templates" element={<TemplatesGallery />} />
             <Route path="/dashboard" element={<PrivateRoute><WorkspacePage /></PrivateRoute>} />
             <Route path="/editor" element={<CVEditorPage />} />
             {/* Backward-compatible URL used by the public "try for free" CTA. */}
