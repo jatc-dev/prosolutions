@@ -40,7 +40,7 @@ function encodeContext(
     role,
     sub: userId,
     iat: now,
-    exp: now + 60,
+    exp: now + 300,
     jti: randomUUID(),
   };
   const payload = JSON.stringify(context);
