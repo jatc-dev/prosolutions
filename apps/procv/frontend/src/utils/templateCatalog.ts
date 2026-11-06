@@ -17,4 +17,5 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "extensa", label: "Extensa", category: "premium", supportsPhoto: true, atsFriendly: true },
   { key: "timeline", label: "Timeline", category: "modern", supportsPhoto: false, atsFriendly: true },
   { key: "compact", label: "Compacta", category: "ats", supportsPhoto: false, atsFriendly: true },
+  { key: "employment", label: "Solicitud de empleo", category: "traditional", supportsPhoto: true, atsFriendly: true },
 ];
