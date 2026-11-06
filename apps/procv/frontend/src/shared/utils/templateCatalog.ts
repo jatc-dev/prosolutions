@@ -15,6 +15,7 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = BASE_TEMPLATES.map((temp
 /** Templates available to guests (no account): ATS-friendly free designs. */
 export const GUEST_FREE_TEMPLATES: ReadonlySet<string> = new Set([
   "minimal",
+  "ats",
   "corporate",
   "developer",
   "classic",
