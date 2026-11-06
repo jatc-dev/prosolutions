@@ -567,7 +567,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                         value={education.startDate}
                         onChange={(value) => updateEducation(education.id, { startDate: value })}
                         required
-                      />
+                       allowPartial/>
                     </FormField>
 
                     <FormField
@@ -578,7 +578,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                         value={education.endDate || ''}
                         onChange={(value) => updateEducation(education.id, { endDate: value })}
                         disabled={toCheckedBoolean(education.isCurrentlyStudying as unknown)}
-                      />
+                       allowPartial/>
                       {toCheckedBoolean(education.isCurrentlyStudying as unknown) && (
                         <p className="text-xs text-gray-500 mt-1">{t('editor.education.untilCurrentDate')}</p>
                       )}
