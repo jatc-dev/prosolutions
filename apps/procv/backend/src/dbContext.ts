@@ -28,6 +28,14 @@ function signingKey(): Buffer {
   return Buffer.from(key, 'hex');
 }
 
+// Temporary, one-way diagnostic: compare this fingerprint with the Neon v1 verifier key.
+if (process.env.PROCV_RLS_CONTEXT_KEY && /^[0-9a-f]{64}$/i.test(process.env.PROCV_RLS_CONTEXT_KEY)) {
+  console.info('[SECURITY] ProCV RLS signing-key fingerprint', {
+    keyId: 'v1',
+    keyFingerprint: createHash('sha256').update(signingKey()).digest('hex'),
+  });
+}
+
 function encodeContext(
   role: ContextRole,
   userId: string | null,
