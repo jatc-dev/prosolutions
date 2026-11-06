@@ -132,6 +132,7 @@ export const createInitialCVData = (): CVData => ({
   languages: [],
   certificates: [],
   links: [],
+  application: {},
 });
 
 const toBoolean = (value: unknown): boolean => {
