@@ -740,21 +740,19 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             rows={4}
           />
 
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={data.showValuePropositionTitle !== false}
-              onChange={(e) => onChange({ ...data, showValuePropositionTitle: e.target.checked })}
-              className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
-            />
-            {t('editor.personal.showValuePropositionTitle')}
-          </label>
+          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-3">
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={data.showValuePropositionTitle !== false} onChange={(e) => updateField('showValuePropositionTitle', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+              Mostrar etiqueta «Propuesta de valor»
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={data.showValuePropositionContent !== false} onChange={(e) => updateField('showValuePropositionContent', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+              Mostrar contenido
+            </label>
+          </div>
         </div>
       </FormField>
 
-      <FormField label="Contenido del panel lateral" help="Elige una sola sección para evitar saturar el panel.">
-        <select value={data.sidebarIntroMode || 'valueProposition'} onChange={(e) => updateField('sidebarIntroMode', e.target.value)} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"><option value="valueProposition">Propuesta de valor</option><option value="summary">Perfil profesional</option><option value="none">No mostrar ninguno</option></select>
-      </FormField>
       <section className="space-y-4 border-t border-gray-200 pt-5">
         <div className="flex items-center justify-between"><div><h4 className="text-sm font-semibold text-gray-900">Referencias laborales y personales</h4><p className="text-xs text-gray-500">Agrega nombre, relación o cargo y datos de contacto.</p></div><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'personal', name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
         {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
@@ -773,12 +771,24 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         error={errors.summary?.[0]}
         help={t('editor.personal.help.summary')}
       >
-        <TextareaField
-          value={data.summary}
-          onChange={(value) => updateField('summary', value)}
-          placeholder={t('editor.personal.placeholders.summary')}
-          rows={6}
-        />
+        <div className="space-y-3">
+          <TextareaField
+            value={data.summary}
+            onChange={(value) => updateField('summary', value)}
+            placeholder={t('editor.personal.placeholders.summary')}
+            rows={6}
+          />
+          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-3">
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={data.showSummaryTitle !== false} onChange={(e) => updateField('showSummaryTitle', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+              Mostrar etiqueta «Perfil profesional»
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={data.showSummaryContent !== false} onChange={(e) => updateField('showSummaryContent', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+              Mostrar contenido
+            </label>
+          </div>
+        </div>
       </FormField>
     </FormSection>
   );
