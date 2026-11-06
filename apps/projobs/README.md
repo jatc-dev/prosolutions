@@ -1,31 +1,45 @@
-# ProJobs — Empleo internacional
+# ProJobs
 
-Módulo del ecosistema ProSolutions (@prosolutions/projobs): portal público de ofertas con
-catálogo estático regenerable. `generator.py` agrega y normaliza ofertas desde las APIs
-públicas de Arbeitnow, Remotive, Jobicy, Himalayas y RemoteOK, y elimina duplicados antes
-de generar `jobs.json`/HTML.
+ProJobs es el módulo de oportunidades laborales de ProSolutions. Combina un catálogo público de empleos con una API para funcionalidades de usuario autenticado.
 
-## Cobertura y calidad del catálogo
+## Componentes
+- **Catálogo web:** aplicación estática generada y servida desde `apps/projobs/`.
+- **API:** servicio Node.js/Express en `apps/projobs/server/`.
+- **Persistencia:** PostgreSQL para funciones de usuario; el catálogo público no depende de la API para renderizarse.
+- **Identidad:** ProIdentity es la autoridad de autenticación. La API valida tokens y permisos de módulo antes de permitir operaciones protegidas.
 
-- Arbeitnow aporta ofertas de su bolsa general (se consultan varias páginas).
-- Remotive, Jobicy, Himalayas y RemoteOK amplían especialmente la cobertura de puestos remotos internacionales.
-- El filtro de país ofrece códigos ISO para todos los países y territorios habituales, además de las ubicaciones reales del catálogo. Que un país aparezca en el filtro no implica que haya ofertas activas allí.
-- Las fuentes públicas tienen límites, políticas y disponibilidad independientes. Un error de una API no debe impedir que se publiquen las ofertas obtenidas de las demás fuentes.
-- La normalización prioriza el país/código explícito de la fuente y traduce algunas ubicaciones urbanas comunes a su país. Las ubicaciones no reconocidas se conservan para evitar atribuciones geográficas inventadas.
-- Antes de ampliar la cobertura a bolsas locales por país, conviene integrar proveedores con API oficial y credenciales documentadas (por ejemplo, Adzuna/Jooble) mediante secretos de despliegue; no se deben guardar claves en el repositorio.
+## Desarrollo
 
-## Scripts
+Desde la raíz:
 
-| Comando | Descripción |
-| --- | --- |
-| `npm run dev` | Servidor estático local en http://localhost:5175 (sirve `dist/` si existe) |
-| `npm run build` | Regenera el contenido (si hay Python) y publica el sitio en `dist/` |
-| `npm start` | Igual que `npm run dev` |
+```bash
+npm install
+npm run dev:projobs
+```
 
-Desde la raíz del monorepo: `npm run build:projobs` / `npm run dev:projobs`.
+Comandos del módulo:
 
-## Automatización
+```bash
+npm run dev
+npm run build
+npm run dev:server
+npm run build:server
+npm run start:server
+```
 
-La actualización diaria de ofertas se ejecutaba con GitHub Actions en el repositorio
-independiente (`empleos-tech-remoto`). Para el monorepo, el workflow debe vivir en el
-`.github/workflows/` de la raíz del repositorio.
+La disponibilidad de fuentes externas depende de sus políticas, límites y conectividad. La generación debe tolerar fallos parciales y no inventar ubicaciones ni datos de ofertas.
+
+## API
+
+Consulta [`server/README.md`](server/README.md) para arquitectura de persistencia, autorización, configuración y validación.
+
+## Seguridad y calidad
+- No confíes en identificadores de usuario enviados por el cliente para definir el alcance de consultas.
+- Aplica RLS y contexto de usuario verificado en operaciones de datos personales.
+- El rol runtime debe tener privilegios mínimos y no ser propietario de tablas.
+- Las búsquedas guardadas no implican envío de correo mientras no exista un worker de entrega configurado y validado.
+- Ejecuta `npm run build` y `npm run build:server` tras modificar catálogo o API.
+
+## Despliegue
+
+Los servicios y su configuración declarativa están en `render.yaml`. Los servicios ProJobs tienen `autoDeploy: false` en el manifiesto versionado; confirma siempre el estado del proveedor antes de una publicación manual.
