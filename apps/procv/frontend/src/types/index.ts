@@ -68,6 +68,8 @@ export interface PersonalData {
   showDocumentIdentity?: boolean;
   sidebarIntroMode?: 'valueProposition' | 'summary' | 'none';
   references?: ReferenceItem[];
+  showReferences?: boolean;
+  referencesAvailableOnRequest?: boolean;
   birthDate?: string;
   showBirthDate?: boolean;
   showAge?: boolean;
