@@ -37,6 +37,7 @@ import { SkillsSection } from "./sections/SkillsSection";
 import { LanguagesSection } from "./sections/LanguagesSection";
 import { CertificatesSection } from "./sections/CertificatesSection";
 import { LinksSection } from "./sections/LinksSection";
+import { EmploymentApplicationSection } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
 import { TemplateSuggestions, AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
@@ -303,6 +304,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
       title: cert.title,
       url: cert.verificationUrl || '',
     })) || [],
+    application: cvData.application || {},
     links: cvData.links?.reduce((acc: any, link: any) => {
       if (link.isVisible) {
         acc[link.label.toLowerCase().replace(/\s+/g, '_')] = link.url;
@@ -772,6 +774,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             {...commonProps}
           />
         );
+      case 'application':
+        return <EmploymentApplicationSection data={cvData.application || {}} onChange={(application) => updateCvData({ application })} {...commonProps} />;
       default:
         return null;
     }
