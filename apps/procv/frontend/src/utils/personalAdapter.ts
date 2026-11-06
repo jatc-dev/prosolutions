@@ -14,6 +14,12 @@ type WorkspacePersonalLike = {
   summary?: string;
   valueProposition?: string;
   showValuePropositionTitle?: boolean;
+  sidebarIntroMode?: PersonalData["sidebarIntroMode"];
+  documentType?: string;
+  documentNumber?: string;
+  showDocumentIdentity?: boolean;
+  references?: PersonalData["references"];
+  nationality?: string;
   profileImage?: string;
   profileImageStyle?: "round" | "square" | "portrait";
   showProfileImage?: boolean;
@@ -145,6 +151,12 @@ export function toWorkspacePersonalData(
     role: editorPersonal.professionalTitle,
     valueProposition: editorPersonal.valueProposition,
     showValuePropositionTitle: editorPersonal.showValuePropositionTitle !== false,
+    sidebarIntroMode: editorPersonal.sidebarIntroMode || 'valueProposition',
+    documentType: editorPersonal.documentType || '',
+    documentNumber: editorPersonal.documentNumber || '',
+    showDocumentIdentity: Boolean(editorPersonal.showDocumentIdentity),
+    references: editorPersonal.references || [],
+    nationality: editorPersonal.nationality || '',
     summary: editorPersonal.summary,
     birthDate: editorPersonal.birthDate,
     showBirthDate: Boolean(editorPersonal.showBirthDate),
