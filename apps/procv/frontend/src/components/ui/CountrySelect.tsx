@@ -154,8 +154,10 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
               role="option"
               aria-selected={option.code === selected?.code}
               onMouseEnter={() => setActiveIndex(index)}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => choose(option)}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
               className={`cursor-pointer px-3 py-2 ${index === activeIndex ? "bg-brand-50 text-brand-800 dark:bg-slate-800 dark:text-white" : "text-gray-800 dark:text-slate-200"}`}
             >
               <span>{option.label}</span>
