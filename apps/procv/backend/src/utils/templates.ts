@@ -193,6 +193,8 @@ export function buildPdfHtml(cv: CV): string {
     case 'classic':
     case 'compact':
       return buildClassicTemplate(cv);
+    case 'employment':
+      return buildEmploymentApplicationTemplate(cv);
 
     // Legacy aliases for existing CVs
     case 'ats-optimized':
@@ -208,6 +210,26 @@ export function buildPdfHtml(cv: CV): string {
   }
 }
 
+function buildEmploymentApplicationTemplate(cv: CV): string {
+  const data = (cv.data ?? {}) as any;
+  const app = data.application && typeof data.application === 'object' ? data.application : {};
+  const personal = data.personal ?? {};
+  const groups: Array<{ title: string; fields: Array<[string, string]> }> = [
+    { title: 'I. Información general', fields: [['applicationDate','Fecha'],['positionRequested','Cargo solicitado'],['vacancyCode','Código'],['surnames','Apellidos'],['givenNames','Nombres'],['address','Dirección'],['city','Ciudad'],['phone','Teléfono'],['email','Correo'],['nationality','Nacionalidad'],['occupation','Oficio o profesión'],['civilStatus','Estado civil'],['totalExperience','Experiencia total'],['documentTypeNumber','Tipo y número de documento'],['documentAvailability','Documentos disponibles']] },
+    { title: 'II. Información personal', fields: [['currentEmployment','Situación laboral actual'],['previousCompanyRelation','Relación laboral previa con la empresa'],['companyReferences','Personas conocidas en la empresa'],['vacancySource','Origen de la vacante'],['relocationAvailability','Disponibilidad de traslado'],['housingType','Vivienda'],['additionalIncome','Otros ingresos'],['financialObligations','Obligaciones económicas'],['salaryExpectation','Aspiración salarial'],['hobbies','Aficiones'],['awards','Reconocimientos'],['careerObjective','Objetivo laboral']] },
+    { title: 'III. Información familiar', fields: [['partnerName','Cónyuge o compañero(a)'],['partnerOccupation','Ocupación'],['partnerCompany','Empresa'],['partnerPhone','Teléfono'],['dependants','Personas a cargo'],['fatherDetails','Datos del padre'],['motherDetails','Datos de la madre'],['siblings','Hermanos']] },
+    { title: 'IV. Educación y aptitudes', fields: [['primaryEducation','Educación primaria'],['secondaryEducation','Educación secundaria'],['technicalEducation','Formación técnica / tecnológica'],['universityEducation','Formación universitaria'],['otherCourses','Cursos y seminarios'],['currentStudies','Estudios actuales'],['computerSkills','Conocimientos de sistemas'],['languageSkills','Idiomas y niveles']] },
+    { title: 'V. Sectores y áreas', fields: [['economicSectors','Sectores económicos'],['workAreas','Áreas de desempeño']] },
+    { title: 'VI. Experiencia laboral', fields: [['job1','Empleo 1: empresa y contacto'],['job1Supervisor','Jefe inmediato'],['job1Dates','Fechas y tiempo servido'],['job1PositionSalary','Cargo y salarios'],['job1Duties','Funciones y logros'],['job1ContractExit','Contrato, jornada y retiro'],['job2','Empleo 2: empresa y contacto'],['job2Supervisor','Jefe inmediato'],['job2Dates','Fechas y tiempo servido'],['job2PositionSalary','Cargo y salarios'],['job2Duties','Funciones y logros'],['job2ContractExit','Contrato, jornada y retiro'],['job3','Empleo 3: empresa y contacto'],['job3Supervisor','Jefe inmediato'],['job3Dates','Fechas y tiempo servido'],['job3PositionSalary','Cargo y salarios'],['job3Duties','Funciones y logros'],['job3ContractExit','Contrato, jornada y retiro'],['healthProvider','EPS / salud'],['pensionFund','Fondo de pensiones'],['severanceFund','Fondo de cesantías']] },
+    { title: 'VII. Referencias', fields: [['reference1','Referencia personal 1'],['reference2','Referencia personal 2'],['emergencyContact','Contacto familiar de emergencia']] }
+  ];
+  const esc = (value: unknown) => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
+  const sections = groups.map(group => {
+    const rows = group.fields.filter(([key]) => String(app[key] ?? '').trim()).map(([key,label]) => '<tr><th>' + esc(label) + '</th><td>' + esc(app[key]).replace(/\n/g,'<br/>') + '</td></tr>').join('');
+    return rows ? '<section><h2>' + esc(group.title) + '</h2><table>' + rows + '</table></section>' : '';
+  }).join('');
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"/><title>' + esc(cv.title) + ' - ProCV</title><style>*{box-sizing:border-box}body{margin:0;background:#eef2f7;color:#172033;font:12px Arial,sans-serif}.page{max-width:794px;margin:24px auto;background:#fff;padding:34px 38px}header{border-bottom:3px solid #334155;padding-bottom:16px}.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:bold}h1{font-size:24px;margin:8px 0 4px}header p{margin:0;color:#475569}section{margin-top:20px;break-inside:avoid}h2{font-size:13px;margin:0;background:#e9eef4;border:1px solid #cbd5e1;padding:8px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #dbe2ea;padding:7px 8px;text-align:left;vertical-align:top;line-height:1.45}th{width:34%;font-size:10px;color:#475569;background:#f8fafc}td{overflow-wrap:anywhere}footer{margin-top:24px;padding-top:10px;border-top:1px solid #cbd5e1;color:#64748b;font-size:9px}@media print{body{background:#fff}.page{margin:0;max-width:none;padding:20px}tr{break-inside:avoid}}</style></head><body><main class="page"><header><div class="eyebrow">Formato de información del aspirante</div><h1>' + esc(personal.fullName || personal.name || 'Nombre del aspirante') + '</h1><p>' + esc(personal.professionalTitle || personal.role || 'Solicitud de empleo') + '</p></header>' + (sections || '<p>Completa los datos en el editor para generar este documento.</p>') + '<footer>ProCV · Formato estructurado de información laboral</footer></main></body></html>';
+}
 function buildSidebarTemplate(cv: CV) {
   const data = cv.data as any;
   const personal = data.personal ?? {};
