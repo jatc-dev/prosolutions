@@ -854,7 +854,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           {/* Header */}
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:flex-1 sm:gap-4">
               {/* Left: platform brand + module switcher (shared ProSolutions nav) */}
               <Link to="/" className="shrink-0" aria-label={t("brand.platformAria", "ProSolutions home")}>
                 <div className="flex items-center space-x-3">
