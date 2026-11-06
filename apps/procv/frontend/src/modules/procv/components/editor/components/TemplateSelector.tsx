@@ -12,12 +12,7 @@ interface TemplateSelectorProps {
   onLockedClick: () => void;
 }
 
-/**
- * Template picker with the unified access rule:
- *   Premium plan      -> every template
- *   Free plan         -> templates flagged `tier: "free"`
- *   Guest (no account)-> only `GUEST_FREE_TEMPLATES`
- */
+/** Compact, horizontally scrollable template picker. */
 export function TemplateSelector({
   templates,
   currentTemplate,
@@ -35,62 +30,38 @@ export function TemplateSelector({
     return isGuest && !GUEST_FREE_TEMPLATES.has(tpl.key);
   };
 
-  const handleTemplateClick = (tpl: CVTemplateOption) => {
-    if (isLocked(tpl)) {
-      onLockedClick();
-      return;
-    }
-    onTemplateSelect(tpl.key);
-  };
-
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+    <div className="flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1 pr-1" role="group" aria-label={t("editor.templateSelector.title", "Plantillas de CV")}>
       {templates.map((tpl) => {
         const locked = isLocked(tpl);
-
+        const selected = currentTemplate === tpl.key;
         return (
           <button
             key={tpl.key}
             type="button"
-            onClick={() => handleTemplateClick(tpl)}
-            title={locked ? t("paywall.lockedHint", "Requiere plan Premium") : undefined}
-            className={`relative flex flex-col items-center rounded-lg border-2 p-2 text-left transition-all ${
-              currentTemplate === tpl.key
-                ? "border-brand-600 bg-brand-50 dark:border-brand-500 dark:bg-brand-950/40"
+            onClick={() => locked ? onLockedClick() : onTemplateSelect(tpl.key)}
+            aria-pressed={selected}
+            title={locked ? t("paywall.lockedHint", "Requiere plan Premium") : t(`workspace.templates.${tpl.key}`, { defaultValue: tpl.label })}
+            className={`relative inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-left text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+              selected
+                ? "border-brand-600 bg-brand-50 text-brand-800 shadow-sm dark:border-brand-400 dark:bg-brand-950/50 dark:text-brand-200"
                 : locked
-                ? "border-slate-200 bg-slate-50 opacity-75 dark:border-slate-700 dark:bg-slate-900/60"
-                : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"
+                ? "border-slate-200 bg-slate-50 text-slate-500 hover:border-amber-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                : "border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-600 dark:hover:bg-slate-800"
             }`}
           >
-            {locked && (
-              <span className="absolute -top-1.5 right-1.5">
-                {tpl.tier === "premium" ? (
-                  <PremiumBadge />
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.25 text-[8px] font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                    {t("templateSelector.proLabel", "Pro")}
-                  </span>
-                )}
+            <svg className={`h-4 w-4 shrink-0 ${selected ? "text-brand-600 dark:text-brand-300" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 3.75h7l5 5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1zM14 4v5h5M9 13h6M9 16.5h6" />
+            </svg>
+            <span className="whitespace-nowrap">{t(`workspace.templates.${tpl.key}`, { defaultValue: tpl.label })}</span>
+            {tpl.atsFriendly ? <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">ATS</span> : null}
+            {locked ? (
+              <span className="inline-flex items-center gap-1">
+                {tpl.tier === "premium" ? <PremiumBadge /> : <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">{t("templateSelector.proLabel", "Pro")}</span>}
+                <span className="sr-only">{t("templateSelector.lockedHint", "Solo con cuenta")}</span>
               </span>
-            )}
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 mb-1.5">
-              <svg className="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200">
-              {t(`workspace.templates.${tpl.key}`, { defaultValue: tpl.label })}
-            </span>
-            {locked && (
-              <span className="mt-0.5 text-[9px] text-slate-400 dark:text-slate-500">
-                {tpl.tier === "premium"
-                  ? t("templateSelector.premiumHint", "Plan Premium")
-                  : t("templateSelector.lockedHint", "Solo con cuenta")}
-              </span>
-            )}
-            {tpl.atsFriendly ? (
-              <span className="mt-0.5 text-[9px] font-semibold text-projobs-600 dark:text-projobs-300">ATS</span>
             ) : null}
+            {selected ? <span className="h-1.5 w-1.5 rounded-full bg-brand-600 dark:bg-brand-400" aria-hidden="true" /> : null}
           </button>
         );
       })}
