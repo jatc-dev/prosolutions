@@ -39,6 +39,11 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
     showProfileImage?: boolean;
+    documentType?: string;
+    documentNumber?: string;
+    showDocumentIdentity?: boolean;
+    sidebarIntroMode?: "valueProposition" | "summary" | "none";
+    references?: Array<{ id: string; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     website?: string;
     linkedin?: string;
     github?: string;
@@ -1719,20 +1724,15 @@ function TemplateSidebar({ data }: { data: CVData }) {
             </div>
           </div>
 
-          {renderValuePropositionBlock({
+          {personal.sidebarIntroMode === "summary" ? (
+            personal.summary ? <div className="mt-8"><h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: softColor }}>Perfil profesional</h2><p className="mt-2 text-sm whitespace-pre-line" style={{ color: mutedColor }}>{personal.summary}</p></div> : null
+          ) : personal.sidebarIntroMode === "none" ? null : renderValuePropositionBlock({
             personal,
             containerClassName: "mt-8 rounded-lg border px-3 py-3",
             titleClassName: "text-xs font-semibold uppercase tracking-wide",
             textClassName: "mt-2 text-sm whitespace-pre-line",
             titleText: "Propuesta de valor",
           })}
-
-          {personal.summary ? (
-            <div className="mt-8">
-              <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: softColor }}>Resumen</h2>
-              <p className="mt-2 text-sm" style={{ color: mutedColor }}>{personal.summary}</p>
-            </div>
-          ) : null}
         </aside>
 
         <main className="col-span-2 p-8">
@@ -2477,41 +2477,54 @@ function TemplateExtensa({ data }: { data: CVData }) {
   );
 }
 
+function SupplementalPersonalSections({ data }: { data: CVData }) {
+  const personal = data.personal ?? {};
+  const references = (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
+  if (!showDocument && references.length === 0) return null;
+  return (
+    <section className="max-w-3xl mx-auto border border-slate-200 bg-white px-7 py-5 text-slate-800 shadow-sm">
+      {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
+      {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Personal"}{reference.position || reference.relationship ? " · " + (reference.position || reference.relationship) : ""}{reference.company ? " · " + reference.company : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
+    </section>
+  );
+}
+
 export function TemplateRenderer({ template, data }: Props) {
   switch (template) {
     case "sidebar":
-      return <TemplateSidebar data={data} />;
+      return <>{<TemplateSidebar data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "corporate":
-      return <TemplateCorporate data={data} />;
+      return <>{<TemplateCorporate data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "developer":
-      return <TemplateDeveloper data={data} />;
+      return <>{<TemplateDeveloper data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "creative":
-      return <TemplateCreative data={data} />;
+      return <>{<TemplateCreative data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "classic":
-      return <TemplateClassic data={data} />;
+      return <>{<TemplateClassic data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "executive":
-      return <TemplateExecutive data={data} />;
+      return <>{<TemplateExecutive data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "extensa":
-      return <TemplateExtensa data={data} />;
+      return <>{<TemplateExtensa data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "timeline":
-      return <TemplateTimeline data={data} />;
+      return <>{<TemplateTimeline data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "compact":
-      return <TemplateCompact data={data} />;
+      return <>{<TemplateCompact data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "ats":
-      return <TemplateMinimal data={data} />;
+      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
 
     // Legacy aliases kept for backward compatibility with existing CVs
     case "ats-optimized":
-      return <TemplateMinimal data={data} />;
+      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "photo-professional":
-      return <TemplateExecutive data={data} />;
+      return <>{<TemplateExecutive data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "modern-sidebar":
-      return <TemplateTimeline data={data} />;
+      return <>{<TemplateTimeline data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "elegant":
-      return <TemplateCompact data={data} />;
+      return <>{<TemplateCompact data={data} />}<SupplementalPersonalSections data={data} /></>;
     case "extensive":
-      return <TemplateExtensa data={data} />;
+      return <>{<TemplateExtensa data={data} />}<SupplementalPersonalSections data={data} /></>;
     default:
-      return <TemplateMinimal data={data} />;
+      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
   }
 }
