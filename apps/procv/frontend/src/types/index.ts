@@ -87,7 +87,10 @@ export interface PersonalData {
   // Professional Summary
   valueProposition?: string;
   showValuePropositionTitle?: boolean;
+  showValuePropositionContent?: boolean;
   summary: string;
+  showSummaryTitle?: boolean;
+  showSummaryContent?: boolean;
 
   // Social Links
   linkedin?: string;
