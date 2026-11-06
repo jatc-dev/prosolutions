@@ -675,6 +675,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     languages: getSectionCompletion('languages'),
     certificates: getSectionCompletion('certificates'),
     links: getSectionCompletion('links'),
+    application: Boolean(cvData.application && Object.values(cvData.application).some((value) => String(value || '').trim())),
   };
 
   // Handle adding a new block item from the palette
