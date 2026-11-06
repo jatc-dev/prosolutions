@@ -258,7 +258,6 @@ function buildSidebarTemplate(cv: CV) {
   const emails: ContactItem[] = normalizeContactItems(personal.emails ?? personal.email);
   const phones: ContactItem[] = normalizeContactItems(personal.phones ?? personal.phone);
   const sidebarBg = (data.settings?.sidebarBg as string) ?? '#0f172a';
-  const sidebarIntroMode = personal.sidebarIntroMode || 'valueProposition';
 
   const formatRange = (from?: string, to?: string) => {
     if (!from) return '';
