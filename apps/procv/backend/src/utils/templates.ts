@@ -165,7 +165,7 @@ function renderValuePropositionHtml(
   },
 ) {
   const content = String(personal?.valueProposition ?? '').trim();
-  if (!content) return '';
+  if (!content || personal?.showValuePropositionContent === false) return '';
 
   const showTitle = personal?.showValuePropositionTitle !== false;
   const containerClass = options?.containerClass ?? 'blk';
@@ -334,7 +334,7 @@ function buildSidebarTemplate(cv: CV) {
             .join('')}
         </div>
 
-        ${sidebarIntroMode === 'summary' ? (personal.summary ? `<div class="blk"><div class="blk-title">Perfil profesional</div><div class="text">${escapeHtml(personal.summary)}</div></div>` : '') : sidebarIntroMode === 'none' ? '' : renderValuePropositionHtml(personal, escapeHtml, { containerClass: 'blk', titleClass: 'blk-title', textClass: 'text' })}
+        ${renderValuePropositionHtml(personal, escapeHtml, { containerClass: 'blk', titleClass: 'blk-title', textClass: 'text' })}
         ${
           Object.keys(links).length
             ? `<div class="blk"><div class="blk-title">Enlaces</div>${Object.entries(links)
@@ -349,6 +349,7 @@ function buildSidebarTemplate(cv: CV) {
       </aside>
 
       <main class="main">
+        ${personal.summary && personal.showSummaryContent !== false ? `<div class="blk">${personal.showSummaryTitle !== false ? '<div class="blk-title" style="color:#475569">Perfil profesional</div>' : ''}<div class="text" style="color:#334155;white-space:pre-line">${escapeHtml(personal.summary)}</div></div>` : ''}
         ${
           experience.length
             ? `<div class="blk"><div class="blk-title">Experiencia</div>${experience
