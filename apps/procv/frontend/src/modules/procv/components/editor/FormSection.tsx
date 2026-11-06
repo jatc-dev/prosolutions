@@ -277,6 +277,7 @@ interface DateFieldProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   required?: boolean;
+  allowPartial?: boolean;
 }
 
 // Helper function to format date for HTML date input (YYYY-MM-DD)
@@ -285,6 +286,9 @@ const formatDateForInput = (dateString: string): string => {
 
   const raw = String(dateString).trim();
   if (!raw) return '';
+
+  // Preserve exact, month-only, and year-only values.
+  if (/^\d{4}$/.test(raw) || /^\d{4}-\d{2}$/.test(raw)) return raw;
 
   // Accept canonical date input value directly.
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
@@ -317,33 +321,19 @@ const formatDateForInput = (dateString: string): string => {
   return '';
 };
 
-export const DateField: React.FC<DateFieldProps> = ({
-  value,
-  onChange,
-  disabled = false,
-  required = false,
-}) => {
+export const DateField: React.FC<DateFieldProps> = ({ value, onChange, disabled = false, required = false, allowPartial = false }) => {
   const normalizedExternalValue = formatDateForInput(value);
+  const getPrecision = (raw: string): 'day' | 'month' | 'year' => /^\\d{4}$/.test(raw) ? 'year' : /^\\d{4}-\\d{2}$/.test(raw) ? 'month' : 'day';
   const [inputValue, setInputValue] = useState<string>(normalizedExternalValue);
-
-  useEffect(() => {
-    setInputValue(normalizedExternalValue);
-  }, [normalizedExternalValue]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedValue = e.target.value;
-    setInputValue(selectedValue);
-    onChange(selectedValue);
+  const [precision, setPrecision] = useState<'day' | 'month' | 'year'>(getPrecision(normalizedExternalValue));
+  useEffect(() => { setInputValue(normalizedExternalValue); setPrecision(getPrecision(normalizedExternalValue)); }, [normalizedExternalValue]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const selectedValue = e.target.value; setInputValue(selectedValue); onChange(selectedValue); };
+  const handlePrecisionChange = (next: 'day' | 'month' | 'year') => {
+    setPrecision(next);
+    if (next === 'year') { const year = inputValue.match(/^\\d{4}/)?.[0] || ''; setInputValue(year); onChange(year); }
+    else if (next === 'month') { const monthValue = /^\\d{4}-\\d{2}/.test(inputValue) ? inputValue.slice(0, 7) : ''; setInputValue(monthValue); onChange(monthValue); }
+    else if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(inputValue)) { setInputValue(''); onChange(''); }
   };
-
-  return (
-    <input
-      type="date"
-      value={inputValue}
-      onChange={handleChange}
-      disabled={disabled}
-      required={required}
-      className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
-    />
-  );
+  const inputType = !allowPartial || precision === 'day' ? 'date' : precision === 'month' ? 'month' : 'number';
+  return <div className="space-y-2">{allowPartial ? <select aria-label="Precisión de fecha" value={precision} onChange={(event) => handlePrecisionChange(event.target.value as 'day' | 'month' | 'year')} disabled={disabled} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="day">Día, mes y año</option><option value="month">Mes y año</option><option value="year">Solo año</option></select> : null}<input type={inputType} value={inputValue} min={inputType === 'number' ? 1900 : undefined} max={inputType === 'number' ? 2100 : undefined} step={inputType === 'number' ? 1 : undefined} onChange={handleChange} disabled={disabled} required={required} placeholder={inputType === 'number' ? 'AAAA' : undefined} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500" /></div>;
 };
