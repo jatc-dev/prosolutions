@@ -20,4 +20,5 @@ export const GUEST_FREE_TEMPLATES: ReadonlySet<string> = new Set([
   "classic",
   "compact",
   "timeline",
+  "employment",
 ]);
