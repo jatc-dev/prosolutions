@@ -2497,6 +2497,8 @@ export function TemplateRenderer({ template, data }: Props) {
       return <TemplateTimeline data={data} />;
     case "compact":
       return <TemplateCompact data={data} />;
+    case "ats":
+      return <TemplateMinimal data={data} />;
 
     // Legacy aliases kept for backward compatibility with existing CVs
     case "ats-optimized":
