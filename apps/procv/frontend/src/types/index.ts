@@ -9,7 +9,8 @@ export type SectionType =
   | 'skills'
   | 'languages'
   | 'certificates'
-  | 'links';
+  | 'links'
+  | 'application';
 
 export type ContactType = 'personal' | 'work' | 'education' | 'other';
 export type PhoneType = 'personal' | 'office' | 'home' | 'whatsapp' | 'other';
@@ -217,6 +218,7 @@ export interface CVData {
   languages: LanguageItem[];
   certificates: CertificateItem[];
   links: LinkItem[];
+  application?: Record<string, string>;
   createdAt?: string;
   updatedAt?: string;
 }
