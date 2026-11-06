@@ -2452,10 +2452,10 @@ function GlobalProfilePhoto({ data }: { data: CVData }) {
   return <div className="mx-auto max-w-3xl bg-white px-6 pt-5 text-center"><img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} mx-auto border border-slate-200`} /></div>;
 }
 
-function SupplementalPersonalSections({ data, includeReferences = true }: { data: CVData; includeReferences?: boolean }) {
+function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean }) {
   const personal = data.personal ?? {};
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
-  const showRequestText = Boolean(personal.referencesAvailableOnRequest);
+  const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
   return <section className="max-w-3xl mx-auto border border-slate-200 bg-white px-7 py-5 text-slate-800 shadow-sm">
@@ -2468,7 +2468,7 @@ function SupplementalPersonalSections({ data, includeReferences = true }: { data
 export function TemplateRenderer({ template, data }: Props) {
   switch (template) {
     case "sidebar":
-      return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} includeRequestText={false} /></>;
     case "corporate":
       return <><GlobalProfilePhoto data={data} /><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
     case "developer":
