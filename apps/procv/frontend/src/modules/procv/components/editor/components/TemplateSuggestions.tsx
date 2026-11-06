@@ -25,6 +25,7 @@ export const TemplateSuggestions: React.FC<TemplateSuggestionsProps> = ({ sectio
       languages: 'Idiomas',
       certificates: 'Certificaciones',
       links: 'Enlaces',
+      application: 'Solicitud de empleo',
     };
     return titles[section] || section;
   };
