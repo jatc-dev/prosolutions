@@ -19,7 +19,23 @@ export function HomePage() {
   // Exact-origin allowlisting prevents open redirects to untrusted sites.
   const getPostLoginDestination = () => {
     const fallback = new URL("/dashboard", window.location.origin).toString();
-    const requested = new URLSearchParams(window.location.search).get("redirect_uri");
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo");
+
+    // Same-origin relative paths are used by the public home login CTA.
+    // Reject protocol-relative URLs and backslashes to prevent open redirects.
+    if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") && !returnTo.includes("\\")) {
+      try {
+        const destination = new URL(returnTo, window.location.origin);
+        if (destination.origin === window.location.origin) return destination.toString();
+      } catch {
+        // Continue with the central module redirect or the dashboard fallback.
+      }
+    }
+
+    // Preserve the requesting first-party module after central authentication.
+    // Exact-origin allowlisting prevents open redirects to untrusted sites.
+    const requested = params.get("redirect_uri");
     if (!requested) return fallback;
 
     try {
