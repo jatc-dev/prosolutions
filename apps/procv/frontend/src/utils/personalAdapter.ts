@@ -14,6 +14,9 @@ type WorkspacePersonalLike = {
   summary?: string;
   valueProposition?: string;
   showValuePropositionTitle?: boolean;
+  showValuePropositionContent?: boolean;
+  showSummaryTitle?: boolean;
+  showSummaryContent?: boolean;
   sidebarIntroMode?: PersonalData["sidebarIntroMode"];
   documentType?: string;
   documentNumber?: string;
@@ -121,7 +124,10 @@ export function toEditorPersonalData(
     phones,
     valueProposition: source.valueProposition || "",
     showValuePropositionTitle: source.showValuePropositionTitle !== false,
+    showValuePropositionContent: source.showValuePropositionContent !== false,
     summary: source.summary || "",
+    showSummaryTitle: source.showSummaryTitle !== false,
+    showSummaryContent: source.showSummaryContent !== false,
     profileImage: source.profileImage || "",
     profileImageStyle: source.profileImageStyle || "round",
     showProfileImage: source.showProfileImage !== false,
@@ -151,7 +157,10 @@ export function toWorkspacePersonalData(
     role: editorPersonal.professionalTitle,
     valueProposition: editorPersonal.valueProposition,
     showValuePropositionTitle: editorPersonal.showValuePropositionTitle !== false,
-    sidebarIntroMode: editorPersonal.sidebarIntroMode || 'valueProposition',
+    showValuePropositionContent: editorPersonal.showValuePropositionContent !== false,
+    showSummaryTitle: editorPersonal.showSummaryTitle !== false,
+    showSummaryContent: editorPersonal.showSummaryContent !== false,
+    sidebarIntroMode: 'valueProposition',
     documentType: editorPersonal.documentType || '',
     documentNumber: editorPersonal.documentNumber || '',
     showDocumentIdentity: Boolean(editorPersonal.showDocumentIdentity),
