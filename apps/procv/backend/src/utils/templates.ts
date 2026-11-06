@@ -193,6 +193,8 @@ export function buildPdfHtml(cv: CV): string {
     case 'classic':
     case 'compact':
       return buildClassicTemplate(cv);
+    case 'ats':
+      return buildMinimalTemplate(cv);
     case 'employment':
       return buildEmploymentApplicationTemplate(cv);
 
