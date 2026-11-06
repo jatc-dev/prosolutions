@@ -364,11 +364,11 @@ function formatPersonalLocation(personal: CVData["personal"]) {
   return parts.join(", ");
 }
 
-function renderNationality(personal: CVData["personal"]) {
+function renderNationality(personal: CVData["personal"], textColor?: string) {
   const nationality = formatCountry(personal?.nationality);
   if (!nationality) return null;
   return (
-    <p className="mt-1 text-xs text-slate-500">
+    <p className="mt-1 text-xs text-slate-500" style={textColor ? { color: textColor } : undefined}>
       {i18n.t("editor.personal.fields.nationality", "Nationality")}: {nationality}
     </p>
   );
@@ -587,8 +587,23 @@ function hexToRgb(hexColor: string) {
 function getContrastMode(hexColor: string): "light" | "dark" {
   const rgb = hexToRgb(hexColor);
   if (!rgb) return "light";
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-  return luminance > 0.62 ? "dark" : "light";
+  const linearize = (channel: number) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance =
+    0.2126 * linearize(rgb.r) +
+    0.7152 * linearize(rgb.g) +
+    0.0722 * linearize(rgb.b);
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  const darkContrast = (luminance + 0.05) / 0.05;
+  return darkContrast >= whiteContrast ? "dark" : "light";
+}
+
+function getGradientStartColor(gradient: string): string {
+  return String(gradient || "").match(/#([0-9a-fA-F]{6})/)?.[0] || "#3730a3";
 }
 
 function rgbaFromHex(hexColor: string, alpha: number): string {
@@ -1300,6 +1315,9 @@ function TemplateCreative({ data }: { data: CVData }) {
   const phones = normalizeContactItems(personal.phones ?? personal.phone);
   const personalMetaLines = getPersonalMetaLines(personal);
   const creativeGradient = data.settings?.creativeGradient ?? "linear-gradient(135deg, #3730a3 0%, #0f172a 55%, #1e293b 100%)";
+  const creativeContrast = getContrastMode(getGradientStartColor(creativeGradient));
+  const creativeTextColor = creativeContrast === "dark" ? "#0f172a" : "#ffffff";
+  const creativeMutedColor = creativeContrast === "dark" ? "#334155" : "#f1f5f9";
   const creativeIntensity = data.settings?.creativeIntensity ?? "medium";
   const intensityOverlay: Record<"soft" | "medium" | "strong", number> = {
     soft: 0.08,
@@ -1311,7 +1329,7 @@ function TemplateCreative({ data }: { data: CVData }) {
 
   return (
     <div
-      className="max-w-2xl mx-auto text-white p-9 rounded-2xl shadow-lg border border-white/10 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal"
+      className="max-w-2xl mx-auto p-9 rounded-2xl shadow-lg border border-white/10 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal"
       style={{ backgroundImage: `linear-gradient(rgba(2, 6, 23, ${overlay}), rgba(2, 6, 23, ${overlay})), ${creativeGradient}` }}
     >
       <header className="space-y-2">
@@ -1322,9 +1340,9 @@ function TemplateCreative({ data }: { data: CVData }) {
             className={`${getProfileImageClass(personal, "medium")} border-2 border-white/30 mb-3`}
           />
         )}
-        <h1 className="text-4xl font-extrabold tracking-tight">{personal.name || "Tu Nombre"}</h1>
-        <p className="text-sm text-slate-200">{personal.role || "Profesional Creativo"}</p>
-        <div className="flex flex-wrap gap-2 text-xs text-slate-200">
+        <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: creativeTextColor }}>{personal.name || "Tu Nombre"}</h1>
+        <p className="text-sm" style={{ color: creativeMutedColor }}>{personal.role || "Profesional Creativo"}</p>
+        <div className="flex flex-wrap gap-2 text-xs" style={{ color: creativeMutedColor }}>
           {emails.map((email, idx) => (
             <span key={`email-${idx}`} className="px-2 py-1 bg-white/10 rounded-full">
               <span className="font-semibold">{email.type}:</span> {email.value}
@@ -1349,14 +1367,14 @@ function TemplateCreative({ data }: { data: CVData }) {
       {renderValuePropositionBlock({
         personal,
         containerClassName: "mt-8 rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-[1px]",
-        titleClassName: "text-sm font-semibold uppercase tracking-wide text-slate-300",
-        textClassName: "mt-2 text-sm text-slate-100 whitespace-pre-line",
+        titleClassName: `text-sm font-semibold uppercase tracking-wide ${creativeContrast === "dark" ? "text-slate-700" : "text-slate-200"}`,
+        textClassName: `mt-2 text-sm whitespace-pre-line ${creativeContrast === "dark" ? "text-slate-800" : "text-slate-100"}`,
       })}
 
       {personal.summary && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">Sobre mí</h2>
-          <p className="mt-2 text-sm text-slate-100">{personal.summary}</p>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: creativeMutedColor }}>Sobre mí</h2>
+          <p className="mt-2 text-sm" style={{ color: creativeTextColor }}>{personal.summary}</p>
         </section>
       )}
 
@@ -1607,7 +1625,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             ) : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
-            {renderNationality(personal)}
+            {renderNationality(personal, mutedColor)}
             {personalLocation ? (
               <p className="text-sm" style={{ color: mutedColor }}>{personalLocation}</p>
             ) : null}
@@ -1801,7 +1819,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
-        {renderNationality(personal)}
+        {renderNationality(personal, subtitleColor)}
         <div className="mt-4 flex flex-wrap gap-2 text-sm" style={{ color: metaColor }}>
           {personalLocation ? <span>{personalLocation}</span> : null}
           {emails[0]?.value ? <span>{emails[0].value}</span> : null}
@@ -2236,7 +2254,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           <div className="flex-1 min-w-0">
             <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
-            {renderNationality(personal)}
+            {renderNationality(personal, subtitleColor)}
             {formatPersonalLocation(personal) ? (
               <p className={`${dense ? "mt-1" : "mt-2"} text-sm`} style={{ color: subtitleColor }}>{formatPersonalLocation(personal)}</p>
             ) : null}
