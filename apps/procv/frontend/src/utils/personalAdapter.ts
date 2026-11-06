@@ -165,6 +165,8 @@ export function toWorkspacePersonalData(
     documentNumber: editorPersonal.documentNumber || '',
     showDocumentIdentity: Boolean(editorPersonal.showDocumentIdentity),
     references: editorPersonal.references || [],
+    showReferences: editorPersonal.showReferences !== false,
+    referencesAvailableOnRequest: Boolean(editorPersonal.referencesAvailableOnRequest),
     nationality: editorPersonal.nationality || '',
     summary: editorPersonal.summary,
     birthDate: editorPersonal.birthDate,
