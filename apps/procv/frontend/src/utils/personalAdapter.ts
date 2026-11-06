@@ -22,6 +22,8 @@ type WorkspacePersonalLike = {
   documentNumber?: string;
   showDocumentIdentity?: boolean;
   references?: PersonalData["references"];
+  showReferences?: boolean;
+  referencesAvailableOnRequest?: boolean;
   nationality?: string;
   profileImage?: string;
   profileImageStyle?: "round" | "square" | "portrait";
