@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID } from 'crypto';
+import { createHmac, randomUUID } from 'crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from './prismaClient';
 
@@ -26,14 +26,6 @@ function signingKey(): Buffer {
     throw new Error('PROCV_RLS_CONTEXT_KEY must be configured as 32 bytes of hex');
   }
   return Buffer.from(key, 'hex');
-}
-
-// Temporary, one-way diagnostic: compare this fingerprint with the Neon v1 verifier key.
-if (process.env.PROCV_RLS_CONTEXT_KEY && /^[0-9a-f]{64}$/i.test(process.env.PROCV_RLS_CONTEXT_KEY)) {
-  console.info('[SECURITY] ProCV RLS signing-key fingerprint', {
-    keyId: 'v1',
-    keyFingerprint: createHash('sha256').update(signingKey()).digest('hex'),
-  });
 }
 
 function encodeContext(
@@ -100,12 +92,6 @@ export function createDbContext(
         verified.claims.role !== role ||
         verified.claims.sub !== userId
       ) {
-        // A one-way fingerprint permits safe comparison with Neon without logging the key.
-        console.error('[SECURITY] ProCV signed-context verification failed', {
-          keyId: 'v1',
-          keyFingerprint: createHash('sha256').update(signingKey()).digest('hex'),
-          contextTtlSeconds: 60,
-        });
         throw new Error(
           'ProCV RLS context was rejected; verify PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
         );
