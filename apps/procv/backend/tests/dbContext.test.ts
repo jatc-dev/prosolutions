@@ -75,6 +75,7 @@ describe('ProCV signed transaction database context', () => {
       kid: 'v1',
     });
     expect(claims.exp as number).toBeGreaterThan(claims.iat as number);
+    expect((claims.exp as number) - (claims.iat as number)).toBe(60);
     expect(operation).toHaveBeenCalledTimes(1);
   });
 
