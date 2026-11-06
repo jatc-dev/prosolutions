@@ -269,12 +269,14 @@ export async function refreshToken(req: Request, res: Response) {
   try {
     const payload = verifyRefreshToken(refreshToken) as {
       sub: string;
+      jti: string;
     };
     const session = await prisma.session.findUnique({ where: { refreshToken } });
     if (
       !session ||
       session.revokedAt ||
       session.userId !== payload.sub ||
+      session.jti !== payload.jti ||
       session.expiresAt < new Date()
     ) {
       logger.warn('Refresh token rejected');
