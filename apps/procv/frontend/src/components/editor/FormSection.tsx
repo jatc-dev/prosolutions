@@ -330,7 +330,7 @@ export const DateField: React.FC<DateFieldProps> = ({
 }) => {
   const normalizedExternalValue = formatDateForInput(value);
   const getPrecision = (raw: string): 'day' | 'month' | 'year' =>
-    /^\\d{4}$/.test(raw) ? 'year' : /^\\d{4}-\\d{2}$/.test(raw) ? 'month' : 'day';
+    /^\d{4}$/.test(raw) ? 'year' : /^\d{4}-\d{2}$/.test(raw) ? 'month' : 'day';
   const [inputValue, setInputValue] = useState<string>(normalizedExternalValue);
   const [precision, setPrecision] = useState<'day' | 'month' | 'year'>(getPrecision(normalizedExternalValue));
 
@@ -348,14 +348,14 @@ export const DateField: React.FC<DateFieldProps> = ({
   const handlePrecisionChange = (next: 'day' | 'month' | 'year') => {
     setPrecision(next);
     if (next === 'year') {
-      const year = inputValue.match(/^\\d{4}/)?.[0] || '';
+      const year = inputValue.match(/^\d{4}/)?.[0] || '';
       setInputValue(year);
       onChange(year);
     } else if (next === 'month') {
-      const monthValue = /^\\d{4}-\\d{2}/.test(inputValue) ? inputValue.slice(0, 7) : '';
+      const monthValue = /^\d{4}-\d{2}/.test(inputValue) ? inputValue.slice(0, 7) : '';
       setInputValue(monthValue);
       onChange(monthValue);
-    } else if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(inputValue)) {
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(inputValue)) {
       setInputValue('');
       onChange('');
     }
