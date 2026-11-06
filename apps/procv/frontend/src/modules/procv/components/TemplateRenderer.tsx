@@ -35,7 +35,10 @@ export interface CVData {
     showCountry?: boolean;
     valueProposition?: string;
     showValuePropositionTitle?: boolean;
+    showValuePropositionContent?: boolean;
     summary?: string;
+    showSummaryTitle?: boolean;
+    showSummaryContent?: boolean;
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
     showProfileImage?: boolean;
@@ -480,7 +483,7 @@ function renderValuePropositionBlock({
   titleText = "Propuesta de valor",
 }: ValuePropositionBlockOptions) {
   const content = String(personal?.valueProposition || "").trim();
-  if (!content) return null;
+  if (!content || personal?.showValuePropositionContent === false) return null;
 
   const showTitle = personal?.showValuePropositionTitle !== false;
 
@@ -1658,9 +1661,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             </div>
           </div>
 
-          {personal.sidebarIntroMode === "summary" ? (
-            personal.summary ? <div className="mt-8"><h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: softColor }}>Perfil profesional</h2><p className="mt-2 text-sm whitespace-pre-line" style={{ color: mutedColor }}>{personal.summary}</p></div> : null
-          ) : personal.sidebarIntroMode === "none" ? null : renderValuePropositionBlock({
+          {renderValuePropositionBlock({
             personal,
             containerClassName: "mt-8 rounded-lg border px-3 py-3",
             titleClassName: "text-xs font-semibold uppercase tracking-wide",
@@ -1670,6 +1671,12 @@ function TemplateSidebar({ data }: { data: CVData }) {
         </aside>
 
         <main className="col-span-2 p-8">
+          {personal.summary?.trim() && personal.showSummaryContent !== false ? (
+            <section className="mb-8">
+              {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Perfil profesional</h2> : null}
+              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-700">{personal.summary}</p>
+            </section>
+          ) : null}
           {data.experience?.length ? (
             <section className="mb-8">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Experiencia</h2>
