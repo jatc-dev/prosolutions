@@ -106,6 +106,7 @@ export function LandingPage() {
         onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
         profile={user ? { name: user.name, email: user.email } : null}
         profileHref="/dashboard"
+        securityHref="/security/sessions"
         onSignOut={user ? handleSignOut : undefined}
         loginHref="/login?returnTo=%2F"
         authLoading={authLoading}

@@ -66,7 +66,7 @@ export function PortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={user ? { name: user.name, email: user.email } : null} onSignOut={user ? logout : undefined} />
+      <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={user ? { name: user.name, email: user.email } : null} onSignOut={user ? logout : undefined} securityHref="/security/sessions" />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-12 sm:px-8">
         {loading ? <div className="py-20 text-center text-slate-500">Cargando tu portal...</div> : error ? (
           <section className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm dark:border-rose-900 dark:bg-slate-900">
