@@ -176,39 +176,53 @@ function renderValuePropositionHtml(
   return `<div class="${containerClass}">${showTitle ? `<div class="${titleClass}">${escapeHtml(titleText)}</div>` : ''}<p class="${textClass}">${escapeHtml(content)}</p></div>`;
 }
 
+function appendSharedPdfSections(html: string, cv: CV): string {
+  const data = (cv.data ?? {}) as any;
+  const personal = data.personal ?? {};
+  const escape = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const photo = personal.profileImage && personal.showProfileImage !== false ? `<div class="procv-profile-photo"><img src="${escape(personal.profileImage)}" alt="Foto de perfil"/></div>` : '';
+  const document = personal.showDocumentIdentity && (personal.documentType || personal.documentNumber) ? `<div class="procv-identity"><strong>Documento de identidad:</strong> ${escape([personal.documentType, personal.documentNumber].filter(Boolean).join(' · '))}</div>` : '';
+  const references = Array.isArray(personal.references) ? personal.references.filter((item: any) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship)) : [];
+  const referenceHtml = references.length ? `<section class="procv-references"><h2>Referencias laborales y personales</h2><div class="procv-reference-grid">${references.map((item: any) => `<div class="procv-reference"><strong>${escape(item.name)}</strong><div>${escape(item.type === 'laboral' ? 'Laboral' : 'Personal')}${item.position || item.relationship ? ' · ' + escape(item.position || item.relationship) : ''}${item.company ? ' · ' + escape(item.company) : ''}</div>${item.phone ? `<div>${escape(item.phone)}</div>` : ''}${item.email ? `<div>${escape(item.email)}</div>` : ''}</div>`).join('')}</div></section>` : '';
+  const style = `<style>.procv-profile-photo{margin:0 auto 14px;text-align:center}.procv-profile-photo img{max-width:96px;max-height:120px;object-fit:cover;border-radius:8px}.procv-identity{margin:12px 0;font-size:11px}.procv-references{margin:18px 0;break-inside:avoid}.procv-references h2{font-size:13px;padding:7px;background:#f1f5f9;border:1px solid #cbd5e1}.procv-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.procv-reference{font-size:11px;line-height:1.4;padding:7px;border:1px solid #e2e8f0;overflow-wrap:anywhere}@media print{.procv-references,.procv-reference{break-inside:avoid}}</style>`;
+  if (photo) html = html.replace(/<body([^>]*)>/i, (match) => match + photo);
+  const additions = (document || referenceHtml) ? style + document + referenceHtml : '';
+  return additions ? html.replace(/<\\/body>/i, additions + '</body>') : html;
+}
+
 export function buildPdfHtml(cv: CV): string {
   const template = (cv.template ?? 'minimal').toLowerCase();
 
   switch (template) {
     case 'sidebar':
-      return buildSidebarTemplate(cv);
+      return appendSharedPdfSections(buildSidebarTemplate(cv), cv);
     case 'corporate':
     case 'executive':
-      return buildCorporateTemplate(cv);
+      return appendSharedPdfSections(buildCorporateTemplate(cv), cv);
     case 'developer':
-      return buildDeveloperTemplate(cv);
+      return appendSharedPdfSections(buildDeveloperTemplate(cv), cv);
     case 'creative':
     case 'timeline':
-      return buildCreativeTemplate(cv);
+      return appendSharedPdfSections(buildCreativeTemplate(cv), cv);
     case 'classic':
     case 'compact':
-      return buildClassicTemplate(cv);
+      return appendSharedPdfSections(buildClassicTemplate(cv), cv);
     case 'ats':
-      return buildMinimalTemplate(cv);
+      return appendSharedPdfSections(buildMinimalTemplate(cv), cv);
     case 'employment':
-      return buildEmploymentApplicationTemplate(cv);
+      return appendSharedPdfSections(buildEmploymentApplicationTemplate(cv), cv);
 
     // Legacy aliases for existing CVs
     case 'ats-optimized':
-      return buildMinimalTemplate(cv);
+      return appendSharedPdfSections(buildMinimalTemplate(cv), cv);
     case 'photo-professional':
-      return buildCorporateTemplate(cv);
+      return appendSharedPdfSections(buildCorporateTemplate(cv), cv);
     case 'modern-sidebar':
-      return buildCreativeTemplate(cv);
+      return appendSharedPdfSections(buildCreativeTemplate(cv), cv);
     case 'elegant':
-      return buildClassicTemplate(cv);
+      return appendSharedPdfSections(buildClassicTemplate(cv), cv);
     default:
-      return buildMinimalTemplate(cv);
+      return appendSharedPdfSections(buildMinimalTemplate(cv), cv);
   }
 }
 
@@ -244,6 +258,7 @@ function buildSidebarTemplate(cv: CV) {
   const emails: ContactItem[] = normalizeContactItems(personal.emails ?? personal.email);
   const phones: ContactItem[] = normalizeContactItems(personal.phones ?? personal.phone);
   const sidebarBg = (data.settings?.sidebarBg as string) ?? '#0f172a';
+  const sidebarIntroMode = personal.sidebarIntroMode || 'valueProposition';
 
   const formatRange = (from?: string, to?: string) => {
     if (!from) return '';
@@ -319,12 +334,7 @@ function buildSidebarTemplate(cv: CV) {
             .join('')}
         </div>
 
-        ${renderValuePropositionHtml(personal, escapeHtml, {
-          containerClass: 'blk',
-          titleClass: 'blk-title',
-          textClass: 'text',
-        })}
-        ${personal.summary ? `<div class="blk"><div class="blk-title">Resumen</div><div class="text">${escapeHtml(personal.summary)}</div></div>` : ''}
+        ${sidebarIntroMode === 'summary' ? (personal.summary ? `<div class="blk"><div class="blk-title">Perfil profesional</div><div class="text">${escapeHtml(personal.summary)}</div></div>` : '') : sidebarIntroMode === 'none' ? '' : renderValuePropositionHtml(personal, escapeHtml, { containerClass: 'blk', titleClass: 'blk-title', textClass: 'text' })}
         ${
           Object.keys(links).length
             ? `<div class="blk"><div class="blk-title">Enlaces</div>${Object.entries(links)
