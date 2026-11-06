@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from 'crypto';
+import { createHash, createHmac, randomUUID } from 'crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from './prismaClient';
 
@@ -92,6 +92,12 @@ export function createDbContext(
         verified.claims.role !== role ||
         verified.claims.sub !== userId
       ) {
+        // A one-way fingerprint permits safe comparison with Neon without logging the key.
+        console.error('[SECURITY] ProCV signed-context verification failed', {
+          keyId: 'v1',
+          keyFingerprint: createHash('sha256').update(signingKey()).digest('hex'),
+          contextTtlSeconds: 60,
+        });
         throw new Error(
           'ProCV RLS context was rejected; verify PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
         );
