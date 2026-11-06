@@ -47,6 +47,8 @@ export interface CVData {
     showDocumentIdentity?: boolean;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
     references?: Array<{ id: string; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
+    showReferences?: boolean;
+    referencesAvailableOnRequest?: boolean;
     birthDate?: string;
     showBirthDate?: boolean;
     showAge?: boolean;
@@ -2445,12 +2447,14 @@ function GlobalProfilePhoto({ data }: { data: CVData }) {
 
 function SupplementalPersonalSections({ data }: { data: CVData }) {
   const personal = data.personal ?? {};
-  const references = (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const references = personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const showRequestText = Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
-  if (!showDocument && references.length === 0) return null;
+  if (!showDocument && references.length === 0 && !showRequestText) return null;
   return <section className="max-w-3xl mx-auto border border-slate-200 bg-white px-7 py-5 text-slate-800 shadow-sm">
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
-    {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Personal"}{reference.position || reference.relationship ? " · " + (reference.position || reference.relationship) : ""}{reference.company ? " · " + reference.company : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
+    {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"}{reference.type === "laboral" && reference.position ? " · " + reference.position : ""}{reference.type === "laboral" && reference.company ? " · " + reference.company : ""}{reference.type === "personal" && (reference.relationship || reference.position) ? " · " + (reference.relationship || reference.position) : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
+    {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
   </section>;
 }
 
