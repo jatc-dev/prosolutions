@@ -57,6 +57,7 @@ model Session {
   @@index([expiresAt])
   @@index([userId])
   @@index([jti])
+  @@index([userId, revokedAt, expiresAt])
 }
 
 model PasswordResetToken {
