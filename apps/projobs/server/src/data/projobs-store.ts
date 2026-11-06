@@ -68,8 +68,12 @@ export async function removeApplication(userId: string, jobId: string) {
 }
 export async function updateApplicationStatus(userId: string, jobId: string, status: ApplicationStatus, note = '') {
   return withUserTransaction(userId, async c => {
-    const previous = await c.query('SELECT status FROM public.projobs_applications WHERE job_id=$1', [jobId]);
+    const previous = await c.query(
+      'SELECT id, status FROM public.projobs_applications WHERE job_id=$1',
+      [jobId],
+    );
     if (!previous.rows[0]) return null;
+    const applicationId = previous.rows[0].id as string;
     const previousStatus = previous.rows[0].status as ApplicationStatus;
     const q = await c.query(
       `UPDATE public.projobs_applications
@@ -80,9 +84,9 @@ export async function updateApplicationStatus(userId: string, jobId: string, sta
     );
     if (!q.rows[0]) return null;
     await c.query(
-      `INSERT INTO public.projobs_application_events(user_id,job_id,previous_status,new_status,note)
-       VALUES($1,$2,$3,$4,$5)`,
-      [userId, jobId, previousStatus, status, note],
+      `INSERT INTO public.projobs_application_events(application_id,user_id,job_id,previous_status,new_status,note)
+       VALUES($1,$2,$3,$4,$5,$6)`,
+      [applicationId, userId, jobId, previousStatus, status, note],
     );
     return q.rows[0];
   });
@@ -114,9 +118,9 @@ export async function getCareerProgress(userId: string) {
     const [applications, saved, events] = await Promise.all([
       c.query(`SELECT status,count(*)::int AS count FROM public.projobs_applications GROUP BY status`),
       c.query('SELECT count(*)::int AS count FROM public.projobs_saved_jobs'),
-      c.query(`SELECT e.job_id,a.job_title,a.company,e.previous_status,e.new_status,e.note,e.created_at
+      c.query(`SELECT a.job_id,a.job_title,a.company,e.previous_status,e.new_status,e.note,e.created_at
         FROM public.projobs_application_events e
-        LEFT JOIN public.projobs_applications a ON a.user_id=e.user_id AND a.job_id=e.job_id
+        INNER JOIN public.projobs_applications a ON a.id=e.application_id
         ORDER BY e.created_at DESC LIMIT 20`),
     ]);
     const counts: Record<string, number> = {};

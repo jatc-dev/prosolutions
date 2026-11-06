@@ -98,6 +98,18 @@ export function createDbContext(
       if (current?.current_role !== databaseRole) {
         throw new Error(`Unable to assume the restricted ${databaseRole} database role`);
       }
+      const [verified] = await tx.$queryRaw<
+        Array<{ claims: { role?: string; sub?: string | null } | null }>
+      >`SELECT procv_private.verified_context() AS claims`;
+      if (
+        !verified?.claims ||
+        verified.claims.role !== role ||
+        verified.claims.sub !== userId
+      ) {
+        throw new Error(
+          'ProCV RLS context was rejected; verify PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
+        );
+      }
       return operation(tx);
     });
   }

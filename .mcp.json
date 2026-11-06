@@ -2,16 +2,16 @@
   "mcpServers": {
     "neon": {
       "command": "npx",
-      "args": ["-y", "@neon-database/mcp-server"],
+      "args": ["-y", "@neondatabase/mcp-server"],
       "env": {
-        "NEON_API_KEY": "TU_API_KEY_DE_NEON"
+        "NEON_API_KEY": "napi_tix5f0x2t1ncg7silwiuqs2xytfru9se1163obnvu1akadit2n36849rx0rnjj6b"
       }
     },
     "render": {
       "command": "npx",
       "args": ["-y", "@render/mcp-server"],
       "env": {
-        "RENDER_API_KEY": "TU_API_KEY_DE_RENDER"
+        "RENDER_API_KEY": "rnd_rRuNPVYLIuDioc4BIXlNewcgKUGT"
       }
     }
   }

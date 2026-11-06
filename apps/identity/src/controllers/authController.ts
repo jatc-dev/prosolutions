@@ -51,27 +51,31 @@ export async function register(req: Request, res: Response) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: { email: normalizedEmail, passwordHash, name },
-    });
-
-    const defaultModules = getDefaultModules(user.role);
-    for (const module of defaultModules) {
-      await prisma.moduleAccess.create({
-        data: { userId: user.id, module },
-      });
-    }
-
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await prisma.emailVerificationToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-      },
+    const { user, verificationToken } = await prisma.$transaction(async tx => {
+      const createdUser = await tx.user.create({
+        data: { email: normalizedEmail, passwordHash, name },
+      });
+
+      const defaultModules = getDefaultModules(createdUser.role);
+      for (const module of defaultModules) {
+        await tx.moduleAccess.create({
+          data: { userId: createdUser.id, module },
+        });
+      }
+
+      await tx.emailVerificationToken.create({
+        data: {
+          userId: createdUser.id,
+          tokenHash,
+          expiresAt,
+        },
+      });
+
+      return { user: createdUser, verificationToken: tokenHash };
     });
 
     const verificationUrl = `${config.frontendUrl}/verify-email?token=${token}&email=${encodeURIComponent(user.email)}`;
@@ -89,7 +93,17 @@ export async function register(req: Request, res: Response) {
       userEmail: user.email,
     });
     if (!verificationEmailSent) {
-      await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id, used: false } });
+      try {
+        await prisma.emailVerificationToken.delete({
+          where: { tokenHash: verificationToken },
+        });
+      } catch (cleanupError: unknown) {
+        logger.error('Verification token cleanup failed after email delivery failure', {
+          userId: user.id,
+          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        });
+        return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
+      }
       logger.warn('Verification email could not be delivered during registration', { userId: user.id });
     }
 

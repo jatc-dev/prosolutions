@@ -15,12 +15,20 @@ const { withAdminContext, withPublicContext, withUserContext } = createDbContext
 );
 const TEST_CONTEXT_KEY = 'a'.repeat(64);
 
-function configureTransactionRole(client: { $transaction: jest.Mock }, role = 'procv_app') {
+function configureTransactionRole(
+  client: { $transaction: jest.Mock },
+  role = 'procv_app',
+  claims: { role: string; sub: string | null } = {
+    role: 'user',
+    sub: 'identity-user-a',
+  },
+) {
   const queryRaw = jest
     .fn()
     .mockResolvedValueOnce([])
     .mockResolvedValueOnce([])
-    .mockResolvedValueOnce([{ current_role: role }]);
+    .mockResolvedValueOnce([{ current_role: role }])
+    .mockResolvedValueOnce([{ claims }]);
   const tx = { $queryRaw: queryRaw };
   client.$transaction.mockImplementation(async (callback: (client: typeof tx) => unknown) =>
     callback(tx),
@@ -54,7 +62,7 @@ describe('ProCV signed transaction database context', () => {
     await expect(withUserContext('identity-user-a', operation)).resolves.toBe('ok');
 
     expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(queryRaw).toHaveBeenCalledTimes(3);
+    expect(queryRaw).toHaveBeenCalledTimes(4);
     expect(queryRaw.mock.calls[0][0][0]).toContain("set_config('role', ");
     expect(queryRaw.mock.calls[0][1]).toBe('procv_app');
     expect(queryRaw.mock.calls[1][0].join('')).toContain("set_config('procv.context_signature'");
@@ -71,7 +79,10 @@ describe('ProCV signed transaction database context', () => {
   });
 
   it('signs an explicit administrator context without a caller-controlled GUC flag', async () => {
-    const { queryRaw } = configureTransactionRole(mockedAdminPrisma, 'procv_admin_app');
+    const { queryRaw } = configureTransactionRole(mockedAdminPrisma, 'procv_admin_app', {
+      role: 'user',
+      sub: 'identity-admin',
+    });
     await withAdminContext('identity-admin', async () => 'admin');
     expect(capturedContext(queryRaw)).toMatchObject({ role: 'user', sub: 'identity-admin' });
     expect(queryRaw.mock.calls[0][1]).toBe('procv_admin_app');
@@ -81,7 +92,10 @@ describe('ProCV signed transaction database context', () => {
   });
 
   it('signs a public context with no subject', async () => {
-    const { queryRaw } = configureTransactionRole(mockedPrisma);
+    const { queryRaw } = configureTransactionRole(mockedPrisma, 'procv_app', {
+      role: 'public',
+      sub: null,
+    });
     await withPublicContext(async () => 'public');
     expect(capturedContext(queryRaw)).toMatchObject({ role: 'public', sub: null });
   });
@@ -115,5 +129,19 @@ describe('ProCV signed transaction database context', () => {
       'Unable to assume the restricted procv_app database role',
     );
     expect(queryRaw).toHaveBeenCalledTimes(3);
+  });
+
+  it('fails closed when PostgreSQL rejects the signed context', async () => {
+    const { queryRaw } = configureTransactionRole(mockedPrisma, 'procv_app', {
+      role: 'user',
+      sub: 'different-user',
+    });
+    const operation = jest.fn();
+
+    await expect(withUserContext('identity-user-a', operation)).rejects.toThrow(
+      'PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
+    );
+    expect(operation).not.toHaveBeenCalled();
+    expect(queryRaw).toHaveBeenCalledTimes(4);
   });
 });
