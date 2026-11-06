@@ -1788,7 +1788,14 @@ function TemplateSidebar({ data }: { data: CVData }) {
               </div>
             </section>
           ) : null}
-        </main>
+          {(personal.showReferences !== false && (personal.references || []).some((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship))) || personal.referencesAvailableOnRequest ? (
+            <section className="mt-8 border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h3>
+              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
+              {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
+            </section>
+          ) : null}
+                </main>
       </div>
     </div>
   );
@@ -2445,9 +2452,9 @@ function GlobalProfilePhoto({ data }: { data: CVData }) {
   return <div className="mx-auto max-w-3xl bg-white px-6 pt-5 text-center"><img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} mx-auto border border-slate-200`} /></div>;
 }
 
-function SupplementalPersonalSections({ data }: { data: CVData }) {
+function SupplementalPersonalSections({ data, includeReferences = true }: { data: CVData; includeReferences?: boolean }) {
   const personal = data.personal ?? {};
-  const references = personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
   const showRequestText = Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
@@ -2461,7 +2468,7 @@ function SupplementalPersonalSections({ data }: { data: CVData }) {
 export function TemplateRenderer({ template, data }: Props) {
   switch (template) {
     case "sidebar":
-      return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} /></>;
     case "corporate":
       return <><GlobalProfilePhoto data={data} /><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
     case "developer":
