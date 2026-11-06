@@ -1329,7 +1329,7 @@ function TemplateCreative({ data }: { data: CVData }) {
 
   return (
     <div
-      className="max-w-2xl mx-auto p-9 rounded-2xl shadow-lg border border-white/10 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal"
+      className={`max-w-2xl mx-auto p-9 rounded-2xl shadow-lg border border-white/10 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal ${creativeContrast === "dark" ? "[&_.text-white]:!text-slate-900 [&_.text-slate-100]:!text-slate-800 [&_.text-slate-200]:!text-slate-700 [&_.text-slate-300]:!text-slate-700 [&_.text-slate-400]:!text-slate-600" : ""}`}
       style={{ backgroundImage: `linear-gradient(rgba(2, 6, 23, ${overlay}), rgba(2, 6, 23, ${overlay})), ${creativeGradient}` }}
     >
       <header className="space-y-2">
