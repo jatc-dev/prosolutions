@@ -717,13 +717,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
     >
       {/* ATS-Friendly Header with Semantic HTML */}
       <header className="mb-7">
-        {shouldRenderProfileImage(personal) && (
-          <img
-            src={personal.profileImage}
-            alt="Foto de perfil"
-            className={`${getProfileImageClass(personal, "small")} border border-slate-200 mb-3`}
-          />
-        )}
+
         <h1
           className="text-4xl font-bold tracking-tight ats-name"
           itemProp="name"
@@ -1675,13 +1669,6 @@ function TemplateSidebar({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 lg:grid-cols-3">
         <aside className="relative px-7 py-9 text-white" style={{ backgroundColor: sidebarBg }}>
           <div className="space-y-4">
-            {shouldRenderProfileImage(personal) ? (
-              <img
-                src={personal.profileImage}
-                alt="Foto de perfil"
-                className={`${getProfileImageClass(personal, "medium")} border-2 border-white/40`}
-              />
-            ) : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
             {renderNationality(personal, "text-xs")}
@@ -2477,6 +2464,12 @@ function TemplateExtensa({ data }: { data: CVData }) {
   );
 }
 
+function GlobalProfilePhoto({ data }: { data: CVData }) {
+  const personal = data.personal ?? {};
+  if (!shouldRenderProfileImage(personal)) return null;
+  return <div className="mx-auto max-w-3xl bg-white px-6 pt-5 text-center"><img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} mx-auto border border-slate-200`} /></div>;
+}
+
 function SupplementalPersonalSections({ data }: { data: CVData }) {
   const personal = data.personal ?? {};
   const references = (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
@@ -2493,38 +2486,38 @@ function SupplementalPersonalSections({ data }: { data: CVData }) {
 export function TemplateRenderer({ template, data }: Props) {
   switch (template) {
     case "sidebar":
-      return <>{<TemplateSidebar data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} /></>;
     case "corporate":
-      return <>{<TemplateCorporate data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
     case "developer":
-      return <>{<TemplateDeveloper data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateDeveloper data={data} /><SupplementalPersonalSections data={data} /></>;
     case "creative":
-      return <>{<TemplateCreative data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateCreative data={data} /><SupplementalPersonalSections data={data} /></>;
     case "classic":
-      return <>{<TemplateClassic data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateClassic data={data} /><SupplementalPersonalSections data={data} /></>;
     case "executive":
-      return <>{<TemplateExecutive data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensa":
-      return <>{<TemplateExtensa data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     case "timeline":
-      return <>{<TemplateTimeline data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "compact":
-      return <>{<TemplateCompact data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "ats":
-      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
 
     // Legacy aliases kept for backward compatibility with existing CVs
     case "ats-optimized":
-      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "photo-professional":
-      return <>{<TemplateExecutive data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "modern-sidebar":
-      return <>{<TemplateTimeline data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "elegant":
-      return <>{<TemplateCompact data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensive":
-      return <>{<TemplateExtensa data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     default:
-      return <>{<TemplateMinimal data={data} />}<SupplementalPersonalSections data={data} /></>;
+      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
   }
 }
