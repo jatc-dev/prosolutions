@@ -31,6 +31,10 @@ interface ProHeaderProps {
   profileHref?: string;
   /** Destino opcional para configuración de cuenta. */
   settingsHref?: string;
+  /** URL de acceso cuando no hay una sesión autenticada. */
+  loginHref?: string;
+  /** Indica que la aplicación está comprobando la sesión. */
+  authLoading?: boolean;
   /** Idioma de la interfaz compartida. */
   locale?: "es" | "en";
   /** Acción para cambiar el idioma, cuando la aplicación ofrece traducciones. */
@@ -73,7 +77,7 @@ function navItems(locale: "es" | "en"): NavItem[] {
  * Header unificado del ecosistema ProSolutions.
  * Uso: <ProHeader activeApp="core" /> en apps/core, "procv" en apps/procv, etc.
  */
-export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref }: ProHeaderProps) {
+export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref, loginHref, authLoading = false }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const items = navItems(locale);
 
@@ -143,6 +147,19 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
           <div className="flex items-center gap-2">
             {actions ? <div className="hidden items-center gap-2 xl:flex">{actions}</div> : null}
 
+            {authLoading && !profile ? (
+              <span role="status" className="hidden rounded-xl px-3 py-2 text-xs font-medium text-slate-500 sm:inline dark:text-slate-400">
+                {locale === "en" ? "Checking session..." : "Comprobando sesión..."}
+              </span>
+            ) : null}
+
+            {!authLoading && !profile && loginHref ? (
+              <a href={loginHref} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
+                <UserRound className="h-4 w-4" aria-hidden="true" />
+                {locale === "en" ? "Sign in" : "Iniciar sesión"}
+              </a>
+            ) : null}
+
             {profile ? (
               <details className="group relative">
                 <summary className="inline-flex h-10 max-w-56 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
@@ -202,6 +219,24 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               {items.map((item) => renderLink(item, () => setMobileOpen(false)))}
 
               {actions ? <div className="flex flex-col gap-2 pt-1">{actions}</div> : null}
+
+              {profile ? (
+                <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{profile.name || (locale === "en" ? "Signed in" : "Sesión iniciada")}</p>
+                  <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{profile.email}</p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    {profileHref ? <a href={profileHref} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">{locale === "en" ? "My account" : "Mi cuenta"}</a> : null}
+                    {onSignOut ? <button type="button" onClick={() => void onSignOut()} className="text-sm font-medium text-red-600 hover:underline dark:text-red-400">{locale === "en" ? "Sign out" : "Cerrar sesión"}</button> : null}
+                  </div>
+                </div>
+              ) : !authLoading && loginHref ? (
+                <a href={loginHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+                  <UserRound className="h-4 w-4" aria-hidden="true" />
+                  {locale === "en" ? "Sign in" : "Iniciar sesión"}
+                </a>
+              ) : authLoading ? (
+                <p role="status" className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">{locale === "en" ? "Checking session..." : "Comprobando sesión..."}</p>
+              ) : null}
 
               <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700">
                 <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{locale === "en" ? "Theme" : "Tema"}</span>
