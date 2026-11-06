@@ -884,6 +884,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 >
                   {t("shell.platformHome", "Plataforma")}
                 </Link>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-600 dark:hover:bg-slate-700 dark:hover:text-white"
+                >
+                  {t("navigation.dashboardShort", "Dashboard")}
+                </Link>
               </nav>
 
               <AutoSaveIndicator
