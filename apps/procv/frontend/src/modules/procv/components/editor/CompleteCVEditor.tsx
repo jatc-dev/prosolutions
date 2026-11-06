@@ -380,7 +380,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [pendingImportData, setPendingImportData] = useState<ParsedCvDraft | null>(null);
   const [pendingMergedData, setPendingMergedData] = useState<Partial<CVData> | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showBlockPalette, setShowBlockPalette] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
@@ -907,6 +906,19 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
+              <section className="basis-full min-w-0 border-t border-slate-100 pt-2 dark:border-slate-800" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla del CV")}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
+                </div>
+                <TemplateSelector
+                  templates={CURATED_CV_TEMPLATES}
+                  currentTemplate={cvData.template}
+                  isGuest={isGuest}
+                  onTemplateSelect={setTemplate}
+                  onLockedClick={() => setShowUpgradeModal(true)}
+                />
+              </section>
             </div>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
@@ -1081,33 +1093,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 />
               </div>
 
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowTemplateSelector(!showTemplateSelector)}
-                  className="inline-flex items-center rounded-md border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-brand-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                  </svg>
-                  {t('editor.templateSelector.title', 'Selector de plantilla')}
-                </button>
-              </div>
 
-              {showTemplateSelector && (
-                <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                  <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    {t('editor.templateSelector.title', 'Selector de plantilla')}
-                  </h4>
-                  <TemplateSelector
-                    templates={CURATED_CV_TEMPLATES}
-                    currentTemplate={cvData.template}
-                    isGuest={isGuest}
-                    onTemplateSelect={setTemplate}
-                    onLockedClick={() => setShowUpgradeModal(true)}
-                  />
-                </div>
-              )}
 
               {/* Block Palette - Drag & Drop style block addition */}
               <div className="mt-4">
