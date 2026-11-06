@@ -187,10 +187,10 @@ function appendSharedPdfSections(html: string, cv: CV): string {
   const referenceHtml = referenceCards || personal.referencesAvailableOnRequest ? `<section class="procv-references"><h2>Referencias laborales y personales</h2>${referenceCards ? `<div class="procv-reference-grid">${referenceCards}</div>` : ''}${personal.referencesAvailableOnRequest ? '<p>Referencias laborales y personales: Disponibles a solicitud.</p>' : ''}</section>` : '';
   const style = `<style>.procv-profile-photo{margin:0 auto 14px;text-align:center}.procv-profile-photo img{max-width:96px;max-height:120px;object-fit:cover;border-radius:8px}.procv-identity{margin:12px 0;font-size:11px}.procv-references{margin:18px 0;break-inside:avoid}.procv-references h2{font-size:13px;padding:7px;background:#f1f5f9;border:1px solid #cbd5e1}.procv-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.procv-reference{font-size:11px;line-height:1.4;padding:7px;border:1px solid #e2e8f0;overflow-wrap:anywhere}@media print{.procv-references,.procv-reference{break-inside:avoid}}</style>`;
   if (photo) html = html.replace(/<body([^>]*)>/i, (match) => match + photo);
-  const additions = document ? style + document : '';
+  const additions = (document || referenceHtml) ? style + document : '';
   let output = additions ? html.replace(/<\/body>/i, additions + '</body>') : html;
   if (referenceHtml) {
-    if (/<main[^>]*class=["'][^"']*main[^"']*["'][^>]*>/i.test(output)) output = output.replace(/<\/main>/i, referenceHtml + '</main>');
+    if (/<\/main>/i.test(output)) output = output.replace(/<\/main>/i, referenceHtml + '</main>');
     else output = output.replace(/<\/body>/i, referenceHtml + '</body>');
   }
   return output;
