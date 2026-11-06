@@ -13,10 +13,10 @@ function refreshCookieOptions(): CookieOptions {
   };
 }
 
-export function setRefreshTokenCookie(res: Response, refreshToken: string): void {
+export function setRefreshTokenCookie(res: Response, refreshToken: string, rememberMe = false): void {
   res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
     ...refreshCookieOptions(),
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    ...(rememberMe ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {}),
   });
 }
 

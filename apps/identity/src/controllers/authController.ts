@@ -135,7 +135,7 @@ export async function login(req: Request, res: Response) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { email, password } = value;
+    const { email, password, rememberMe } = value;
     const normalizedEmail = email.toLowerCase().trim();
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -199,9 +199,12 @@ export async function login(req: Request, res: Response) {
       email: user.email,
       role: user.role,
       modules,
+    }, {
+      rememberMe,
+      deviceName: req.get("sec-ch-ua-platform") || req.get("user-agent")?.split(" ")[0] || "Dispositivo desconocido",
+      userAgent: req.get("user-agent") || null,
+      ipAddress: req.ip || null,
     });
-
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     try {
       await prisma.$transaction([
@@ -211,7 +214,7 @@ export async function login(req: Request, res: Response) {
         }),
         prisma.session.update({
           where: { refreshToken },
-          data: { expiresAt, lastAccessedAt: new Date() },
+          data: { lastAccessedAt: new Date() },
         }),
       ]);
     } catch (txError: unknown) {
@@ -221,7 +224,7 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    setRefreshTokenCookie(res, refreshToken);
+    setRefreshTokenCookie(res, refreshToken, rememberMe);
 
     auditLog('authentication.login_success', {
       userId: user.id,
@@ -304,28 +307,22 @@ export async function refreshToken(req: Request, res: Response) {
       {
         issuer: config.issuer,
         audience: config.audience,
-        expiresIn: config.jwtRefreshExpiresIn,
+        expiresIn: session.rememberMe ? "30d" : "12h",
       } as jwt.SignOptions,
     );
-    const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const newExpiresAt = new Date(Date.now() + (session.rememberMe ? 30 : 0.5) * 24 * 60 * 60 * 1000);
 
-    await prisma.$transaction([
-      prisma.session.update({
-        where: { id: session.id },
-        data: { revokedAt: new Date() },
-      }),
-      prisma.session.create({
-        data: {
-          userId: session.userId,
-          refreshToken: newRefreshToken,
-          jti,
-          expiresAt: newExpiresAt,
-          lastAccessedAt: new Date(),
-        },
-      }),
-    ]);
+    await prisma.$transaction(async (tx) => {
+      const revoked = await tx.session.updateMany({ where: { id: session.id, revokedAt: null }, data: { revokedAt: new Date() } });
+      if (revoked.count !== 1) throw new Error("Refresh token already used or revoked");
+      await tx.session.create({ data: {
+        userId: session.userId, refreshToken: newRefreshToken, jti,
+        expiresAt: newExpiresAt, lastAccessedAt: new Date(), rememberMe: session.rememberMe,
+        deviceName: session.deviceName, userAgent: session.userAgent, ipAddress: session.ipAddress,
+      } });
+    });
 
-    setRefreshTokenCookie(res, newRefreshToken);
+    setRefreshTokenCookie(res, newRefreshToken, session.rememberMe);
     return res.json({ accessToken, modules });
   } catch {
     logger.warn('Refresh token verification failed');

@@ -109,7 +109,7 @@ export function PortalPage() {
             {(!user?.modules?.includes("PROCV") && !user?.modules?.includes("PROJOBS")) && (
               <p role="status" className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">Tu cuenta no tiene módulos habilitados. Contacta con soporte para revisar tus permisos.</p>
             )}
-            <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">Sesión iniciada como {user?.email}. La sesión se comparte de forma segura entre los módulos.</p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400"><span>Sesión iniciada como {user?.email}. La sesión se comparte de forma segura entre los módulos.</span><a href="/security/sessions" className="font-semibold text-brand-700 underline underline-offset-4 dark:text-brand-300">Seguridad y dispositivos</a></div>
           </>
         )}
       </main>

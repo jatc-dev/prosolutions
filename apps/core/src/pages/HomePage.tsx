@@ -64,13 +64,14 @@ export function HomePage() {
     const formData = new FormData(form);
     const email = String(formData.get("email") || "").trim();
     const password = String(formData.get("password") || "");
+    const rememberMe = formData.get("rememberMe") === "on";
 
     try {
       const response = await fetch(`${IDENTITY_API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       if (!response.ok) {
@@ -177,6 +178,10 @@ export function HomePage() {
                     required
                   />
 
+                  <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+                    <input type="checkbox" name="rememberMe" className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
+                    <span><span className="font-medium">Permanecer conectado en este equipo</span><span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">Mantendremos tu sesión hasta 30 días. No actives esta opción en equipos compartidos.</span></span>
+                  </label>
                   <div className="flex justify-end mb-2">
                     <a
                       href="/forgot-password"

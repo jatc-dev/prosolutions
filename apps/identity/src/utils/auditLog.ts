@@ -23,6 +23,8 @@ export type AuditEventType =
   | 'authentication.verification_resent'
   | 'authentication.profile_updated'
   | 'authentication.token_validated'
+  | 'authentication.session_revoked'
+  | 'authentication.other_sessions_revoked'
   | 'authorization.unauthorized_access'
   | 'authorization.module_access_denied'
   | 'authorization.module_access_granted'

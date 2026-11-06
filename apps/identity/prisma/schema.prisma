@@ -48,6 +48,10 @@ model Session {
   createdAt        DateTime  @default(now())
   revokedAt        DateTime?
   lastAccessedAt   DateTime  @default(now())
+  rememberMe       Boolean   @default(false)
+  deviceName       String?
+  userAgent        String?
+  ipAddress        String?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])

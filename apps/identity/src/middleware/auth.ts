@@ -17,6 +17,7 @@ export interface IdentityRequest extends Request {
   email?: string;
   role?: string;
   modules?: string[];
+  sessionId?: string;
 }
 
 export async function identityMiddleware(
@@ -74,7 +75,8 @@ export async function identityMiddleware(
 
     const now = new Date();
     const idleMs = now.getTime() - session.lastAccessedAt.getTime();
-    if (idleMs > SESSION_IDLE_TIMEOUT) {
+    const idleTimeout = session.rememberMe ? 30 * 24 * 60 * 60 * 1000 : SESSION_IDLE_TIMEOUT;
+    if (idleMs > idleTimeout) {
       await prisma.session.update({
         where: { id: session.id },
         data: { revokedAt: now },
@@ -89,6 +91,7 @@ export async function identityMiddleware(
     });
 
     req.userId = payload.sub;
+    req.sessionId = session.id;
     req.email = payload.email;
     req.role = payload.role;
     req.modules = payload.modules;

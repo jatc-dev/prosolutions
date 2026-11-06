@@ -52,12 +52,8 @@ export function signAccessToken(payload: {
   );
 }
 
-export function signRefreshToken(payload: { sub: string; jti: string }): string {
-  return jwt.sign(
-    { sub: payload.sub, jti: payload.jti },
-    config.jwtSecret,
-    REFRESH_TOKEN_OPTIONS,
-  );
+export function signRefreshToken(payload: { sub: string; jti: string }, expiresIn: string = config.jwtRefreshExpiresIn): string {
+  return jwt.sign({ sub: payload.sub, jti: payload.jti }, config.jwtSecret, { ...REFRESH_TOKEN_OPTIONS, expiresIn } as jwt.SignOptions);
 }
 
 export function verifyAccessToken(token: string): IdentityTokenPayload {
@@ -79,7 +75,10 @@ export async function createTokenPair(user: {
   email: string;
   role: string;
   modules?: string[];
-}): Promise<TokenPair> {
+}, options: { rememberMe?: boolean; deviceName?: string | null; userAgent?: string | null; ipAddress?: string | null } = {}): Promise<TokenPair> {
+  const rememberMe = options.rememberMe === true;
+  const lifetime = rememberMe ? "30d" : "12h";
+  const expiresAt = new Date(Date.now() + (rememberMe ? 30 : 0.5) * 24 * 60 * 60 * 1000);
   const jti = crypto.randomUUID();
   const accessToken = signAccessToken({
     sub: user.id,
@@ -89,8 +88,7 @@ export async function createTokenPair(user: {
     jti,
   });
 
-  const refreshToken = signRefreshToken({ sub: user.id, jti });
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const refreshToken = signRefreshToken({ sub: user.id, jti }, lifetime);
 
   try {
     await prisma.session.create({
@@ -100,6 +98,10 @@ export async function createTokenPair(user: {
         jti,
         expiresAt,
         lastAccessedAt: new Date(),
+        rememberMe,
+        deviceName: options.deviceName || null,
+        userAgent: options.userAgent || null,
+        ipAddress: options.ipAddress || null,
       },
     });
   } catch (error: unknown) {

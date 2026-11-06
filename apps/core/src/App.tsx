@@ -7,6 +7,7 @@ import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { PortalPage } from "./pages/PortalPage";
 import { AdminAccessPage } from "./pages/AdminAccessPage";
 import { LandingPage } from "./pages/LandingPage";
+import { SecuritySessionsPage } from "./pages/SecuritySessionsPage";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/login" element={<HomePage />} />
         <Route path="/auth/callback" element={<HomePage />} />
         <Route path="/dashboard" element={<PortalPage />} />
+        <Route path="/security/sessions" element={<SecuritySessionsPage />} />
         <Route path="/modules" element={<PortalPage />} />
         <Route path="/admin/access" element={<AdminAccessPage />} />
         <Route path="/register" element={<RegisterPage />} />

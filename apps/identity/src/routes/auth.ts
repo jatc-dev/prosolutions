@@ -20,6 +20,7 @@ import {
   introspectLimiter,
 } from '../middleware/rateLimiter';
 import { identityMiddleware } from '../middleware/auth';
+import { listSessions, revokeSessionById, revokeOtherSessions } from '../controllers/sessionController';
 
 const router = Router();
 
@@ -29,6 +30,9 @@ router.post('/refresh', refreshLimiter, refreshToken);
 router.post('/logout', logout);
 router.post('/introspect', introspectLimiter, introspectToken);
 router.get('/me', identityMiddleware, me);
+router.get('/sessions', identityMiddleware, listSessions);
+router.delete('/sessions/:sessionId', identityMiddleware, revokeSessionById);
+router.post('/sessions/revoke-others', identityMiddleware, revokeOtherSessions);
 router.put('/profile', identityMiddleware, updateProfile);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
 router.post('/reset-password', passwordResetLimiter, resetPassword);
