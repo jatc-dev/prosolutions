@@ -1,3 +1,12 @@
+# IMPORTANT: this Blueprint is NOT reconciled with the live Render services.
+# Audit on 2026-11-06 found differences in service runtimes and AutoDeploy settings.
+# Do NOT run Blueprint Sync or use this file to recreate/update production services.
+# Treat the Render dashboard as the source of truth until a separately approved
+# reconciliation has compared service IDs, root dirs, runtimes, commands, domains,
+# health checks, environment variables and AutoDeploy behavior.
+# Operational docs: docs/deployment/PRODUCTION_ARCHITECTURE.md
+# This warning intentionally does not alter any service definitions below.
+
 services:
   - type: web
     name: proidentity

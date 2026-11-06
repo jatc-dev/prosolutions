@@ -1,19 +1,14 @@
 # ProJobs API
 
-API de persistencia y funcionalidades de usuario de ProJobs. El catálogo público de ofertas se mantiene desacoplado de esta API.
+API de persistencia y funcionalidades de usuario de ProJobs. El catálogo público se mantiene desacoplado de esta API.
 
 ## Responsabilidades
 - Proteger rutas de usuario mediante tokens emitidos por ProIdentity.
 - Validar emisor, audiencia, expiración y autorización de módulo.
-- Persistir datos propios de ProJobs en PostgreSQL.
-- Aplicar aislamiento por usuario mediante RLS y contexto transaccional verificado.
+- Persistir datos de usuario en PostgreSQL, base Neon projobs.
+- Aplicar aislamiento por usuario mediante RLS y contexto transaccional.
 
-## Desarrollo
-
-Desde la raíz: `npm install` y `npm run dev:projobs`.
-
-Desde esta carpeta:
-
+## Desarrollo y validación
 ```bash
 npm run dev
 npm run build
@@ -21,28 +16,18 @@ npm test
 npm start
 ```
 
-La API requiere `DATABASE_URL` y la configuración de validación de identidad definida en el código. Usa una base de datos de desarrollo y secretos locales.
-
-## Modelo de seguridad
-- Usa un rol de conexión dedicado, sin propiedad de tablas ni `BYPASSRLS`.
-- El contexto de usuario se obtiene del token verificado, no de parámetros libres de la petición.
-- Establece el contexto dentro de la transacción para evitar contaminación entre conexiones del pool.
-- Mantén las políticas RLS y las pruebas de aislamiento como controles obligatorios.
-- Devuelve errores genéricos al cliente; no expongas SQL, credenciales ni detalles internos.
+La API usa DATABASE_URL, IDENTITY_JWT_SECRET (JWT_SECRET es fallback de compatibilidad), IDENTITY_URL, IDENTITY_ISSUER, IDENTITY_AUDIENCE y CORS_ORIGIN. Consulta ../../../docs/deployment/ENVIRONMENT_VARIABLES.md. Usa credenciales locales de desarrollo, nunca producción.
 
 ## Esquema y migraciones
+Los scripts SQL versionados están en sql/. No se usa Prisma ni _prisma_migrations para ProJobs. Revisa el SQL, confirma proyecto/rama/base Neon y prueba en entorno aislado antes de aplicar con administrador temporal. Nunca ejecutes estos scripts en ProCV o ProIdentity.
 
-Los scripts SQL versionados están en `sql/`. Antes de aplicar una migración, confirma la base de datos destino, revisa el SQL y valida su impacto. Nunca apliques scripts de ProJobs en las bases de ProCV o ProIdentity.
+Después de migrar, verifica FORCE RLS, políticas, grants y que el login runtime no sea propietario ni tenga BYPASSRLS. La existencia de un archivo SQL en Git no demuestra que esté aplicado en producción.
 
-## Funcionalidades y límites
+## Seguridad
+- No confíes en IDs de usuario enviados por el cliente.
+- El contexto de usuario debe proceder del token verificado y establecerse dentro de la transacción.
+- No expongas SQL, credenciales ni detalles internos.
+- Las búsquedas guardadas no implican notificaciones por correo mientras no exista un worker de entrega validado.
 
-Las operaciones disponibles se definen en `src/`. Los estados de postulación son datos declarados por el usuario, no confirmaciones de empleadores. Las búsquedas guardadas no deben describirse como notificaciones por correo mientras no exista un worker de entrega independiente.
-
-## Validación
-
-```bash
-npm run build
-npm test
-```
-
-Las pruebas locales no sustituyen un smoke test autenticado y una verificación de aislamiento contra una base de integración.
+## Producción
+Consulta ../../../docs/deployment/DATABASE_MIGRATIONS.md, PRODUCTION_ARCHITECTURE.md y PRODUCTION_RELEASE.md. Verifica el servicio y su AutoDeploy directamente en Render; no asumas que render.yaml representa la infraestructura desplegada.

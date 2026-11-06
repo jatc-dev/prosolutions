@@ -1,54 +1,23 @@
 # ProCV
 
-ProCV permite crear y editar hojas de vida, evaluar su compatibilidad con sistemas ATS y generar documentos PDF a partir de plantillas.
+ProCV permite crear y editar hojas de vida, evaluar compatibilidad ATS y generar documentos PDF.
 
 ## Arquitectura
-
-```text
-apps/procv/
-├── frontend/   # SPA React + Vite
-├── backend/    # API Express + Prisma
-└── scripts/    # Orquestación local
-```
-
-Frontend y backend son aplicaciones separadas. El backend gestiona datos de CV, análisis y generación PDF; la identidad y las sesiones son responsabilidad de ProIdentity. PostgreSQL es la persistencia; el esquema y las migraciones están en `backend/prisma/`.
-
-## Stack
-- Frontend: React, TypeScript, Vite, Tailwind CSS y Zustand.
-- Backend: Node.js, Express, TypeScript y Prisma.
-- Documentos: Puppeteer y utilidades de parsing.
-- Pruebas backend: Jest; existen pruebas de integración específicas para RLS.
-
-## Requisitos y configuración
-- Node.js 20.19 o superior para backend.
-- npm y PostgreSQL/Neon para persistencia local.
-- Configuración basada en los archivos `.env.example` disponibles. Mantén secretos fuera del repositorio.
-
-Consulta `backend/src/config.ts` y el código del frontend para identificar las variables vigentes. No reutilices configuraciones heredadas de Supabase ni nombres de variables de despliegues anteriores.
+- Frontend: SPA React + Vite en frontend/.
+- Backend: API Express + TypeScript + Prisma en backend/.
+- Datos: PostgreSQL en Neon, base procv.
+- Identidad: ProIdentity es la autoridad de credenciales, sesiones y permisos.
 
 ## Desarrollo
+Requisitos: Node.js 20.19 o superior, npm y PostgreSQL local.
 
 Desde la raíz:
-
 ```bash
 npm install
 npm run dev:procv
 ```
 
-Desde esta carpeta:
-
-```bash
-npm run dev
-npm run dev:frontend
-npm run dev:backend
-```
-
-## Build y pruebas
-
-Desde la raíz: `npm run build:procv`.
-
-Desde `apps/procv/backend`:
-
+Desde backend:
 ```bash
 npm run build
 npm test -- --runInBand
@@ -56,20 +25,17 @@ npm run pdf:smoke
 npm run pdf:audit
 ```
 
-Para pruebas de aislamiento RLS en una base de datos de integración configurada: `npm run test:rls:integration`. No ejecutes pruebas ni migraciones contra producción salvo que el procedimiento de release lo requiera y exista autorización explícita.
+Para pruebas RLS de integración, configura una base no productiva y ejecuta npm run test:rls:integration.
 
-## Datos y seguridad
-- La identidad y las sesiones son responsabilidad de ProIdentity.
-- Verifica credenciales y autorización en el servidor antes de acceder a datos personales.
-- Mantén RLS habilitado y prueba el aislamiento entre usuarios.
-- Usa roles runtime con privilegios mínimos; no conectes la aplicación como propietario de esquema.
-- Aplica migraciones con el rol DDL y la conexión directa documentados para el entorno.
-- No expongas secretos, datos de CV ni tokens en logs.
+## Variables y seguridad
+El ejemplo local está en backend/.env.example. La lista de variables y sus reglas productivas están en ../../docs/deployment/ENVIRONMENT_VARIABLES.md.
+
+La aplicación usa DATABASE_URL en runtime. El código prioriza DIRECT_DATABASE_URL si existe; por ello, no dejes la conexión DDL directa configurada en el servicio web. PROCV_ADMIN_DATABASE_URL es una conexión independiente para operaciones administrativas de aplicación, no para migraciones.
+
+PROCV_RLS_CONTEXT_KEY debe coincidir con el verificador v1 provisionado en Neon. No generes ni rotes la clave sin un procedimiento coordinado. Mantén RLS y FORCE RLS, roles runtime restringidos y pruebas de aislamiento.
+
+## Migraciones y producción
+Consulta ../../docs/deployment/DATABASE_MIGRATIONS.md y ../../docs/deployment/PRODUCTION_RELEASE.md. No ejecutes migraciones desde el arranque normal del servicio ni uses start:migrate como comando de producción sin aprobación y revisión explícita. El Dockerfile contiene ese comando, pero el procedimiento actual separa DDL del runtime.
 
 ## Calidad PDF
-
-El protocolo y los resultados históricos de paginación se conservan en [`docs/quality/PROCV_PDF_PAGINATION_QA.md`](../../docs/quality/PROCV_PDF_PAGINATION_QA.md). Los resultados anteriores no sustituyen la validación de cambios posteriores.
-
-## Despliegue
-
-La definición declarativa de servicios está en `render.yaml`. Revisa los servicios y sus opciones `autoDeploy` antes de integrar cambios en `main`. Consulta [el índice de documentación](../../docs/README.md) para la documentación transversal. Las notas heredadas de Supabase están archivadas y no son procedimientos operativos actuales.
+El protocolo y resultados históricos están en ../../docs/quality/PROCV_PDF_PAGINATION_QA.md. Los resultados históricos no sustituyen pruebas de una versión posterior.

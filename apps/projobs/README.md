@@ -1,45 +1,31 @@
 # ProJobs
 
-ProJobs es el módulo de oportunidades laborales de ProSolutions. Combina un catálogo público de empleos con una API para funcionalidades de usuario autenticado.
+ProJobs combina un catálogo público de oportunidades laborales con una API para funcionalidades personales autenticadas.
 
 ## Componentes
-- **Catálogo web:** aplicación estática generada y servida desde `apps/projobs/`.
-- **API:** servicio Node.js/Express en `apps/projobs/server/`.
-- **Persistencia:** PostgreSQL para funciones de usuario; el catálogo público no depende de la API para renderizarse.
-- **Identidad:** ProIdentity es la autoridad de autenticación. La API valida tokens y permisos de módulo antes de permitir operaciones protegidas.
+- Catálogo web estático en este módulo.
+- API Node.js/Express en server/.
+- Persistencia PostgreSQL en Neon, base projobs.
+- ProIdentity como autoridad de autenticación.
 
 ## Desarrollo
-
 Desde la raíz:
-
 ```bash
 npm install
 npm run dev:projobs
 ```
 
-Comandos del módulo:
-
+Para validar la API:
 ```bash
-npm run dev
+cd apps/projobs/server
 npm run build
-npm run dev:server
-npm run build:server
-npm run start:server
+npm test
 ```
 
-La disponibilidad de fuentes externas depende de sus políticas, límites y conectividad. La generación debe tolerar fallos parciales y no inventar ubicaciones ni datos de ofertas.
+## Persistencia y seguridad
+El esquema SQL versionado está en server/sql/. No existe un historial Prisma para ProJobs. Ejecuta los scripts únicamente en la base projobs, nunca en procv o proidentity. El rol runtime debe ser restringido, no propietario de tablas y sin BYPASSRLS. Mantén FORCE RLS y prueba aislamiento por usuario.
 
-## API
-
-Consulta [`server/README.md`](server/README.md) para arquitectura de persistencia, autorización, configuración y validación.
-
-## Seguridad y calidad
-- No confíes en identificadores de usuario enviados por el cliente para definir el alcance de consultas.
-- Aplica RLS y contexto de usuario verificado en operaciones de datos personales.
-- El rol runtime debe tener privilegios mínimos y no ser propietario de tablas.
-- Las búsquedas guardadas no implican envío de correo mientras no exista un worker de entrega configurado y validado.
-- Ejecuta `npm run build` y `npm run build:server` tras modificar catálogo o API.
+La API valida tokens de ProIdentity. Las variables activas del código están descritas en ../../docs/deployment/ENVIRONMENT_VARIABLES.md.
 
 ## Despliegue
-
-Los servicios y su configuración declarativa están en `render.yaml`. Los servicios ProJobs tienen `autoDeploy: false` en el manifiesto versionado; confirma siempre el estado del proveedor antes de una publicación manual.
+La configuración real debe verificarse en Render antes de cada release. En la observación del 2026-11-06, ProJobs Frontend tenía AutoDeploy activo y ProJobs API no. El manifiesto render.yaml no refleja fielmente la configuración actual; no usar Blueprint Sync para cambiar los servicios. Consulta ../../docs/deployment/PRODUCTION_ARCHITECTURE.md y ../../docs/deployment/PRODUCTION_RELEASE.md.
