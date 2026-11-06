@@ -41,6 +41,17 @@ export interface PhoneItem {
   isPrimary?: boolean;
 }
 
+export interface ReferenceItem {
+  id: string;
+  type: 'personal' | 'laboral';
+  name: string;
+  position?: string;
+  company?: string;
+  relationship?: string;
+  phone?: string;
+  email?: string;
+}
+
 // ==============================================
 // PERSONAL SECTION
 // ==============================================
@@ -52,6 +63,11 @@ export interface PersonalData {
   profileImage?: string;
   profileImageStyle?: ProfileImageStyle;
   showProfileImage?: boolean;
+  documentType?: string;
+  documentNumber?: string;
+  showDocumentIdentity?: boolean;
+  sidebarIntroMode?: 'valueProposition' | 'summary' | 'none';
+  references?: ReferenceItem[];
   birthDate?: string;
   showBirthDate?: boolean;
   showAge?: boolean;
