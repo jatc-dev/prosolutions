@@ -516,7 +516,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                         value={experience.startDate}
                         onChange={(value) => updateExperience(experience.id, { startDate: value })}
                         required
-                      />
+                       allowPartial/>
                     </FormField>
 
                     <FormField
@@ -527,7 +527,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                         value={experience.endDate || ''}
                         onChange={(value) => updateExperience(experience.id, { endDate: value })}
                         disabled={toCheckedBoolean(experience.isCurrentPosition as unknown)}
-                      />
+                       allowPartial/>
                       {toCheckedBoolean(experience.isCurrentPosition as unknown) && (
                         <p className="text-xs text-gray-500 mt-1">{t('editor.experience.untilCurrentDate')}</p>
                       )}
