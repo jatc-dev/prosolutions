@@ -326,6 +326,16 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         />
       </FormField>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label="Tipo de documento de identidad">
+          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+            <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
+          </select>
+        </FormField>
+        <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
+      </div>
+      <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar documento de identidad en la hoja de vida</label>
+
       {/* Profile Image */}
       <FormField
         label={t('editor.personal.fields.profileImage')}
@@ -741,6 +751,22 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </label>
         </div>
       </FormField>
+
+      <FormField label="Contenido del panel lateral" help="Elige una sola sección para evitar saturar el panel.">
+        <select value={data.sidebarIntroMode || 'valueProposition'} onChange={(e) => updateField('sidebarIntroMode', e.target.value)} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"><option value="valueProposition">Propuesta de valor</option><option value="summary">Perfil profesional</option><option value="none">No mostrar ninguno</option></select>
+      </FormField>
+      <section className="space-y-4 border-t border-gray-200 pt-5">
+        <div className="flex items-center justify-between"><div><h4 className="text-sm font-semibold text-gray-900">Referencias laborales y personales</h4><p className="text-xs text-gray-500">Agrega nombre, relación o cargo y datos de contacto.</p></div><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'personal', name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
+        {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
+          <FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="personal">Personal</option><option value="laboral">Laboral</option></select></FormField>
+          <FormField label="Nombre"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField>
+          <FormField label="Cargo o relación"><InputField value={reference.position || reference.relationship || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value, relationship: value } : item))} /></FormField>
+          <FormField label="Empresa (si aplica)"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField>
+          <FormField label="Teléfono"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField>
+          <FormField label="Correo electrónico"><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField>
+          <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">Eliminar referencia</button></div>
+        </div>)}
+      </section>
 
       <FormField
         label={t('editor.personal.fields.summary')}
