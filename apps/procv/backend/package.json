@@ -10,7 +10,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node scripts/ensure-build.mjs && node dist/index.js",
-    "start:migrate": "DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate resolve --rolled-back zzzz_procv_rls_user_context || true; DATABASE_URL=\"$DIRECT_DATABASE_URL\" npx prisma migrate deploy && unset DIRECT_DATABASE_URL && node dist/index.js",
+    "start:migrate": "unset DIRECT_DATABASE_URL && node dist/index.js",
     "pdf:smoke": "npm run build && node dist/scripts/pdfPaginationSmoke.js",
     "pdf:audit": "npm run build && node dist/scripts/pdfPaginationAudit.js",
     "lint": "eslint src tests",
