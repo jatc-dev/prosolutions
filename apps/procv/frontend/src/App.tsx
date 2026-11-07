@@ -12,7 +12,7 @@ const PROSOLUTIONS_URL =
   import.meta.env.VITE_PROSOLUTIONS_URL ||
   "https://prosolutions.page";
 
-const WorkspacePage = lazy(() => import("./pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })));
+const WorkspacePage = lazy(() => import("./pages/UnifiedWorkspacePage").then((m) => ({ default: m.UnifiedWorkspacePage })));
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
@@ -45,7 +45,6 @@ function RedirectToCentralLogin() {
 
 function RouteFallback() {
   const { t } = useTranslation();
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 dark:bg-slate-950 dark:text-slate-300">
       {t("common.loading")}
@@ -55,27 +54,18 @@ function RouteFallback() {
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return <RouteFallback />;
-  }
-
+  if (loading) return <RouteFallback />;
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
     window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
     return null;
   }
-
   return children;
 }
 
 function AdminRoute({ children }: { children: JSX.Element }) {
   const { isAuthenticated, user, loading } = useAuth();
-
-  if (loading) {
-    return <RouteFallback />;
-  }
-
+  if (loading) return <RouteFallback />;
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
     window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
@@ -87,66 +77,46 @@ function AdminRoute({ children }: { children: JSX.Element }) {
 
 export default function App() {
   useSessionTimeout();
-
-  useEffect(() => {
-    fetchCSRFToken();
-  }, []);
+  useEffect(() => { fetchCSRFToken(); }, []);
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <ErrorBoundary>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<RedirectToCentralLogin />} />
-            <Route path="/auth/callback" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/auth" element={<RedirectToCentralLogin />} />
-            <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
-            <Route path="/forgot-password" element={<RedirectToProsolutions path="/forgot-password" />} />
-            <Route path="/reset-password" element={<RedirectToProsolutions path="/reset-password" />} />
-            <Route path="/verify-email" element={<RedirectToProsolutions path="/verify-email" />} />
-            <Route path="/landing" element={<Navigate to="/" replace />} />
-            <Route path="/templates" element={<TemplatesGallery />} />
-            <Route path="/dashboard" element={<PrivateRoute><WorkspacePage /></PrivateRoute>} />
-            <Route path="/editor" element={<CVEditorPage />} />
-            {/* Backward-compatible URL used by the public "try for free" CTA. */}
-            <Route path="/editor-free" element={<Navigate to="/editor" replace />} />
-            <Route path="/editor/:cvId" element={<CVEditorPage />} />
-            <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-            <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
-            <Route path="/admin/settings" element={<AdminRoute><AdminLayout><PlatformSettings /></AdminLayout></AdminRoute>} />
-            <Route path="/admin/landing" element={<AdminRoute><AdminLayout><LandingPageManagement /></AdminLayout></AdminRoute>} />
-            <Route path="/admin/audit-logs" element={<AdminRoute><AdminLayout><AuditLogs /></AdminLayout></AdminRoute>} />
-
-            <Route path="*" element={<Navigate to="/" />} />
-           </Routes>
-        </Suspense>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<RedirectToCentralLogin />} />
+              <Route path="/auth/callback" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/auth" element={<RedirectToCentralLogin />} />
+              <Route path="/register" element={<RedirectToProsolutions path="/register" />} />
+              <Route path="/forgot-password" element={<RedirectToProsolutions path="/forgot-password" />} />
+              <Route path="/reset-password" element={<RedirectToProsolutions path="/reset-password" />} />
+              <Route path="/verify-email" element={<RedirectToProsolutions path="/verify-email" />} />
+              <Route path="/landing" element={<Navigate to="/" replace />} />
+              <Route path="/templates" element={<TemplatesGallery />} />
+              <Route path="/dashboard" element={<PrivateRoute><WorkspacePage /></PrivateRoute>} />
+              <Route path="/editor" element={<CVEditorPage />} />
+              <Route path="/editor-free" element={<Navigate to="/editor" replace />} />
+              <Route path="/editor/:cvId" element={<CVEditorPage />} />
+              <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+              <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+              <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
+              <Route path="/admin/settings" element={<AdminRoute><AdminLayout><PlatformSettings /></AdminLayout></AdminRoute>} />
+              <Route path="/admin/landing" element={<AdminRoute><AdminLayout><LandingPageManagement /></AdminLayout></AdminRoute>} />
+              <Route path="/admin/audit-logs" element={<AdminRoute><AdminLayout><AuditLogs /></AdminLayout></AdminRoute>} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Suspense>
         </ErrorBoundary>
       </AuthProvider>
       <Toaster
         position="bottom-right"
         toastOptions={{
           duration: 4000,
-          style: {
-            background: "var(--toast-bg, #363636)",
-            color: "#fff",
-          },
-          success: {
-            duration: 3000,
-            style: {
-              background: "#059669",
-            },
-          },
-          error: {
-            duration: 5000,
-            style: {
-              background: "#dc2626",
-            },
-          },
+          style: { background: "var(--toast-bg, #363636)", color: "#fff" },
+          success: { duration: 3000, style: { background: "#059669" } },
+          error: { duration: 5000, style: { background: "#dc2626" } },
         }}
       />
     </ThemeProvider>
