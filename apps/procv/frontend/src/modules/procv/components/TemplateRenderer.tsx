@@ -757,9 +757,9 @@ function TemplateMinimal({ data }: { data: CVData }) {
       })}
 
       {/* Professional Summary - ATS Critical */}
-      {personal.summary && (
+      {personal.summary && personal.showSummaryContent !== false && (
         <section className="mb-6" itemProp="description">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">Resumen Profesional</h2>
+          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">Resumen Profesional</h2> : null}
           <p className="mt-2 text-sm leading-relaxed text-slate-700 ats-summary whitespace-pre-line">
             {personal.summary}
           </p>
@@ -1004,8 +1004,8 @@ function TemplateCorporate({ data }: { data: CVData }) {
     <div className="max-w-2xl mx-auto bg-white p-9 text-slate-900 border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{personal.name || "Tu Nombre"}</h1>
-          <p className="text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+          <h1 className="text-3xl font-bold">{personal.name || ""}</h1>
+          <p className="text-sm text-slate-500">{personal.role || ""}</p>
           {renderNationality(personal)}
         </div>
         {shouldRenderProfileImage(personal) && (
@@ -1041,9 +1041,9 @@ function TemplateCorporate({ data }: { data: CVData }) {
         textClassName: "mt-2 text-sm text-slate-700 whitespace-pre-line",
       })}
 
-      {personal.summary && (
+      {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-6 border-l-4 border-brand-500 pl-4 py-1">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Perfil</h2>
+          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Perfil</h2> : null}
           <p className="mt-2 text-sm text-slate-700">{personal.summary}</p>
         </section>
       )}
@@ -1188,7 +1188,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
               className={`${getProfileImageClass(personal, "medium")} border-2 border-slate-700 mb-3`}
             />
           )}
-          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || "Tu Nombre"}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || ""}</h1>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || "Desarrollador"}</p>
         </div>
         <div className="space-y-1 text-xs" style={{ color: textMuted }}>
@@ -1218,9 +1218,9 @@ function TemplateDeveloper({ data }: { data: CVData }) {
         textClassName: "mt-2 text-sm leading-relaxed text-slate-200 whitespace-pre-line",
       })}
 
-      {personal.summary && (
+      {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Acerca de mí</h2>
+          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Acerca de mí</h2> : null}
           <p className="mt-2 text-sm leading-relaxed text-slate-200">{personal.summary}</p>
         </section>
       )}
@@ -1346,7 +1346,7 @@ function TemplateCreative({ data }: { data: CVData }) {
             className={`${getProfileImageClass(personal, "medium")} border-2 border-white/30 mb-3`}
           />
         )}
-        <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: creativeTextColor }}>{personal.name || "Tu Nombre"}</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: creativeTextColor }}>{personal.name || ""}</h1>
         <p className="text-sm" style={{ color: creativeMutedColor }}>{personal.role || "Profesional Creativo"}</p>
         <div className="flex flex-wrap gap-2 text-xs" style={{ color: creativeMutedColor }}>
           {emails.map((email, idx) => (
@@ -1377,9 +1377,9 @@ function TemplateCreative({ data }: { data: CVData }) {
         textClassName: `mt-2 text-sm whitespace-pre-line ${creativeContrast === "dark" ? "text-slate-800" : "text-slate-100"}`,
       })}
 
-      {personal.summary && (
+      {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: creativeMutedColor }}>Sobre mí</h2>
+          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: creativeMutedColor }}>Sobre mí</h2> : null}
           <p className="mt-2 text-sm" style={{ color: creativeTextColor }}>{personal.summary}</p>
         </section>
       )}
@@ -1481,8 +1481,8 @@ function TemplateClassic({ data }: { data: CVData }) {
             className={`${getProfileImageClass(personal, "small")} border border-slate-200 mb-3`}
           />
         )}
-        <h1 className="text-4xl font-bold tracking-tight">{personal.name || "Tu Nombre"}</h1>
-        <p className="mt-2 text-sm text-slate-500">{personal.role || "Tu título profesional"}</p>
+        <h1 className="text-4xl font-bold tracking-tight">{personal.name || ""}</h1>
+        <p className="mt-2 text-sm text-slate-500">{personal.role || ""}</p>
         {renderNationality(personal)}
         <p className="mt-3 text-xs text-slate-500">
           {contacts.map((contact, idx) => (
@@ -1516,9 +1516,9 @@ function TemplateClassic({ data }: { data: CVData }) {
         textClassName: "mt-2 text-sm text-slate-700 whitespace-pre-line",
       })}
 
-      {personal.summary && (
+      {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Resumen</h2>
+          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Resumen</h2> : null}
           <p className="mt-2 text-sm text-slate-700">{personal.summary}</p>
         </section>
       )}
@@ -1623,8 +1623,8 @@ function TemplateSidebar({ data }: { data: CVData }) {
         <aside className="relative px-7 py-9 text-white" style={{ backgroundColor: sidebarBg }}>
           <div className="space-y-4">
             {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
-            <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
-            <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
+            <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
+            <p className="text-sm" style={{ color: mutedColor }}>{personal.role || ""}</p>
             {renderNationality(personal, mutedColor)}
             {personalLocation ? (
               <p className="text-sm" style={{ color: mutedColor }}>{personalLocation}</p>
@@ -1824,8 +1824,8 @@ function TemplateExecutive({ data }: { data: CVData }) {
       <header className="relative px-8 py-8 border-b border-slate-200 text-white" style={{ backgroundColor: executiveTop }}>
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
         {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
-        <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
+        <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || ""}</p>
         {renderNationality(personal, subtitleColor)}
         <div className="mt-4 flex flex-wrap gap-2 text-sm" style={{ color: metaColor }}>
           {personalLocation ? <span>{personalLocation}</span> : null}
@@ -1847,7 +1847,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
 
         {personal.summary && personal.showSummaryContent !== false ? (
           <section>
-            <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Perfil Profesional</h2>
+            {personal.showSummaryTitle !== false ? <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Perfil Profesional</h2> : null}
             <p className="mt-2 text-sm text-slate-700 leading-relaxed whitespace-pre-line">{personal.summary}</p>
           </section>
         ) : null}
@@ -1976,8 +1976,8 @@ function TemplateTimeline({ data }: { data: CVData }) {
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="pb-6 border-b border-slate-200">
         {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
-        <h1 className="text-3xl font-bold text-slate-900">{personal.name || "Tu Nombre"}</h1>
-        <p className="text-slate-600 mt-1">{personal.role || "Tu título profesional"}</p>
+        <h1 className="text-3xl font-bold text-slate-900">{personal.name || ""}</h1>
+        <p className="text-slate-600 mt-1">{personal.role || ""}</p>
         {renderNationality(personal)}
         <p className="text-sm text-slate-500 mt-2">
           {personalLocation}
@@ -2115,8 +2115,8 @@ function TemplateCompact({ data }: { data: CVData }) {
     <article className="max-w-2xl mx-auto bg-white border border-slate-200 p-8 text-slate-900 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="text-center pb-4 border-b border-slate-200">
         {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`mx-auto mb-3 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
-        <h1 className="text-2xl font-bold">{personal.name || "Tu Nombre"}</h1>
-        <p className="text-sm text-slate-600">{personal.role || "Tu título profesional"}</p>
+        <h1 className="text-2xl font-bold">{personal.name || ""}</h1>
+        <p className="text-sm text-slate-600">{personal.role || ""}</p>
         {renderNationality(personal)}
         <p className="text-xs text-slate-500 mt-1">
           {personalLocation}
@@ -2132,7 +2132,7 @@ function TemplateCompact({ data }: { data: CVData }) {
         textClassName: "mt-2 text-sm text-slate-700 leading-relaxed whitespace-pre-line",
       })}
 
-      {personal.summary ? <p className="mt-4 text-sm text-slate-700 leading-relaxed">{personal.summary}</p> : null}
+      {personal.summary && personal.showSummaryContent !== false ? <p className="mt-4 text-sm text-slate-700 leading-relaxed">{personal.summary}</p> : null}
 
       {data.experience?.length ? (
         <section className="mt-6">
@@ -2261,8 +2261,8 @@ function TemplateExtensa({ data }: { data: CVData }) {
       <header className={`${dense ? "px-6 py-5" : "px-8 py-7"} border-b border-slate-200`} style={{ backgroundColor: topColor }}>
         <div className={`flex flex-col md:flex-row md:items-start md:justify-between ${dense ? "gap-3" : "gap-5"}`}>
           <div className="flex-1 min-w-0">
-            <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
-            <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
+            <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || ""}</h1>
+            <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || ""}</p>
             {renderNationality(personal, subtitleColor)}
             {formatPersonalLocation(personal) ? (
               <p className={`${dense ? "mt-1" : "mt-2"} text-sm`} style={{ color: subtitleColor }}>{formatPersonalLocation(personal)}</p>
@@ -2304,9 +2304,9 @@ function TemplateExtensa({ data }: { data: CVData }) {
           textClassName: `${dense ? "mt-1" : "mt-2"} text-sm text-slate-700 leading-relaxed whitespace-pre-line`,
         })}
 
-        {personal.summary ? (
+        {personal.summary && personal.showSummaryContent !== false ? (
           <section>
-            <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Perfil profesional</h2>
+            {personal.showSummaryTitle !== false ? <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Perfil profesional</h2> : null}
             <p className={`${dense ? "mt-1" : "mt-2"} text-sm text-slate-700 leading-relaxed whitespace-pre-line`}>{personal.summary}</p>
           </section>
         ) : null}
