@@ -862,8 +862,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
           {/* Header */}
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:flex-1 sm:gap-4">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
               {/* Left: platform brand + module switcher (shared ProSolutions nav) */}
               <Link to="/" className="shrink-0" aria-label={t("brand.platformAria", "ProSolutions home")}>
                 <div className="flex items-center space-x-3">
@@ -915,7 +915,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
-              <section className="min-w-0 w-full sm:w-[min(48vw,620px)] sm:flex-1" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
+              <section className="basis-full min-w-0 w-full flex-none" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
                 <div className="mb-1 flex items-center gap-2 sm:mb-0.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla")}</span>
                   <span className="hidden text-[10px] text-slate-400 dark:text-slate-500 lg:inline">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
@@ -930,7 +930,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               </section>
             </div>
 
-            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
