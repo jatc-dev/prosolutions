@@ -2454,7 +2454,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
 }
 function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true, includeDocument = true, documentWidthClass = "max-w-4xl" }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean; documentWidthClass?: string }) {
   const personal = data.personal ?? {};
-  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => { if (!item || item.isVisible === false) return false; const hidden = item.hiddenFields || []; return (item.name && !hidden.includes("name")) || (item.phone && !hidden.includes("phone")) || (item.email && !hidden.includes("email")) || (item.company && !hidden.includes("company")) || (item.position && !hidden.includes("position")) || (item.relationship && !hidden.includes("relationship")); });
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
