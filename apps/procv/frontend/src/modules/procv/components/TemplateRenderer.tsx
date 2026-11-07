@@ -2484,7 +2484,7 @@ export function TemplateRenderer({ template, data }: Props) {
     case "timeline":
       return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "compact":
-      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} documentWidthClass="max-w-2xl" /></>;
     case "ats":
       return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "employment":
@@ -2498,7 +2498,7 @@ export function TemplateRenderer({ template, data }: Props) {
     case "modern-sidebar":
       return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "elegant":
-      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} documentWidthClass="max-w-2xl" /></>;
     case "extensive":
       return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     default:
