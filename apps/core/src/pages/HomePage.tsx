@@ -40,9 +40,14 @@ export function HomePage() {
 
     try {
       const destination = new URL(requested);
+      const configuredModuleOrigins = [
+        import.meta.env.VITE_PROCV_URL,
+        import.meta.env.VITE_PROJOBS_URL,
+      ].filter((origin): origin is string => Boolean(origin));
       const allowedOrigins = new Set([
         "https://projobs.prosolutions.page",
         "https://procv.prosolutions.page",
+        ...configuredModuleOrigins,
       ]);
       if (destination.protocol !== "https:" || !allowedOrigins.has(destination.origin)) {
         return fallback;
