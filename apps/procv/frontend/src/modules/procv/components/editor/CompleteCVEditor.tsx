@@ -918,7 +918,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
             </div>
 
-              <section className="basis-full min-w-0 w-full flex-none" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
+              <section className="w-full min-w-0" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
                 <div className="mb-1 flex items-center gap-2 sm:mb-0.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla")}</span>
                   <span className="hidden text-[10px] text-slate-400 dark:text-slate-500 lg:inline">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
