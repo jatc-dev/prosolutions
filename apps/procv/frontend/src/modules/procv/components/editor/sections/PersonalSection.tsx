@@ -767,25 +767,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         </div>
       </FormField>
 
-      <section className="space-y-4 border-t border-gray-200 pt-5">
-        <div><h4 className="text-sm font-semibold text-gray-900">Referencias</h4><p className="text-xs text-gray-500">Se mostrarán al final del contenido principal de la hoja de vida.</p></div>
-        <div className="space-y-2">
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Incluir referencias directas</label>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
-        </div>
-        {data.showReferences !== false ? <>
-          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
-          {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
-            <FormField label="Nombre y apellido"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField>
-            {reference.type === 'laboral' ? <><FormField label="Cargo actual"><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><FormField label="Empresa"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField></> : <FormField label="Parentesco"><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField>}
-            <FormField label="Teléfono de contacto"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField>
-            <FormField label="Correo electrónico"><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField>
-            <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">Eliminar referencia</button></div>
-          </div>)}
-        </> : null}
-      </section>
-
       <FormField
         label={t('editor.personal.fields.summary')}
         error={errors.summary?.[0]}
@@ -810,6 +791,25 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
       </FormField>
+      <section className="space-y-4 border-t border-gray-200 pt-5">
+        <div><h4 className="text-sm font-semibold text-gray-900">Referencias</h4><p className="text-xs text-gray-500">Se mostrarán al final del contenido principal de la hoja de vida.</p></div>
+        <div className="space-y-2">
+          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Incluir referencias directas</label>
+          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
+        </div>
+        {data.showReferences !== false ? <>
+          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
+          {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
+            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
+            <FormField label="Nombre y apellido"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField>
+            {reference.type === 'laboral' ? <><FormField label="Cargo actual"><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><FormField label="Empresa"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField></> : <FormField label="Parentesco"><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField>}
+            <FormField label="Teléfono de contacto"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField>
+            <FormField label="Correo electrónico"><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField>
+            <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">Eliminar referencia</button></div>
+          </div>)}
+        </> : null}
+      </section>
+
     </FormSection>
   );
 };
