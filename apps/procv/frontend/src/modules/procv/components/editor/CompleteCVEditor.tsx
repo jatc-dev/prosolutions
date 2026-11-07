@@ -915,6 +915,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
+
+            </div>
+
               <section className="basis-full min-w-0 w-full flex-none" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
                 <div className="mb-1 flex items-center gap-2 sm:mb-0.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla")}</span>
@@ -928,7 +931,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   onLockedClick={() => setShowUpgradeModal(true)}
                 />
               </section>
-            </div>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-2">
               <input
