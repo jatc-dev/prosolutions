@@ -24,10 +24,10 @@ ALTER ROLE procv_context_owner NOLOGIN NOCREATEDB NOCREATEROLE
   NOINHERIT NOREPLICATION NOBYPASSRLS;
 
 -- The migration principal must be a member to transfer schema/table/function ownership.
-DO $
+DO $grant$
 BEGIN
   EXECUTE format('GRANT procv_context_owner TO %I', current_user);
-END $;
+END $grant$;
 
 DO $$
 BEGIN
