@@ -640,7 +640,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       }
 
       const options = {
-        margin: 0.5,
+        margin: 0.12, // ~3 mm on each side
         filename: `${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
