@@ -23,6 +23,12 @@ END $$;
 ALTER ROLE procv_context_owner NOLOGIN NOCREATEDB NOCREATEROLE
   NOINHERIT NOREPLICATION NOBYPASSRLS;
 
+-- The migration principal must be a member to transfer schema/table/function ownership.
+DO $
+BEGIN
+  EXECUTE format('GRANT procv_context_owner TO %I', current_user);
+END $;
+
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'procv_admin_app') THEN
