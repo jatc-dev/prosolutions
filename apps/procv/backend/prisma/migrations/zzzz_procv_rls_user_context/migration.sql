@@ -189,9 +189,9 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM pg_auth_members m
     WHERE m.roleid = 'procv_admin_app'::regrole
-      AND m.member <> 'procv_admin_login'::regrole
+      AND m.member NOT IN ('procv_admin_login'::regrole, current_user::regrole)
   ) THEN
-    RAISE EXCEPTION 'procv_admin_app must be granted exclusively to procv_admin_login';
+    RAISE EXCEPTION 'procv_admin_app may be granted only to procv_admin_login and the migration principal';
   END IF;
   IF pg_has_role('procv_login', 'procv_admin_app', 'MEMBER')
     OR pg_has_role('procv_runtime', 'procv_admin_app', 'MEMBER')
