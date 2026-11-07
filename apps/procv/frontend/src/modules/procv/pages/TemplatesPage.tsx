@@ -8,9 +8,9 @@ import { FeatureGate } from "../../monetization/components/FeatureGate";
 import { PremiumBadge } from "../../monetization/components/UpgradeBanner";
 import { useEntitlements } from "../../../shared/feature-flags";
 import { useSeo, softwareApplicationSchema } from "../../../shared/seo";
-import { CURATED_CV_TEMPLATES } from "../../../shared/utils/templateCatalog";
+import { CURATED_CV_TEMPLATES, CV_TEMPLATE_GROUPS, type CVTemplateGroup } from "../../../shared/utils/templateCatalog";
 
-type Filter = "all" | "free" | "premium" | "ats";
+type Filter = "all" | CVTemplateGroup;
 
 /** Public gallery: shows free vs premium templates and routes into the editor. */
 export function TemplatesPage() {
@@ -34,17 +34,13 @@ export function TemplatesPage() {
   useSeo(seo);
 
   const templates = useMemo(() => {
-    if (filter === "free") return CURATED_CV_TEMPLATES.filter((template) => template.tier === "free");
-    if (filter === "premium") return CURATED_CV_TEMPLATES.filter((template) => template.tier === "premium");
-    if (filter === "ats") return CURATED_CV_TEMPLATES.filter((template) => template.atsFriendly);
+    if (filter !== "all") return CURATED_CV_TEMPLATES.filter((template) => template.group === filter);
     return CURATED_CV_TEMPLATES;
   }, [filter]);
 
-  const filters: Array<{ id: Filter; labelKey: string }> = [
-    { id: "all", labelKey: "procv.templatesAll" },
-    { id: "free", labelKey: "procv.templatesFree" },
-    { id: "premium", labelKey: "procv.templatesPremium" },
-    { id: "ats", labelKey: "procv.templatesAts" },
+  const filters: Array<{ id: Filter; label: string }> = [
+    { id: "all", label: t("procv.templatesAll", "Todas") },
+    ...CV_TEMPLATE_GROUPS.map((group) => ({ id: group.id, label: group.label })),
   ];
 
   return (
@@ -90,7 +86,7 @@ export function TemplatesPage() {
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                 }`}
               >
-                {t(item.labelKey, item.id)}
+                {item.label}
               </button>
             ))}
           </div>
@@ -111,6 +107,7 @@ export function TemplatesPage() {
                 }`}
                 data-template={template.key}
                 data-tier={template.tier}
+                data-group={template.group}
               >
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -120,7 +117,7 @@ export function TemplatesPage() {
                 </div>
 
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  {String(t(`procv.templateCategory.${template.category}`, template.category))} ·{" "}
+                  {CV_TEMPLATE_GROUPS.find((group) => group.id === template.group)?.label ?? template.group} ·{" "}
                   {template.atsFriendly ? t("procv.atsFriendly", "ATS friendly") : t("procv.notAts", "Diseño visual")}
                 </p>
 
