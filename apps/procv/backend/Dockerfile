@@ -1,5 +1,5 @@
 # Usamos una imagen de Node más completa (Debian) en lugar de Alpine
-FROM node:20-slim
+FROM node:22-slim
 
 # Instalar dependencias del sistema: OpenSSL para Prisma y librerias para Puppeteer/Chromium
 RUN apt-get update && apt-get install -y \
@@ -37,7 +37,7 @@ COPY apps/procv/frontend/package.json ./apps/procv/frontend/package.json
 COPY apps/core/package.json ./apps/core/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 
-RUN npm ci --include=dev --workspace=apps/procv/backend --include-workspace-root
+RUN npm install --include=dev --workspace=apps/procv/backend --include-workspace-root
 
 # Copiamos el backend en su ruta de workspace para mantener la resolucion
 # de dependencias desde /app/node_modules.
