@@ -906,10 +906,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
-              <section className="basis-full min-w-0 border-t border-slate-100 pt-2 dark:border-slate-800" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
-                <div className="mb-1.5 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla del CV")}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
+              <section className="min-w-0 w-full sm:w-[min(48vw,620px)] sm:flex-1" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
+                <div className="mb-1 flex items-center gap-2 sm:mb-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla")}</span>
+                  <span className="hidden text-[10px] text-slate-400 dark:text-slate-500 lg:inline">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
                 </div>
                 <TemplateSelector
                   templates={CURATED_CV_TEMPLATES}
