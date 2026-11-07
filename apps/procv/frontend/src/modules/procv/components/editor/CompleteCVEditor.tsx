@@ -241,37 +241,46 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
         sidebarSectionTitleColor: cvData.settings?.sidebarSectionTitleColor,
       },
     personal: {
-      name: cvData.personal?.fullName || '',
-      role: cvData.personal?.professionalTitle || '',
-      email: cvData.personal?.emails?.find((e: any) => e.isPrimary)?.value || '',
-      phone: cvData.personal?.phones?.find((p: any) => p.isPrimary)?.number || '',
-      emails: cvData.personal?.emails?.map((e: any) => ({
+      name: cvData.personal?.showFullName === false ? '' : (cvData.personal?.fullName || ''),
+      role: cvData.personal?.showProfessionalTitle === false ? '' : (cvData.personal?.professionalTitle || ''),
+      email: cvData.personal?.emails?.find((e: any) => e.isPrimary && e.isVisible !== false)?.value || '',
+      phone: cvData.personal?.phones?.find((p: any) => p.isPrimary && p.isVisible !== false)?.number || '',
+      emails: cvData.personal?.emails?.filter((e: any) => e.isVisible !== false).map((e: any) => ({
         value: e.value,
         type: e.type === 'personal' ? 'Personal' : 'Trabajo'
       })) || [],
-      phones: cvData.personal?.phones?.map((p: any) => ({
+      phones: cvData.personal?.phones?.filter((p: any) => p.isVisible !== false).map((p: any) => ({
         value: p.number,
         type: p.type === 'personal' ? 'Personal' : 'Trabajo'
       })) || [],
       address: cvData.personal?.address || '',
       city: cvData.personal?.city || '',
       country: cvData.personal?.country || '',
-      nationality: cvData.personal?.nationality || '',
-      documentType: cvData.personal?.documentType || '',
-      documentNumber: cvData.personal?.documentNumber || '',
+      nationality: cvData.personal?.showNationality === false ? '' : (cvData.personal?.nationality || ''),
+      documentType: cvData.personal?.showDocumentType === false ? '' : (cvData.personal?.documentType || ''),
+      documentNumber: cvData.personal?.showDocumentNumber === false ? '' : (cvData.personal?.documentNumber || ''),
       showDocumentIdentity: Boolean(cvData.personal?.showDocumentIdentity),
       sidebarIntroMode: cvData.personal?.sidebarIntroMode || 'valueProposition',
-      references: cvData.personal?.references || [],
+      references: cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
+      showReferences: cvData.personal?.showReferences !== false,
+      referencesAvailableOnRequest: Boolean(cvData.personal?.referencesAvailableOnRequest),
       valueProposition: cvData.personal?.valueProposition,
       showValuePropositionTitle: cvData.personal?.showValuePropositionTitle !== false,
+      showValuePropositionContent: cvData.personal?.showValuePropositionContent !== false,
       summary: cvData.personal?.summary || '',
+      showSummaryTitle: cvData.personal?.showSummaryTitle !== false,
+      showSummaryContent: cvData.personal?.showSummaryContent !== false,
       profileImage: cvData.personal?.profileImage || '',
       profileImageStyle: cvData.personal?.profileImageStyle || 'round',
+      showProfileImage: cvData.personal?.showProfileImage !== false,
+      birthDate: cvData.personal?.birthDate || '',
+      showBirthDate: Boolean(cvData.personal?.showBirthDate),
+      showAge: Boolean(cvData.personal?.showAge),
       showAddress: cvData.personal?.showAddress !== false,
       showCity: cvData.personal?.showCity !== false,
       showCountry: cvData.personal?.showCountry !== false,
     },
-    experience: cvData.experience?.map((exp: any) => ({
+    experience: cvData.experience?.filter((exp: any) => exp.isVisible !== false).map((exp: any) => ({
       id: exp.id,
       company: exp.company,
       role: exp.position,
@@ -281,7 +290,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
       city: exp.location?.split(',')[0]?.trim() || '',
       country: exp.location?.split(',')[1]?.trim() || '',
     })) || [],
-    education: cvData.education?.map((edu: any) => ({
+    education: cvData.education?.filter((edu: any) => edu.isVisible !== false).map((edu: any) => ({
       id: edu.id,
       institution: edu.institution,
       degree: edu.degree,
@@ -290,7 +299,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
       city: edu.location?.split(',')[0]?.trim() || '',
       country: edu.location?.split(',')[1]?.trim() || '',
     })) || [],
-    skills: cvData.skills?.map((skill: any) => ({
+    skills: cvData.skills?.filter((skill: any) => skill.isVisible !== false).map((skill: any) => ({
       id: skill.id,
       name: skill.name,
       level: skill.level === 'beginner' ? 1 :
@@ -298,13 +307,13 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
              skill.level === 'advanced' ? 3 :
              skill.level === 'expert' ? 4 : 0,
     })) || [],
-    languages: cvData.languages?.map((lang: any) => ({
+    languages: cvData.languages?.filter((lang: any) => lang.isVisible !== false).map((lang: any) => ({
       id: lang.id,
       name: lang.language,
       level: lang.listeningLevel || 'B1',
       certificateUrl: lang.certification || '',
     })) || [],
-    certificates: cvData.certificates?.map((cert: any) => ({
+    certificates: cvData.certificates?.filter((cert: any) => cert.isVisible !== false).map((cert: any) => ({
       id: cert.id,
       title: cert.title,
       url: cert.verificationUrl || '',
