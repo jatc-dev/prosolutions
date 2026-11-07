@@ -2458,7 +2458,7 @@ function SupplementalPersonalSections({ data, includeReferences = true, includeR
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
-  return <section className="max-w-3xl mx-auto border border-slate-200 bg-white px-7 py-5 text-slate-800 shadow-sm">
+  return <section className="mx-auto max-w-3xl border-t border-slate-200 bg-white px-6 pb-6 pt-5 text-slate-800">
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
     {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"}{reference.type === "laboral" && reference.position ? " · " + reference.position : ""}{reference.type === "laboral" && reference.company ? " · " + reference.company : ""}{reference.type === "personal" && (reference.relationship || reference.position) ? " · " + (reference.relationship || reference.position) : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
     {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
@@ -2470,17 +2470,17 @@ export function TemplateRenderer({ template, data }: Props) {
     case "sidebar":
       return <><GlobalProfilePhoto data={data} /><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} includeRequestText={false} /></>;
     case "corporate":
-      return <><GlobalProfilePhoto data={data} /><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
     case "developer":
-      return <><GlobalProfilePhoto data={data} /><TemplateDeveloper data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateDeveloper data={data} /><SupplementalPersonalSections data={data} /></>;
     case "creative":
-      return <><GlobalProfilePhoto data={data} /><TemplateCreative data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCreative data={data} /><SupplementalPersonalSections data={data} /></>;
     case "classic":
-      return <><GlobalProfilePhoto data={data} /><TemplateClassic data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateClassic data={data} /><SupplementalPersonalSections data={data} /></>;
     case "executive":
       return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensa":
-      return <><GlobalProfilePhoto data={data} /><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     case "timeline":
       return <><GlobalProfilePhoto data={data} /><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "compact":
@@ -2500,7 +2500,7 @@ export function TemplateRenderer({ template, data }: Props) {
     case "elegant":
       return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensive":
-      return <><GlobalProfilePhoto data={data} /><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     default:
       return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
   }
