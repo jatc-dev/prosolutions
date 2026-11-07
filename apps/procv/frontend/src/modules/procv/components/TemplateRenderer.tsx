@@ -43,7 +43,6 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
     showProfileImage?: boolean;
-    showReferences?: boolean;
     documentType?: string;
     documentNumber?: string;
     showDocumentIdentity?: boolean;
@@ -1623,7 +1622,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 lg:grid-cols-3">
         <aside className="relative px-7 py-9 text-white" style={{ backgroundColor: sidebarBg }}>
           <div className="space-y-4">
-            {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={\`\${getProfileImageClass(personal, "medium")} border border-white/30\`} /> : null}
+            {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || "Tu título profesional"}</p>
             {renderNationality(personal, mutedColor)}
@@ -1824,7 +1823,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="relative px-8 py-8 border-b border-slate-200 text-white" style={{ backgroundColor: executiveTop }}>
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={\`float-right ml-5 \${getProfileImageClass(personal, "medium")} border border-white/30\`} /> : null}
+        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || "Tu Nombre"}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || "Tu título profesional"}</p>
         {renderNationality(personal, subtitleColor)}
@@ -1976,7 +1975,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
   return (
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="pb-6 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={\`float-right ml-5 \${getProfileImageClass(personal, "medium")} border border-slate-200\`} /> : null}
+        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
         <h1 className="text-3xl font-bold text-slate-900">{personal.name || "Tu Nombre"}</h1>
         <p className="text-slate-600 mt-1">{personal.role || "Tu título profesional"}</p>
         {renderNationality(personal)}
@@ -2115,7 +2114,7 @@ function TemplateCompact({ data }: { data: CVData }) {
   return (
     <article className="max-w-2xl mx-auto bg-white border border-slate-200 p-8 text-slate-900 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="text-center pb-4 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={\`mx-auto mb-3 \${getProfileImageClass(personal, "medium")} border border-slate-200\`} /> : null}
+        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`mx-auto mb-3 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
         <h1 className="text-2xl font-bold">{personal.name || "Tu Nombre"}</h1>
         <p className="text-sm text-slate-600">{personal.role || "Tu título profesional"}</p>
         {renderNationality(personal)}
@@ -2446,18 +2445,12 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
   ];
   const hasData = Object.values(app).some(value => String(value || "").trim());
   return <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{fontFamily:"Arial,sans-serif"}}>
-    <header className="border-b-2 border-slate-700 pb-4">{shouldRenderProfileImage(data.personal) ? <img src={data.personal?.profileImage} alt="Foto de perfil" className={\`float-right ml-5 \${getProfileImageClass(data.personal, "medium")} border border-slate-200\`} /> : null}<p className="text-xs font-bold uppercase tracking-widest text-slate-500">Formato de información del aspirante</p><h1 className="mt-2 text-2xl font-bold">{data.personal?.name}</h1><p className="text-sm text-slate-600">{data.personal?.role}</p></header>
+    <header className="border-b-2 border-slate-700 pb-4">{shouldRenderProfileImage(data.personal) ? <img src={data.personal?.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(data.personal, "medium")} border border-slate-200`} /> : null}<p className="text-xs font-bold uppercase tracking-widest text-slate-500">Formato de información del aspirante</p><h1 className="mt-2 text-2xl font-bold">{data.personal?.name}</h1><p className="text-sm text-slate-600">{data.personal?.role}</p></header>
     {groups.map(group => { const rows=group.fields.filter(([key])=>String(app[key]||"").trim()); return rows.length ? <section key={group.title} className="mt-5 break-inside-avoid"><h2 className="border-b border-slate-300 bg-slate-100 px-2 py-2 text-sm font-bold">{group.title}</h2><div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">{rows.map(([key,label])=><div key={key} className="border-b border-slate-200 px-2 py-2"><div className="text-[10px] font-bold uppercase text-slate-500">{label}</div><div className="mt-1 whitespace-pre-wrap text-xs leading-5">{app[key]}</div></div>)}</div></section> : null; })}
     {!hasData && <p className="mt-6 text-sm text-slate-500">Completa los datos en la sección Solicitud de empleo para generar este documento.</p>}
     <footer className="mt-6 border-t pt-3 text-[10px] text-slate-500">ProCV · Formato estructurado de información laboral</footer>
   </article>;
 }
-function GlobalProfilePhoto({ data }: { data: CVData }) {
-  const personal = data.personal ?? {};
-  if (!shouldRenderProfileImage(personal)) return null;
-  return <div className="mx-auto max-w-3xl bg-white px-6 pt-5 text-center"><img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} mx-auto border border-slate-200`} /></div>;
-}
-
 function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean }) {
   const personal = data.personal ?? {};
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
@@ -2484,27 +2477,27 @@ export function TemplateRenderer({ template, data }: Props) {
     case "classic":
       return <><TemplateClassic data={data} /><SupplementalPersonalSections data={data} /></>;
     case "executive":
-      return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensa":
       return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     case "timeline":
-      return <><GlobalProfilePhoto data={data} /><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "compact":
-      return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "ats":
       return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "employment":
-      return <><GlobalProfilePhoto data={data} /><TemplateEmploymentApplication data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateEmploymentApplication data={data} /><SupplementalPersonalSections data={data} /></>;
 
     // Legacy aliases kept for backward compatibility with existing CVs
     case "ats-optimized":
       return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "photo-professional":
-      return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "modern-sidebar":
-      return <><GlobalProfilePhoto data={data} /><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
     case "elegant":
-      return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "extensive":
       return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     default:
