@@ -94,54 +94,68 @@ export function TemplatesPage() {
       </section>
 
       <section className="px-1 py-6">
-        <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => {
-            const locked = template.tier === "premium" && !isPremium;
+        <div className="mx-auto max-w-4xl space-y-8">
+          {(filter === "all" ? CV_TEMPLATE_GROUPS : CV_TEMPLATE_GROUPS.filter((group) => group.id === filter)).map((group) => {
+            const groupTemplates = templates.filter((template) => template.group === group.id);
+            if (groupTemplates.length === 0) return null;
+
             return (
-              <article
-                key={template.key}
-                className={`flex flex-col rounded-card border p-5 transition-all hover:-translate-y-0.5 hover:shadow-panel ${
-                  locked
-                    ? "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60"
-                    : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
-                }`}
-                data-template={template.key}
-                data-tier={template.tier}
-                data-group={template.group}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                    {t(`workspace.templates.${template.key}`, { defaultValue: template.label })}
-                  </h2>
-                  {template.tier === "premium" ? <PremiumBadge /> : null}
+              <section key={group.id} aria-labelledby={`template-group-${group.id}`}>
+                <div className="mb-3">
+                  <h2 id={`template-group-${group.id}`} className="text-lg font-bold text-slate-900 dark:text-white">{group.label}</h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{group.description}</p>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {groupTemplates.map((template) => {
+                    const locked = template.tier === "premium" && !isPremium;
+                    return (
+                      <article
+                        key={template.key}
+                        className={`flex flex-col rounded-card border p-5 transition-all hover:-translate-y-0.5 hover:shadow-panel ${
+                          locked
+                            ? "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60"
+                            : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+                        }`}
+                        data-template={template.key}
+                        data-tier={template.tier}
+                        data-group={template.group}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                            {t(`workspace.templates.${template.key}`, { defaultValue: template.label })}
+                          </h3>
+                          {template.tier === "premium" ? <PremiumBadge /> : null}
+                        </div>
 
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  {CV_TEMPLATE_GROUPS.find((group) => group.id === template.group)?.label ?? template.group} ·{" "}
-                  {template.atsFriendly ? t("procv.atsFriendly", "ATS friendly") : t("procv.notAts", "Diseño visual")}
-                </p>
+                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                          {template.atsFriendly ? t("procv.atsFriendly", "ATS friendly") : t("procv.notAts", "Diseño visual")}
+                        </p>
 
-                <div className="mt-4 flex-1" aria-hidden="true">
-                  <div className="h-24 rounded-lg border border-dashed border-slate-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-950">
-                    <div className="h-2 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
-                    <div className="mt-2 h-1.5 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
-                    <div className="mt-2 h-1.5 w-2/3 rounded bg-slate-100 dark:bg-slate-800" />
-                  </div>
+                        <div className="mt-4 flex-1" aria-hidden="true">
+                          <div className="h-24 rounded-lg border border-dashed border-slate-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-950">
+                            <div className="h-2 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
+                            <div className="mt-2 h-1.5 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
+                            <div className="mt-2 h-1.5 w-2/3 rounded bg-slate-100 dark:bg-slate-800" />
+                          </div>
+                        </div>
+
+                        {locked ? (
+                          <FeatureGate featureKey="procv_premium_templates" fallback="lock" origin="templates_gallery">
+                            <span />
+                          </FeatureGate>
+                        ) : (
+                          <Link
+                            to={`/procv/editor?template=${template.key}`}
+                            className="mt-4 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-procv-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-procv-700"
+                          >
+                            {t("procv.useTemplate", "Usar plantilla")}
+                          </Link>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
-
-                {locked ? (
-                  <FeatureGate featureKey="procv_premium_templates" fallback="lock" origin="templates_gallery">
-                    <span />
-                  </FeatureGate>
-                ) : (
-                  <Link
-                    to={`/procv/editor?template=${template.key}`}
-                    className="mt-4 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-procv-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-procv-700"
-                  >
-                    {t("procv.useTemplate", "Usar plantilla")}
-                  </Link>
-                )}
-              </article>
+              </section>
             );
           })}
         </div>
