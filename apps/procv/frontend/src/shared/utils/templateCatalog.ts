@@ -1,4 +1,12 @@
-import { CURATED_CV_TEMPLATES as BASE_TEMPLATES, type CVTemplateOption as BaseTemplateOption } from "../../utils/templateCatalog";
+import {
+  CURATED_CV_TEMPLATES as BASE_TEMPLATES,
+  CV_TEMPLATE_GROUPS,
+  type CVTemplateOption as BaseTemplateOption,
+  type CVTemplateGroup,
+} from "../../utils/templateCatalog";
+
+export { CV_TEMPLATE_GROUPS };
+export type { CVTemplateGroup };
 
 /** Template option enriched with the monetization tier consumed by the modules layer. */
 export interface CVTemplateOption extends BaseTemplateOption {
