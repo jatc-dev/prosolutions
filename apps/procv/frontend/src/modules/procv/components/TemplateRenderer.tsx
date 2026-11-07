@@ -15,6 +15,7 @@ export type ContactType =
 
 export interface ContactItem {
   value: string;
+  isVisible?: boolean;
   type: ContactType;
 }
 
@@ -42,6 +43,7 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
     showProfileImage?: boolean;
+    showReferences?: boolean;
     documentType?: string;
     documentNumber?: string;
     showDocumentIdentity?: boolean;
@@ -674,13 +676,13 @@ function TemplateMinimal({ data }: { data: CVData }) {
           className="text-4xl font-bold tracking-tight ats-name"
           itemProp="name"
         >
-          {personal.name || "Tu Nombre"}
+          {personal.name}
         </h1>
         <p
           className="text-lg text-slate-700 ats-title"
           itemProp="jobTitle"
         >
-          {personal.role || "Tu título profesional"}
+          {personal.role}
         </p>
         {renderNationality(personal)}
         {personalLocation && (
@@ -1791,7 +1793,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
           {(personal.showReferences !== false && (personal.references || []).some((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship))) || personal.referencesAvailableOnRequest ? (
             <section className="mt-8 border-t border-slate-200 pt-5">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h3>
-              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
+              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
               {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
             </section>
           ) : null}
@@ -2440,7 +2442,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
   ];
   const hasData = Object.values(app).some(value => String(value || "").trim());
   return <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{fontFamily:"Arial,sans-serif"}}>
-    <header className="border-b-2 border-slate-700 pb-4"><p className="text-xs font-bold uppercase tracking-widest text-slate-500">Formato de información del aspirante</p><h1 className="mt-2 text-2xl font-bold">{data.personal?.name || "Nombre del aspirante"}</h1><p className="text-sm text-slate-600">{data.personal?.role || "Solicitud de empleo"}</p></header>
+    <header className="border-b-2 border-slate-700 pb-4"><p className="text-xs font-bold uppercase tracking-widest text-slate-500">Formato de información del aspirante</p><h1 className="mt-2 text-2xl font-bold">{data.personal?.name}</h1><p className="text-sm text-slate-600">{data.personal?.role}</p></header>
     {groups.map(group => { const rows=group.fields.filter(([key])=>String(app[key]||"").trim()); return rows.length ? <section key={group.title} className="mt-5 break-inside-avoid"><h2 className="border-b border-slate-300 bg-slate-100 px-2 py-2 text-sm font-bold">{group.title}</h2><div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">{rows.map(([key,label])=><div key={key} className="border-b border-slate-200 px-2 py-2"><div className="text-[10px] font-bold uppercase text-slate-500">{label}</div><div className="mt-1 whitespace-pre-wrap text-xs leading-5">{app[key]}</div></div>)}</div></section> : null; })}
     {!hasData && <p className="mt-6 text-sm text-slate-500">Completa los datos en la sección Solicitud de empleo para generar este documento.</p>}
     <footer className="mt-6 border-t pt-3 text-[10px] text-slate-500">ProCV · Formato estructurado de información laboral</footer>
@@ -2454,11 +2456,11 @@ function GlobalProfilePhoto({ data }: { data: CVData }) {
 
 function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean }) {
   const personal = data.personal ?? {};
-  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
+  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
-  return <section className="mx-auto max-w-3xl border-t border-slate-200 bg-white px-6 pb-6 pt-5 text-slate-800">
+  return <section className="mx-auto -mt-px max-w-2xl border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm">
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
     {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"}{reference.type === "laboral" && reference.position ? " · " + reference.position : ""}{reference.type === "laboral" && reference.company ? " · " + reference.company : ""}{reference.type === "personal" && (reference.relationship || reference.position) ? " · " + (reference.relationship || reference.position) : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
     {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
@@ -2486,13 +2488,13 @@ export function TemplateRenderer({ template, data }: Props) {
     case "compact":
       return <><GlobalProfilePhoto data={data} /><TemplateCompact data={data} /><SupplementalPersonalSections data={data} /></>;
     case "ats":
-      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "employment":
       return <><GlobalProfilePhoto data={data} /><TemplateEmploymentApplication data={data} /><SupplementalPersonalSections data={data} /></>;
 
     // Legacy aliases kept for backward compatibility with existing CVs
     case "ats-optimized":
-      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
     case "photo-professional":
       return <><GlobalProfilePhoto data={data} /><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
     case "modern-sidebar":
@@ -2502,6 +2504,6 @@ export function TemplateRenderer({ template, data }: Props) {
     case "extensive":
       return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
     default:
-      return <><GlobalProfilePhoto data={data} /><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
+      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
   }
 }
