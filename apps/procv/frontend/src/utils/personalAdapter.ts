@@ -6,6 +6,7 @@ type WorkspaceContactItem = {
   value?: string;
   type?: string;
   isPrimary?: boolean;
+  isVisible?: boolean;
 };
 
 type WorkspacePersonalLike = {
@@ -21,6 +22,11 @@ type WorkspacePersonalLike = {
   documentType?: string;
   documentNumber?: string;
   showDocumentIdentity?: boolean;
+  showFullName?: boolean;
+  showProfessionalTitle?: boolean;
+  showNationality?: boolean;
+  showDocumentType?: boolean;
+  showDocumentNumber?: boolean;
   references?: PersonalData["references"];
   showReferences?: boolean;
   referencesAvailableOnRequest?: boolean;
@@ -122,6 +128,11 @@ export function toEditorPersonalData(
   return {
     fullName: source.name || "",
     professionalTitle: source.role || "",
+    showFullName: source.showFullName !== false,
+    showProfessionalTitle: source.showProfessionalTitle !== false,
+    showNationality: source.showNationality !== false,
+    showDocumentType: source.showDocumentType !== false,
+    showDocumentNumber: source.showDocumentNumber !== false,
     documentType: source.documentType || "",
     documentNumber: source.documentNumber || "",
     showDocumentIdentity: Boolean(source.showDocumentIdentity),
@@ -184,6 +195,11 @@ export function toWorkspacePersonalData(
     documentType: editorPersonal.documentType || '',
     documentNumber: editorPersonal.documentNumber || '',
     showDocumentIdentity: Boolean(editorPersonal.showDocumentIdentity),
+    showFullName: editorPersonal.showFullName !== false,
+    showProfessionalTitle: editorPersonal.showProfessionalTitle !== false,
+    showNationality: editorPersonal.showNationality !== false,
+    showDocumentType: editorPersonal.showDocumentType !== false,
+    showDocumentNumber: editorPersonal.showDocumentNumber !== false,
     references: editorPersonal.references || [],
     showReferences: editorPersonal.showReferences !== false,
     referencesAvailableOnRequest: Boolean(editorPersonal.referencesAvailableOnRequest),
@@ -210,12 +226,14 @@ export function toWorkspacePersonalData(
       value: e.value,
       type: mapEditorEmailTypeToWorkspace(e.type, e.label),
       isPrimary: Boolean(e.isPrimary),
+      isVisible: e.isVisible !== false,
     })),
     phones: editorPersonal.phones.map((p) => ({
       id: p.id,
       value: p.number,
       type: mapEditorPhoneTypeToWorkspace(p.type, p.label),
       isPrimary: Boolean(p.isPrimary),
+      isVisible: p.isVisible !== false,
     })),
   };
 }
