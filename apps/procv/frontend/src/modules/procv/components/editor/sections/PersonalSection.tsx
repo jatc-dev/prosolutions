@@ -18,6 +18,13 @@ interface PersonalSectionProps {
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
+const VisibilityToggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label?: string }> = ({ checked, onChange, label = 'Incluir en la hoja de vida' }) => (
+  <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+    <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+    {label}
+  </label>
+);
+
 const CUSTOM_LABEL_VALUE = '__custom__';
 const COMBINED_VALUE_SEPARATOR = '__::__';
 
@@ -311,6 +318,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.professionalTitle')}
           />
         </FormField>
+        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label="Mostrar nombre" />
+        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label="Mostrar título profesional" />
       </div>
 
       <FormField
@@ -325,6 +334,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           aria-label={t('editor.personal.fields.nationality')}
         />
       </FormField>
+      <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label="Mostrar nacionalidad" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label="Tipo de documento de identidad">
@@ -332,7 +342,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
           </select>
         </FormField>
+        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label="Mostrar tipo de documento" />
         <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
+        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label="Mostrar número de documento" />
       </div>
       <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar documento de identidad en la hoja de vida</label>
 
@@ -511,6 +523,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
                   />
                   <span className="text-sm text-gray-700">{t('editor.personal.primaryEmail')}</span>
+                  <VisibilityToggle checked={email.isVisible !== false} onChange={(value) => updateEmail(email.id, { isVisible: value })} label="Mostrar este correo" />
                 </div>
 
                 <FormField label={t('editor.personal.fields.type')}>
@@ -596,6 +609,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">{t('editor.personal.primaryPhone')}</span>
+                  <VisibilityToggle checked={phone.isVisible !== false} onChange={(value) => updatePhone(phone.id, { isVisible: value })} label="Mostrar este teléfono" />
                 </div>
 
                 <FormField label={t('editor.personal.fields.type')}>
@@ -760,9 +774,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
         </div>
         {data.showReferences !== false ? <>
-          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
+          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
           {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-            <FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
+            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
             <FormField label="Nombre y apellido"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField>
             {reference.type === 'laboral' ? <><FormField label="Cargo actual"><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><FormField label="Empresa"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField></> : <FormField label="Parentesco"><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField>}
             <FormField label="Teléfono de contacto"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField>
