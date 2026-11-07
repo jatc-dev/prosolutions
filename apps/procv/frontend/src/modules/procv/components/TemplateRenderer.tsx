@@ -1675,6 +1675,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
         </aside>
 
         <main className="col-span-2 p-8">
+          {personal.showDocumentIdentity && (personal.documentType || personal.documentNumber) ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-2 text-sm text-slate-700">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></section> : null}
           {personal.summary?.trim() && personal.showSummaryContent !== false ? (
             <section className="mb-8">
               {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Perfil profesional</h2> : null}
@@ -2451,11 +2452,11 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
     <footer className="mt-6 border-t pt-3 text-[10px] text-slate-500">ProCV · Formato estructurado de información laboral</footer>
   </article>;
 }
-function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean }) {
+function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true, includeDocument = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean }) {
   const personal = data.personal ?? {};
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
-  const showDocument = Boolean(personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
+  const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
   return <section className="mx-auto -mt-px max-w-2xl border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm">
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
@@ -2467,7 +2468,7 @@ function SupplementalPersonalSections({ data, includeReferences = true, includeR
 export function TemplateRenderer({ template, data }: Props) {
   switch (template) {
     case "sidebar":
-      return <><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} includeRequestText={false} /></>;
+      return <><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} includeRequestText={false} includeDocument={false} /></>;
     case "corporate":
       return <><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
     case "developer":
