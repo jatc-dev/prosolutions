@@ -47,7 +47,7 @@ export interface CVData {
     documentNumber?: string;
     showDocumentIdentity?: boolean;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
-    references?: Array<{ id: string; isVisible?: boolean; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
+    references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
     referencesAvailableOnRequest?: boolean;
     birthDate?: string;
@@ -2460,7 +2460,7 @@ function SupplementalPersonalSections({ data, includeReferences = true, includeR
   if (!showDocument && references.length === 0 && !showRequestText) return null;
   return <section className={`mx-auto -mt-px w-full ${documentWidthClass} border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm`}>
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
-    {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"}{reference.type === "laboral" && reference.position ? " · " + reference.position : ""}{reference.type === "laboral" && reference.company ? " · " + reference.company : ""}{reference.type === "personal" && (reference.relationship || reference.position) ? " · " + (reference.relationship || reference.position) : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
+    {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => { const hidden = reference.hiddenFields || []; const show = (field: string) => !hidden.includes(field); const meta = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean); return <div key={reference.id} className="text-sm">{show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}{meta.length ? <p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {meta.join(" · ")}</p> : null}{show("phone") && reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{show("email") && reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>; })}</div></div> : null}
     {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
   </section>;
 }
