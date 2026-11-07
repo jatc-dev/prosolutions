@@ -30,7 +30,7 @@ export interface CVTemplateOption {
 export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "sidebar", label: "Panel lateral", category: "modern", group: "professional", supportsPhoto: true, atsFriendly: false },
   { key: "minimal", label: "Minimalista", category: "modern", group: "ats", supportsPhoto: false, atsFriendly: true },
-  { key: "ats", label: "ATS Profesional", category: "ats", group: "ats", supportsPhoto: false, atsFriendly: true },
+  { key: "ats", label: "ATS Profesional", category: "ats", group: "ats", supportsPhoto: true, atsFriendly: true },
   { key: "corporate", label: "Profesional", category: "corporate", group: "professional", supportsPhoto: true, atsFriendly: true },
   { key: "developer", label: "Desarrollador", category: "tech", group: "professional", supportsPhoto: true, atsFriendly: true },
   { key: "creative", label: "Creativa", category: "design", group: "professional", supportsPhoto: true, atsFriendly: false },
