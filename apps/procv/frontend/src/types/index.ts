@@ -53,6 +53,7 @@ export interface ReferenceItem {
   relationship?: string;
   phone?: string;
   email?: string;
+  hiddenFields?: string[];
 }
 
 // ==============================================
