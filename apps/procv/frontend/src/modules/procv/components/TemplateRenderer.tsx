@@ -2452,13 +2452,13 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
     <footer className="mt-6 border-t pt-3 text-[10px] text-slate-500">ProCV · Formato estructurado de información laboral</footer>
   </article>;
 }
-function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true, includeDocument = true }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean }) {
+function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true, includeDocument = true, documentWidthClass = "max-w-4xl" }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean; documentWidthClass?: string }) {
   const personal = data.personal ?? {};
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.company || item.position || item.relationship));
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
-  return <section className="mx-auto -mt-px max-w-2xl border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm">
+  return <section className={`mx-auto -mt-px w-full ${documentWidthClass} border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm`}>
     {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
     {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => <div key={reference.id} className="text-sm"><p className="font-semibold">{reference.name}</p><p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"}{reference.type === "laboral" && reference.position ? " · " + reference.position : ""}{reference.type === "laboral" && reference.company ? " · " + reference.company : ""}{reference.type === "personal" && (reference.relationship || reference.position) ? " · " + (reference.relationship || reference.position) : ""}</p>{reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>)}</div></div> : null}
     {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
