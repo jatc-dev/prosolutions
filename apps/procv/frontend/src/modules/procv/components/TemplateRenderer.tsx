@@ -47,7 +47,7 @@ export interface CVData {
     documentNumber?: string;
     showDocumentIdentity?: boolean;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
-    references?: Array<{ id: string; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
+    references?: Array<{ id: string; isVisible?: boolean; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
     referencesAvailableOnRequest?: boolean;
     birthDate?: string;
