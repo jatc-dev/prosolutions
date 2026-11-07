@@ -27,6 +27,7 @@ export type ProfileImageStyle = 'round' | 'square' | 'portrait';
 
 export interface ContactItem {
   id: string;
+  isVisible?: boolean;
   type: ContactType;
   label: string;
   value: string;
@@ -35,6 +36,7 @@ export interface ContactItem {
 
 export interface PhoneItem {
   id: string;
+  isVisible?: boolean;
   type: PhoneType;
   number: string;
   label?: string;
@@ -43,6 +45,7 @@ export interface PhoneItem {
 
 export interface ReferenceItem {
   id: string;
+  isVisible?: boolean;
   type: 'personal' | 'laboral';
   name: string;
   position?: string;
@@ -66,6 +69,11 @@ export interface PersonalData {
   documentType?: string;
   documentNumber?: string;
   showDocumentIdentity?: boolean;
+  showFullName?: boolean;
+  showProfessionalTitle?: boolean;
+  showNationality?: boolean;
+  showDocumentType?: boolean;
+  showDocumentNumber?: boolean;
   sidebarIntroMode?: 'valueProposition' | 'summary' | 'none';
   references?: ReferenceItem[];
   showReferences?: boolean;
@@ -106,6 +114,7 @@ export interface PersonalData {
 
 export interface ExperienceItem {
   id: string;
+  isVisible?: boolean;
   position: string;
   company: string;
   location?: string;
@@ -125,6 +134,7 @@ export interface ExperienceItem {
 
 export interface EducationItem {
   id: string;
+  isVisible?: boolean;
   degree: string;
   institution: string;
   location?: string;
@@ -144,6 +154,7 @@ export interface EducationItem {
 
 export interface SkillItem {
   id: string;
+  isVisible?: boolean;
   name: string;
   category: SkillCategory;
   level: SkillLevel;
@@ -159,6 +170,7 @@ export interface SkillItem {
 
 export interface LanguageItem {
   id: string;
+  isVisible?: boolean;
   language: string;
   listeningLevel: LanguageLevel;
   readingLevel: LanguageLevel;
@@ -175,6 +187,7 @@ export interface LanguageItem {
 
 export interface CertificateItem {
   id: string;
+  isVisible?: boolean;
   title: string;
   issuingOrganization: string;
   issueDate: string;
