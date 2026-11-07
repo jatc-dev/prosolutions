@@ -105,6 +105,7 @@ export function toEditorPersonalData(
     label: e?.type || "",
     value: e?.value || "",
     isPrimary: Boolean(e?.isPrimary),
+    isVisible: e?.isVisible !== false,
   }));
 
   const phones = sourcePhones.map((p) => ({
@@ -113,6 +114,7 @@ export function toEditorPersonalData(
     number: p?.value || "",
     label: p?.type || "",
     isPrimary: Boolean(p?.isPrimary),
+    isVisible: p?.isVisible !== false,
   }));
 
   const hasExplicitEmailPrimaryFlag = sourceEmails.some((email) => typeof email?.isPrimary === "boolean");
