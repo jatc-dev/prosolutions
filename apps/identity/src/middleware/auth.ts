@@ -4,13 +4,7 @@ import { config } from '../config';
 import prisma from '../prismaClient';
 import { REFRESH_TOKEN_COOKIE_NAME, clearRefreshTokenCookie } from '../utils/cookies';
 import { auditLog, extractRequestInfo } from '../utils/auditLog';
-
-const SESSION_IDLE_TIMEOUT =
-  (process.env.SESSION_IDLE_TIMEOUT_MINUTES
-    ? Number(process.env.SESSION_IDLE_TIMEOUT_MINUTES)
-    : 30) *
-  60 *
-  1000;
+import { isSessionIdleExpired } from '../utils/sessionPolicy';
 
 export interface IdentityRequest extends Request {
   userId?: string;
@@ -74,9 +68,7 @@ export async function identityMiddleware(
     }
 
     const now = new Date();
-    const idleMs = now.getTime() - session.lastAccessedAt.getTime();
-    const idleTimeout = session.rememberMe ? 30 * 24 * 60 * 60 * 1000 : SESSION_IDLE_TIMEOUT;
-    if (idleMs > idleTimeout) {
+    if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
       await prisma.session.update({
         where: { id: session.id },
         data: { revokedAt: now },
