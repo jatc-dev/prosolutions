@@ -2,10 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import create from "zustand";
 
-/*──────────────────────────────────────────────────────────────
-  1. Tipos
-──────────────────────────────────────────────────────────────*/
-
 export interface UserProfile {
   id: string;
   email: string;
@@ -21,10 +17,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
 }
-
-/*──────────────────────────────────────────────────────────────
-  2. Configuración de entorno
-──────────────────────────────────────────────────────────────*/
 
 declare global {
   interface ImportMetaEnv {
@@ -43,19 +35,13 @@ export const IDENTITY_URL =
 export const IDENTITY_API_URL =
   env.VITE_IDENTITY_API_URL ?? `${IDENTITY_URL}/api/auth`;
 
-/*──────────────────────────────────────────────────────────────
-  3. Cliente HTTP preconfigurado (credentials: 'include')
-──────────────────────────────────────────────────────────────*/
-
 export const authHttp: AxiosInstance = axios.create({
   baseURL: IDENTITY_API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-/* Inject Bearer token from Zustand store on every request */
+/** Access tokens are held in memory only; refresh credentials stay in HttpOnly cookies. */
 let currentToken: string | null = null;
 
 export function setAuthToken(token: string | null) {
@@ -69,39 +55,28 @@ export function setAuthToken(token: string | null) {
 
 authHttp.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (currentToken) {
-      config.headers.Authorization = `Bearer ${currentToken}`;
-    }
+    if (currentToken) config.headers.Authorization = `Bearer ${currentToken}`;
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-/*──────────────────────────────────────────────────────────────
-  4. Zustand store
-──────────────────────────────────────────────────────────────*/
-
-const LOCAL_STORAGE_KEY = "procv_auth";
-
-export const useAuthStore = create<AuthState & {
+type AuthActions = {
   login: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   validateSession: () => Promise<void>;
   setAccessToken: (token: string | null) => void;
-}>((set, get) => ({
+};
+
+export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
   loading: true,
 
   login: async (accessToken) => {
-    localStorage.setItem(
-      LOCAL_STORAGE_KEY,
-      JSON.stringify({ accessToken }),
-    );
     setAuthToken(accessToken);
-    set({ accessToken, isAuthenticated: true });
-
+    set({ accessToken, loading: true });
     await get().validateSession();
   },
 
@@ -109,35 +84,58 @@ export const useAuthStore = create<AuthState & {
     try {
       await authHttp.post("/logout");
     } catch {
-      // Ignore logout errors
+      // Clear local authentication state even if Identity is unavailable.
+    } finally {
+      setAuthToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false, loading: false });
     }
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    setAuthToken(null);
-    set({ user: null, accessToken: null, isAuthenticated: false });
   },
 
   validateSession: async () => {
+    set({ loading: true });
     try {
-      const response = await authHttp.get("/me");
-      const data = response.data;
-      const user = data?.user ?? null;
-      set({ user, isAuthenticated: true });
+      let token = get().accessToken;
+      let response;
+
+      if (token) {
+        try {
+          response = await authHttp.get("/me");
+        } catch {
+          response = undefined;
+        }
+      }
+
+      // On a fresh page load (or an expired access token), exchange the
+      // central HttpOnly refresh cookie for a short-lived in-memory token.
+      if (!response?.data?.user) {
+        const refreshResponse = await authHttp.post("/refresh");
+        token = refreshResponse.data?.accessToken;
+        if (!token) throw new Error("Identity did not return an access token");
+        setAuthToken(token);
+        set({ accessToken: token });
+        response = await authHttp.get("/me");
+      }
+
+      const user = response.data?.user ?? null;
+      if (!user) throw new Error("Identity did not return a user profile");
+      set({ user, accessToken: token, isAuthenticated: true });
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
       setAuthToken(null);
       set({ user: null, accessToken: null, isAuthenticated: false });
+    } finally {
+      set({ loading: false });
     }
   },
 
   setAccessToken: (token) => {
     setAuthToken(token);
-    set({ accessToken: token, isAuthenticated: Boolean(token) });
+    set({
+      accessToken: token,
+      isAuthenticated: Boolean(token),
+      ...(token ? {} : { user: null }),
+    });
   },
 }));
-
-/*──────────────────────────────────────────────────────────────
-  5. React Context (AuthProvider)
-──────────────────────────────────────────────────────────────*/
 
 export interface AuthContextType {
   user: UserProfile | null;
@@ -148,41 +146,22 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const { user, accessToken, isAuthenticated, loading, validateSession, setAccessToken } =
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user, accessToken, isAuthenticated, loading, validateSession } =
     useAuthStore();
 
   useEffect(() => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!stored) {
-      setAccessToken(null);
-      return;
-    }
+    // Remove the legacy persisted bearer token; never restore it.
     try {
-      const { accessToken: storedToken } = JSON.parse(stored);
-      if (storedToken) {
-        setAccessToken(storedToken);
-        validateSession().catch(() => {});
-      }
+      window.localStorage.removeItem("procv_auth");
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      setAccessToken(null);
+      // Storage may be unavailable in hardened browser contexts.
     }
-  }, [validateSession, setAccessToken]);
+    void validateSession();
+  }, [validateSession]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        accessToken,
-        isAuthenticated,
-        loading,
-      }}
-    >
+    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -190,21 +169,11 @@ export function AuthProvider({
 
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 }
 
-/*──────────────────────────────────────────────────────────────
-  6. ProtectedRoute
-──────────────────────────────────────────────────────────────*/
-
-export function ProtectedRoute({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -217,10 +186,7 @@ export function ProtectedRoute({
 
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
-    const identityUrl =
-      import.meta.env.VITE_IDENTITY_URL ??
-      "https://identity.prosolutions.page";
-    window.location.href = `${identityUrl}/login?redirect_uri=${redirectUri}`;
+    window.location.href = `${IDENTITY_URL}/login?redirect_uri=${redirectUri}`;
     return null;
   }
 
