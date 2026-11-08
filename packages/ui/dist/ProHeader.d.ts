@@ -16,6 +16,12 @@ interface ProHeaderProps {
     profileHref?: string;
     /** Destino opcional para configuración de cuenta. */
     settingsHref?: string;
+    /** Destino opcional para administrar dispositivos y sesiones. */
+    securityHref?: string;
+    /** URL de acceso cuando no hay una sesión autenticada. */
+    loginHref?: string;
+    /** Indica que la aplicación está comprobando la sesión. */
+    authLoading?: boolean;
     /** Idioma de la interfaz compartida. */
     locale?: "es" | "en";
     /** Acción para cambiar el idioma, cuando la aplicación ofrece traducciones. */
@@ -28,5 +34,5 @@ interface ProHeaderProps {
  * Header unificado del ecosistema ProSolutions.
  * Uso: <ProHeader activeApp="core" /> en apps/core, "procv" en apps/procv, etc.
  */
-export declare function ProHeader({ activeApp, actions, className, locale, onLocaleChange, profile, onSignOut, profileHref, settingsHref }: ProHeaderProps): React.JSX.Element;
+export declare function ProHeader({ activeApp, actions, className, locale, onLocaleChange, profile, onSignOut, profileHref, settingsHref, securityHref, loginHref, authLoading }: ProHeaderProps): React.JSX.Element;
 export {};
