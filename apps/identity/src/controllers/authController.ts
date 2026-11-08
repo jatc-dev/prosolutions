@@ -273,20 +273,15 @@ export async function refreshToken(req: Request, res: Response) {
       jti: string;
     };
     const session = await prisma.session.findUnique({ where: { refreshToken } });
+    const now = new Date();
     if (
       !session ||
       session.revokedAt ||
       session.userId !== payload.sub ||
       session.jti !== payload.jti ||
-      session.expiresAt < new Date()
+      session.expiresAt <= now
     ) {
       logger.warn('Refresh token rejected');
-      clearRefreshTokenCookie(res);
-      return res.status(401).json({ message: 'Invalid or expired refresh token' });
-    }
-
-    const now = new Date();
-    if (session.expiresAt <= now) {
       clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
