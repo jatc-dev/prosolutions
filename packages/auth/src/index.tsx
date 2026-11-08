@@ -116,7 +116,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         response = await authHttp.get("/me");
       }
 
-      const user = response.data?.user ?? null;
+      const user = response?.data?.user ?? null;
       if (!user) throw new Error("Identity did not return a user profile");
       set({ user, accessToken: token, isAuthenticated: true });
     } catch {
