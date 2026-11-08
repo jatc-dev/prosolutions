@@ -78,7 +78,7 @@ export async function introspectToken(req: Request, res: Response) {
       } as IntrospectResponse);
     }
 
-    if (session.expiresAt < new Date()) {
+    if (session.expiresAt <= new Date()) {
       return res.status(401).json({
         valid: false,
         reason: 'session_expired',
