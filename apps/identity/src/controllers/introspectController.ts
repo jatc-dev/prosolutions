@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
+import { isSessionIdleExpired } from '../utils/sessionPolicy';
 
 export interface IntrospectResponse {
   valid: boolean;
@@ -85,15 +86,7 @@ export async function introspectToken(req: Request, res: Response) {
     }
 
     const now = new Date();
-    const idleMs = now.getTime() - session.lastAccessedAt.getTime();
-    const SESSION_IDLE_TIMEOUT =
-      (process.env.SESSION_IDLE_TIMEOUT_MINUTES
-        ? Number(process.env.SESSION_IDLE_TIMEOUT_MINUTES)
-        : 30) *
-      60 *
-      1000;
-
-    if (idleMs > SESSION_IDLE_TIMEOUT) {
+    if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
       await prisma.session.update({
         where: { id: session.id },
         data: { revokedAt: now },
