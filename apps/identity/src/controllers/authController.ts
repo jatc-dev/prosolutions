@@ -300,6 +300,11 @@ export async function refreshToken(req: Request, res: Response) {
       include: { moduleAccess: true },
     });
     if (!user || !user.isActive) {
+      await prisma.session.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'User not found or inactive' });
     }
 
