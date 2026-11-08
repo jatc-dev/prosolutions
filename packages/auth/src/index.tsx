@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import create from "zustand";
 
 export interface UserProfile {
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     set({ loading: true });
     try {
       let token = get().accessToken;
-      let response;
+      let response: AxiosResponse | undefined;
 
       if (token) {
         try {
