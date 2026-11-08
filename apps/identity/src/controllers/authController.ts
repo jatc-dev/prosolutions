@@ -29,6 +29,7 @@ import {
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
 import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
+import { isSessionIdleExpired } from '../utils/sessionPolicy';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
@@ -282,6 +283,21 @@ export async function refreshToken(req: Request, res: Response) {
       logger.warn('Refresh token rejected');
       clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+
+    const now = new Date();
+    if (session.expiresAt <= now) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+
+    if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
+      await prisma.session.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Session timed out due to inactivity' });
     }
 
     const user = await prisma.user.findUnique({
