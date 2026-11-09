@@ -57,6 +57,14 @@ test('allows recovery only for the matching recently rotated session and browser
   assert.equal(recoveryAllowed(), true);
 });
 
+test('allows recovery after normal activity updates the successor lastAccessedAt', () => {
+  const successorAfterMeRequest = session({
+    lastAccessedAt: new Date(rotationAt.getTime() + 500),
+  });
+
+  assert.equal(recoveryAllowed(undefined, successorAfterMeRequest), true);
+});
+
 test('rejects recovery when the browser user-agent is missing or different', () => {
   assert.equal(recoveryAllowed(undefined, undefined, null), false);
   assert.equal(recoveryAllowed(undefined, undefined, 'Firefox/other'), false);
