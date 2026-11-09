@@ -59,13 +59,13 @@ export function canRecoverRefreshRotation(input: {
     return false;
   }
 
-  // These timestamps are written together only by the rotation transaction.
-  // A later explicit revocation changes revokedAt and invalidates recovery.
+  // The predecessor's lastAccessedAt and successor's createdAt are written
+  // at rotation time. Do not use successor.lastAccessedAt as a marker:
+  // ordinary /me requests update it and must not break concurrent recovery.
   const rotationAt = predecessor.revokedAt.getTime();
   if (
     predecessor.lastAccessedAt.getTime() !== rotationAt ||
-    successor.createdAt.getTime() !== rotationAt ||
-    successor.lastAccessedAt.getTime() !== rotationAt
+    successor.createdAt.getTime() !== rotationAt
   ) {
     return false;
   }
