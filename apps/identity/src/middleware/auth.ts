@@ -115,6 +115,10 @@ export async function identityMiddleware(
       jti?: string;
     };
 
+    if (!payload.jti) {
+      return res.status(401).json({ message: 'Session token missing' });
+    }
+
     // Access tokens remain bound to a persisted session. When the refresh
     // cookie has rotated in another app, resolve the current session from
     // that cookie rather than clearing it because this tab has a stale jti.
