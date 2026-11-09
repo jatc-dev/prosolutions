@@ -11,6 +11,7 @@ import {
 import { auditLog, extractRequestInfo } from '../utils/auditLog';
 import { ensureDefaultModuleAccess } from '../services/moduleAccessService';
 import { signAccessToken, verifyRefreshToken } from '../services/tokenService';
+import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import {
   canRecoverRefreshRotation,
   deriveRefreshSuccessorJti,
@@ -20,6 +21,7 @@ type RefreshPayload = { sub: string; jti: string };
 
 async function recoverRotatedSession(
   predecessor: Awaited<ReturnType<typeof prisma.session.findUnique>>,
+  predecessorRefreshToken: string,
   payload: RefreshPayload,
   requestUserAgent: string | null,
   req: Request,
@@ -36,7 +38,7 @@ async function recoverRotatedSession(
   }
 
   const successorJti = deriveRefreshSuccessorJti(
-    req.cookies[REFRESH_TOKEN_COOKIE_NAME],
+    predecessorRefreshToken,
     config.jwtSecret,
   );
   const successor = await prisma.session.findUnique({
@@ -86,7 +88,8 @@ async function recoverRotatedSession(
     ...extractRequestInfo(req),
     details: { rotationRecovered: true },
   });
-  return Boolean(res.json({ accessToken, modules }));
+  res.json({ accessToken, modules });
+  return true;
 }
 
 export async function refreshToken(req: Request, res: Response) {
@@ -112,6 +115,7 @@ export async function refreshToken(req: Request, res: Response) {
     if (session.revokedAt) {
       const recovered = await recoverRotatedSession(
         session,
+        predecessorRefreshToken,
         payload,
         requestUserAgent,
         req,
@@ -132,7 +136,6 @@ export async function refreshToken(req: Request, res: Response) {
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
 
-    const { isSessionIdleExpired } = await import('../utils/sessionPolicy');
     if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
       await prisma.session.updateMany({
         where: { id: session.id, revokedAt: null },
@@ -213,6 +216,7 @@ export async function refreshToken(req: Request, res: Response) {
       });
       const recovered = await recoverRotatedSession(
         latestPredecessor,
+        predecessorRefreshToken,
         payload,
         requestUserAgent,
         req,
