@@ -122,7 +122,7 @@ test('concurrent refresh requests receive the same active successor session', as
           return { count: 1 };
         },
         create: async ({ data }: any) => {
-          successor = { id: 'session-after-rotation', ...data };
+          successor = { id: 'session-after-rotation', revokedAt: null, ...data };
           return successor;
         },
       },
