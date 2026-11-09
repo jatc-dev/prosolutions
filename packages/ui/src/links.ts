@@ -35,7 +35,9 @@ const coreUrl = configuredCoreUrl && /^https?:\/\//i.test(configuredCoreUrl)
 export const APP_URLS = {
   core: coreUrl,
   procv: procvUrl,
-  procvLogin: `${procvUrl.replace(/\/+$/, "")}/login`,
+  // Enter through the protected route so ProCV can preserve its return URL
+  // when the central QA login is required.
+  procvLogin: `${procvUrl.replace(/\/+$/, "")}/dashboard`,
   projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",
 } as const;
 
