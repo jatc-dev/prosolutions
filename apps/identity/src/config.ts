@@ -61,6 +61,10 @@ const DEFAULT_ALLOWED_ORIGINS: string[] = [
   'http://localhost:5175',
 ];
 
+function parseOrigins(value?: string): string[] {
+  return (value || '').split(',').map((origin) => origin.trim()).filter(Boolean);
+}
+
 function getCookieSameSite(): 'lax' | 'strict' | 'none' {
   const raw = (process.env.COOKIE_SAME_SITE || '').toLowerCase();
   if (raw === 'lax' || raw === 'strict' || raw === 'none') {
@@ -93,6 +97,11 @@ function getJwtSecret(): string {
   return secret || 'change-me-for-development-only';
 }
 
+const configuredAllowedOrigins = process.env.ALLOWED_ORIGINS
+  ? parseOrigins(process.env.ALLOWED_ORIGINS)
+  : DEFAULT_ALLOWED_ORIGINS;
+const additionalAllowedOrigins = parseOrigins(process.env.ADDITIONAL_ALLOWED_ORIGINS);
+
 export const config = {
   port: getPort(),
   jwtSecret: getJwtSecret(),
@@ -105,8 +114,9 @@ export const config = {
   isProduction: getEnvironment() === 'production',
   cookieSecure: process.env.COOKIE_SECURE === 'true' || getEnvironment() === 'production',
   cookieSameSite: getCookieSameSite(),
-  cookieDomain: process.env.COOKIE_DOMAIN || '.prosolutions.page',
-  allowedOrigins: process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
-    : DEFAULT_ALLOWED_ORIGINS,
+  // Explicit opt-in for host-only cookies in QA/custom domains; production default stays shared.
+  cookieDomain: process.env.COOKIE_DOMAIN?.trim().toLowerCase() === 'host-only'
+    ? undefined
+    : process.env.COOKIE_DOMAIN || '.prosolutions.page',
+  allowedOrigins: [...new Set([...configuredAllowedOrigins, ...additionalAllowedOrigins])],
 };
