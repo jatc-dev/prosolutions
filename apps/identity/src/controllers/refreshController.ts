@@ -120,7 +120,7 @@ export async function refreshToken(req: Request, res: Response) {
         requestUserAgent,
         req,
         res,
-        now,
+        new Date(),
       );
       if (recovered) return;
       clearRefreshTokenCookie(res);
