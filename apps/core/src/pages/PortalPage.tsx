@@ -5,6 +5,7 @@ import { useCoreLocale } from "../i18n";
 import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
+const PROCV_APP_URL = (import.meta.env.VITE_PROCV_APP_URL || "https://procv.prosolutions.page").trim();
 const ACCESS_TOKEN_KEY = "pro_identity_token";
 interface PortalUser { id: string; name?: string | null; email: string; role?: string; modules?: string[]; }
 
@@ -89,7 +90,7 @@ export function PortalPage() {
               </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              {user?.modules?.includes("PROCV") && (<a href="https://procv.prosolutions.page/" className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
+              {user?.modules?.includes("PROCV") && (<a href={PROCV_APP_URL} className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-200">
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3.75h7l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M14 3.75v4h4M8.5 12h7M8.5 15.5h7" /></svg>
                 </div>
