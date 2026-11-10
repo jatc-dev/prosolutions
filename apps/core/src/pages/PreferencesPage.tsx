@@ -28,8 +28,8 @@ export function PreferencesPage() {
       if (!response.ok) throw new Error("No se pudo verificar la sesión.");
       const data = await response.json();
       if (!active) return;
-      const nextTheme = preferences.theme || "system";
-      const nextLanguage = preferences.locale || "es";
+      const nextTheme = preferences.theme || preference;
+      const nextLanguage = preferences.locale || locale;
       setTheme(nextTheme);
       setLanguage(nextLanguage);
       setPreference(nextTheme);
