@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { useTheme } from "@prosolutions/ui";
 import { CoreLocaleProvider } from "./i18n";
+import { PreferencesBootstrap } from "./PreferencesBootstrap";
 import "./index.css";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider>
       <CoreLocaleProvider>
+        <PreferencesBootstrap />
         <App />
       </CoreLocaleProvider>
     </ThemeProvider>
