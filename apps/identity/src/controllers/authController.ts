@@ -30,7 +30,7 @@ import {
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
 import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
-import { getUserPermissions, getUserAdminAssignments } from '../services/adminAuthorization';
+import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
 import { Module } from '@prisma/client';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
@@ -385,12 +385,11 @@ export async function me(req: Request, res: Response) {
   const modules = user.moduleAccess
     .map((ma) => ma.module)
     .filter(isAvailableModule);
-  const [permissions, adminRoles, modulePermissionEntries] = await Promise.all([
-    getUserPermissions(userId),
+  const [permissionSets, adminRoles] = await Promise.all([
+    getUserPermissionSets(userId),
     getUserAdminAssignments(userId),
-    Promise.all(Object.values(Module).map(async (module) => [module, await getUserPermissions(userId, module)] as const)),
   ]);
-  const modulePermissions = Object.fromEntries(modulePermissionEntries) as Partial<Record<Module, string[]>>;
+  const { permissions, modulePermissions } = permissionSets;
 
   return res.json({
     user: {
