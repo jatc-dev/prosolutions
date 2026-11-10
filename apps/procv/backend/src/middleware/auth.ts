@@ -109,7 +109,12 @@ function validateIntrospectionContract(
   return { valid: true };
 }
 
-export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authMiddleware(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+  options: { allowAdminWithoutModule?: boolean } = {},
+) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Authorization header missing' });
@@ -148,7 +153,13 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     }
 
     const modules = introspection.modules as string[];
-    if (!modules.includes('PROCV')) {
+    const permissions = [
+      ...(introspection.permissions as string[]),
+      ...(introspection.modulePermissions?.PROCV || []),
+    ];
+    const hasProductAccess = modules.includes('PROCV');
+    const hasAdministrativeAccess = permissions.includes('procv.admin.access');
+    if (!hasProductAccess && !(options.allowAdminWithoutModule && hasAdministrativeAccess)) {
       return res
         .status(403)
         .json({ message: 'ProCV module access required', requiredModule: 'PROCV' });
@@ -158,10 +169,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.email = introspection.email;
     req.role = introspection.role;
     req.modules = modules;
-    req.permissions = [
-      ...(introspection.permissions as string[]),
-      ...(introspection.modulePermissions?.PROCV || []),
-    ];
+    req.permissions = permissions;
 
     return next();
   } catch {
