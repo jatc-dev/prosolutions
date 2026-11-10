@@ -102,7 +102,12 @@ function validateIntrospectionContract(
     return { valid: false, reason: 'introspection_invalid_permissions' };
   }
 
-  if (!introspection.modulePermissions || !Array.isArray(introspection.modulePermissions.PROCV)) {
+  if (
+    !introspection.modulePermissions ||
+    typeof introspection.modulePermissions !== 'object' ||
+    Array.isArray(introspection.modulePermissions) ||
+    Object.values(introspection.modulePermissions).some((permissions) => !Array.isArray(permissions))
+  ) {
     return { valid: false, reason: 'introspection_invalid_module_permissions' };
   }
 
