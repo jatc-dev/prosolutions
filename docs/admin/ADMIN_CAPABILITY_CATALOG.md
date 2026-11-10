@@ -157,20 +157,21 @@ La rama de trabajo incorpora una primera implementación ejecutable del modelo:
 
 - Esquema Prisma para roles, permisos, relación rol-permiso y asignaciones por usuario.
 - Permisos almacenados en base de datos y resolución en cada solicitud; las declaraciones de rol incluidas en el JWT no bastan para autorizar.
-- Asignaciones temporales con vencimiento y alcance opcional por módulo. El rol `module_admin` exige un módulo explícito.
+- Asignaciones temporales con vencimiento y alcance opcional por módulo. El rol `module_admin` exige un módulo explícito. `platform_owner` es permanente para evitar que la plataforma quede sin propietario.
 - Roles de sistema iniciales: owner, platform admin, security admin, support agent, content manager, analytics viewer, module admin y user.
 - Migración aditiva que asigna el rol explícito `platform_owner` a las cuentas QA cuyo rol anterior era `admin`, preservando el acceso administrativo existente.
 - Endpoints para consultar roles/asignaciones, asignar y revocar roles; el último propietario activo no puede ser eliminado.
 - Introspección de Identity expone permisos efectivos para que ProCV aplique autorización en su propio backend.
 - ProCV aplica permisos distintos para analítica, auditoría, lectura/configuración y marca. El antiguo control por `role=admin` deja de ser suficiente.
 - Los endpoints heredados de ajustes ProCV solo exponen y aceptan las dos claves de contenido público verificadas; las demás claves quedan bloqueadas.
+- El acceso al contenido de CV de terceros no se concede a ningún rol administrativo de forma implícita. `procv.cvs.support_access` queda sin asignación predeterminada; solo el propietario puede aprobar una futura solicitud temporal mediante `procv.cvs.support_access.approve`.
 - Consola central con panel de roles/asignaciones y permisos; el directorio de usuarios y concesión de módulos distingue lectura de gestión.
 
 ### Validación pendiente antes de habilitar en QA
 
 1. Finalizar CI de Identity, Core y ProCV/ProJobs en la cabeza actual de la rama.
-2. Validar el SQL de la migración con Prisma y aplicarlo exclusivamente a la base QA `proidentity`.
-3. Confirmar que la cuenta administradora QA heredó `platform_owner` y que usuarios ordinarios no recibieron permisos administrativos.
+2. Confirmar que Prisma reconoce ambas migraciones aplicadas y que el esquema de QA coincide con `schema.prisma`.
+3. Confirmar que la cuenta administradora QA heredó `platform_owner` y que usuarios ordinarios no recibieron permisos administrativos. La verificación de datos ya confirma 8 roles, 40 permisos, un propietario activo y cero roles con acceso implícito a CV ajeno.
 4. Probar rutas permitidas y denegadas para cada rol y para asignaciones con alcance PROCV/PROJOBS.
 5. Verificar en navegador que la consola muestra solo las secciones autorizadas y que las operaciones de CV continúan siendo propias del usuario.
 6. No fusionar PR ni ejecutar migraciones/despliegues de producción durante esta fase.
