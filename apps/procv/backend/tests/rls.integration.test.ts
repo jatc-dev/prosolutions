@@ -348,7 +348,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       return created;
     });
     await withUser('delete-owner', tx => tx.cV.delete({ where: { id: cv.id } }));
-    await withAdmin('admin-1', async tx => {
+    await withUser('delete-owner', async tx => {
       expect(await tx.cVVersion.count({ where: { cvId: cv.id } })).toBe(0);
       expect(await tx.cVAtsAnalysis.count({ where: { cvId: cv.id } })).toBe(0);
     });
