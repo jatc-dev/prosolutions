@@ -7,6 +7,7 @@ export interface AuthRequest extends Request {
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
 }
 
 const INTROSPECTION_TIMEOUT_MS = Number(process.env.INTROSPECTION_TIMEOUT_MS) || 5000;
@@ -17,6 +18,7 @@ async function introspectSession(token: string): Promise<{
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
   reason?: string;
 }> {
   const controller = new AbortController();
@@ -59,6 +61,7 @@ async function introspectSession(token: string): Promise<{
       email?: string;
       role?: string;
       modules?: string[];
+      permissions?: string[];
       reason?: string;
     };
   } catch (error: unknown) {
@@ -91,6 +94,10 @@ function validateIntrospectionContract(
 
   if (!Array.isArray(introspection.modules)) {
     return { valid: false, reason: 'introspection_invalid_modules' };
+  }
+
+  if (!Array.isArray(introspection.permissions)) {
+    return { valid: false, reason: 'introspection_invalid_permissions' };
   }
 
   return { valid: true };
@@ -145,6 +152,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.email = introspection.email;
     req.role = introspection.role;
     req.modules = modules;
+    req.permissions = introspection.permissions as string[];
 
     return next();
   } catch {
