@@ -123,6 +123,9 @@ jobs:
           END $$;
           SQL
 
+      - name: Generate ProCV Prisma Client for integration tests
+        run: npx prisma generate --schema=apps/procv/backend/prisma/schema.prisma
+
       - name: Run real PostgreSQL RLS isolation tests
         env:
           PROCV_TEST_DATABASE_URL: postgresql://procv_login:ci-only-procv-test-password@localhost:5432/procv_test?schema=public
