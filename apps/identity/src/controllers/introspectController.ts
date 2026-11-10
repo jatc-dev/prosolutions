@@ -4,7 +4,7 @@ import { config } from '../config';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
-import { getUserPermissions } from '../services/adminAuthorization';
+import { getUserPermissionSets } from '../services/adminAuthorization';
 import { Module } from '@prisma/client';
 
 export interface IntrospectResponse {
@@ -106,10 +106,7 @@ export async function introspectToken(req: Request, res: Response) {
       data: { lastAccessedAt: now },
     });
 
-    const permissions = await getUserPermissions(payload.sub);
-    const modulePermissions = Object.fromEntries(await Promise.all(
-      Object.values(Module).map(async (module) => [module, await getUserPermissions(payload.sub, module)] as const),
-    )) as Partial<Record<Module, string[]>>;
+    const { permissions, modulePermissions } = await getUserPermissionSets(payload.sub);
 
     return res.json({
       valid: true,
