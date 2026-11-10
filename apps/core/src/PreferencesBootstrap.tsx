@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useTheme, type ThemePreference } from "@prosolutions/ui";
+import { useTheme } from "@prosolutions/ui";
+type ThemePreference = "light" | "dark" | "system";
 import { useCoreLocale } from "./i18n";
 import { loadUserPreferences } from "./preferencesApi";
 

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme, type ThemePreference } from "@prosolutions/ui";
+import { useTheme } from "@prosolutions/ui";
+type ThemePreference = "light" | "dark" | "system";
 import { useAuth } from "../stores/authStore";
 import { identityAuthApiUrl } from "../lib/identityUrl";
 

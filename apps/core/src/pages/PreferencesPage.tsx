@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ProFooter, ProHeader, useTheme, type ThemePreference } from "@prosolutions/ui";
+import { ProFooter, ProHeader, useTheme } from "@prosolutions/ui";
+type ThemePreference = "light" | "dark" | "system";
 import { useNavigate } from "react-router-dom";
 import { useCoreLocale } from "../i18n";
 import { identityRequest, loadUserPreferences, saveUserPreferences } from "../preferencesApi";
