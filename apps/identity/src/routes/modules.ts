@@ -10,6 +10,6 @@ const router = Router();
 
 router.get('/me', identityMiddleware, getModuleAccess);
 router.post('/grant', identityMiddleware, requirePermission('identity.users.manage'), grantModuleAccess);
-router.post('/revoke', identityMiddleware, requireRole('admin'), revokeModuleAccess);
+router.post('/revoke', identityMiddleware, requirePermission('identity.users.manage'), revokeModuleAccess);
 
 export default router;
