@@ -106,7 +106,7 @@ export function AdminRolesPanel({
     } finally { setBusy(false); }
   };
 
-  const availableRoles = roles.filter((role) => canAssignOwner || role.key !== "platform_owner");
+  const availableRoles = roles.filter((role) => canAssignOwner || !["platform_owner", "platform_admin", "security_admin"].includes(role.key));
   return (
     <section className="mt-7 space-y-5">
       <div>
@@ -157,7 +157,7 @@ export function AdminRolesPanel({
                 <p className="mt-1 break-all text-sm text-slate-600 dark:text-slate-300">{assignment.user.email} · {assignment.module || (english ? "Platform-wide" : "Toda la plataforma")}</p>
                 <p className="mt-1 text-xs text-slate-500">{assignment.expiresAt ? (english ? `Expires ${new Date(assignment.expiresAt).toLocaleString()}` : `Vence ${new Date(assignment.expiresAt).toLocaleString()}`) : (english ? "No expiry" : "Sin vencimiento")}</p>
               </div>
-              {canManage && <button type="button" disabled={busy} onClick={() => void revoke(assignment)} className="rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300">{english ? "Revoke" : "Revocar"}</button>}
+              {canManage && (canAssignOwner || !["platform_owner", "platform_admin", "security_admin"].includes(assignment.role.key)) && <button type="button" disabled={busy} onClick={() => void revoke(assignment)} className="rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300">{english ? "Revoke" : "Revocar"}</button>}
             </div>)}</div> : <p className="mt-3 text-sm text-slate-500">{english ? "No administrative role assignments found." : "No se encontraron asignaciones administrativas."}</p>}
           </article>
           <div className="grid gap-3 md:grid-cols-2">
