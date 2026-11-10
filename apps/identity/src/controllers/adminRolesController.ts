@@ -99,6 +99,9 @@ export async function assignAdminRole(req: Request, res: Response) {
   }
 
   let expiresAt: Date | null = null;
+  if (role.key === 'platform_owner' && expiresAtValue !== undefined && expiresAtValue !== null && expiresAtValue !== '') {
+    return res.status(400).json({ message: 'The platform owner assignment cannot expire; maintain at least one permanent owner' });
+  }
   if (expiresAtValue !== undefined && expiresAtValue !== null && expiresAtValue !== '') {
     expiresAt = new Date(expiresAtValue);
     if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
@@ -108,6 +111,17 @@ export async function assignAdminRole(req: Request, res: Response) {
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const duplicate = await prisma.userAdminRole.findFirst({
+    where: {
+      userId,
+      roleId: role.id,
+      module: moduleValue as Module | undefined,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: { id: true },
+  });
+  if (duplicate) return res.status(409).json({ message: 'This active role assignment already exists' });
 
   const current = actor(req);
   const assignment = await prisma.userAdminRole.create({
