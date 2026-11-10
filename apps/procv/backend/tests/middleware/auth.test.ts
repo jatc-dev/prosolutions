@@ -15,6 +15,8 @@ type IntrospectionResponse = {
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
+  modulePermissions?: Record<string, string[]>;
   reason?: string;
 };
 
@@ -96,6 +98,8 @@ describe('ProCV Identity authorization middleware', () => {
       email: 'user@example.test',
       role: 'user',
       modules: ['PROCV', 'PROJOBS'],
+      permissions: [],
+      modulePermissions: { PROCV: [] },
     });
     introspectionShouldThrow = false;
     introspectionShouldTimeout = false;
@@ -125,6 +129,37 @@ describe('ProCV Identity authorization middleware', () => {
     expect(next).toHaveBeenCalledTimes(1);
     expect(req.userId).toBe('identity-user-2');
     expect(req.modules).toEqual(['PROCV', 'PROJOBS']);
+  });
+
+
+  it('does not let an administrative permission bypass candidate module entitlement', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-admin-1',
+      email: 'admin@example.test',
+      role: 'admin',
+      modules: [],
+      jti: 'test-jti-admin',
+    });
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-admin-1',
+      email: 'admin@example.test',
+      role: 'admin',
+      modules: [],
+      permissions: [],
+      modulePermissions: { PROCV: ['procv.admin.access'] },
+    });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toEqual({
+      message: 'ProCV module access required',
+      requiredModule: 'PROCV',
+    });
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('rejects a valid Identity token without PROCV entitlement', async () => {
