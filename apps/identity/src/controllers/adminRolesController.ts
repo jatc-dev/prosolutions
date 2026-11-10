@@ -93,6 +93,10 @@ export async function assignAdminRole(req: Request, res: Response) {
     const allowed = await userHasPermission(actor(req).id, 'identity.roles.owner_manage');
     if (!allowed) return res.status(403).json({ message: 'Only a platform owner can assign platform_owner' });
   }
+  if (['platform_admin', 'security_admin'].includes(role.key)) {
+    const allowed = await userHasPermission(actor(req).id, 'identity.roles.privileged_manage');
+    if (!allowed) return res.status(403).json({ message: 'Only a platform owner can assign privileged administrator roles' });
+  }
 
   let expiresAt: Date | null = null;
   if (expiresAtValue !== undefined && expiresAtValue !== null && expiresAtValue !== '') {
@@ -139,6 +143,11 @@ export async function revokeAdminRole(req: Request, res: Response) {
     include: { role: { select: { key: true } } },
   });
   if (!assignment) return res.status(404).json({ message: 'Role assignment not found' });
+
+  if (['platform_owner', 'platform_admin', 'security_admin'].includes(assignment.role.key)) {
+    const allowed = await userHasPermission(actor(req).id, 'identity.roles.privileged_manage');
+    if (!allowed) return res.status(403).json({ message: 'Only a platform owner can revoke privileged administrator roles' });
+  }
 
   if (assignment.role.key === 'platform_owner' && !assignment.module) {
     const activeOwners = await prisma.userAdminRole.count({
