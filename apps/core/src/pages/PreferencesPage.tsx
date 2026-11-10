@@ -43,7 +43,7 @@ export function PreferencesPage() {
       }
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [navigate, setLocale, setPreference]);
+  }, [locale, navigate, preference, setLocale, setPreference]);
 
   const save = async () => {
     setSaving(true);
