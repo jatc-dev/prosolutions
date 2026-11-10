@@ -136,3 +136,5 @@ jobs:
         run: npx prisma generate --schema apps/procv/backend/prisma/schema.prisma
       - name: Build ProCV backend
         run: npm run build --workspace=procv-backend
+      - name: Test ProCV module and administrative authorization
+        run: npm test --workspace=procv-backend -- --runInBand tests/middleware/auth.test.ts tests/adminMiddleware.test.ts
