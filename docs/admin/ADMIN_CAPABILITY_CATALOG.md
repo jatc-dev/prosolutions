@@ -149,3 +149,28 @@ ProSkills, ProCareer, ProInterview y ProRecruit deben aparecer en el catálogo d
 - No modificar producción, TransCamacho ni desplegar producción.
 - ProJobs no tiene actualmente servicios QA equivalentes; sus funciones administrativas requieren primero entorno QA y rol de base de datos aislado. No se conectará una consola de QA a datos de producción.
 - Backups, correo, MFA, almacenamiento externo y webhooks solo se declararán operativos tras configurar y probar sus servicios reales.
+
+
+## Implementación RBAC iniciada en QA
+
+La rama de trabajo incorpora una primera implementación ejecutable del modelo:
+
+- Esquema Prisma para roles, permisos, relación rol-permiso y asignaciones por usuario.
+- Permisos almacenados en base de datos y resolución en cada solicitud; las declaraciones de rol incluidas en el JWT no bastan para autorizar.
+- Asignaciones temporales con vencimiento y alcance opcional por módulo. El rol `module_admin` exige un módulo explícito.
+- Roles de sistema iniciales: owner, platform admin, security admin, support agent, content manager, analytics viewer, module admin y user.
+- Migración aditiva que asigna el rol explícito `platform_owner` a las cuentas QA cuyo rol anterior era `admin`, preservando el acceso administrativo existente.
+- Endpoints para consultar roles/asignaciones, asignar y revocar roles; el último propietario activo no puede ser eliminado.
+- Introspección de Identity expone permisos efectivos para que ProCV aplique autorización en su propio backend.
+- ProCV aplica permisos distintos para analítica, auditoría, lectura/configuración y marca. El antiguo control por `role=admin` deja de ser suficiente.
+- Los endpoints heredados de ajustes ProCV solo exponen y aceptan las dos claves de contenido público verificadas; las demás claves quedan bloqueadas.
+- Consola central con panel de roles/asignaciones y permisos; el directorio de usuarios y concesión de módulos distingue lectura de gestión.
+
+### Validación pendiente antes de habilitar en QA
+
+1. Finalizar CI de Identity, Core y ProCV/ProJobs en la cabeza actual de la rama.
+2. Validar el SQL de la migración con Prisma y aplicarlo exclusivamente a la base QA `proidentity`.
+3. Confirmar que la cuenta administradora QA heredó `platform_owner` y que usuarios ordinarios no recibieron permisos administrativos.
+4. Probar rutas permitidas y denegadas para cada rol y para asignaciones con alcance PROCV/PROJOBS.
+5. Verificar en navegador que la consola muestra solo las secciones autorizadas y que las operaciones de CV continúan siendo propias del usuario.
+6. No fusionar PR ni ejecutar migraciones/despliegues de producción durante esta fase.
