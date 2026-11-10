@@ -3,7 +3,7 @@ import { IdentityRequest } from "../middleware/auth";
 import prisma from "../prismaClient";
 import { clearRefreshTokenCookie } from "../utils/cookies";
 import { auditLog, extractRequestInfo } from "../utils/auditLog";
-import { partitionSessionsByIdlePolicy } from "../utils/sessionPolicy";
+import { getSessionIdleTimeoutMs, partitionSessionsByIdlePolicy } from "../utils/sessionPolicy";
 
 export async function listSessions(req: Request, res: Response) {
   const auth = req as IdentityRequest;
@@ -17,6 +17,7 @@ export async function listSessions(req: Request, res: Response) {
   return res.json({
     sessions: active.map(session => ({ ...session, current: session.id === auth.sessionId })),
     idleExpiredSessions: idleExpired.map(session => ({ ...session, current: false })),
+    policy: { idleTimeoutMinutes: Math.round(getSessionIdleTimeoutMs(false) / 60000), rememberedIdleTimeoutDays: 30 },
   });
 }
 
