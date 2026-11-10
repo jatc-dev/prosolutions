@@ -5,7 +5,7 @@ import { requireAdmin } from '../src/middleware/admin';
 
 function setup(
   role: string | null,
-  options: { valid?: boolean; userId?: string; tokenRole?: string; permissions?: string[] } = {},
+  options: { valid?: boolean; userId?: string; tokenRole?: string; permissions?: string[]; modules?: string[] } = {},
 ) {
   const subject = 'identity-admin-1';
   const token = jwt.sign(
@@ -25,7 +25,7 @@ function setup(
       userId: options.userId ?? subject,
       email: 'admin@example.test',
       role,
-      modules: ['PROCV'],
+      modules: options.modules ?? ['PROCV'],
       permissions: [],
       modulePermissions: { PROCV: options.permissions ?? (role === 'admin' ? ['procv.admin.access'] : []) },
     }),
@@ -53,6 +53,17 @@ describe('requireAdmin using the real ProIdentity auth middleware', () => {
       email: 'admin@example.test',
       role: 'admin',
     });
+  });
+
+
+  it('allows a scoped ProCV administrator without a candidate ProCV entitlement', async () => {
+    const { req, res, status, next } = setup('user', {
+      modules: [],
+      permissions: ['procv.admin.access'],
+    });
+    await requireAdmin(req, res, next);
+    expect(status).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
   });
 
   it('rejects a valid session without the ProCV admin permission', async () => {
