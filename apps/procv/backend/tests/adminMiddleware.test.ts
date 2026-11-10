@@ -5,7 +5,7 @@ import { requireAdmin } from '../src/middleware/admin';
 
 function setup(
   role: string | null,
-  options: { valid?: boolean; userId?: string; tokenRole?: string } = {},
+  options: { valid?: boolean; userId?: string; tokenRole?: string; permissions?: string[] } = {},
 ) {
   const subject = 'identity-admin-1';
   const token = jwt.sign(
