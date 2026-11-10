@@ -1,22 +1,23 @@
 import { Module } from '@prisma/client';
 import prisma from '../prismaClient';
 
-const activeAssignmentWhere = (userId: string, module?: Module) => ({
+const activeAssignmentWhere = (userId: string, module?: Module, includeModuleScoped = false) => ({
   userId,
   AND: [
     { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
-    {
-      OR: [
-        { module: null },
-        ...(module ? [{ module }] : []),
-      ],
-    },
+    ...(module
+      ? [{ OR: [{ module: null }, { module }] }]
+      : includeModuleScoped ? [] : [{ module: null }]),
   ],
 });
 
-export async function getUserPermissions(userId: string, module?: Module): Promise<string[]> {
+export async function getUserPermissions(
+  userId: string,
+  module?: Module,
+  includeModuleScoped = false,
+): Promise<string[]> {
   const assignments = await prisma.userAdminRole.findMany({
-    where: activeAssignmentWhere(userId, module),
+    where: activeAssignmentWhere(userId, module, includeModuleScoped),
     include: {
       role: {
         include: {
