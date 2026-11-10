@@ -95,7 +95,6 @@ export function PreferencesPage() {
         </section>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => void save()} disabled={loading || saving} className="min-h-11 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">{saving ? (english ? "Saving…" : "Guardando…") : (english ? "Save preferences" : "Guardar preferencias")}</button>
-          <button type="button" onClick={() => navigate("/security/sessions")} className="min-h-11 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">{english ? "Security and sessions" : "Seguridad y sesiones"}</button>
         </div>
         {loading && <p role="status" className="mt-4 text-sm text-slate-500">{english ? "Loading your preferences…" : "Cargando tus preferencias…"}</p>}
       </main>
