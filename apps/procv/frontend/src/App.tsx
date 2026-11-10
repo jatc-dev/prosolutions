@@ -57,18 +57,6 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   return children;
 }
 
-function AdminRoute({ children }: { children: JSX.Element }) {
-  const { isAuthenticated, user, loading } = useAuth();
-  if (loading) return <RouteFallback />;
-  if (!isAuthenticated) {
-    const redirectUri = encodeURIComponent(window.location.href);
-    window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
-    return null;
-  }
-  if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
-  return children;
-}
-
 export default function App() {
   useSessionTimeout();
   useEffect(() => { fetchCSRFToken(); }, []);
