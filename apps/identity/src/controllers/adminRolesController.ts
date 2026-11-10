@@ -1,4 +1,4 @@
-import { Module } from '@prisma/client';
+import { Module, Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import prisma from '../prismaClient';
 import { IdentityRequest } from '../middleware/auth';
@@ -20,7 +20,7 @@ async function writeAdminAudit(req: Request, action: string, resourceId: string,
       action,
       resource: 'admin_role_assignment',
       resourceId,
-      details,
+      details: details as Prisma.InputJsonObject,
       ipAddress: req.ip || null,
       userAgent: req.get('user-agent') || null,
     },
