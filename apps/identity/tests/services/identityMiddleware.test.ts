@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../../src/prismaClient';
 import { config } from '../../src/config';
 import { identityMiddleware, type IdentityRequest } from '../../src/middleware/auth';
+import { deriveRefreshSuccessorJti } from '../../src/utils/refreshRotation';
 
 const originalFindUnique = prisma.session.findUnique;
 const originalUpdate = prisma.session.update;
@@ -72,16 +73,19 @@ function harness(cookieToken: string | undefined) {
   return { req: req as IdentityRequest, res, response };
 }
 
-test('accepts a stale app access token when the same browser has a valid current refresh session', async () => {
+test('accepts a stale app access token only when the current cookie is its exact rotation successor', async () => {
+  const rotationAt = new Date();
+  const predecessorRefreshToken = 'refresh-old';
+  const successorJti = deriveRefreshSuccessorJti(predecessorRefreshToken, config.jwtSecret);
   const predecessor = session({
     id: 'session-predecessor',
-    refreshToken: 'refresh-old',
+    refreshToken: predecessorRefreshToken,
     jti: 'predecessor-jti',
-    revokedAt: new Date(),
-    lastAccessedAt: new Date(),
+    revokedAt: rotationAt,
+    lastAccessedAt: rotationAt,
   });
-  const successor = session();
-  const refreshToken = signedToken('user-123', 'successor-jti');
+  const successor = session({ jti: successorJti, createdAt: rotationAt });
+  const refreshToken = signedToken('user-123', successorJti);
   const { req, res, response } = harness(refreshToken);
   let updatedSessionId: string | undefined;
   let nextCalled = false;
@@ -101,6 +105,31 @@ test('accepts a stale app access token when the same browser has a valid current
   assert.equal(nextCalled, true);
   assert.equal(req.sessionId, 'session-current');
   assert.equal(updatedSessionId, 'session-current');
+});
+
+test('rejects an explicitly revoked session when another same-user browser session is active', async () => {
+  const predecessor = session({
+    id: 'session-explicitly-revoked',
+    refreshToken: 'refresh-revoked',
+    jti: 'predecessor-jti',
+    revokedAt: new Date(),
+    // Explicit revocation does not stamp the rotation marker on lastAccessedAt.
+    lastAccessedAt: new Date(Date.now() - 60_000),
+  });
+  const unrelatedSuccessor = session();
+  const refreshToken = signedToken('user-123', unrelatedSuccessor.jti);
+  const { req, res, response } = harness(refreshToken);
+  let nextCalled = false;
+
+  (prisma.session as any).findUnique = async ({ where }: any) =>
+    where.jti === 'predecessor-jti' ? predecessor :
+      where.refreshToken === refreshToken ? unrelatedSuccessor : null;
+
+  await identityMiddleware(req, res, () => { nextCalled = true; });
+
+  assert.equal(response.statusCode, 401);
+  assert.equal(response.clearedCookie, true);
+  assert.equal(nextCalled, false);
 });
 
 test('rejects and clears a refresh cookie belonging to another user', async () => {
