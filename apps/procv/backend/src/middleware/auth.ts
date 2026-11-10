@@ -77,7 +77,7 @@ async function introspectSession(token: string): Promise<{
 }
 
 function validateIntrospectionContract(
-  introspection: { valid: boolean; userId?: string; modules?: string[]; reason?: string },
+  introspection: { valid: boolean; userId?: string; modules?: string[]; permissions?: string[]; reason?: string },
   jwtSub: string,
 ): { valid: boolean; reason?: string } {
   if (!introspection.valid) {
