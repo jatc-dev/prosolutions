@@ -2,15 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthRequest, authMiddleware } from './auth';
 
 /**
- * Admin routes reuse the same JWT + live ProIdentity introspection contract as
- * candidate routes, then add the admin-role requirement. This prevents revoked
- * sessions from retaining access through the separate admin router.
+ * Administrative access is resolved from ProIdentity's live permission set.
+ * A legacy JWT role claim alone is never sufficient.
  */
 export async function requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   await authMiddleware(req as AuthRequest, res, () => {
     const authReq = req as AuthRequest;
-    if (authReq.role !== 'admin') {
-      res.status(403).json({ message: 'Admin access required' });
+    if (!authReq.permissions?.includes('procv.admin.access')) {
+      res.status(403).json({ message: 'ProCV administrative permission required' });
       return;
     }
 
@@ -21,4 +20,17 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     };
     next();
   });
+}
+
+export function requireProcvPermission(permission: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authReq = req as AuthRequest;
+    if (!authReq.permissions?.includes(permission)) {
+      return res.status(403).json({
+        message: 'Insufficient ProCV administrative permission',
+        requiredPermission: permission,
+      });
+    }
+    return next();
+  };
 }
