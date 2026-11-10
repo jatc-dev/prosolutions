@@ -31,3 +31,17 @@ test("remembered session remains valid beyond the ordinary timeout", () => {
   assert.equal(isSessionIdleExpired(lastAccessedAt, true, now, "30"), false);
   assert.equal(isSessionIdleExpired(lastAccessedAt, false, now, "30"), true);
 });
+
+test("partitionSessionsByIdlePolicy hides idle temporary sessions without mutating them", async () => {
+  const { partitionSessionsByIdlePolicy } = await import("../../src/utils/sessionPolicy");
+  const now = new Date("2026-11-10T12:00:00.000Z");
+  const sessions = [
+    { id: "recent", lastAccessedAt: new Date(now.getTime() - 5 * 60 * 1000), rememberMe: false },
+    { id: "idle", lastAccessedAt: new Date(now.getTime() - 45 * 60 * 1000), rememberMe: false },
+    { id: "remembered", lastAccessedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000), rememberMe: true },
+  ];
+  const { active, idleExpired } = partitionSessionsByIdlePolicy(sessions, now);
+  assert.deepEqual(active.map((session) => session.id), ["recent", "remembered"]);
+  assert.deepEqual(idleExpired.map((session) => session.id), ["idle"]);
+  assert.equal(sessions.length, 3);
+});

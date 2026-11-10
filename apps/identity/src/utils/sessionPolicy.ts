@@ -28,3 +28,20 @@ export function isSessionIdleExpired(
 ): boolean {
   return now.getTime() - lastAccessedAt.getTime() > getSessionIdleTimeoutMs(rememberMe, configuredMinutes);
 }
+
+/**
+ * Separate sessions that are still within their absolute lifetime from sessions
+ * that have exceeded the idle policy. This is intentionally read-only: listing
+ * sessions must not revoke or delete historical rows.
+ */
+export function partitionSessionsByIdlePolicy<T extends { lastAccessedAt: Date; rememberMe: boolean }>(
+  sessions: T[],
+  now: Date = new Date(),
+): { active: T[]; idleExpired: T[] } {
+  const active: T[] = [];
+  const idleExpired: T[] = [];
+  for (const session of sessions) {
+    (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now) ? idleExpired : active).push(session);
+  }
+  return { active, idleExpired };
+}
