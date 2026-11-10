@@ -19,7 +19,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
       role: authReq.role,
     };
     next();
-  });
+  }, { allowAdminWithoutModule: true });
 }
 
 export function requireProcvPermission(permission: string) {
