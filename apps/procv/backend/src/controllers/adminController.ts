@@ -6,6 +6,8 @@ import { logger } from '../utils/logger';
 import { AuditLogger } from '../utils/auditLogger';
 import { writeAuditLog } from '../utils/auditLogger';
 
+const EDITABLE_PLATFORM_SETTING_KEYS = new Set(['landing_features_en', 'landing_features_es']);
+
 export async function getAuditLogs(req: Request, res: Response) {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -46,7 +48,10 @@ export async function getPlatformSettings(req: Request, res: Response) {
   try {
     const adminUser = (req as any).user;
     const settings = await withAdminContext(adminUser.id, tx =>
-      tx.platformSetting.findMany({ orderBy: { createdAt: 'desc' } }),
+      tx.platformSetting.findMany({
+        where: { key: { in: [...EDITABLE_PLATFORM_SETTING_KEYS] } },
+        orderBy: { createdAt: 'desc' },
+      }),
     );
 
     return res.json(settings);
@@ -64,6 +69,9 @@ export async function updatePlatformSetting(req: Request, res: Response) {
     const { value } = req.body;
     const adminUser = (req as any).user;
 
+    if (!EDITABLE_PLATFORM_SETTING_KEYS.has(key)) {
+      return res.status(403).json({ message: 'This legacy setting is not an active, approved ProCV control.' });
+    }
     if (value === undefined) {
       return res.status(400).json({ message: 'Value is required' });
     }
@@ -168,6 +176,13 @@ export async function bulkUpdatePlatformSettings(req: Request, res: Response) {
     if (!Array.isArray(settings)) {
       return res.status(400).json({ message: 'Settings must be an array' });
     }
+    if (settings.some((setting) =>
+      !setting || typeof setting !== 'object' ||
+      !EDITABLE_PLATFORM_SETTING_KEYS.has(String((setting as { key?: unknown }).key || '')) ||
+      (setting as { value?: unknown }).value === undefined
+    )) {
+      return res.status(403).json({ message: 'The payload contains an unsupported or inactive platform setting.' });
+    }
 
     const results = await withAdminContext(adminUser.id, async tx => {
       const updated: unknown[] = [];
@@ -232,6 +247,10 @@ export async function deletePlatformSetting(req: Request, res: Response) {
   try {
     const { key } = req.params;
     const adminUser = (req as any).user;
+
+    if (!EDITABLE_PLATFORM_SETTING_KEYS.has(key)) {
+      return res.status(403).json({ message: 'This legacy setting is not an active, approved ProCV control.' });
+    }
 
     const setting = await withAdminContext(adminUser.id, async tx => {
       const existing = await tx.platformSetting.findUnique({ where: { key } });
