@@ -29,7 +29,9 @@ function setIntrospectionResponse(
   shouldThrow = false,
   shouldTimeout = false,
 ) {
-  introspectionResponse = response;
+  introspectionResponse = response
+    ? { permissions: [], modulePermissions: { PROCV: [] }, ...response }
+    : null;
   introspectionShouldThrow = shouldThrow;
   introspectionShouldTimeout = shouldTimeout;
 }
