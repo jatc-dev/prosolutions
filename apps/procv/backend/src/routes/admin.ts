@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { requireAdmin } from '../middleware/admin';
+import { requireAdmin, requireProcvPermission } from '../middleware/admin';
 import {
   getSystemStats,
   getChartData,
@@ -33,19 +33,19 @@ const upload = multer({
 router.use(requireAdmin);
 
 // System stats
-router.get('/stats', getSystemStats);
-router.get('/charts', getChartData);
+router.get('/stats', requireProcvPermission('procv.analytics.read'), getSystemStats);
+router.get('/charts', requireProcvPermission('procv.analytics.read'), getChartData);
 
 // Audit logs
-router.get('/audit-logs', getAuditLogs);
+router.get('/audit-logs', requireProcvPermission('procv.audit.read'), getAuditLogs);
 
 // Platform Settings
-router.get('/settings', getPlatformSettings);
-router.put('/settings/:key', updatePlatformSetting);
-router.put('/settings', bulkUpdatePlatformSettings);
-router.delete('/settings/:key', deletePlatformSetting);
+router.get('/settings', requireProcvPermission('procv.settings.read'), getPlatformSettings);
+router.put('/settings/:key', requireProcvPermission('procv.settings.manage'), updatePlatformSetting);
+router.put('/settings', requireProcvPermission('procv.settings.manage'), bulkUpdatePlatformSettings);
+router.delete('/settings/:key', requireProcvPermission('procv.settings.manage'), deletePlatformSetting);
 
 // File Uploads
-router.post('/upload/logo', upload.single('logo'), uploadLogo);
+router.post('/upload/logo', requireProcvPermission('procv.branding.manage'), upload.single('logo'), uploadLogo);
 
 export default router;
