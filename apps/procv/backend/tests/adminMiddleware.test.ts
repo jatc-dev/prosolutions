@@ -26,6 +26,7 @@ function setup(
       email: 'admin@example.test',
       role,
       modules: ['PROCV'],
+      permissions: options.permissions ?? (role === 'admin' ? ['procv.admin.access'] : []),
     }),
   } as unknown as globalThis.Response);
   return { req, res, status, json, next, fetchSpy, token };
@@ -34,7 +35,7 @@ function setup(
 describe('requireAdmin using the real ProIdentity auth middleware', () => {
   afterEach(() => jest.restoreAllMocks());
 
-  it('accepts a signed token only after live ProIdentity introspection grants admin', async () => {
+  it('accepts a signed token only after live ProIdentity introspection grants ProCV admin permission', async () => {
     const { req, res, status, next, fetchSpy, token } = setup('admin');
     await requireAdmin(req, res, next);
 
@@ -53,11 +54,20 @@ describe('requireAdmin using the real ProIdentity auth middleware', () => {
     });
   });
 
-  it('rejects a valid session whose current ProIdentity role is not admin', async () => {
+  it('rejects a valid session without the ProCV admin permission', async () => {
     const { req, res, status, json, next } = setup('user');
     await requireAdmin(req, res, next);
     expect(status).toHaveBeenCalledWith(403);
-    expect(json).toHaveBeenCalledWith({ message: 'Admin access required' });
+    expect(json).toHaveBeenCalledWith({ message: 'ProCV administrative permission required' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+
+  it('does not trust the legacy admin role claim without an explicit permission', async () => {
+    const { req, res, status, json, next } = setup('admin', { permissions: [] });
+    await requireAdmin(req, res, next);
+    expect(status).toHaveBeenCalledWith(403);
+    expect(json).toHaveBeenCalledWith({ message: 'ProCV administrative permission required' });
     expect(next).not.toHaveBeenCalled();
   });
 
