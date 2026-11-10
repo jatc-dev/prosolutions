@@ -163,15 +163,27 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       expect(await tx.cVVersion.findMany({ where: { cvId: cvB.id } })).toHaveLength(0);
       expect(await tx.cVAtsAnalysis.findMany({ where: { cvId: cvB.id } })).toHaveLength(0);
       expect(await tx.auditLog.findMany()).toEqual([expect.objectContaining({ userId: 'user-a' })]);
-      await expect(
-        tx.cV.update({ where: { id: cvB.id }, data: { title: 'stolen' } }),
-      ).rejects.toThrow();
-      await expect(tx.cV.delete({ where: { id: cvB.id } })).rejects.toThrow();
-      await expect(
-        tx.cVVersion.create({ data: { cvId: cvB.id, snapshot: '{}' } }),
-      ).rejects.toThrow();
-      await expect(tx.cVAtsAnalysis.create({ data: { cvId: cvB.id } })).rejects.toThrow();
     });
+
+    // Each denied write gets its own transaction. PostgreSQL marks a
+    // transaction aborted after an RLS violation; keeping subsequent
+    // assertions in that transaction would make them pass for the wrong reason.
+    await expect(
+      withUser('user-a', tx =>
+        tx.cV.update({ where: { id: cvB.id }, data: { title: 'stolen' } }),
+      ),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx => tx.cV.delete({ where: { id: cvB.id } })),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx =>
+        tx.cVVersion.create({ data: { cvId: cvB.id, snapshot: '{}' } }),
+      ),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx => tx.cVAtsAnalysis.create({ data: { cvId: cvB.id } })),
+    ).rejects.toThrow();
 
     await withUser('user-b', async tx => {
       expect(await tx.cV.findMany()).toEqual([expect.objectContaining({ id: cvB.id })]);
@@ -187,15 +199,14 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       expect(
         await tx.$queryRaw<Array<{ count: number }>>`SELECT COUNT("id")::int AS count FROM "CV"`,
       ).toEqual([{ count: 2 }]);
-
-      // The administrative database role is deliberately unable to read
-      // candidate content, versions, or ATS analyses, even with a valid admin
-      // context. Aggregate metadata is the only CV data exposed to analytics.
-      await expect(tx.cV.findMany()).rejects.toThrow();
-      await expect(tx.cVVersion.count()).rejects.toThrow();
-      await expect(tx.cVAtsAnalysis.count()).rejects.toThrow();
       expect(await tx.auditLog.count()).toBe(2);
     });
+
+    // Permission-denial checks must not share a transaction: PostgreSQL
+    // aborts the transaction after the first privilege error.
+    await expect(withAdmin('admin-1', tx => tx.cV.findMany())).rejects.toThrow();
+    await expect(withAdmin('admin-1', tx => tx.cVVersion.count())).rejects.toThrow();
+    await expect(withAdmin('admin-1', tx => tx.cVAtsAnalysis.count())).rejects.toThrow();
 
     // Any SQL session can set custom GUCs. An unsigned admin claim must still
     // resolve to no verified context and reveal no CV rows.
