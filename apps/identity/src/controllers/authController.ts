@@ -30,6 +30,7 @@ import {
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
 import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
+import { getUserPermissions, getUserAdminAssignments } from '../services/adminAuthorization';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
@@ -383,11 +384,21 @@ export async function me(req: Request, res: Response) {
   const modules = user.moduleAccess
     .map((ma) => ma.module)
     .filter(isAvailableModule);
+  const [permissions, adminRoles] = await Promise.all([
+    getUserPermissions(userId),
+    getUserAdminAssignments(userId),
+  ]);
 
   return res.json({
     user: {
       ...user,
       modules,
+      permissions,
+      adminRoles: adminRoles.map((assignment) => ({
+        role: assignment.role.key,
+        module: assignment.module,
+        expiresAt: assignment.expiresAt,
+      })),
       moduleAccess: undefined,
     },
   });
