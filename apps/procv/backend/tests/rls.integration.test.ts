@@ -180,9 +180,20 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
     });
 
     await withAdmin('admin-1', async tx => {
-      expect(await tx.cV.count()).toBe(2);
-      expect(await tx.cVVersion.count()).toBe(2);
-      expect(await tx.cVAtsAnalysis.count()).toBe(2);
+      const metadata = await tx.cV.findMany({
+        select: { id: true, userId: true, createdAt: true },
+      });
+      expect(metadata).toHaveLength(2);
+      expect(
+        await tx.$queryRaw<Array<{ count: number }>>`SELECT COUNT("id")::int AS count FROM "CV"`,
+      ).toEqual([{ count: 2 }]);
+
+      // The administrative database role is deliberately unable to read
+      // candidate content, versions, or ATS analyses, even with a valid admin
+      // context. Aggregate metadata is the only CV data exposed to analytics.
+      await expect(tx.cV.findMany()).rejects.toThrow();
+      await expect(tx.cVVersion.count()).rejects.toThrow();
+      await expect(tx.cVAtsAnalysis.count()).rejects.toThrow();
       expect(await tx.auditLog.count()).toBe(2);
     });
 
