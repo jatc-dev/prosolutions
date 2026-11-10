@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { createDbContext } from '../src/dbContext';
 import { writeAuditLog } from '../src/utils/auditLogger';
 
@@ -208,7 +208,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       exp: 4102444800,
       jti: randomUUID(),
     });
-    await runtime.$transaction(async tx => {
+    await runtime.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRaw`SELECT set_config('role', 'procv_app', true)`;
       await tx.$queryRaw`
         SELECT set_config('procv.context_payload', ${forged}, true),
@@ -222,7 +222,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       expect(await tx.cV.count()).toBe(0);
     });
     await expect(
-      runtime.$transaction(async tx => {
+      runtime.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.$queryRaw`SELECT set_config('role', 'procv_admin_app', true)`;
       }),
     ).rejects.toThrow();
@@ -252,7 +252,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
   });
 
   it('returns no protected rows without signed context and clears local context after rollback', async () => {
-    await runtime.$transaction(async tx => {
+    await runtime.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRaw`SELECT set_config('role', 'procv_app', true)`;
       expect(await tx.cV.count()).toBe(0);
       expect(await tx.auditLog.count()).toBe(0);
