@@ -286,20 +286,25 @@ export async function deletePlatformSetting(req: Request, res: Response) {
 export async function getSystemStats(req: Request, res: Response) {
   try {
     const adminUser = (req as any).user;
-    const [ownerRows, totalCVs] = await withAdminContext(adminUser.id, tx =>
+    const [ownerRows, cvRows] = await withAdminContext(adminUser.id, tx =>
       Promise.all([
         tx.$queryRaw<Array<{ count: number }>>`
           SELECT COUNT(DISTINCT "userId")::int AS count
           FROM "CV"
         `,
-        tx.cV.count(),
+        // The admin database role is granted metadata columns only. Keep the
+        // aggregate query explicit so Prisma never requests private CV fields.
+        tx.$queryRaw<Array<{ count: number }>>`
+          SELECT COUNT("id")::int AS count
+          FROM "CV"
+        `,
       ]),
     );
 
     return res.json({
       stats: {
         cvOwnerCount: Number(ownerRows[0]?.count ?? 0),
-        totalCVs,
+        totalCVs: Number(cvRows[0]?.count ?? 0),
       },
     });
   } catch (error) {
