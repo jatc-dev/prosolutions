@@ -19,6 +19,7 @@ async function introspectSession(token: string): Promise<{
   role?: string;
   modules?: string[];
   permissions?: string[];
+  modulePermissions?: Record<string, string[]>;
   reason?: string;
 }> {
   const controller = new AbortController();
@@ -62,6 +63,7 @@ async function introspectSession(token: string): Promise<{
       role?: string;
       modules?: string[];
       permissions?: string[];
+      modulePermissions?: Record<string, string[]>;
       reason?: string;
     };
   } catch (error: unknown) {
@@ -98,6 +100,10 @@ function validateIntrospectionContract(
 
   if (!Array.isArray(introspection.permissions)) {
     return { valid: false, reason: 'introspection_invalid_permissions' };
+  }
+
+  if (!introspection.modulePermissions || !Array.isArray(introspection.modulePermissions.PROCV)) {
+    return { valid: false, reason: 'introspection_invalid_module_permissions' };
   }
 
   return { valid: true };
@@ -152,7 +158,10 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.email = introspection.email;
     req.role = introspection.role;
     req.modules = modules;
-    req.permissions = introspection.permissions as string[];
+    req.permissions = [
+      ...(introspection.permissions as string[]),
+      ...(introspection.modulePermissions?.PROCV || []),
+    ];
 
     return next();
   } catch {
