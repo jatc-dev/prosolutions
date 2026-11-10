@@ -114,6 +114,7 @@ export function AdminAccessPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [canManageUsers, setCanManageUsers] = useState(false);
 
   const loadUsers = useCallback(async (search = activeQuery, requestedPage = 1) => {
     setLoading(true);
@@ -123,12 +124,14 @@ export function AdminAccessPage() {
       if (!meResponse.ok) throw await responseError(meResponse);
       const me = await meResponse.json();
       if (me?.user) setProfile({ name: me.user.name, email: me.user.email });
-      if (me?.user?.role !== "admin") {
+      const permissions = Array.isArray(me?.user?.permissions) ? me.user.permissions as string[] : [];
+      if (!permissions.includes("identity.users.read")) {
         setUsers([]);
         setTotal(0);
-        setError("Esta sección está reservada para administradores de ProIdentity.");
+        setError("Tu cuenta no tiene permiso para consultar el directorio de usuarios.");
         return;
       }
+      setCanManageUsers(permissions.includes("identity.users.manage"));
 
       const params = new URLSearchParams({ page: String(requestedPage), limit: "50" });
       if (search.trim()) params.set("search", search.trim());
@@ -234,11 +237,11 @@ export function AdminAccessPage() {
                   const key = `${user.id}:${module.key}`;
                   return (
                     <label key={module.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-brand-300 bg-brand-50 dark:border-brand-800 dark:bg-brand-950/30" : "border-slate-200 dark:border-slate-800"} ${busyKey === key ? "opacity-60" : ""}`}>
-                      <input type="checkbox" checked={checked} disabled={busyKey !== null || !user.isActive} onChange={(event) => void toggleModule(user, module.key, event.target.checked)} className="mt-1 h-4 w-4 accent-brand-600" />
+                      <input type="checkbox" checked={checked} disabled={busyKey !== null || !user.isActive || !canManageUsers} onChange={(event) => void toggleModule(user, module.key, event.target.checked)} className="mt-1 h-4 w-4 accent-brand-600" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold">{module.label}</span>
                         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{module.description}</span>
-                        <span className="mt-1 block text-xs font-medium">{checked ? "Acceso habilitado" : "Sin acceso"}</span>
+                        <span className="mt-1 block text-xs font-medium">{checked ? "Acceso habilitado" : "Sin acceso"}{!canManageUsers ? " · Solo lectura" : ""}</span>
                       </span>
                     </label>
                   );
