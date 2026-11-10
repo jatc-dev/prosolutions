@@ -31,7 +31,6 @@ import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } f
 import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
-import { Module } from '@prisma/client';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
