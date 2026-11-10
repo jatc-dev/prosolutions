@@ -11,9 +11,15 @@ function actor(req: Request) {
   return { id: identityReq.userId!, email: identityReq.email ?? null };
 }
 
-async function writeAdminAudit(req: Request, action: string, resourceId: string, details: Record<string, unknown>) {
+async function writeAdminAudit(
+  tx: Prisma.TransactionClient,
+  req: Request,
+  action: string,
+  resourceId: string,
+  details: Record<string, unknown>,
+) {
   const current = actor(req);
-  await prisma.auditLog.create({
+  await tx.auditLog.create({
     data: {
       adminId: current.id,
       adminEmail: current.email,
@@ -25,6 +31,11 @@ async function writeAdminAudit(req: Request, action: string, resourceId: string,
       userAgent: req.get('user-agent') || null,
     },
   });
+}
+
+/** Serialize operations that must preserve a global invariant across requests. */
+async function acquireAdminRoleLock(tx: Prisma.TransactionClient, key: string) {
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
 }
 
 export async function listAdminRoles(_req: Request, res: Response) {
@@ -112,34 +123,44 @@ export async function assignAdminRole(req: Request, res: Response) {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!user) return res.status(404).json({ message: 'User not found' });
 
-  const duplicate = await prisma.userAdminRole.findFirst({
-    where: {
-      userId,
-      roleId: role.id,
-      module: moduleValue as Module | undefined,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-    },
-    select: { id: true },
-  });
-  if (duplicate) return res.status(409).json({ message: 'This active role assignment already exists' });
-
   const current = actor(req);
-  const assignment = await prisma.userAdminRole.create({
-    data: {
-      userId,
-      roleId: role.id,
-      module: moduleValue as Module | undefined,
-      assignedById: current.id,
-      expiresAt,
-    },
-    include: { role: { select: { key: true, name: true } } },
+  const lockKey = role.key === 'platform_owner'
+    ? 'admin-role:platform-owner:global'
+    : `admin-role:assignment:${userId}:${role.id}:${moduleValue ?? 'global'}`;
+
+  const assignment = await prisma.$transaction(async (tx) => {
+    await acquireAdminRoleLock(tx, lockKey);
+    const duplicate = await tx.userAdminRole.findFirst({
+      where: {
+        userId,
+        roleId: role.id,
+        module: moduleValue as Module | undefined,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    });
+    if (duplicate) return null;
+
+    const created = await tx.userAdminRole.create({
+      data: {
+        userId,
+        roleId: role.id,
+        module: moduleValue as Module | undefined,
+        assignedById: current.id,
+        expiresAt,
+      },
+      include: { role: { select: { key: true, name: true } } },
+    });
+    await writeAdminAudit(tx, req, 'admin.role.assigned', created.id, {
+      targetUserId: userId,
+      roleKey,
+      module: moduleValue ?? null,
+      expiresAt: expiresAt?.toISOString() ?? null,
+    });
+    return created;
   });
-  await writeAdminAudit(req, 'admin.role.assigned', assignment.id, {
-    targetUserId: userId,
-    roleKey,
-    module: moduleValue ?? null,
-    expiresAt: expiresAt?.toISOString() ?? null,
-  });
+
+  if (!assignment) return res.status(409).json({ message: 'This active role assignment already exists' });
   return res.status(201).json({
     assignment: {
       id: assignment.id,
@@ -163,24 +184,39 @@ export async function revokeAdminRole(req: Request, res: Response) {
     if (!allowed) return res.status(403).json({ message: 'Only a platform owner can revoke privileged administrator roles' });
   }
 
-  if (assignment.role.key === 'platform_owner' && !assignment.module) {
-    const activeOwners = await prisma.userAdminRole.count({
-      where: {
-        role: { key: 'platform_owner' },
-        module: null,
-        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-      },
-    });
-    if (activeOwners <= 1) {
-      return res.status(409).json({ message: 'The last active platform owner cannot be removed' });
+  const revoked = await prisma.$transaction(async (tx) => {
+    if (assignment.role.key === 'platform_owner' && !assignment.module) {
+      await acquireAdminRoleLock(tx, 'admin-role:platform-owner:global');
     }
-  }
 
-  await prisma.userAdminRole.delete({ where: { id: assignment.id } });
-  await writeAdminAudit(req, 'admin.role.revoked', assignment.id, {
-    targetUserId: assignment.userId,
-    roleKey: assignment.role.key,
-    module: assignment.module ?? null,
+    const currentAssignment = await tx.userAdminRole.findUnique({
+      where: { id: req.params.assignmentId },
+      include: { role: { select: { key: true } } },
+    });
+    if (!currentAssignment) return false;
+
+    if (currentAssignment.role.key === 'platform_owner' && !currentAssignment.module) {
+      const activeOwners = await tx.userAdminRole.count({
+        where: {
+          role: { key: 'platform_owner' },
+          module: null,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+      });
+      if (activeOwners <= 1) return false;
+    }
+
+    await tx.userAdminRole.delete({ where: { id: currentAssignment.id } });
+    await writeAdminAudit(tx, req, 'admin.role.revoked', currentAssignment.id, {
+      targetUserId: currentAssignment.userId,
+      roleKey: currentAssignment.role.key,
+      module: currentAssignment.module ?? null,
+    });
+    return true;
   });
+
+  if (!revoked) {
+    return res.status(409).json({ message: 'The last active platform owner cannot be removed, or the assignment was already revoked' });
+  }
   return res.status(204).send();
 }
