@@ -3,6 +3,7 @@ import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { useNavigate } from "react-router-dom";
 import { useCoreLocale } from "../i18n";
 import { identityAuthApiUrl } from "../identityApi";
+import { saveUserPreferences } from "../preferencesApi";
 
 const API = identityAuthApiUrl();
 const TOKEN_KEY = "pro_identity_token";
@@ -99,7 +100,7 @@ export function SecuritySessionsPage() {
   };
 
   return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={account ? { name: account.name, email: account.email } : null} settingsHref="/settings" securityHref="/security/sessions" onSignOut={logout} />
+    <ProHeader activeApp="core" locale={language} onLocaleChange={() => { const next = locale === "es" ? "en" : "es"; setLocale(next); void saveUserPreferences({ locale: next }).catch(() => undefined); }} profile={account ? { name: account.name, email: account.email } : null} settingsHref="/settings" securityHref="/security/sessions" onSignOut={logout} />
     <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8">
       <a href="/dashboard" className="text-sm font-semibold text-brand-700 underline dark:text-brand-300">← Volver al portal</a>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">

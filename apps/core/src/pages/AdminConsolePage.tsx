@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
-import { identityRequest } from "../preferencesApi";
+import { identityRequest, saveUserPreferences } from "../preferencesApi";
 
 type Tab = "overview" | "users" | "roles" | "platform" | "landing" | "audit";
 type Account = { name?: string | null; email: string; role: string };
@@ -113,7 +113,7 @@ export function AdminConsolePage() {
   const nav = (["overview", "users", "roles", "platform", "landing", "audit"] as Tab[]);
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <ProHeader activeApp="core" locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={account ? { name: account.name, email: account.email } : null} onSignOut={logout} settingsHref="/settings" securityHref="/security/sessions" />
+      <ProHeader activeApp="core" locale={locale} onLocaleChange={() => { const next = locale === "es" ? "en" : "es"; setLocale(next); void saveUserPreferences({ locale: next }).catch(() => undefined); }} profile={account ? { name: account.name, email: account.email } : null} onSignOut={logout} settingsHref="/settings" securityHref="/security/sessions" />
       <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-10 sm:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-sm font-semibold uppercase tracking-[0.15em] text-brand-600 dark:text-brand-300">ProSolutions · Administración central</p><h1 className="mt-2 text-3xl font-bold tracking-tight">{english ? "Platform administration" : "Administración de la plataforma"}</h1><p className="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">{english ? "Manage users, modules, platform settings, public content and audit from one place." : "Gestiona usuarios, módulos, configuración, contenido público y auditoría desde un único lugar."}</p></div>

@@ -64,7 +64,7 @@ export function PreferencesPage() {
   const english = locale === "en";
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <ProHeader activeApp="core" locale={locale} onLocaleChange={() => { const next = language === "es" ? "en" : "es"; setLanguage(next); setLocale(next); }} profile={account ? { name: account.name, email: account.email } : null} settingsHref="/settings" securityHref="/security/sessions" onSignOut={async () => { await identityRequest("/api/auth/logout", { method: "POST" }).catch(() => undefined); sessionStorage.removeItem("pro_identity_token"); window.location.assign("/login"); }} />
+      <ProHeader activeApp="core" locale={locale} onLocaleChange={() => { const next = language === "es" ? "en" : "es"; setLanguage(next); setLocale(next); void saveUserPreferences({ locale: next }).catch(() => undefined); }} profile={account ? { name: account.name, email: account.email } : null} settingsHref="/settings" securityHref="/security/sessions" onSignOut={async () => { await identityRequest("/api/auth/logout", { method: "POST" }).catch(() => undefined); sessionStorage.removeItem("pro_identity_token"); window.location.assign("/login"); }} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-12 sm:px-8">
         <a href="/dashboard" className="text-sm font-semibold text-brand-700 underline dark:text-brand-300">← {english ? "Back to portal" : "Volver al portal"}</a>
         <div className="mt-6">

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { LayoutDashboard, ShieldCheck } from "lucide-react";
 import { ProHeader } from "@prosolutions/ui";
 import { useAuthStore } from "../stores/authStore";
+import { saveGlobalPreferences } from "../lib/globalPreferences";
 
 const PROSOLUTIONS_URL = import.meta.env.VITE_PROSOLUTIONS_URL || "https://prosolutions.page";
 
@@ -23,5 +24,5 @@ export function AppHeader({ leftExtra, rightExtra, showUserInfo = true }: AppHea
       {rightExtra}
     </>
   );
-  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref={`${PROSOLUTIONS_URL}/settings`} securityHref={`${PROSOLUTIONS_URL}/security/sessions`} />;
+  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => { const next = language === "es" ? "en" : "es"; void i18n.changeLanguage(next); void saveGlobalPreferences({ locale: next }).catch(() => undefined); }} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref={`${PROSOLUTIONS_URL}/settings`} securityHref={`${PROSOLUTIONS_URL}/security/sessions`} />;
 }

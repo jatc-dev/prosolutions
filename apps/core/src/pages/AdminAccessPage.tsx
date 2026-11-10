@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { identityAuthApiUrl } from "../identityApi";
 import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
+import { saveUserPreferences } from "../preferencesApi";
 
 const AUTH_API = identityAuthApiUrl();
 const IDENTITY_API = AUTH_API.replace(/\/api\/auth$/i, "");
@@ -180,7 +181,7 @@ export function AdminAccessPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <ProHeader activeApp="core" locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={profile} settingsHref="/settings" securityHref="/security/sessions" />
+    <ProHeader activeApp="core" locale={locale} onLocaleChange={() => { const next = locale === "es" ? "en" : "es"; setLocale(next); void saveUserPreferences({ locale: next }).catch(() => undefined); }} profile={profile} settingsHref="/settings" securityHref="/security/sessions" />
     <nav className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900"><div className="mx-auto flex max-w-7xl flex-wrap gap-2"><Link to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Panel de administración</Link><Link to="/admin/access" aria-current="page" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900">Usuarios y accesos</Link><Link to="/settings" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Configuración</Link><Link to="/security/sessions" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Seguridad y sesiones</Link></div></nav>
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:px-8">
       <div className="mx-auto max-w-7xl">
