@@ -129,7 +129,7 @@ WHERE key IN ('identity.users.read','identity.roles.read','identity.sessions.rea
 INSERT INTO "AdminRolePermission" ("roleId", "permissionId")
 SELECT 'role_support_agent', id FROM "AdminPermission"
 WHERE key IN ('identity.users.read','identity.sessions.read','platform.health.read','analytics.read',
-  'procv.analytics.read','procv.audit.read','projobs.catalog.read','projobs.analytics.read');
+  'procv.admin.access','projobs.admin.access','procv.analytics.read','procv.audit.read','projobs.catalog.read','projobs.analytics.read');
 
 INSERT INTO "AdminRolePermission" ("roleId", "permissionId")
 SELECT 'role_content_manager', id FROM "AdminPermission"
@@ -137,7 +137,7 @@ WHERE key IN ('platform.branding.manage','platform.content.manage','procv.brandi
 
 INSERT INTO "AdminRolePermission" ("roleId", "permissionId")
 SELECT 'role_analytics_viewer', id FROM "AdminPermission"
-WHERE key IN ('analytics.read','procv.analytics.read','projobs.analytics.read');
+WHERE key IN ('analytics.read','procv.admin.access','projobs.admin.access','procv.analytics.read','projobs.analytics.read');
 
 INSERT INTO "AdminRolePermission" ("roleId", "permissionId")
 SELECT 'role_module_admin', id FROM "AdminPermission"
