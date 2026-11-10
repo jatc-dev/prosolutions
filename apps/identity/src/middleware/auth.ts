@@ -5,6 +5,8 @@ import prisma from '../prismaClient';
 import { REFRESH_TOKEN_COOKIE_NAME, clearRefreshTokenCookie } from '../utils/cookies';
 import { auditLog, extractRequestInfo } from '../utils/auditLog';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
+import { Module } from '@prisma/client';
+import { userHasPermission } from '../services/adminAuthorization';
 
 export interface IdentityRequest extends Request {
   userId?: string;
@@ -200,5 +202,33 @@ export function requireRole(requiredRole: string) {
     }
 
     next();
+  };
+}
+
+
+/**
+ * Enforces a database-backed administrative permission on every request.
+ * JWT role claims are deliberately not treated as authorization evidence.
+ */
+export function requirePermission(permission: string, module?: Module) {
+  return async (req: IdentityRequest, res: Response, next: NextFunction) => {
+    if (!req.userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    try {
+      const allowed = await userHasPermission(req.userId, permission, module);
+      if (!allowed) {
+        auditLog('authorization.unauthorized_access', {
+          userId: req.userId,
+          ...extractRequestInfo(req),
+          details: { permission, module: module ?? null },
+        });
+        return res.status(403).json({ message: 'Insufficient permission', requiredPermission: permission });
+      }
+      return next();
+    } catch (error) {
+      return next(error);
+    }
   };
 }
