@@ -35,7 +35,8 @@ async function writeAdminAudit(
 
 /** Serialize operations that must preserve a global invariant across requests. */
 async function acquireAdminRoleLock(tx: Prisma.TransactionClient, key: string) {
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+  // Return a Prisma-decodable boolean while PostgreSQL holds the transaction-scoped lock.
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key})) IS NULL AS acquired`;
 }
 
 export async function listAdminRoles(_req: Request, res: Response) {
