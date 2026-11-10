@@ -104,7 +104,7 @@ export async function introspectToken(req: Request, res: Response) {
       data: { lastAccessedAt: now },
     });
 
-    const permissions = await getUserPermissions(payload.sub);
+    const permissions = await getUserPermissions(payload.sub, undefined, true);
 
     return res.json({
       valid: true,
