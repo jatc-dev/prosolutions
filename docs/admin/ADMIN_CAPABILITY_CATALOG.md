@@ -169,9 +169,10 @@ La rama de trabajo incorpora una primera implementación ejecutable del modelo:
 
 ### Validación pendiente antes de habilitar en QA
 
-1. Finalizar CI de Identity, Core y ProCV/ProJobs en la cabeza actual de la rama.
-2. Confirmar que Prisma reconoce ambas migraciones aplicadas y que el esquema de QA coincide con `schema.prisma`.
-3. Confirmar que la cuenta administradora QA heredó `platform_owner` y que usuarios ordinarios no recibieron permisos administrativos. La verificación de datos ya confirma 8 roles, 40 permisos, un propietario activo y cero roles con acceso implícito a CV ajeno.
-4. Probar rutas permitidas y denegadas para cada rol y para asignaciones con alcance PROCV/PROJOBS.
-5. Verificar en navegador que la consola muestra solo las secciones autorizadas y que las operaciones de CV continúan siendo propias del usuario.
-6. No fusionar PR ni ejecutar migraciones/despliegues de producción durante esta fase.
+1. CI de Core, ProCV y ProJobs pasó en la cabeza actual `b2945e65`; Identity pasó la cadena completa de migraciones en una base PostgreSQL limpia, las pruebas de regresión y el build en `30e8a27f`.
+2. Las dos migraciones RBAC están registradas con checksum y aplicadas exclusivamente a QA `proidentity`.
+3. La verificación de datos confirma 8 roles, 40 permisos, un propietario activo y cero roles con acceso implícito al contenido de CV ajeno.
+4. Desplegar únicamente a servicios QA y ejecutar pruebas autenticadas de navegador; el código de la rama aún no se ha desplegado.
+5. Probar rutas permitidas y denegadas para cada rol y para asignaciones con alcance PROCV/PROJOBS.
+6. Verificar en navegador que la consola muestra solo las secciones autorizadas y que las operaciones de CV continúan siendo propias del usuario.
+7. No fusionar PR ni ejecutar migraciones/despliegues de producción durante esta fase.
