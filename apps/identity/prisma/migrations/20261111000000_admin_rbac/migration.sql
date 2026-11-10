@@ -58,6 +58,7 @@ INSERT INTO "AdminPermission" ("id", "key", "description") VALUES
 ('perm_identity_roles_read', 'identity.roles.read', 'Read administrative roles and permissions'),
 ('perm_identity_roles_manage', 'identity.roles.manage', 'Assign and revoke administrative roles'),
 ('perm_identity_roles_owner_manage', 'identity.roles.owner_manage', 'Assign or revoke platform owner'),
+('perm_identity_roles_privileged_manage', 'identity.roles.privileged_manage', 'Assign or revoke platform, security and other privileged administrator roles'),
 ('perm_identity_sessions_read', 'identity.sessions.read', 'Read privileged session metadata'),
 ('perm_identity_sessions_revoke', 'identity.sessions.revoke', 'Revoke user sessions'),
 ('perm_identity_security_manage', 'identity.security.manage', 'Manage identity security policies'),
