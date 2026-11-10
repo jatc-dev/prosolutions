@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 const PROCV_BACKEND_URL = (process.env.PROCV_BACKEND_URL || '').replace(/\/+$/, '');
-const SECRET_SETTING_KEY = /(password|secret|token|private.?key|api.?key|credential)/i;
+const CENTRAL_LANDING_KEYS = new Set(['landing_features_en', 'landing_features_es']);
 
 function safeSettings(payload: unknown) {
   const settings = Array.isArray(payload)
@@ -11,13 +11,7 @@ function safeSettings(payload: unknown) {
       : [];
   return settings.filter((entry): entry is Record<string, unknown> =>
     Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry),
-  ).map((setting) => {
-    const key = String(setting.key || '');
-    if (SECRET_SETTING_KEY.test(key)) {
-      return { ...setting, value: '', isSecret: true };
-    }
-    return { ...setting, isSecret: false };
-  });
+  ).filter((setting) => CENTRAL_LANDING_KEYS.has(String(setting.key || '')));
 }
 
 async function proxyAdminRequest(req: Request, res: Response, path: string, method: 'GET' | 'PUT' | 'DELETE' = 'GET') {
@@ -79,23 +73,23 @@ export function getProcvSettings(req: Request, res: Response) {
   return proxyAdminRequest(req, res, '/settings');
 }
 export function updateProcvSetting(req: Request, res: Response) {
-  if (SECRET_SETTING_KEY.test(req.params.key)) {
-    return res.status(403).json({ message: 'Secret settings are managed outside the platform UI.' });
+  if (!CENTRAL_LANDING_KEYS.has(req.params.key)) {
+    return res.status(403).json({ message: 'This legacy setting is not verified as an active platform control and cannot be edited centrally.' });
   }
   return proxyAdminRequest(req, res, `/settings/${encodeURIComponent(req.params.key)}`, 'PUT');
 }
 export function bulkUpdateProcvSettings(req: Request, res: Response) {
   const settings = (req.body as { settings?: unknown })?.settings;
   if (!Array.isArray(settings) || settings.some((item) =>
-    !item || typeof item !== 'object' || SECRET_SETTING_KEY.test(String((item as { key?: unknown }).key || '')),
+    !item || typeof item !== 'object' || !CENTRAL_LANDING_KEYS.has(String((item as { key?: unknown }).key || '')),
   )) {
     return res.status(400).json({ message: 'Settings payload is invalid or contains a secret field.' });
   }
   return proxyAdminRequest(req, res, '/settings', 'PUT');
 }
 export function deleteProcvSetting(req: Request, res: Response) {
-  if (SECRET_SETTING_KEY.test(req.params.key)) {
-    return res.status(403).json({ message: 'Secret settings are managed outside the platform UI.' });
+  if (!CENTRAL_LANDING_KEYS.has(req.params.key)) {
+    return res.status(403).json({ message: 'This legacy setting is not verified as an active platform control and cannot be deleted centrally.' });
   }
   return proxyAdminRequest(req, res, `/settings/${encodeURIComponent(req.params.key)}`, 'DELETE');
 }
