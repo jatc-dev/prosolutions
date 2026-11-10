@@ -4,6 +4,7 @@ import { config } from '../config';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
+import { getUserPermissions } from '../services/adminAuthorization';
 
 export interface IntrospectResponse {
   valid: boolean;
@@ -11,6 +12,7 @@ export interface IntrospectResponse {
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
   reason?: string;
 }
 
@@ -102,12 +104,15 @@ export async function introspectToken(req: Request, res: Response) {
       data: { lastAccessedAt: now },
     });
 
+    const permissions = await getUserPermissions(payload.sub);
+
     return res.json({
       valid: true,
       userId: payload.sub,
       email: payload.email,
       role: payload.role,
       modules: payload.modules,
+      permissions,
     } as IntrospectResponse);
   } catch (error: unknown) {
     logger.warn('Introspection: token verification failed', {
