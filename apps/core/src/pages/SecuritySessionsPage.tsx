@@ -6,12 +6,14 @@ import { identityAuthApiUrl } from "../identityApi";
 
 const API = identityAuthApiUrl();
 const TOKEN_KEY = "pro_identity_token";
+type Account = { name?: string | null; email: string };
 type SessionItem = { id: string; createdAt: string; lastAccessedAt: string; expiresAt: string; rememberMe: boolean; deviceName?: string | null; userAgent?: string | null; ipAddress?: string | null; current: boolean };
 
 export function SecuritySessionsPage() {
   const { locale, setLocale } = useCoreLocale();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [account, setAccount] = useState<Account | null>(null);
   const [idleExpiredSessions, setIdleExpiredSessions] = useState<SessionItem[]>([]);
   const [idleTimeoutMinutes, setIdleTimeoutMinutes] = useState(30);
   const [loading, setLoading] = useState(true);
@@ -49,9 +51,13 @@ export function SecuritySessionsPage() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const response = await request("/sessions");
+      const [response, profileResponse] = await Promise.all([request("/sessions"), request("/me")]);
       if (!response.ok) throw new Error("No se pudieron consultar las sesiones.");
       const data = await response.json();
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.user) setAccount({ name: profileData.user.name, email: profileData.user.email });
+      }
       setSessions(data.sessions || []);
       setIdleExpiredSessions(data.idleExpiredSessions || []);
       setIdleTimeoutMinutes(data.policy?.idleTimeoutMinutes || 30);
@@ -93,7 +99,7 @@ export function SecuritySessionsPage() {
   };
 
   return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} onSignOut={logout} />
+    <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={account ? { name: account.name, email: account.email } : null} settingsHref="/settings" securityHref="/security/sessions" onSignOut={logout} />
     <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8">
       <a href="/dashboard" className="text-sm font-semibold text-brand-700 underline dark:text-brand-300">← Volver al portal</a>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">

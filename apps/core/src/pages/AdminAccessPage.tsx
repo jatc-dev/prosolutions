@@ -109,6 +109,7 @@ export function AdminAccessPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<{ name?: string | null; email: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -120,6 +121,7 @@ export function AdminAccessPage() {
       const meResponse = await identityFetch("/api/auth/me");
       if (!meResponse.ok) throw await responseError(meResponse);
       const me = await meResponse.json();
+      if (me?.user) setProfile({ name: me.user.name, email: me.user.email });
       if (me?.user?.role !== "admin") {
         setUsers([]);
         setTotal(0);
@@ -178,7 +180,7 @@ export function AdminAccessPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <ProHeader activeApp="core" locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} settingsHref="/settings" securityHref="/security/sessions" />
+    <ProHeader activeApp="core" locale={locale} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={profile} settingsHref="/settings" securityHref="/security/sessions" />
     <nav className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900"><div className="mx-auto flex max-w-7xl flex-wrap gap-2"><Link to="/admin" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Panel de administración</Link><Link to="/admin/access" aria-current="page" className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900">Usuarios y accesos</Link><Link to="/settings" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Configuración</Link><Link to="/security/sessions" className="rounded-lg px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">Seguridad y sesiones</Link></div></nav>
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:px-8">
       <div className="mx-auto max-w-7xl">
