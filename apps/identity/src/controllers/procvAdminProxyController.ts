@@ -30,14 +30,16 @@ async function proxyAdminRequest(req: Request, res: Response, path: string, meth
   try {
     const headers: Record<string, string> = { Authorization: authorization, Accept: 'application/json' };
     let body: string | undefined;
-    if (method !== 'GET' && method !== 'DELETE') {
+    if (method !== 'GET') {
       const csrfResponse = await fetch(`${PROCV_BACKEND_URL}/api/csrf-token`);
       if (!csrfResponse.ok) return res.status(502).json({ message: 'Unable to initialize ProCV admin request protection.' });
       const csrfPayload = await csrfResponse.json() as { csrfToken?: string };
       if (!csrfPayload.csrfToken) return res.status(502).json({ message: 'ProCV did not return a CSRF token.' });
-      headers['Content-Type'] = 'application/json';
       headers['X-CSRF-Token'] = csrfPayload.csrfToken;
-      body = JSON.stringify(req.body ?? {});
+      if (method !== 'DELETE') {
+        headers['Content-Type'] = 'application/json';
+        body = JSON.stringify(req.body ?? {});
+      }
     }
 
     const response = await fetch(`${PROCV_BACKEND_URL}/api/admin${path}`, {
