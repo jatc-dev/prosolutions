@@ -81,7 +81,6 @@ export function AdminConsolePage() {
   useEffect(() => { if (requestedTab && requestedTab in labels) setTab(requestedTab); }, [requestedTab]);
 
   const visibleSettings = useMemo(() => settings.filter((setting) => !setting.isSecret), [settings]);
-  const platformSettings = visibleSettings.filter((setting) => !setting.key.startsWith("landing_"));
   const landingSettings = visibleSettings.filter((setting) => setting.key.startsWith("landing_"));
 
   const selectTab = (next: Tab) => {
