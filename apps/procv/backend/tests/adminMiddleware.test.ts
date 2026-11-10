@@ -26,7 +26,8 @@ function setup(
       email: 'admin@example.test',
       role,
       modules: ['PROCV'],
-      permissions: options.permissions ?? (role === 'admin' ? ['procv.admin.access'] : []),
+      permissions: [],
+      modulePermissions: { PROCV: options.permissions ?? (role === 'admin' ? ['procv.admin.access'] : []) },
     }),
   } as unknown as globalThis.Response);
   return { req, res, status, json, next, fetchSpy, token };
