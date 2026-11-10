@@ -85,7 +85,7 @@ export function PortalPage() {
                 <p className="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">Tu cuenta, tus herramientas profesionales. Elige uno de los módulos disponibles; podrás volver aquí cuando quieras.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {user?.role === "admin" && <a href="/admin/access" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-200 dark:hover:bg-brand-950/40">Administrar accesos</a>}
+                {user?.role === "admin" && <a href="/admin" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-200 dark:hover:bg-brand-950/40">Administrar accesos</a>}
 
               </div>
             </div>

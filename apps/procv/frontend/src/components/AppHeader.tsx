@@ -19,7 +19,7 @@ export function AppHeader({ leftExtra, rightExtra, showUserInfo = true }: AppHea
     <>
       {leftExtra}
       <Link to="/dashboard" className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"><LayoutDashboard className="h-4 w-4" aria-hidden="true" /><span>{t("navigation.dashboardShort", "Dashboard")}</span></Link>
-      {user?.role === "admin" ? <Link to="/admin" className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"><ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>{t("navigation.adminShort", "Admin")}</span></Link> : null}
+      {user?.role === "admin" ? <Link to={`${PROSOLUTIONS_URL}/admin`} className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"><ShieldCheck className="h-4 w-4" aria-hidden="true" /><span>{t("navigation.adminShort", "Admin")}</span></Link> : null}
       {rightExtra}
     </>
   );

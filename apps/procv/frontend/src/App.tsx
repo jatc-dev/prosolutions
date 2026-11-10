@@ -19,13 +19,6 @@ const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 
 
-const AdminLayout = lazy(() => import("./components/AdminLayout").then((m) => ({ default: m.AdminLayout })));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
-const PlatformSettings = lazy(() => import("./pages/admin/PlatformSettings").then((m) => ({ default: m.PlatformSettings })));
-const AuditLogs = lazy(() => import("./pages/admin/AuditLogs").then((m) => ({ default: m.AuditLogs })));
-const LandingPageManagement = lazy(() =>
-  import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
-);
 const TemplatesGallery = lazy(() =>
   import("./modules/landing/pages/TemplatesGallery").then((m) => ({ default: m.TemplatesGallery }))
 );
@@ -103,10 +96,10 @@ export default function App() {
               <Route path="/editor/:cvId" element={<CVEditorPage />} />
               <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
               <Route path="/settings" element={<RedirectToProsolutions path="/settings" />} />
-              <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><AdminLayout><PlatformSettings /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/landing" element={<AdminRoute><AdminLayout><LandingPageManagement /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/audit-logs" element={<AdminRoute><AdminLayout><AuditLogs /></AdminLayout></AdminRoute>} />
+              <Route path="/admin" element={<RedirectToProsolutions path="/admin" />} />
+              <Route path="/admin/settings" element={<RedirectToProsolutions path="/admin?section=platform" />} />
+              <Route path="/admin/landing" element={<RedirectToProsolutions path="/admin?section=landing" />} />
+              <Route path="/admin/audit-logs" element={<RedirectToProsolutions path="/admin?section=audit" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
