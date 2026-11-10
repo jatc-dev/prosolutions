@@ -59,3 +59,41 @@ export async function getUserAdminAssignments(userId: string) {
     orderBy: { createdAt: 'desc' },
   });
 }
+
+
+/** Resolve global and per-module grants in one database read for API introspection. */
+export async function getUserPermissionSets(userId: string): Promise<{
+  permissions: string[];
+  modulePermissions: Partial<Record<Module, string[]>>;
+}> {
+  const assignments = await prisma.userAdminRole.findMany({
+    where: {
+      userId,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    include: {
+      role: {
+        include: {
+          permissions: { include: { permission: { select: { key: true } } } },
+        },
+      },
+    },
+  });
+
+  const globalPermissions = new Set<string>();
+  const modulePermissions = new Map<Module, Set<string>>();
+  for (const assignment of assignments) {
+    const target = assignment.module
+      ? (modulePermissions.get(assignment.module) ?? new Set<string>())
+      : globalPermissions;
+    for (const entry of assignment.role.permissions) target.add(entry.permission.key);
+    if (assignment.module) modulePermissions.set(assignment.module, target);
+  }
+
+  return {
+    permissions: [...globalPermissions].sort(),
+    modulePermissions: Object.fromEntries(
+      [...modulePermissions.entries()].map(([module, permissions]) => [module, [...permissions].sort()]),
+    ) as Partial<Record<Module, string[]>>,
+  };
+}
