@@ -60,6 +60,21 @@ test('allows only the requested capability in its module scope', async () => {
   assert.equal(h.wasNextCalled(), true);
 });
 
+
+test('a PROJOBS-scoped assignment cannot satisfy a PROCV permission check', async () => {
+  (prisma.userAdminRole as any).findMany = async ({ where }: any) => {
+    const moduleScope = where.AND?.find((clause: any) =>
+      Array.isArray(clause.OR) && clause.OR.some((entry: any) => entry.module === Module.PROCV),
+    );
+    assert.ok(moduleScope, 'the authorization query must bind to PROCV scope');
+    return [];
+  };
+  const h = harness('projobs-admin-1');
+  await requirePermission('procv.templates.manage', Module.PROCV)(h.req, h.res, h.next as any);
+  assert.equal(h.response.statusCode, 403);
+  assert.equal(h.wasNextCalled(), false);
+});
+
 test('forwards authorization lookup failures to the error handler', async () => {
   const failure = new Error('database unavailable');
   (prisma.userAdminRole as any).findMany = async () => { throw failure; };
