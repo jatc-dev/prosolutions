@@ -60,7 +60,7 @@ export function AdminConsolePage() {
     setLoading(true); setError(null);
     try {
       const me = await call("/api/auth/me");
-      const permissions = Array.isArray(me?.user?.permissions) ? me.user.permissions as string[] : [];
+      const permissions = [...(Array.isArray(me?.user?.permissions) ? me.user.permissions as string[] : []), ...(Array.isArray(me?.user?.modulePermissions?.PROCV) ? me.user.modulePermissions.PROCV as string[] : [])];
       const canOpenAdmin = ["identity.users.read", "identity.roles.read", "procv.analytics.read", "procv.settings.read", "procv.audit.read"].some((permission) => permissions.includes(permission));
       if (!canOpenAdmin) {
         setError(english ? "Your account does not have an administrative console permission." : "Tu cuenta no tiene permisos para acceder a la consola administrativa.");
