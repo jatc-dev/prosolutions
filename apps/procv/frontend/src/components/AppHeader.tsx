@@ -5,6 +5,8 @@ import { LayoutDashboard, ShieldCheck } from "lucide-react";
 import { ProHeader } from "@prosolutions/ui";
 import { useAuthStore } from "../stores/authStore";
 
+const PROSOLUTIONS_URL = import.meta.env.VITE_PROSOLUTIONS_URL || "https://prosolutions.page";
+
 interface AppHeaderProps { cvId?: string; leftExtra?: ReactNode; rightExtra?: ReactNode; showUserInfo?: boolean; }
 
 /** Global ecosystem navigation plus ProCV-specific account actions. */
@@ -21,5 +23,5 @@ export function AppHeader({ leftExtra, rightExtra, showUserInfo = true }: AppHea
       {rightExtra}
     </>
   );
-  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref="/settings" />;
+  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref={`${PROSOLUTIONS_URL}/settings`} securityHref={`${PROSOLUTIONS_URL}/security/sessions`} />;
 }
