@@ -7,6 +7,7 @@ import { auditLog, extractRequestInfo } from '../utils/auditLog';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import { Module } from '@prisma/client';
 import { userHasPermission } from '../services/adminAuthorization';
+import { canRecoverRefreshRotation, deriveRefreshSuccessorJti } from '../utils/refreshRotation';
 
 export interface IdentityRequest extends Request {
   userId?: string;
@@ -86,6 +87,27 @@ async function resolveRequestSession(
     accessSession.userAgent === requestUserAgent;
 
   if (!cookieIsCurrent) {
+    clearRefreshTokenCookie(res);
+    return null;
+  }
+
+  // A different active session is authoritative only when it is the exact
+  // deterministic successor of this access token's persisted predecessor.
+  // Matching user + user-agent alone would let an explicitly revoked session
+  // borrow an unrelated active session from the same browser.
+  const sameSession = accessSession.jti === cookieSession!.jti;
+  const validRotationSuccessor =
+    !sameSession &&
+    cookieSession!.jti === deriveRefreshSuccessorJti(accessSession.refreshToken, config.jwtSecret) &&
+    canRecoverRefreshRotation({
+      predecessor: accessSession,
+      successor: cookieSession!,
+      expectedUserId: accessPayload.sub,
+      requestUserAgent,
+      now,
+    });
+
+  if (!sameSession && !validRotationSuccessor) {
     clearRefreshTokenCookie(res);
     return null;
   }
