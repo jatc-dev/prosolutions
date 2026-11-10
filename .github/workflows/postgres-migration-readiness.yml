@@ -2,13 +2,13 @@ name: PostgreSQL migration readiness
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, qa]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
       - ".github/workflows/postgres-migration-readiness.yml"
   push:
-    branches: [main]
+    branches: [main, qa, fix/qa-session-block-1]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
