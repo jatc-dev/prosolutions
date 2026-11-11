@@ -1,16 +1,16 @@
 import React from "react";
-import { beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
-jest.mock("../src/identityApi", () => ({
+vi.mock("../src/identityApi", () => ({
   identityAuthApiUrl: () => "https://identity.test/api/auth",
 }));
-jest.mock("../src/i18n", () => ({
-  useCoreLocale: () => ({ locale: "es", setLocale: jest.fn() }),
+vi.mock("../src/i18n", () => ({
+  useCoreLocale: () => ({ locale: "es", setLocale: vi.fn() }),
 }));
-jest.mock("../src/preferencesApi", () => ({
-  saveUserPreferences: jest.fn(async () => undefined),
+vi.mock("../src/preferencesApi", () => ({
+  saveUserPreferences: vi.fn(async () => undefined),
 }));
 
 import { AdminAccessPage } from "../src/pages/AdminAccessPage";
@@ -75,7 +75,7 @@ function usersPayload(modules: string[] = []) {
 
 function setupFetch(permissions: string[], initialModules: string[] = []) {
   let modules = [...initialModules];
-  const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = requestPath(input);
     const method = (init?.method || "GET").toUpperCase();
     if (path === "/api/auth/me") return jsonResponse(200, userPayload(permissions));
@@ -108,10 +108,10 @@ function moduleCheckbox(label: string) {
 describe("AdminAccessPage mounted RBAC behavior", () => {
   beforeEach(() => {
     sessionStorage.clear();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
-  test("identity.users.read loads the directory while read-only controls cannot grant or revoke", async () => {
+  it("identity.users.read loads the directory while read-only controls cannot grant or revoke", async () => {
     const fetchMock = setupFetch([READ], ["PROCV"]);
     renderPage();
 
@@ -124,7 +124,7 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(fetchMock.mock.calls.some(([url]) => requestPath(url).startsWith("/api/modules/"))).toBe(false);
   });
 
-  test("identity.users.read without manage sees no management controls when access is denied", async () => {
+  it("a user without identity.users.read sees no management controls", async () => {
     const fetchMock = setupFetch([]);
     renderPage();
 
@@ -134,7 +134,7 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(fetchMock.mock.calls.some(([url]) => requestPath(url).startsWith("/api/admin/") || requestPath(url).startsWith("/api/modules/"))).toBe(false);
   });
 
-  test("identity.users.manage with read permission can grant and revoke a module", async () => {
+  it("identity.users.manage with read permission can grant and revoke a module", async () => {
     const fetchMock = setupFetch([READ, MANAGE]);
     renderPage();
 
@@ -152,8 +152,8 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(await screen.findByRole("checkbox", { name: /ProCV/ })).not.toBeChecked();
   });
 
-  test("401 clears token and replaces the route with login even when refresh also returns 401", async () => {
-    const fetchMock = jest.fn(async (input: RequestInfo | URL) => {
+  it("401 clears token and replaces the route with login even when refresh also returns 401", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (requestPath(input) === "/api/auth/me") return jsonResponse(401, { message: "" });
       if (requestPath(input) === "/api/auth/refresh") return jsonResponse(401, { message: "expired" });
       throw new Error(`Unexpected request: ${requestPath(input)}`);
@@ -167,7 +167,7 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(screen.getByTestId("current-route")).toHaveTextContent("/login");
   });
 
-  test("a permission 403 on module grant is not retried as a CSRF failure and leaves the checkbox unchanged", async () => {
+  it("a permission 403 on module grant is not retried as a CSRF failure and leaves the checkbox unchanged", async () => {
     const fetchMock = setupFetch([READ, MANAGE]);
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = requestPath(input);
@@ -186,7 +186,7 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(await screen.findByRole("checkbox", { name: /ProCV/ })).not.toBeChecked();
   });
 
-  test("identified CSRF rejection refreshes the CSRF token and retries once", async () => {
+  it("identified CSRF rejection refreshes the CSRF token and retries once", async () => {
     const fetchMock = setupFetch([READ, MANAGE]);
     let grants = 0;
     let modules: string[] = [];
@@ -213,11 +213,11 @@ describe("AdminAccessPage mounted RBAC behavior", () => {
     expect(await screen.findByRole("checkbox", { name: /ProCV/ })).toBeChecked();
   });
 
-  test.each([
+  it.each([
     ["network", new TypeError("fetch failed"), /Error de red/],
     ["server", jsonResponse(500, { message: "Identity unavailable" }), /Identity unavailable/],
   ])("%s failures render a recoverable error state", async (_label, failure, message) => {
-    const fetchMock = jest.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (requestPath(input) === "/api/auth/me") {
         if (failure instanceof Error) throw failure;
         return failure;

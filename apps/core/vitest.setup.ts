@@ -1,5 +1,9 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
 import { TextDecoder, TextEncoder } from "node:util";
+import { afterEach } from "vitest";
+
+afterEach(cleanup);
 
 Object.defineProperty(globalThis, "TextDecoder", { configurable: true, value: TextDecoder });
 Object.defineProperty(globalThis, "TextEncoder", { configurable: true, value: TextEncoder });

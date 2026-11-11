@@ -9,7 +9,7 @@
     "build:ui": "npm --prefix ../../packages/ui install --no-package-lock && npm --prefix ../../packages/ui run build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
-    "test": "jest --config jest.config.cjs"
+    "test": "vitest run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.1.0",
-    "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/react": "^18.2.39",
@@ -32,12 +31,12 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
-    "jest-environment-jsdom": "30.5.2",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.3",
-    "ts-jest": "29.4.14",
     "typescript": "^5.3.2",
     "typescript-eslint": "^8.71.1",
-    "vite": "^5.1.7"
+    "vite": "^5.1.7",
+    "vitest": "^2.1.9"
   }
 }
