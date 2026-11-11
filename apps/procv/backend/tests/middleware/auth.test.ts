@@ -15,6 +15,8 @@ type IntrospectionResponse = {
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
+  modulePermissions?: Record<string, string[]>;
   reason?: string;
 };
 
@@ -27,7 +29,9 @@ function setIntrospectionResponse(
   shouldThrow = false,
   shouldTimeout = false,
 ) {
-  introspectionResponse = response;
+  introspectionResponse = response
+    ? { permissions: [], modulePermissions: { PROCV: [] }, ...response }
+    : null;
   introspectionShouldThrow = shouldThrow;
   introspectionShouldTimeout = shouldTimeout;
 }
@@ -96,6 +100,8 @@ describe('ProCV Identity authorization middleware', () => {
       email: 'user@example.test',
       role: 'user',
       modules: ['PROCV', 'PROJOBS'],
+      permissions: [],
+      modulePermissions: { PROCV: [] },
     });
     introspectionShouldThrow = false;
     introspectionShouldTimeout = false;
@@ -125,6 +131,68 @@ describe('ProCV Identity authorization middleware', () => {
     expect(next).toHaveBeenCalledTimes(1);
     expect(req.userId).toBe('identity-user-2');
     expect(req.modules).toEqual(['PROCV', 'PROJOBS']);
+  });
+
+
+  it('does not let an administrative permission bypass candidate module entitlement', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-admin-1',
+      email: 'admin@example.test',
+      role: 'admin',
+      modules: [],
+      jti: 'test-jti-admin',
+    });
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-admin-1',
+      email: 'admin@example.test',
+      role: 'admin',
+      modules: [],
+      permissions: [],
+      modulePermissions: { PROCV: ['procv.admin.access'] },
+    });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toEqual({
+      message: 'ProCV module access required',
+      requiredModule: 'PROCV',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('allows a global ProCV administrator when no module-scoped grants exist', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      sub: 'identity-owner-1',
+      email: 'owner@example.test',
+      role: 'admin',
+      modules: [],
+      jti: 'test-jti-owner',
+    });
+    setIntrospectionResponse({
+      valid: true,
+      userId: 'identity-owner-1',
+      email: 'owner@example.test',
+      role: 'admin',
+      modules: [],
+      permissions: ['procv.admin.access'],
+      modulePermissions: {},
+    });
+    const req = mockRequest();
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(req, res as unknown as ExpressResponse, next, {
+      allowAdminWithoutModule: true,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.permissions).toContain('procv.admin.access');
+    expect(req.modules).toEqual([]);
   });
 
   it('rejects a valid Identity token without PROCV entitlement', async () => {

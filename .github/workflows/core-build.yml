@@ -1,22 +1,26 @@
-name: Core and ProJobs Build Validation
+name: Core, ProCV and ProJobs Build Validation
 
 on:
   push:
     branches:
-      - main
+      - fix/qa-session-block-1
     paths:
       - "apps/core/**"
       - "apps/projobs/**"
+      - "apps/procv/backend/**"
+      - "apps/procv/frontend/**"
       - "packages/ui/**"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/core-build.yml"
   pull_request:
     branches:
-      - main
+      - qa
     paths:
       - "apps/core/**"
       - "apps/projobs/**"
+      - "apps/procv/backend/**"
+      - "apps/procv/frontend/**"
       - "packages/ui/**"
       - "package.json"
       - "package-lock.json"
@@ -116,3 +120,40 @@ jobs:
             console.log(`${file}: localization script syntax OK`);
           }
           NODE
+
+  procv-frontend-build:
+    name: ProCV frontend (TypeScript + Vite build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Build ProCV frontend and shared UI
+        run: npm run build --prefix apps/procv/frontend
+
+
+  procv-backend-build:
+    name: ProCV backend (Prisma + TypeScript build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Generate ProCV Prisma client
+        run: npx prisma generate --schema apps/procv/backend/prisma/schema.prisma
+      - name: Build ProCV backend
+        run: npm run build --workspace=procv-backend
+      - name: Test ProCV module and administrative authorization
+        run: npm test --workspace=procv-backend -- --runInBand tests/middleware/auth.test.ts tests/adminMiddleware.test.ts

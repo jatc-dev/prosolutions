@@ -2,13 +2,13 @@ name: PostgreSQL migration readiness
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, qa]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
       - ".github/workflows/postgres-migration-readiness.yml"
   push:
-    branches: [main]
+    branches: [main, qa, fix/qa-session-block-1]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
@@ -64,10 +64,11 @@ jobs:
         run: |
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE proidentity'
           psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE procv'
+          psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE procv_test'
           psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_app NOLOGIN'
-          psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_login NOLOGIN'
-          psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_runtime NOLOGIN'
-          psql -d procv -v ON_ERROR_STOP=1 -c 'CREATE ROLE procv_admin_login LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE'
+          psql -d procv -v ON_ERROR_STOP=1 -c "CREATE ROLE procv_login LOGIN PASSWORD 'ci-only-procv-test-password'"
+          psql -d procv -v ON_ERROR_STOP=1 -c "CREATE ROLE procv_runtime LOGIN PASSWORD 'ci-only-procv-test-password'"
+          psql -d procv -v ON_ERROR_STOP=1 -c "CREATE ROLE procv_admin_login LOGIN PASSWORD 'ci-only-procv-test-password' NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE"
 
       - name: Apply ProIdentity Prisma migration history to an empty database
         env:
@@ -77,6 +78,11 @@ jobs:
       - name: Apply ProCV Prisma migration history to an empty database
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv?schema=public
+        run: npx prisma migrate deploy --schema=apps/procv/backend/prisma/schema.prisma
+
+      - name: Apply ProCV Prisma migration history to isolated RLS test database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv_test?schema=public
         run: npx prisma migrate deploy --schema=apps/procv/backend/prisma/schema.prisma
 
       - name: Assert final module schema boundaries
@@ -116,6 +122,17 @@ jobs:
             END IF;
           END $$;
           SQL
+
+      - name: Generate ProCV Prisma Client for integration tests
+        run: npx prisma generate --schema=apps/procv/backend/prisma/schema.prisma
+
+      - name: Run real PostgreSQL RLS isolation tests
+        env:
+          PROCV_TEST_DATABASE_URL: postgresql://procv_login:ci-only-procv-test-password@localhost:5432/procv_test?schema=public
+          PROCV_TEST_RUNTIME_URL: postgresql://procv_runtime:ci-only-procv-test-password@localhost:5432/procv_test?schema=public
+          PROCV_TEST_ADMIN_ROLE_DATABASE_URL: postgresql://procv_admin_login:ci-only-procv-test-password@localhost:5432/procv_test?schema=public
+          PROCV_TEST_OPERATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/procv_test?schema=public
+        run: npm test --workspace=procv-backend -- --runInBand tests/rls.integration.test.ts
 
       - name: Report migration status for both schemas
         env:

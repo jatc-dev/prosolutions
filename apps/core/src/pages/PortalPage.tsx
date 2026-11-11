@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { useNavigate } from "react-router-dom";
 import { useCoreLocale } from "../i18n";
+import { saveUserPreferences } from "../preferencesApi";
 import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
+const PROCV_APP_URL = (import.meta.env.VITE_PROCV_APP_URL || "https://procv.prosolutions.page").trim();
 const ACCESS_TOKEN_KEY = "pro_identity_token";
 interface PortalUser { id: string; name?: string | null; email: string; role?: string; modules?: string[]; }
 
@@ -66,7 +68,7 @@ export function PortalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <ProHeader activeApp="core" locale={language} onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")} profile={user ? { name: user.name, email: user.email } : null} onSignOut={user ? logout : undefined} securityHref="/security/sessions" />
+      <ProHeader activeApp="core" locale={language} onLocaleChange={() => { const next = locale === "es" ? "en" : "es"; setLocale(next); void saveUserPreferences({ locale: next }).catch(() => undefined); }} profile={user ? { name: user.name, email: user.email } : null} onSignOut={user ? logout : undefined} settingsHref="/settings" securityHref="/security/sessions" />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-12 sm:px-8">
         {loading ? <div className="py-20 text-center text-slate-500">Cargando tu portal...</div> : error ? (
           <section className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm dark:border-rose-900 dark:bg-slate-900">
@@ -84,12 +86,12 @@ export function PortalPage() {
                 <p className="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">Tu cuenta, tus herramientas profesionales. Elige uno de los módulos disponibles; podrás volver aquí cuando quieras.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {user?.role === "admin" && <a href="/admin/access" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-200 dark:hover:bg-brand-950/40">Administrar accesos</a>}
+                {user?.role === "admin" && <a href="/admin" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-200 dark:hover:bg-brand-950/40">Administrar accesos</a>}
 
               </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              {user?.modules?.includes("PROCV") && (<a href="https://procv.prosolutions.page/" className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
+              {user?.modules?.includes("PROCV") && (<a href={PROCV_APP_URL} className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-200">
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M7 3.75h7l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M14 3.75v4h4M8.5 12h7M8.5 15.5h7" /></svg>
                 </div>

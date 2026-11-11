@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { createDbContext } from '../src/dbContext';
 import { writeAuditLog } from '../src/utils/auditLogger';
 
@@ -163,15 +163,27 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       expect(await tx.cVVersion.findMany({ where: { cvId: cvB.id } })).toHaveLength(0);
       expect(await tx.cVAtsAnalysis.findMany({ where: { cvId: cvB.id } })).toHaveLength(0);
       expect(await tx.auditLog.findMany()).toEqual([expect.objectContaining({ userId: 'user-a' })]);
-      await expect(
-        tx.cV.update({ where: { id: cvB.id }, data: { title: 'stolen' } }),
-      ).rejects.toThrow();
-      await expect(tx.cV.delete({ where: { id: cvB.id } })).rejects.toThrow();
-      await expect(
-        tx.cVVersion.create({ data: { cvId: cvB.id, snapshot: '{}' } }),
-      ).rejects.toThrow();
-      await expect(tx.cVAtsAnalysis.create({ data: { cvId: cvB.id } })).rejects.toThrow();
     });
+
+    // Each denied write gets its own transaction. PostgreSQL marks a
+    // transaction aborted after an RLS violation; keeping subsequent
+    // assertions in that transaction would make them pass for the wrong reason.
+    await expect(
+      withUser('user-a', tx =>
+        tx.cV.update({ where: { id: cvB.id }, data: { title: 'stolen' } }),
+      ),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx => tx.cV.delete({ where: { id: cvB.id } })),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx =>
+        tx.cVVersion.create({ data: { cvId: cvB.id, snapshot: '{}' } }),
+      ),
+    ).rejects.toThrow();
+    await expect(
+      withUser('user-a', tx => tx.cVAtsAnalysis.create({ data: { cvId: cvB.id } })),
+    ).rejects.toThrow();
 
     await withUser('user-b', async tx => {
       expect(await tx.cV.findMany()).toEqual([expect.objectContaining({ id: cvB.id })]);
@@ -180,11 +192,21 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
     });
 
     await withAdmin('admin-1', async tx => {
-      expect(await tx.cV.count()).toBe(2);
-      expect(await tx.cVVersion.count()).toBe(2);
-      expect(await tx.cVAtsAnalysis.count()).toBe(2);
+      const metadata = await tx.cV.findMany({
+        select: { id: true, userId: true, createdAt: true },
+      });
+      expect(metadata).toHaveLength(2);
+      expect(
+        await tx.$queryRaw<Array<{ count: number }>>`SELECT COUNT("id")::int AS count FROM "CV"`,
+      ).toEqual([{ count: 2 }]);
       expect(await tx.auditLog.count()).toBe(2);
     });
+
+    // Permission-denial checks must not share a transaction: PostgreSQL
+    // aborts the transaction after the first privilege error.
+    await expect(withAdmin('admin-1', tx => tx.cV.findMany())).rejects.toThrow();
+    await expect(withAdmin('admin-1', tx => tx.cVVersion.count())).rejects.toThrow();
+    await expect(withAdmin('admin-1', tx => tx.cVAtsAnalysis.count())).rejects.toThrow();
 
     // Any SQL session can set custom GUCs. An unsigned admin claim must still
     // resolve to no verified context and reveal no CV rows.
@@ -197,7 +219,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       exp: 4102444800,
       jti: randomUUID(),
     });
-    await runtime.$transaction(async tx => {
+    await runtime.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRaw`SELECT set_config('role', 'procv_app', true)`;
       await tx.$queryRaw`
         SELECT set_config('procv.context_payload', ${forged}, true),
@@ -211,7 +233,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       expect(await tx.cV.count()).toBe(0);
     });
     await expect(
-      runtime.$transaction(async tx => {
+      runtime.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.$queryRaw`SELECT set_config('role', 'procv_admin_app', true)`;
       }),
     ).rejects.toThrow();
@@ -241,7 +263,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
   });
 
   it('returns no protected rows without signed context and clears local context after rollback', async () => {
-    await runtime.$transaction(async tx => {
+    await runtime.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRaw`SELECT set_config('role', 'procv_app', true)`;
       expect(await tx.cV.count()).toBe(0);
       expect(await tx.auditLog.count()).toBe(0);
@@ -337,7 +359,7 @@ suite('PostgreSQL RLS integration (isolated local database only)', () => {
       return created;
     });
     await withUser('delete-owner', tx => tx.cV.delete({ where: { id: cv.id } }));
-    await withAdmin('admin-1', async tx => {
+    await withUser('delete-owner', async tx => {
       expect(await tx.cVVersion.count({ where: { cvId: cv.id } })).toBe(0);
       expect(await tx.cVAtsAnalysis.count({ where: { cvId: cv.id } })).toBe(0);
     });

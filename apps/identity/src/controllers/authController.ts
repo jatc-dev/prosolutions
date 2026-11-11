@@ -29,6 +29,8 @@ import {
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
 import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
+import { isSessionIdleExpired } from '../utils/sessionPolicy';
+import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
@@ -272,16 +274,26 @@ export async function refreshToken(req: Request, res: Response) {
       jti: string;
     };
     const session = await prisma.session.findUnique({ where: { refreshToken } });
+    const now = new Date();
     if (
       !session ||
       session.revokedAt ||
       session.userId !== payload.sub ||
       session.jti !== payload.jti ||
-      session.expiresAt < new Date()
+      session.expiresAt <= now
     ) {
       logger.warn('Refresh token rejected');
       clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+
+    if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
+      await prisma.session.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Session timed out due to inactivity' });
     }
 
     const user = await prisma.user.findUnique({
@@ -289,6 +301,11 @@ export async function refreshToken(req: Request, res: Response) {
       include: { moduleAccess: true },
     });
     if (!user || !user.isActive) {
+      await prisma.session.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'User not found or inactive' });
     }
 
@@ -367,11 +384,23 @@ export async function me(req: Request, res: Response) {
   const modules = user.moduleAccess
     .map((ma) => ma.module)
     .filter(isAvailableModule);
+  const [permissionSets, adminRoles] = await Promise.all([
+    getUserPermissionSets(userId),
+    getUserAdminAssignments(userId),
+  ]);
+  const { permissions, modulePermissions } = permissionSets;
 
   return res.json({
     user: {
       ...user,
       modules,
+      permissions,
+      modulePermissions,
+      adminRoles: adminRoles.map((assignment) => ({
+        role: assignment.role.key,
+        module: assignment.module,
+        expiresAt: assignment.expiresAt,
+      })),
       moduleAccess: undefined,
     },
   });

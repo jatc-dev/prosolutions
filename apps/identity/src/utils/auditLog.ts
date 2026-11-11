@@ -22,6 +22,7 @@ export type AuditEventType =
   | 'authentication.email_verified'
   | 'authentication.verification_resent'
   | 'authentication.profile_updated'
+  | 'account.preferences_updated'
   | 'authentication.token_validated'
   | 'authentication.session_revoked'
   | 'authentication.other_sessions_revoked'

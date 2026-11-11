@@ -83,10 +83,6 @@ function extractFirstHexFromGradient(gradient: string): string {
 
 export function TemplateColorCustomizer({ template, settings, onChange }: TemplateColorCustomizerProps) {
   const options = getTemplateColorOptions(template);
-  if (options.length === 0) {
-    return null;
-  }
-
   const active = getCurrentTemplateColor(template, settings);
   const [customColor, setCustomColor] = useState(() => {
     if (template === "sidebar") return normalizeHex(settings?.sidebarBg || "#0f172a");
@@ -112,6 +108,10 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
     const sample = template === "creative" ? creativeStart : customColor;
     return getWcagStatus(sample);
   }, [template, customColor, creativeStart]);
+
+  if (options.length === 0) {
+    return null;
+  }
 
   const applyCustom = () => {
     if (template === "sidebar") {

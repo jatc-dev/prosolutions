@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { fetchCSRFToken } from "./services/api";
+import { GlobalPreferencesBootstrap } from "./components/GlobalPreferencesBootstrap";
 
 const PROSOLUTIONS_URL =
   import.meta.env.VITE_PROSOLUTIONS_URL ||
@@ -16,15 +17,8 @@ const WorkspacePage = lazy(() => import("./pages/UnifiedWorkspacePage").then((m)
 const CVEditorPage = lazy(() => import("./pages/CVEditorPage").then((m) => ({ default: m.CVEditorPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
-const SettingsPage = lazy(() => import("./pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 
-const AdminLayout = lazy(() => import("./components/AdminLayout").then((m) => ({ default: m.AdminLayout })));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
-const PlatformSettings = lazy(() => import("./pages/admin/PlatformSettings").then((m) => ({ default: m.PlatformSettings })));
-const AuditLogs = lazy(() => import("./pages/admin/AuditLogs").then((m) => ({ default: m.AuditLogs })));
-const LandingPageManagement = lazy(() =>
-  import("./pages/admin/LandingPageManagement").then((m) => ({ default: m.LandingPageManagement }))
-);
+
 const TemplatesGallery = lazy(() =>
   import("./modules/landing/pages/TemplatesGallery").then((m) => ({ default: m.TemplatesGallery }))
 );
@@ -63,18 +57,6 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   return children;
 }
 
-function AdminRoute({ children }: { children: JSX.Element }) {
-  const { isAuthenticated, user, loading } = useAuth();
-  if (loading) return <RouteFallback />;
-  if (!isAuthenticated) {
-    const redirectUri = encodeURIComponent(window.location.href);
-    window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
-    return null;
-  }
-  if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
-  return children;
-}
-
 export default function App() {
   useSessionTimeout();
   useEffect(() => { fetchCSRFToken(); }, []);
@@ -82,6 +64,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <GlobalPreferencesBootstrap />
         <ErrorBoundary>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
@@ -100,11 +83,11 @@ export default function App() {
               <Route path="/editor-free" element={<Navigate to="/editor" replace />} />
               <Route path="/editor/:cvId" element={<CVEditorPage />} />
               <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-              <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><AdminLayout><PlatformSettings /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/landing" element={<AdminRoute><AdminLayout><LandingPageManagement /></AdminLayout></AdminRoute>} />
-              <Route path="/admin/audit-logs" element={<AdminRoute><AdminLayout><AuditLogs /></AdminLayout></AdminRoute>} />
+              <Route path="/settings" element={<RedirectToProsolutions path="/settings" />} />
+              <Route path="/admin" element={<RedirectToProsolutions path="/admin" />} />
+              <Route path="/admin/settings" element={<RedirectToProsolutions path="/admin?section=platform" />} />
+              <Route path="/admin/landing" element={<RedirectToProsolutions path="/admin?section=landing" />} />
+              <Route path="/admin/audit-logs" element={<RedirectToProsolutions path="/admin?section=audit" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>

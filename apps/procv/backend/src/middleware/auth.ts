@@ -7,6 +7,7 @@ export interface AuthRequest extends Request {
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
 }
 
 const INTROSPECTION_TIMEOUT_MS = Number(process.env.INTROSPECTION_TIMEOUT_MS) || 5000;
@@ -17,6 +18,8 @@ async function introspectSession(token: string): Promise<{
   email?: string;
   role?: string;
   modules?: string[];
+  permissions?: string[];
+  modulePermissions?: Record<string, string[]>;
   reason?: string;
 }> {
   const controller = new AbortController();
@@ -59,6 +62,8 @@ async function introspectSession(token: string): Promise<{
       email?: string;
       role?: string;
       modules?: string[];
+      permissions?: string[];
+      modulePermissions?: Record<string, string[]>;
       reason?: string;
     };
   } catch (error: unknown) {
@@ -74,7 +79,7 @@ async function introspectSession(token: string): Promise<{
 }
 
 function validateIntrospectionContract(
-  introspection: { valid: boolean; userId?: string; modules?: string[]; reason?: string },
+  introspection: { valid: boolean; userId?: string; modules?: string[]; permissions?: string[]; modulePermissions?: Record<string, string[]>; reason?: string },
   jwtSub: string,
 ): { valid: boolean; reason?: string } {
   if (!introspection.valid) {
@@ -93,10 +98,28 @@ function validateIntrospectionContract(
     return { valid: false, reason: 'introspection_invalid_modules' };
   }
 
+  if (!Array.isArray(introspection.permissions)) {
+    return { valid: false, reason: 'introspection_invalid_permissions' };
+  }
+
+  if (
+    !introspection.modulePermissions ||
+    typeof introspection.modulePermissions !== 'object' ||
+    Array.isArray(introspection.modulePermissions) ||
+    Object.values(introspection.modulePermissions).some((permissions) => !Array.isArray(permissions))
+  ) {
+    return { valid: false, reason: 'introspection_invalid_module_permissions' };
+  }
+
   return { valid: true };
 }
 
-export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authMiddleware(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+  options: { allowAdminWithoutModule?: boolean } = {},
+) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Authorization header missing' });
@@ -135,7 +158,13 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     }
 
     const modules = introspection.modules as string[];
-    if (!modules.includes('PROCV')) {
+    const permissions = [
+      ...(introspection.permissions as string[]),
+      ...(introspection.modulePermissions?.PROCV || []),
+    ];
+    const hasProductAccess = modules.includes('PROCV');
+    const hasAdministrativeAccess = permissions.includes('procv.admin.access');
+    if (!hasProductAccess && !(options.allowAdminWithoutModule && hasAdministrativeAccess)) {
       return res
         .status(403)
         .json({ message: 'ProCV module access required', requiredModule: 'PROCV' });
@@ -145,6 +174,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.email = introspection.email;
     req.role = introspection.role;
     req.modules = modules;
+    req.permissions = permissions;
 
     return next();
   } catch {

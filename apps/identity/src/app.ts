@@ -18,6 +18,7 @@ import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
 import adminRoutes from './routes/admin';
+import preferencesRoutes from './routes/preferences';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
@@ -131,6 +132,7 @@ export function createApp() {
   app.use('/api/profile', profileRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/modules', moduleRoutes);
+  app.use('/api/preferences', preferencesRoutes);
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Resource not found' });

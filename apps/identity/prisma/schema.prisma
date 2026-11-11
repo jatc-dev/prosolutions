@@ -28,12 +28,14 @@ model User {
   updatedAt                 DateTime            @updatedAt
   emailVerified             Boolean             @default(false)
   isActive                  Boolean             @default(true)
+  preferences               Json                @default("{}")
 
   sessions                  Session[]
   passwordResetTokens       PasswordResetToken[]
   emailVerificationTokens   EmailVerificationToken[]
   professionalProfile       ProfessionalProfile?
   moduleAccess              ModuleAccess[]
+  adminRoleAssignments      UserAdminRole[]
 
   @@index([email])
   @@index([createdAt])
@@ -137,4 +139,54 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+}
+
+
+model AdminRole {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  name        String
+  description String?
+  isSystem    Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  permissions AdminRolePermission[]
+  assignments UserAdminRole[]
+
+  @@index([key])
+}
+
+model AdminPermission {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  description String?
+  createdAt   DateTime           @default(now())
+  roles       AdminRolePermission[]
+
+  @@index([key])
+}
+
+model AdminRolePermission {
+  roleId       String
+  permissionId String
+  role         AdminRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   AdminPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserAdminRole {
+  id           String    @id @default(cuid())
+  userId       String
+  roleId       String
+  module       Module?
+  assignedById String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([roleId, module])
 }

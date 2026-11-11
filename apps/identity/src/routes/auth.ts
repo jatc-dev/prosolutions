@@ -2,7 +2,6 @@ import { Router } from 'express';
 import {
   login,
   register,
-  refreshToken,
   logout,
   me,
   updateProfile,
@@ -11,6 +10,7 @@ import {
   verifyEmail,
   resendVerification,
 } from '../controllers/authController';
+import { refreshToken } from '../controllers/refreshController';
 import { introspectToken } from '../controllers/introspectController';
 import {
   refreshLimiter,

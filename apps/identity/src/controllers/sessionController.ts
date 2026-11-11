@@ -3,16 +3,22 @@ import { IdentityRequest } from "../middleware/auth";
 import prisma from "../prismaClient";
 import { clearRefreshTokenCookie } from "../utils/cookies";
 import { auditLog, extractRequestInfo } from "../utils/auditLog";
+import { getSessionIdleTimeoutMs, partitionSessionsByIdlePolicy } from "../utils/sessionPolicy";
 
 export async function listSessions(req: Request, res: Response) {
   const auth = req as IdentityRequest;
   if (!auth.userId) return res.status(401).json({ message: "Unauthorized" });
-  const sessions = await prisma.session.findMany({
+  const candidates = await prisma.session.findMany({
     where: { userId: auth.userId, revokedAt: null, expiresAt: { gt: new Date() } },
     orderBy: { lastAccessedAt: "desc" },
     select: { id: true, createdAt: true, lastAccessedAt: true, expiresAt: true, rememberMe: true, deviceName: true, userAgent: true, ipAddress: true },
   });
-  return res.json({ sessions: sessions.map(session => ({ ...session, current: session.id === auth.sessionId })) });
+  const { active, idleExpired } = partitionSessionsByIdlePolicy(candidates, new Date());
+  return res.json({
+    sessions: active.map(session => ({ ...session, current: session.id === auth.sessionId })),
+    idleExpiredSessions: idleExpired.map(session => ({ ...session, current: false })),
+    policy: { idleTimeoutMinutes: Math.round(getSessionIdleTimeoutMs(false) / 60000), rememberedIdleTimeoutDays: 30 },
+  });
 }
 
 export async function revokeSessionById(req: Request, res: Response) {
