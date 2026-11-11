@@ -2,6 +2,8 @@
 
 Fecha: 2026-10-18
 
+> **Nota de vigencia (2026-11-10):** las propuestas de Premium y planes comerciales de la sección de monetización quedan obsoletas. El modelo aprobado para usuarios de ProSolutions es gratuito y financiado mediante publicidad. Se conserva el historial; no es una hoja de ruta vigente.
+
 Este documento distingue capacidades recomendadas de funcionalidades ya implementadas. No habilitar características transaccionales hasta contar con API, almacenamiento seguro, permisos, consentimiento, pruebas y observabilidad.
 
 ## Prioridad 0 — Fiabilidad y experiencia unificada
@@ -36,11 +38,11 @@ Este documento distingue capacidades recomendadas de funcionalidades ya implemen
 - Búsqueda de talento basada en perfiles que eligieron ser visibles; acceso con consentimiento, auditoría y controles anti-extracción.
 - Analítica de vacantes: vistas, clics, conversiones, calidad de fuente y tiempo de cobertura; evitar métricas engañosas.
 
-## Prioridad 4 — Monetización responsable
+## Prioridad 4 — Monetización responsable (histórico; propuestas comerciales obsoletas)
 
-- Premium para herramientas de productividad: CV/versiones adicionales, alertas avanzadas y personalización ampliada con beneficios claros.
+- ~~Premium para herramientas de productividad: CV/versiones adicionales, alertas avanzadas y personalización ampliada con beneficios claros.~~ Obsoleto: las funciones implementadas para usuarios no se condicionan a planes pagos.
 - Publicaciones patrocinadas con etiqueta visible, expiración automática y separación del ranking orgánico.
-- Planes para empresas por volumen de ofertas, colaboración y analítica.
+- ~~Planes para empresas por volumen de ofertas, colaboración y analítica.~~ Obsoleto para el modelo comercial aprobado.
 - AdSense limitado y medido; nunca ocultar contenido, confundir anuncios con ofertas orgánicas ni degradar accesibilidad.
 
 ## Requisitos transversales de calidad

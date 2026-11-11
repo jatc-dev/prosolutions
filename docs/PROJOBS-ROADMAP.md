@@ -2,6 +2,8 @@
 
 Fecha de referencia: 2026-10-18. Este documento separa lo que ya existe de las capacidades que requieren diseño e implementación adicionales.
 
+> **Nota de vigencia (2026-11-10):** los apartados que proponen suscripciones o Premium son históricos y quedan obsoletos. El modelo aprobado para usuarios de ProSolutions es gratuito y financiado mediante publicidad. Se conservan para trazabilidad; no representan una hoja de ruta vigente.
+
 ## Estado técnico observado
 
 - ProJobs se publica como sitio estático desde `apps/projobs` en Render.
@@ -25,7 +27,7 @@ Normalizar cada empleo a un contrato común: identificador estable, fuente, URL 
 
 ### 3. Servicios transaccionales — etapa posterior
 
-Cuando se habiliten cuentas, usar API autenticada y PostgreSQL/Supabase con migraciones, validación, límites de tasa, auditoría, autorización por propietario y políticas RLS verificadas. Entidades iniciales: CandidateProfile, CompanyProfile, SavedJob, JobAlert, Application, ApplicationEvent, EmployerJob, Subscription y AdPlacement. Las postulaciones a fuentes externas deben identificarse como externas; no prometer seguimiento interno cuando no exista integración con el empleador.
+Cuando se habiliten cuentas, usar API autenticada y PostgreSQL/Supabase con migraciones, validación, límites de tasa, auditoría, autorización por propietario y políticas RLS verificadas. Entidades funcionales propuestas: CandidateProfile, CompanyProfile, SavedJob, JobAlert, Application, ApplicationEvent, EmployerJob y AdPlacement. ~~Subscription~~ queda obsoleta como propuesta comercial futura; no implica que exista una tabla o facturación activa. Las postulaciones a fuentes externas deben identificarse como externas; no prometer seguimiento interno cuando no exista integración con el empleador.
 
 ### 4. Descubrimiento, búsqueda y SEO
 
@@ -78,10 +80,10 @@ Fuente: https://www.remoteok.com/hire-remotely
 - Pipeline de candidatos con estados, historial y mensajes.
 - Moderación, prevención de fraude, reportes y métricas de conversión.
 
-### Lote 5 — Monetización
+### Lote 5 — Monetización (histórico; propuestas comerciales obsoletas)
 - AdSense: ubicaciones limitadas y responsive; etiqueta publicitaria clara; no insertar anuncios junto a botones de postulación ni dentro de controles; probar rendimiento y políticas antes de aumentar densidad.
 - Patrocinios: ofertas destacadas etiquetadas, vencimiento automático, facturación y separación del ranking orgánico.
-- Premium: alertas avanzadas, filtros y herramientas de empresa con límites/beneficios transparentes.
+- ~~Premium: alertas avanzadas, filtros y herramientas de empresa con límites/beneficios transparentes.~~ Obsoleto: las funciones implementadas para usuarios no se condicionan a planes pagos.
 - Acceso a talento: solo con perfiles voluntariamente visibles, consentimiento revocable, control de acceso, auditoría y privacidad. No vender datos personales ni exponer CV/contactos por defecto.
 
 ## Métricas de éxito

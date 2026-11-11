@@ -5,8 +5,8 @@ import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 
 function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ label: string; href: string; external?: boolean }> }> {
   const labels = locale === "en"
-    ? { ecosystem: "Ecosystem", home: "Home", plans: "Premium plans", legal: "Legal", privacy: "Privacy", terms: "Terms" }
-    : { ecosystem: "Ecosistema", home: "Inicio", plans: "Planes Premium", legal: "Legal", privacy: "Privacidad", terms: "Términos" };
+    ? { ecosystem: "Ecosystem", home: "Home", legal: "Legal", privacy: "Privacy", terms: "Terms" }
+    : { ecosystem: "Ecosistema", home: "Inicio", legal: "Legal", privacy: "Privacidad", terms: "Términos" };
   return [
     {
       title: labels.ecosystem,
@@ -14,7 +14,6 @@ function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ l
         { label: labels.home, href: APP_URLS.core, external: isExternalUrl(APP_URLS.core) },
         { label: "ProCV", href: APP_URLS.procvLogin, external: true },
         { label: "ProJobs", href: APP_URLS.projobs, external: true },
-        { label: labels.plans, href: `${APP_URLS.core.replace(/\/$/, "")}/#planes` },
       ],
     },
     {

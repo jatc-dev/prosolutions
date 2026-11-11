@@ -92,7 +92,7 @@
     "signIn": "Sign In",
     "welcomeBack": "Welcome back!",
     "getStarted": "Get started with your professional CV",
-    "registerDescription": "Join ProCV and create professional resumes that stand out. Register now and access all premium functionalities.",
+    "registerDescription": "Join ProCV and create professional resumes with all available tools.",
     "createAccount": "Create Account",
     "loginSubtitle": "Sign in to your account",
     "registerSubtitle": "Join thousands of professionals",
@@ -138,16 +138,16 @@
         "description": "Create your account in seconds and start creating your professional CV."
       },
       "templates": {
-        "title": "Exclusive Templates",
-        "description": "Access premium templates once you register."
+        "title": "Professional Templates",
+        "description": "Explore and use every ProCV template."
       },
       "cloud": {
         "title": "Cloud Synchronization",
         "description": "Save and access your CVs from any device."
       },
       "support": {
-        "title": "Priority Support",
-        "description": "Registered users receive preferred technical assistance."
+        "title": "Technical Help",
+        "description": "See the available technical help options."
       },
       "updates": {
         "title": "Early Updates",
@@ -469,8 +469,7 @@
     "templateSelector": {
       "title": "Template Selector",
       "free": "Free",
-      "lockedHint": "Account required",
-      "proLabel": "Pro"
+      "lockedHint": "Account required"
     },
     "guest": {
       "mode": "You are using Guest Mode. Your changes are stored only in this browser.",

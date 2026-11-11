@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import { Briefcase, FileText, Gem, House, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X } from "lucide-react";
+import { Briefcase, FileText, House, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X } from "lucide-react";
 import { APP_URLS, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -10,15 +10,12 @@ function ThemeToggle({ locale }) {
     const isDark = theme === "dark";
     return (_jsx("button", { type: "button", onClick: toggle, className: "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white", "aria-label": isDark ? (locale === "en" ? "Switch to light mode" : "Activar modo claro") : (locale === "en" ? "Switch to dark mode" : "Activar modo oscuro"), title: isDark ? (locale === "en" ? "Light mode" : "Modo claro") : (locale === "en" ? "Dark mode" : "Modo oscuro"), children: isDark ? _jsx(Sun, { className: "h-5 w-5" }) : _jsx(Moon, { className: "h-5 w-5" }) }));
 }
-function navItems(locale) {
-    const labels = locale === "en"
-        ? { home: "ProSolutions", plans: "Premium plans" }
-        : { home: "ProSolutions", plans: "Planes Premium" };
+function navItems() {
+    const labels = { home: "ProSolutions" };
     return [
         { label: labels.home, href: APP_URLS.core, app: "core", icon: House },
         { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
         { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
-        { label: labels.plans, href: APP_URLS.core.replace(/\/$/, "") + "/#planes", icon: Gem },
     ];
 }
 /**
@@ -27,7 +24,7 @@ function navItems(locale) {
  */
 export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref, securityHref, loginHref, authLoading = false }) {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const items = navItems(locale);
+    const items = navItems();
     useEffect(() => {
         const onKeyDown = (event) => {
             if (event.key === "Escape")

@@ -2,7 +2,6 @@ import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { AdsSection } from "../components/AdsSection";
 import { Hero } from "../components/Hero";
 import { Modules } from "../components/Modules";
-import { Premium } from "../components/Premium";
 import { useCoreLocale } from "../i18n";
 import { useCallback, useEffect, useState } from "react";
 import { identityAuthApiUrl } from "../identityApi";
@@ -114,7 +113,6 @@ export function LandingPage() {
       <main className="flex-1">
         <Hero />
         <Modules />
-        <Premium />
         <AdsSection />
       </main>
       <ProFooter locale={locale} />

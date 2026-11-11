@@ -24,7 +24,6 @@ import {
 } from "./ATSOptimizationPanel";
 import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
 import { TemplateSelector } from "./components/TemplateSelector";
-import { UpgradeTemplateModal } from "./components/UpgradeTemplateModal";
 import { BlockPalette, createEmptyItem } from "./components/DraggableBlock";
 import { AIPanel } from "./components/AIPanel";
 import { CustomizerPanel } from "./components/CustomizerPanel";
@@ -389,7 +388,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [pendingImportData, setPendingImportData] = useState<ParsedCvDraft | null>(null);
   const [pendingMergedData, setPendingMergedData] = useState<Partial<CVData> | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showBlockPalette, setShowBlockPalette] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -926,9 +924,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 <TemplateSelector
                   templates={CURATED_CV_TEMPLATES}
                   currentTemplate={cvData.template}
-                  isGuest={isGuest}
                   onTemplateSelect={setTemplate}
-                  onLockedClick={() => setShowUpgradeModal(true)}
                 />
               </section>
 
@@ -1249,10 +1245,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               },
             },
           }}
-        />
-        <UpgradeTemplateModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
         />
       </div>
     </DndContext>

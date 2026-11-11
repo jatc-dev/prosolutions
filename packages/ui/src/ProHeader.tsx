@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Briefcase, FileText, Gem, House, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
+import { Briefcase, FileText, House, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -63,15 +63,12 @@ function ThemeToggle({ locale }: { locale: "es" | "en" }) {
   );
 }
 
-function navItems(locale: "es" | "en"): NavItem[] {
-  const labels = locale === "en"
-    ? { home: "ProSolutions", plans: "Premium plans" }
-    : { home: "ProSolutions", plans: "Planes Premium" };
+function navItems(): NavItem[] {
+  const labels = { home: "ProSolutions" };
   return [
     { label: labels.home, href: APP_URLS.core, app: "core", icon: House },
     { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
     { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
-    { label: labels.plans, href: APP_URLS.core.replace(/\/$/, "") + "/#planes", icon: Gem },
   ];
 }
 
@@ -81,7 +78,7 @@ function navItems(locale: "es" | "en"): NavItem[] {
  */
 export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref, securityHref, loginHref, authLoading = false }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = navItems(locale);
+  const items = navItems();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

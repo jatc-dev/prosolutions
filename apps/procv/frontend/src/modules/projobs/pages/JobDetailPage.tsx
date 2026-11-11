@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, Building2, ExternalLink, FileText, MapPin, ShieldAlert, Tags } from "lucide-react";
 import { PlatformLayout } from "../../../shared/components/PlatformLayout";
 import { AdSlot } from "../../monetization/components/AdSlot";
-import { UpgradeBanner } from "../../monetization/components/UpgradeBanner";
 import { useSeo, organizationSchema } from "../../../shared/seo";
 import { JobCard } from "../components/JobCard";
 import { JobsErrorState, JobsSkeleton } from "../components/JobsStates";
@@ -194,10 +193,6 @@ export function JobDetailPage() {
                 {source === "snapshot" ? ` · ${t("projobs.snapshotNote", "listado de respaldo")}` : ""}
               </p>
             </section>
-
-            <div className="mt-6">
-              <UpgradeBanner featureKey="projobs_early_access" />
-            </div>
 
             <div className="mt-6">
               <AdSlot placement="projobs-detail-bottom" />

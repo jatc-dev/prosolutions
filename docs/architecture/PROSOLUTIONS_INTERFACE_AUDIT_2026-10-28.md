@@ -2,9 +2,11 @@
 
 **Status:** Initial evidence-based inventory with the first cleanup/recovery batch deployed. The route wiring has been rechecked against `main`; live browser/CORS verification and the broader route/import sweep remain open. **Date:** 2026-10-28.
 
+> **Current status (2026-11-10):** references below to the Premium section describe the observed interface on 2026-10-28 and became obsolete after the commercial plans were removed from `qa`.
+
 ## Executive summary
 
-Core owns the public platform landing at `/` and the focused login at `/login`. The Core route table explicitly maps `/` to `LandingPage`, which renders `Hero`, `Modules`, `Premium`, and `AdsSection`; `/login` and `/auth/callback` map to the login `HomePage`. The earlier concern that Core did not route to `LandingPage` is stale and is corrected here.
+As observed on 2026-10-28, Core owned the public platform landing at `/` and the focused login at `/login`. The Core route table mapped `/` to `LandingPage`, which then rendered `Hero`, `Modules`, `Premium`, and `AdsSection`; `/login` and `/auth/callback` mapped to the login `HomePage`. The Premium section has since been removed from the landing page. The earlier concern that Core did not route to `LandingPage` was stale and is corrected here.
 
 ProCV's previous Landing Features editor remains a transitional content source. Core's `Modules` component reads the public ProCV endpoint for the selected locale and retains localized static fallback copy. This is a compatibility bridge, not the final central catalog/admin solution.
 
@@ -12,7 +14,7 @@ ProCV's previous Landing Features editor remains a transitional content source. 
 
 | Area | Evidence | Status | Recommendation | Risk |
 |---|---|---|---|---|
-| Core public landing and login | `apps/core/src/App.tsx` maps `/` to `LandingPage` and `/login` plus `/auth/callback` to `HomePage`. `LandingPage.tsx` composes Hero, Modules, Premium, AdsSection. | Active and intentionally separated | Preserve; add route/browser regression checks | Low |
+| Core public landing and login | As observed on 2026-10-28, `apps/core/src/App.tsx` mapped `/` to `LandingPage` and `/login` plus `/auth/callback` to `HomePage`. The landing composition then included `Premium`; that section was removed on 2026-11-10. | Landing and login remain active; Premium section is obsolete | Preserve the landing/login routes; add route/browser regression checks | Low |
 | ProCV auth/account routes | `apps/procv/frontend/src/App.tsx` redirects `/login`, `/auth`, `/auth/callback`, `/register`, `/forgot-password`, `/reset-password`, and `/verify-email` to Core. | Intentional compatibility redirects | Preserve until inbound links and redirect behavior are tested | High |
 | Free editor CTA | ProCV has a compatibility route `/editor-free` redirecting to `/editor` (PR #85). | Fixed; alias remains intentionally | Keep alias until external links have been checked | Low/medium |
 | ProCV Landing Features admin | `LandingPageManagement.tsx`, `/admin/landing` route and admin navigation remain. | Active legacy admin and temporary source of truth | Preserve until central catalog editing, migration, rollback, and authorization are verified | Medium |

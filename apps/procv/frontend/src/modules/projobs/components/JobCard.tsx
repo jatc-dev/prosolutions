@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Building2, Clock3, ExternalLink, MapPin, Tags } from "lucide-react";
 import { MODALITY_LABELS, SENIORITY_LABELS, type JobPosting } from "../types";
-import { PremiumBadge } from "../../monetization/components/UpgradeBanner";
 
 const MODALITY_STYLES: Record<JobPosting["modality"], string> = {
   remote: "bg-projobs-100 text-projobs-700 dark:bg-projobs-950/60 dark:text-projobs-200",
@@ -37,7 +36,7 @@ export function JobCard({ job, featured = false }: JobCardProps) {
             {SENIORITY_LABELS[job.seniority]}
           </span>
         ) : null}
-        {featured ? <PremiumBadge /> : null}
+        {featured ? <span className="rounded-full bg-projobs-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-projobs-700 dark:bg-projobs-950/60 dark:text-projobs-200">{t("jobs.featured", "Destacada")}</span> : null}
       </div>
 
       <h3 className="mt-3 text-base font-bold leading-snug text-slate-900 dark:text-white">

@@ -64,7 +64,7 @@ export function TemplateSelector({
                   >
                     {isLocked && (
                       <span className="absolute -top-1.5 right-1.5 inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.25 text-[8px] font-bold text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                        {t("templateSelector.proLabel", "Pro")}
+                        {t("templateSelector.accountRequired", "Cuenta")}
                       </span>
                     )}
                     {isGuest && isFree && (

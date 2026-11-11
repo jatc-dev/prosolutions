@@ -1,4 +1,4 @@
-export type CVTemplateGroup = "professional" | "ats" | "premium";
+export type CVTemplateGroup = "professional" | "ats" | "design";
 
 export const CV_TEMPLATE_GROUPS: Array<{ id: CVTemplateGroup; label: string; description: string }> = [
   {
@@ -12,8 +12,8 @@ export const CV_TEMPLATE_GROUPS: Array<{ id: CVTemplateGroup; label: string; des
     description: "Diseños de lectura sencilla, estructurados para sistemas de seguimiento de candidatos.",
   },
   {
-    id: "premium",
-    label: "Premium",
+    id: "design",
+    label: "Diseños visuales",
     description: "Diseños avanzados con una presentación visual más distintiva.",
   },
 ];
@@ -21,7 +21,7 @@ export const CV_TEMPLATE_GROUPS: Array<{ id: CVTemplateGroup; label: string; des
 export interface CVTemplateOption {
   key: string;
   label: string;
-  category: "modern" | "corporate" | "tech" | "design" | "traditional" | "premium" | "ats";
+  category: "modern" | "corporate" | "tech" | "design" | "traditional" | "ats";
   group: CVTemplateGroup;
   supportsPhoto: boolean;
   atsFriendly: boolean;
@@ -35,8 +35,8 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "developer", label: "Desarrollador", category: "tech", group: "professional", supportsPhoto: true, atsFriendly: true },
   { key: "creative", label: "Creativa", category: "design", group: "professional", supportsPhoto: true, atsFriendly: false },
   { key: "classic", label: "Clásica", category: "traditional", group: "professional", supportsPhoto: false, atsFriendly: true },
-  { key: "executive", label: "Ejecutiva", category: "premium", group: "premium", supportsPhoto: true, atsFriendly: true },
-  { key: "extensa", label: "Extensa", category: "premium", group: "premium", supportsPhoto: true, atsFriendly: true },
+  { key: "executive", label: "Ejecutiva", category: "corporate", group: "design", supportsPhoto: true, atsFriendly: true },
+  { key: "extensa", label: "Extensa", category: "traditional", group: "design", supportsPhoto: true, atsFriendly: true },
   { key: "timeline", label: "Timeline", category: "modern", group: "professional", supportsPhoto: false, atsFriendly: true },
   { key: "compact", label: "Compacta", category: "ats", group: "ats", supportsPhoto: false, atsFriendly: true },
   { key: "employment", label: "Solicitud de empleo", category: "traditional", group: "professional", supportsPhoto: true, atsFriendly: true },

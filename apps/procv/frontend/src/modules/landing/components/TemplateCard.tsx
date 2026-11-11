@@ -12,7 +12,7 @@ export interface TemplateCardProps {
 
 /**
  * Renders a single CV template card with mini-preview, category badge,
- * tier indicator, and color preset preview.
+ * and color preset preview.
  */
 export function TemplateCard({
   template,
@@ -20,7 +20,6 @@ export function TemplateCard({
   onSelect,
 }: TemplateCardProps) {
   const colorOptions = getTemplateColorOptions(template.key);
-  const isPremium = template.category === "premium";
 
   const handleClick = () => {
     if (onSelect) {
@@ -56,12 +55,6 @@ export function TemplateCard({
         {template.category.charAt(0).toUpperCase() + template.category.slice(1)}
       </span>
 
-      {/* Premium tag if applicable */}
-      {isPremium && (
-        <span className="absolute top-4 right-4 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium uppercase tracking-tighter bg-amber-50 text-amber-700">
-          Premium
-        </span>
-      )}
 
       {/* Mini-preview placeholder */}
       <div className="mt-4 aspect-video rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
@@ -71,7 +64,7 @@ export function TemplateCard({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            style={{ color: isPremium ? "#f59e0b" : "#0f766e" }}
+            style={{ color: "#0f766e" }}
           >
             <path
               strokeLinecap="round"

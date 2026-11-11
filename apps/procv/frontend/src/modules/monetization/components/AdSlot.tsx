@@ -15,8 +15,8 @@ export function AdSlot({ placement, slot, className = "" }: AdSlotProps) {
   const { can } = useEntitlements();
   const shouldShowAds = !can("platform_no_ads");
 
-  // Premium users (and admins) have the no-ads entitlement. Keep hooks unconditional,
-  // but do not load the AdSense script or enqueue an ad request for those users.
+  // No user-facing plan grants ad-free access. Consent and AdSense configuration
+  // continue to control script loading through the shared hooks.
   useAdSenseScript(shouldShowAds ? client : undefined);
   useAdSensePush(shouldShowAds && Boolean(slot));
 

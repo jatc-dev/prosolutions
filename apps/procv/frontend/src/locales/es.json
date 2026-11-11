@@ -92,7 +92,7 @@
     "signIn": "Iniciar Sesión",
     "welcomeBack": "¡Bienvenido de vuelta!",
     "getStarted": "Comienza con tu CV profesional",
-    "registerDescription": "Únete a ProCV y crea currículums profesionales que destaquen. Regístrate ahora y accede a todas las funcionalidades premium.",
+    "registerDescription": "Únete a ProCV y crea currículums profesionales con todas las herramientas disponibles.",
     "createAccount": "Crear Cuenta",
     "loginSubtitle": "Inicia sesión en tu cuenta",
     "registerSubtitle": "Únete a miles de profesionales",
@@ -138,16 +138,16 @@
         "description": "Crea tu cuenta en segundos y comienza a crear tu CV profesional."
       },
       "templates": {
-        "title": "Plantillas exclusivas",
-        "description": "Accede a plantillas premium una vez que te registres."
+        "title": "Plantillas profesionales",
+        "description": "Explora y utiliza todas las plantillas de ProCV."
       },
       "cloud": {
         "title": "Sincronización en la nube",
         "description": "Guarda y accede a tus CVs desde cualquier dispositivo."
       },
       "support": {
-        "title": "Soporte prioritario",
-        "description": "Los usuarios registrados reciben asistencia técnica preferente."
+        "title": "Ayuda técnica",
+        "description": "Puedes consultar las opciones de ayuda técnica disponibles."
       },
       "updates": {
         "title": "Actualizaciones anticipadas",
@@ -484,8 +484,7 @@
     "templateSelector": {
       "title": "Selector de plantilla",
       "free": "Gratis",
-      "lockedHint": "Solo con cuenta",
-      "proLabel": "Pro"
+      "lockedHint": "Solo con cuenta"
     },
     "guest": {
       "mode": "Estás en el modo de invitado. Tus cambios se guardan solo en este navegador.",
