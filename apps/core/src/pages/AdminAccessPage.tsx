@@ -5,10 +5,31 @@ import { identityAuthApiUrl } from "../identityApi";
 import { ProFooter, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { saveUserPreferences } from "../preferencesApi";
+import {
+  accessFailureForStatus,
+  errorMessage,
+  expireAdminSession,
+  hasPermission,
+  performModuleMutation,
+  requestAdminUsers,
+  retryUnauthorizedResponse,
+  SessionExpiredError,
+  USER_MANAGE_PERMISSION,
+  USER_READ_PERMISSION,
+} from "./adminAccessPolicy";
+import type { AdminAccessState } from "./adminAccessPolicy";
+import {
+  AdminAccessDeniedView,
+  AdminAccessErrorView,
+  AdminAccessHeader,
+  AdminAccessLoadingView,
+  AdminAccessModuleControl,
+} from "./adminAccessViews";
 
 const AUTH_API = identityAuthApiUrl();
 const IDENTITY_API = AUTH_API.replace(/\/api\/auth$/i, "");
 const ACCESS_TOKEN_KEY = "pro_identity_token";
+const CSRF_TOKEN_KEY = "pro_identity_csrf_token";
 
 const MODULES = [
   { key: "PROCV", label: "ProCV", description: "CV y análisis ATS" },
@@ -35,8 +56,6 @@ interface UserListResponse {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
-let csrfToken: string | null = null;
-
 async function accessToken(forceRefresh = false): Promise<string> {
   const cached = sessionStorage.getItem(ACCESS_TOKEN_KEY);
   if (cached && !forceRefresh) return cached;
@@ -46,7 +65,9 @@ async function accessToken(forceRefresh = false): Promise<string> {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
-  if (!response.ok) throw new Error("La sesión expiró. Inicia sesión de nuevo.");
+  if (response.status === 401) throw new SessionExpiredError();
+  if (response.status === 403) throw new Error("No tienes autorización para renovar esta sesión.");
+  if (!response.ok) throw new Error(`No se pudo renovar la sesión (${response.status}).`);
   const result = await response.json();
   if (!result?.accessToken) throw new Error("Identity no devolvió un token de acceso.");
   sessionStorage.setItem(ACCESS_TOKEN_KEY, result.accessToken);
@@ -54,13 +75,14 @@ async function accessToken(forceRefresh = false): Promise<string> {
 }
 
 async function getCsrfToken(forceRefresh = false): Promise<string> {
-  if (csrfToken && !forceRefresh) return csrfToken;
+  const cached = sessionStorage.getItem(CSRF_TOKEN_KEY);
+  if (cached && !forceRefresh) return cached;
   const response = await fetch(`${IDENTITY_API}/api/csrf-token`, { credentials: "include" });
   if (!response.ok) throw new Error("No se pudo iniciar la protección CSRF.");
   const result = await response.json();
   if (!result?.csrfToken) throw new Error("Identity no devolvió el token CSRF.");
   const token = result.csrfToken as string;
-  csrfToken = token;
+  sessionStorage.setItem(CSRF_TOKEN_KEY, token);
   return token;
 }
 
@@ -83,16 +105,24 @@ async function identityFetch(path: string, init: RequestInit = {}): Promise<Resp
     });
   };
 
-  let response = await send(token, csrf);
-  if (response.status === 401) {
-    token = await accessToken(true);
-    response = await send(token, csrf);
-  }
-  if (response.status === 403 && mutating) {
+  let refreshedToken = token;
+  let response = await retryUnauthorizedResponse(
+    (afterRefresh) => {
+      if (afterRefresh) token = refreshedToken;
+      return send(token, csrf);
+    },
+    async () => { refreshedToken = await accessToken(true); },
+  );
+  if (response.status === 403 && mutating && await isCsrfFailure(response)) {
     csrf = await getCsrfToken(true);
     response = await send(token, csrf);
   }
   return response;
+}
+
+async function isCsrfFailure(response: Response): Promise<boolean> {
+  const payload = await response.clone().json().catch(() => ({}));
+  return typeof payload?.message === "string" && /csrf token (missing|mismatch)/i.test(payload.message);
 }
 
 async function responseError(response: Response): Promise<Error> {
@@ -115,46 +145,88 @@ export function AdminAccessPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [canManageUsers, setCanManageUsers] = useState(false);
+  const [accessState, setAccessState] = useState<AdminAccessState>("loading");
+
+  const expireSession = useCallback(() => {
+    sessionStorage.removeItem(CSRF_TOKEN_KEY);
+    expireAdminSession(
+      () => sessionStorage.removeItem(ACCESS_TOKEN_KEY),
+      () => navigate("/login", { replace: true }),
+    );
+  }, [navigate]);
 
   const loadUsers = useCallback(async (search = activeQuery, requestedPage = 1) => {
     setLoading(true);
     setError(null);
+    setAccessState("loading");
     try {
       const meResponse = await identityFetch("/api/auth/me");
+      const meFailure = accessFailureForStatus(meResponse.status);
+      if (meFailure === "session-expired") {
+        expireSession();
+        return;
+      }
+      if (meFailure === "denied") {
+        setCanManageUsers(false);
+        setAccessState("denied");
+        return;
+      }
       if (!meResponse.ok) throw await responseError(meResponse);
       const me = await meResponse.json();
       if (me?.user) setProfile({ name: me.user.name, email: me.user.email });
       const permissions = Array.isArray(me?.user?.permissions) ? me.user.permissions as string[] : [];
-      if (!permissions.includes("identity.users.read")) {
+      if (!hasPermission(permissions, USER_READ_PERMISSION)) {
         setUsers([]);
         setTotal(0);
-        setError("Tu cuenta no tiene permiso para consultar el directorio de usuarios.");
+        setCanManageUsers(false);
+        setAccessState("denied");
         return;
       }
-      setCanManageUsers(permissions.includes("identity.users.manage"));
+      setCanManageUsers(hasPermission(permissions, USER_MANAGE_PERMISSION));
 
       const params = new URLSearchParams({ page: String(requestedPage), limit: "50" });
       if (search.trim()) params.set("search", search.trim());
-      const response = await identityFetch(`/api/admin/users?${params.toString()}`);
+      const response = await requestAdminUsers(permissions, params.toString(), identityFetch);
+      if (!response) {
+        setCanManageUsers(false);
+        setAccessState("denied");
+        return;
+      }
+      const usersFailure = accessFailureForStatus(response.status);
+      if (usersFailure === "session-expired") {
+        expireSession();
+        return;
+      }
+      if (usersFailure === "denied") {
+        setCanManageUsers(false);
+        setAccessState("denied");
+        return;
+      }
       if (!response.ok) throw await responseError(response);
       const result = (await response.json()) as UserListResponse;
       setUsers(result.users);
       setTotal(result.pagination.total);
       setCurrentPage(result.pagination.page);
       setPages(Math.max(1, result.pagination.pages));
+      setAccessState("authorized");
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "No se pudieron cargar las cuentas.";
-      setError(message);
-      if (message.toLowerCase().includes("sesión expiró")) {
-        sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-        navigate("/login", { replace: true });
+      if (reason instanceof SessionExpiredError) {
+        expireSession();
+        return;
       }
+      const message = errorMessage(reason, "No se pudieron cargar las cuentas.");
+      setError(message);
+      setAccessState("error");
     } finally {
       setLoading(false);
     }
-  }, [activeQuery, navigate]);
+  }, [activeQuery, expireSession]);
 
   useEffect(() => { void loadUsers(activeQuery, currentPage); }, [loadUsers, activeQuery, currentPage]);
+
+  if (accessState === "denied") return <AdminAccessDeniedView />;
+  if (accessState === "error") return <AdminAccessErrorView message={error || "No se pudieron cargar las cuentas."} onRetry={() => void loadUsers(activeQuery, currentPage)} />;
+  if (accessState === "loading") return <AdminAccessLoadingView />;
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -168,15 +240,30 @@ export function AdminAccessPage() {
     setError(null);
     setNotice(null);
     try {
-      const response = await identityFetch(`/api/modules/${enabled ? "grant" : "revoke"}`, {
-        method: "POST",
-        body: JSON.stringify({ userId: user.id, module }),
-      });
-      if (!response.ok) throw await responseError(response);
-      setNotice(`${MODULES.find((item) => item.key === module)?.label}: permiso ${enabled ? "activado" : "revocado"} para ${user.email}.`);
-      await loadUsers(activeQuery, currentPage);
+      const result = await performModuleMutation(
+        () => identityFetch(`/api/modules/${enabled ? "grant" : "revoke"}`, {
+          method: "POST",
+          body: JSON.stringify({ userId: user.id, module }),
+        }),
+        async () => {
+          setNotice(`${MODULES.find((item) => item.key === module)?.label}: permiso ${enabled ? "activado" : "revocado"} para ${user.email}.`);
+          await loadUsers(activeQuery, currentPage);
+        },
+      );
+      if (result.kind === "session-expired") {
+        expireSession();
+        return;
+      }
+      if (result.kind === "denied") {
+        throw new Error("No tienes permiso para gestionar accesos de módulos.");
+      }
+      if (result.kind === "error") throw await responseError(result.response);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "No se pudo actualizar el permiso.");
+      if (reason instanceof SessionExpiredError) {
+        expireSession();
+        return;
+      }
+      setError(errorMessage(reason, "No se pudo actualizar el permiso."));
     } finally {
       setBusyKey(null);
     }
@@ -189,11 +276,7 @@ export function AdminAccessPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-brand-600 dark:text-brand-300">ProIdentity · Administración</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">Cuentas y permisos de módulos</h1>
-            <p className="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">Gestiona el acceso central de ProCV, ProJobs y los módulos futuros. Los permisos se guardan en ProIdentity; cada API los vuelve a validar.</p>
-          </div>
+          <AdminAccessHeader />
           <Link to="/dashboard" className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-white dark:border-slate-700 dark:hover:bg-slate-900">Volver al portal</Link>
         </div>
 
@@ -236,14 +319,16 @@ export function AdminAccessPage() {
                   const checked = user.modules.includes(module.key);
                   const key = `${user.id}:${module.key}`;
                   return (
-                    <label key={module.key} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-brand-300 bg-brand-50 dark:border-brand-800 dark:bg-brand-950/30" : "border-slate-200 dark:border-slate-800"} ${busyKey === key ? "opacity-60" : ""}`}>
-                      <input type="checkbox" checked={checked} disabled={busyKey !== null || !user.isActive || !canManageUsers} onChange={(event) => void toggleModule(user, module.key, event.target.checked)} className="mt-1 h-4 w-4 accent-brand-600" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold">{module.label}</span>
-                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{module.description}</span>
-                        <span className="mt-1 block text-xs font-medium">{checked ? "Acceso habilitado" : "Sin acceso"}{!canManageUsers ? " · Solo lectura" : ""}</span>
-                      </span>
-                    </label>
+                    <AdminAccessModuleControl
+                      key={module.key}
+                      label={module.label}
+                      description={module.description}
+                      checked={checked}
+                      isActive={user.isActive}
+                      canManage={canManageUsers}
+                      busy={busyKey === key}
+                      onChange={(enabled) => void toggleModule(user, module.key, enabled)}
+                    />
                   );
                 })}
               </div>
