@@ -6,7 +6,7 @@
 
 ## 1. Modelo operativo confirmado
 
-- Responsable previsto: **Alejandro Torres**, persona natural domiciliada en Colombia. La identidad legal completa indicada por el titular queda incorporada para la preparación de los documentos; su publicación final queda condicionada a verificar los demás datos de contacto y el texto jurídico.
+- Responsable confirmado: **Alejandro Torres**, persona natural domiciliada en Colombia. No existe una sociedad titular declarada para ProSolutions; JATC.DEV se presenta únicamente como marca comercial.
 - Marca comercial utilizada: JATC.DEV (no se presentará como sociedad ni como marca registrada).
 - Plataforma: ProSolutions, integrada por Core, ProIdentity, ProCV y ProJobs.
 - Modelo para usuarios: gratuito.
