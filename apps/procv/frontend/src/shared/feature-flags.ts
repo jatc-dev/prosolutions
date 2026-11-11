@@ -3,7 +3,7 @@ export interface Entitlements {
   can: (featureKey: string) => boolean;
 }
 
-const AVAILABLE_FEATURES = new Set(["projobs_job_alerts", "procv_templates_all"]);
+const AVAILABLE_FEATURES = new Set(["projobs_job_alerts"]);
 
 export function useEntitlements(): Entitlements {
   const can = (featureKey: string) => AVAILABLE_FEATURES.has(featureKey);
