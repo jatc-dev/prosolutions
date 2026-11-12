@@ -10,6 +10,7 @@ import { useCVEditorStore } from "../../../../shared/stores/cvEditorStore";
 import { useAuthStore } from "../../../../shared/stores/authStore";
 import { CVData, SectionType, SkillItem } from "../../../../shared/types";
 import { EditorTabs } from "./EditorTabs";
+import { changeEditorSection } from "./navigationValidation";
 import { TemplateRenderer, CVData as RendererCVData } from "../TemplateRenderer";
 import { WithCustomStyles } from "../withCustomStyles";
 import { CURATED_CV_TEMPLATES } from "../../../../shared/utils/templateCatalog";
@@ -362,6 +363,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     saveCV,
     loadCV,
     resetCV,
+    validateField,
     validateSection,
     getSectionCompletion,
     loadTemplates,
@@ -433,15 +435,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
   // Handle section change with validation
   const handleSectionChange = useCallback((section: SectionType) => {
-    // Validate current section before switching
-    const isCurrentValid = validateSection(activeSection);
-
-    if (!isCurrentValid) {
+    const changed = changeEditorSection(activeSection, section, validateSection, setActiveSection);
+    if (!changed) {
       toast.error(t('editor.validationBeforeChange', { section: activeSection }));
-      return;
     }
-
-    setActiveSection(section);
   }, [activeSection, validateSection, setActiveSection, t]);
 
   // Handle manual save
@@ -735,6 +732,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             <PersonalSection
               data={cvData.personal}
               onChange={updatePersonal}
+              onValidateField={validateField}
               {...commonProps}
             />
           );

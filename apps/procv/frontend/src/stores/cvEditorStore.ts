@@ -50,6 +50,7 @@ interface CVEditorState {
   // Validation
   validateField: (field: string, value: any) => void;
   validateSection: (section: SectionType) => boolean;
+  validateCV: () => boolean;
   getSectionCompletion: (section: SectionType) => boolean;
 
   // Persistence
@@ -380,6 +381,31 @@ const validationRules: Record<string, (value: any) => string | null> = {
   },
 };
 
+const getFieldValue = (root: unknown, path: string[]): unknown =>
+  path.reduce<unknown>((value, segment) => {
+    if (segment === '*') return value;
+    if (value === null || typeof value !== 'object') return undefined;
+    return (value as Record<string, unknown>)[segment];
+  }, root);
+
+const expandValidationPath = (root: unknown, path: string[]): Array<{ path: string; value: unknown }> => {
+  const visit = (value: unknown, remaining: string[], resolved: string[]): Array<{ path: string; value: unknown }> => {
+    if (remaining.length === 0) return [{ path: resolved.join('.'), value }];
+
+    const [segment, ...rest] = remaining;
+    if (segment === '*') {
+      if (!Array.isArray(value)) return [];
+      return value.flatMap((item, index) => visit(item, rest, [...resolved, String(index)]));
+    }
+
+    if (value === null || typeof value !== 'object') return [];
+    const child = (value as Record<string, unknown>)[segment];
+    return visit(child, rest, [...resolved, segment]);
+  };
+
+  return visit(root, path, []);
+};
+
 export const useCVEditorStore = create<CVEditorState>()(
   devtools(
     persist(
@@ -484,70 +510,85 @@ export const useCVEditorStore = create<CVEditorState>()(
         // Validation
         validateField: (field, value) => {
           const rule = validationRules[field] || validationRules[field.replace(/\.\d+\./, '.*.')];
-          if (rule) {
-            const error = rule(value);
-            set((state) => ({
-              validationErrors: {
-                ...state.validationErrors,
-                [field]: error ? [error] : [],
-              },
-              touchedFields: new Set([...state.touchedFields, field]),
-            }));
+          if (!rule) return;
+
+          let error: string | null;
+          try {
+            error = rule(value);
+          } catch {
+            error = 'No se pudo validar este campo';
           }
+
+          set((state) => {
+            const validationErrors = { ...state.validationErrors };
+            if (error) validationErrors[field] = [error];
+            else delete validationErrors[field];
+
+            return {
+              validationErrors,
+              touchedFields: new Set([...state.touchedFields, field]),
+            };
+          });
         },
 
         validateSection: (section) => {
-          const state = get();
-          const sectionData = state.cvData[section as keyof CVData];
-          let isValid = true;
+          const sectionPrefix = `${section}.`;
+          const { cvData } = get();
+          const nextSectionErrors: ValidationErrors = {};
+          const sectionTouched = new Set<string>();
 
-          // Validate all fields in the section
-          Object.keys(validationRules).forEach(field => {
-            if (field.startsWith(`${section}.`)) {
-              const rule = validationRules[field];
-              let value;
+          try {
+            Object.entries(validationRules).forEach(([rulePath, rule]) => {
+              if (!rulePath.startsWith(sectionPrefix)) return;
 
-              if (field.includes('.*.')) {
-                // Handle array fields
-                const arrayField = field.split('.*.')[0];
-                const valueField = field.split('.*.')[1];
-                const array = (sectionData as any[]) || [];
-                array.forEach((item, index) => {
-                  const itemValue = item[valueField];
-                  if (itemValue !== undefined) {
-                    const error = rule(itemValue);
-                    if (error) {
-                      isValid = false;
-                      set((state) => ({
-                        validationErrors: {
-                          ...state.validationErrors,
-                          [`${arrayField}.${index}.${valueField}`]: [error],
-                        },
-                      }));
-                    }
-                  }
-                });
-              } else {
-                // Handle simple fields
-                const fieldPath = field.split('.').slice(1).join('.');
-                value = (sectionData as any)?.[fieldPath];
-                if (value !== undefined) {
-                  const error = rule(value);
-                  if (error) {
-                    isValid = false;
-                    set((state) => ({
-                      validationErrors: {
-                        ...state.validationErrors,
-                        [field]: [error],
-                      },
-                    }));
-                  }
-                }
+              const dataPath = rulePath.slice(sectionPrefix.length).split('.');
+              const matches = expandValidationPath(cvData[section as keyof CVData], dataPath);
+              if (!rulePath.includes('*') && matches.length === 0) {
+                matches.push({ path: dataPath.join('.'), value: getFieldValue(cvData[section as keyof CVData], dataPath) });
               }
-            }
+
+              matches.forEach(({ path, value }) => {
+                const field = `${section}.${path}`;
+                sectionTouched.add(field);
+                const error = rule(value);
+                if (error) nextSectionErrors[field] = [error];
+              });
+            });
+          } catch {
+            return false;
+          }
+
+          set((state) => {
+            const validationErrors = Object.fromEntries(
+              Object.entries(state.validationErrors).filter(([field]) => !field.startsWith(sectionPrefix)),
+            );
+
+            return {
+              validationErrors: { ...validationErrors, ...nextSectionErrors },
+              touchedFields: new Set([
+                ...[...state.touchedFields].filter((field) => !field.startsWith(sectionPrefix)),
+                ...sectionTouched,
+              ]),
+            };
           });
 
-          return isValid;
+          return Object.keys(nextSectionErrors).length === 0;
+        },
+
+        validateCV: () => {
+          const state = get();
+          const sections: SectionType[] = ['personal', 'experience', 'education', 'skills', 'languages', 'certificates', 'links', 'application'];
+          let allValid = true;
+          sections.forEach((section) => {
+            try {
+              if (!state.validateSection(section)) {
+                allValid = false;
+              }
+            } catch {
+              allValid = false;
+            }
+          });
+          return allValid;
         },
 
         getSectionCompletion: (section) => {
@@ -584,6 +625,13 @@ export const useCVEditorStore = create<CVEditorState>()(
         // Persistence
         saveCV: async () => {
           const state = get();
+
+          // Validate before saving — reject if any section has validation errors
+          if (!state.validateCV()) {
+            set({ isSaving: false });
+            throw new Error('VALIDATION_ERROR');
+          }
+
           set({ isSaving: true });
 
           try {
