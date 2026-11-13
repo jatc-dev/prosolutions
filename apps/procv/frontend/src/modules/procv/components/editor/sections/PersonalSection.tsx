@@ -13,6 +13,7 @@ import {
 interface PersonalSectionProps {
   data: PersonalData;
   onChange: (data: PersonalData) => void;
+  onValidateField?: (field: string, value: unknown) => void;
   errors?: ValidationErrors;
   isLoading?: boolean;
 }
@@ -106,6 +107,7 @@ const calculateAge = (birthDate?: string): string => {
 export const PersonalSection: React.FC<PersonalSectionProps> = ({
   data,
   onChange,
+  onValidateField,
   errors = {},
   isLoading = false,
 }) => {
@@ -158,6 +160,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   const updateField = (field: keyof PersonalData, value: any) => {
     try {
       onChange({ ...data, [field]: value });
+      onValidateField?.(`personal.${field}`, value);
     } catch (err) {
       toast.error(t('editor.personal.alerts.updateError', 'Error actualizando el campo'));
     }
@@ -197,6 +200,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   };
 
   const updateEmail = (id: string, updates: Partial<ContactItem>) => {
+    const emailIndex = data.emails.findIndex((email) => email.id === id);
     const updatedEmails = data.emails.map((email) => {
       if (email.id !== id) {
         if (updates.isPrimary) {
@@ -208,6 +212,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       return { ...email, ...updates };
     });
     updateField('emails', updatedEmails);
+    if (updates.value !== undefined) onValidateField?.(`personal.emails.${emailIndex}.value`, updates.value);
   };
 
   const updateEmailType = (id: string, type: ContactItem['type']) => {
@@ -238,6 +243,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   };
 
   const updatePhone = (id: string, updates: Partial<PhoneItem>) => {
+    const phoneIndex = data.phones.findIndex((phone) => phone.id === id);
     const updatedPhones = data.phones.map((phone) => {
       if (phone.id !== id) {
         if (updates.isPrimary) {
@@ -249,6 +255,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       return { ...phone, ...updates };
     });
     updateField('phones', updatedPhones);
+    if (updates.number !== undefined && phoneIndex >= 0) {
+      onValidateField?.(`personal.phones.${phoneIndex}.number`, updates.number);
+    }
   };
 
   const updatePhoneType = (id: string, type: PhoneItem['type']) => {

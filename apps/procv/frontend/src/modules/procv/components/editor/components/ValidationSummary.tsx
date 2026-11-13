@@ -11,8 +11,9 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
   section,
 }) => {
   // Filter errors for current section
-  const sectionErrors = Object.entries(errors).filter(([key]) =>
-    key.startsWith(`${section}.`) || key.startsWith(`${section}[`)
+  const sectionErrors = Object.entries(errors).filter(([key, error]) =>
+    (key.startsWith(`${section}.`) || key.startsWith(`${section}[`)) &&
+    (Array.isArray(error) ? error.some((message) => Boolean(message?.trim())) : Boolean(error))
   );
 
   if (sectionErrors.length === 0) {
@@ -22,7 +23,7 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
   const getErrorMessage = (field: string) => {
     const error = errors[field];
     if (Array.isArray(error)) {
-      return error[0];
+      return error.find((message) => Boolean(message?.trim()));
     }
     return error;
   };
