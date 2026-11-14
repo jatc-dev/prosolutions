@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ProHeader } from "@prosolutions/ui";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../stores/authStore";
-import { CompleteCVEditor } from "../components/editor/CompleteCVEditor";
+import { CompleteCVEditor } from "../modules/procv/components/editor/CompleteCVEditor";
 
 const IDENTITY_URL =
   import.meta.env.VITE_IDENTITY_URL ||
