@@ -1,7 +1,7 @@
 export declare const APP_URLS: {
     readonly core: string;
     readonly procv: string;
-    readonly procvLogin: `${string}/login`;
+    readonly procvLogin: `${string}/dashboard`;
     readonly projobs: string;
 };
 export declare const JATC_URL: string;

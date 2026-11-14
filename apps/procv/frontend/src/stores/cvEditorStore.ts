@@ -888,6 +888,12 @@ export const useCVEditorStore = create<CVEditorState>()(
           lastSaved: state.lastSaved,
           isGuest: state.isGuest,
         }),
+        onRehydrateStorage: () => (rawState) => {
+          if (rawState) {
+            const parsed = rawState.lastSaved ? new Date(rawState.lastSaved) : null;
+            rawState.lastSaved = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+          }
+        },
       }
     ),
     { name: 'cv-editor' }

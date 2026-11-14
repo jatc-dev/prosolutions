@@ -1,30 +1,36 @@
-name: Core, ProCV and ProJobs Build Validation
+name: ProSolutions Monorepo CI
 
 on:
   push:
     branches:
-      - fix/qa-session-block-1
-    paths:
-      - "apps/core/**"
-      - "apps/projobs/**"
-      - "apps/procv/backend/**"
-      - "apps/procv/frontend/**"
-      - "packages/ui/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/core-build.yml"
-  pull_request:
-    branches:
+      - main
       - qa
     paths:
       - "apps/core/**"
       - "apps/projobs/**"
       - "apps/procv/backend/**"
       - "apps/procv/frontend/**"
+      - "apps/identity/**"
       - "packages/ui/**"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/core-build.yml"
+      - ".github/workflows/postgres-migration-readiness.yml"
+  pull_request:
+    branches:
+      - main
+      - qa
+    paths:
+      - "apps/core/**"
+      - "apps/projobs/**"
+      - "apps/procv/backend/**"
+      - "apps/procv/frontend/**"
+      - "apps/identity/**"
+      - "packages/ui/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/core-build.yml"
+      - ".github/workflows/postgres-migration-readiness.yml"
 
 permissions:
   contents: read
@@ -41,12 +47,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Install workspace dependencies
-        run: npm ci
+      - name: Install Core workspace dependencies
+        run: npm ci --include=dev --workspace=apps/core --include-workspace-root
       - name: Validate ProJobs auth client syntax
         run: node --check apps/projobs/auth.js
       - name: Build Core and shared UI
-        run: npm run build:core
+        run: npm run build --workspace=apps/core
         env:
           VITE_ADSENSE_CLIENT: ca-pub-3956322934366702
       - name: Verify published AdSense assets
@@ -132,10 +138,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Install workspace dependencies
-        run: npm ci
-      - name: Build ProCV frontend and shared UI
-        run: npm run build --prefix apps/procv/frontend
+      - name: Install ProCV frontend workspace dependencies
+        run: npm ci --include=dev --workspace=apps/procv/frontend --include-workspace-root
+      - name: Test ProCV frontend
+        run: npm test --workspace=apps/procv/frontend
+      - name: Build ProCV frontend
+        run: npm run build --workspace=apps/procv/frontend
 
 
   procv-backend-build:
@@ -149,11 +157,49 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Install workspace dependencies
-        run: npm ci
+      - name: Install ProCV backend workspace dependencies
+        run: npm ci --include=dev --workspace=apps/procv/backend --include-workspace-root
       - name: Generate ProCV Prisma client
         run: npx prisma generate --schema apps/procv/backend/prisma/schema.prisma
       - name: Build ProCV backend
         run: npm run build --workspace=procv-backend
       - name: Test ProCV module and administrative authorization
         run: npm test --workspace=procv-backend -- --runInBand tests/middleware/auth.test.ts tests/adminMiddleware.test.ts
+
+  identity:
+    name: Identity TypeScript build and regression tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: prosolutions_identity
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d prosolutions_identity"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prosolutions_identity?schema=public
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install Identity workspace dependencies
+        run: npm ci --include=dev --workspace=apps/identity --include-workspace-root
+      - name: Validate and apply all Identity migrations to a clean CI database
+        run: npx prisma migrate deploy --schema apps/identity/prisma/schema.prisma
+      - name: Generate Prisma client
+        run: npx prisma generate --schema apps/identity/prisma/schema.prisma
+      - name: Run Identity regression tests
+        run: npm run test:regression --workspace=proidentity
+      - name: Build Identity
+        run: npm run build --workspace=proidentity

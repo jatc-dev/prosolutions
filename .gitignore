@@ -48,3 +48,16 @@ __pycache__/
 
 # Supabase CLI
 supabase/.temp/
+
+# Additional local secrets
+.env.*
+!.env.example
+!.env.template
+
+*.pem
+*.key
+*.p12
+*.pfx
+
+secrets/
+credentials/

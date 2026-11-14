@@ -1,0 +1,12 @@
+.git
+**/.git
+**/node_modules
+**/dist
+!packages/ui/dist
+!packages/ui/dist/**
+**/coverage
+**/.cache
+**/.vite
+**/__pycache__
+**/.env
+**/.env.*
