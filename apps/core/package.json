@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:ui": "npm --prefix ../../packages/ui install --no-package-lock && npm --prefix ../../packages/ui run build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
     "test": "vitest run"

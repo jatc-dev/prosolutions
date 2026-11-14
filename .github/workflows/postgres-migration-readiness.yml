@@ -8,7 +8,7 @@ on:
       - "apps/procv/backend/prisma/**"
       - ".github/workflows/postgres-migration-readiness.yml"
   push:
-    branches: [main, qa, fix/qa-session-block-1]
+    branches: [main, qa]
     paths:
       - "apps/identity/prisma/**"
       - "apps/procv/backend/prisma/**"
