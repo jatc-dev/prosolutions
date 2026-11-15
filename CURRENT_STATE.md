@@ -157,3 +157,11 @@ No repo-level test command; run per workspace.
 - GitHub CI completed successfully for the published SHA, including Core, ProCV frontend, ProCV backend, ProJobs build, and Identity build/regression jobs: run `43669174324`.
 - No database migration, RLS change, secret, domain, infrastructure setting, or production data change was performed.
 - Deliberately excluded from this release: local-only Vite proxy changes, local startup script, development package script, audit/context documents until this release record, and unrelated ProJobs source/generated changes. ProJobs remains at its prior deployed SHA; ProJobs API was not deployed because it has AutoDeploy disabled.
+
+## 16. P0 session-loading hotfix prepared
+
+- Production incident: Core's `LandingPage` initializes `authLoading` to `true` and performs `/me` followed by `/refresh` with bare `fetch` calls. The published bundle contains no timeout (`AbortController` absent), so a stalled Identity/network request never settles and leaves `ProHeader` rendering `Checking session...` indefinitely.
+- Production configuration inspection confirmed Core's Render service uses branch `main`, root `apps/core/`, and does not define `VITE_IDENTITY_API_URL`; the compiled fallback is the correct `https://identity.prosolutions.page/api/auth`, so no infrastructure or secret change is required.
+- Prepared minimal fix in `apps/core/src/pages/LandingPage.tsx`: both session requests use a 10-second `AbortController` timeout, and `authLoading` is cleared unconditionally in `finally`. Timeout, 401, 429, and network failures therefore fall through the existing unauthenticated path and expose the login link without refresh loops.
+- Validation: Core TypeScript/Vite build passed; targeted ESLint passed; `git diff --check` passed. No production request, authentication write, database change, or deployment was performed.
+- Hotfix is prepared locally for review and has not been published.

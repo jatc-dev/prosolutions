@@ -104,3 +104,11 @@ The AI panel is inactive and has no visible editor entry point; its services wer
 - Render reports `live` for the published SHA on ProIdentity, ProSolutions/Core, ProCVBackEnd, and ProCVFrontEnd. Public health checks returned HTTP 200. GitHub CI run `43669174324` completed successfully.
 - ProJobs source/generated changes, local Vite proxy settings, local startup tooling, and the development-only package script were excluded because they are outside this release scope. ProJobs API was not deployed because AutoDeploy is disabled.
 - No migration, secret, domain, RLS, infrastructure, production-session, or production-data change was performed.
+
+## 14. P0 production session hotfix
+
+- Incident cause confirmed in the published Core bundle: `LandingPage.loadSession` used unbounded `fetch` calls for Identity `/me` and `/refresh`. If either request hung, `authLoading` stayed true and `ProHeader` remained on `Checking session...`; the existing 401/429/error branches could not run until the request settled.
+- Minimal fix prepared in `apps/core/src/pages/LandingPage.tsx`: a 10-second abort timeout wraps both session requests, and the `finally` block always sets `authLoading(false)`. Existing invalid-session behavior remains: token cleanup, unauthenticated state, and login link.
+- Render metadata confirmed Core production branch `main`, root `apps/core/`, and no `VITE_IDENTITY_API_URL`; the source fallback resolves to the correct production Identity API URL. No endpoint, cookie, CORS, secret, or infrastructure setting was changed.
+- Validation completed: Core build passed, targeted ESLint passed, and `git diff --check` passed. No production traffic or deployment was initiated.
+- Review required before publishing the hotfix.
