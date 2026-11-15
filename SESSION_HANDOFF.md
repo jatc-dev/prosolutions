@@ -120,3 +120,10 @@ The AI panel is inactive and has no visible editor entry point; its services wer
 - Existing behavior is preserved for invalid sessions and transient failures: the coordinator still handles 429 cooldowns, no refresh loop is added, and `AuthProvider`'s existing `finally` clears `loading` so guest/login access is reachable.
 - ProCV build, targeted lint, and `git diff --check` passed. No QA/production requests, writes, or deployment were performed.
 - Review both local hotfix commits before publishing: Core `0ff8674` and the ProCV follow-up commit to be created from this working tree.
+
+## 16. P0 release result
+
+- Core `0ff8674` and ProCV `068bafd` were integrated cleanly into production `main`.
+- Published SHA: `835e255bcc3638e03303131c106b0fe15decd91d`.
+- Render confirmed `live`: ProSolutions/Core, ProCV Frontend, and ProIdentity at `835e255`; ProCV Backend stayed `live` at `91b5533` because it had no code changes.
+- ProJobs was not touched. No functional tests or production writes were run, and no database, secret, cookie, CORS, domain, or infrastructure settings changed.

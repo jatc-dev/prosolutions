@@ -173,3 +173,10 @@ No repo-level test command; run per workspace.
 - `AuthProvider` already finalizes `loading` in `finally`; timeout, 401, 429, and network failures therefore reach that path and leave the user unauthenticated without clearing an existing valid session as a side effect of the timeout wrapper. Refresh single-flight and cooldown behavior remain unchanged.
 - Validation: ProCV frontend TypeScript/Vite build and targeted ESLint passed; `git diff --check` passed. No QA or production requests and no writes were performed.
 - Both Core and ProCV P0 fixes are local only and await review. No deployment was activated.
+
+## 18. P0 release completed
+
+- Integrated Core hotfix `0ff8674710fc4a9989f86e0f9ab3d9a15865a0ed` and ProCV hotfix `068bafd563bfb3bf7f541ba71d68951d3ab7b147` onto `origin/main` without conflicts, force-push, rollback, or history rewrite.
+- Published production SHA: `835e255bcc3638e03303131c106b0fe15decd91d`.
+- Render status: ProSolutions/Core, ProCV Frontend, and ProIdentity are `live` at `835e255`; ProCV Backend remains `live` at `91b5533` because the P0 changes do not affect its code.
+- No ProJobs service was modified or redeployed. No functional tests, production writes, database changes, secret changes, cookie/CORS changes, or infrastructure changes were performed.
