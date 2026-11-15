@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import React from "react";
 import { api } from "../services/api";
 import { identityAuthApiUrl } from "../lib/identityUrl";
-import { refreshAccessToken } from "../services/authRefresh";
+import { fetchWithTimeout, refreshAccessToken } from "../services/authRefresh";
 
 interface UserProfile {
   id: string;
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   refreshToken: async () => {
     const accessToken = await refreshAccessToken();
-    const meResponse = await fetch(IDENTITY_ME_URL, {
+    const meResponse = await fetchWithTimeout(IDENTITY_ME_URL, {
       method: "GET",
       credentials: "include",
       headers: { Authorization: `Bearer ${accessToken}` },

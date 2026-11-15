@@ -112,3 +112,11 @@ The AI panel is inactive and has no visible editor entry point; its services wer
 - Render metadata confirmed Core production branch `main`, root `apps/core/`, and no `VITE_IDENTITY_API_URL`; the source fallback resolves to the correct production Identity API URL. No endpoint, cookie, CORS, secret, or infrastructure setting was changed.
 - Validation completed: Core build passed, targeted ESLint passed, and `git diff --check` passed. No production traffic or deployment was initiated.
 - Review required before publishing the hotfix.
+
+## 15. ProCV P0 session hotfix
+
+- ProCV had the same root cause as Core: `AuthProvider` could remain in `loading: true` while the refresh or `/me` request was pending forever. The existing single-flight coordinator addressed concurrency, not hung network requests.
+- Prepared a shared 10-second timeout wrapper in `apps/procv/frontend/src/services/authRefresh.ts` and applied it to refresh and `/me` in `apps/procv/frontend/src/stores/authStore.tsx`.
+- Existing behavior is preserved for invalid sessions and transient failures: the coordinator still handles 429 cooldowns, no refresh loop is added, and `AuthProvider`'s existing `finally` clears `loading` so guest/login access is reachable.
+- ProCV build, targeted lint, and `git diff --check` passed. No QA/production requests, writes, or deployment were performed.
+- Review both local hotfix commits before publishing: Core `0ff8674` and the ProCV follow-up commit to be created from this working tree.

@@ -1,6 +1,18 @@
 import { identityAuthApiUrl } from "../lib/identityUrl";
 
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
+export const SESSION_REQUEST_TIMEOUT_MS = 10000;
+
+export async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), SESSION_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
 
 export class RefreshRateLimitedError extends Error {
   readonly retryAfterMs: number;
@@ -49,7 +61,7 @@ export function refreshAccessToken(): Promise<string> {
 
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const response = await fetch(`${IDENTITY_AUTH_URL}/refresh`, {
+      const response = await fetchWithTimeout(`${IDENTITY_AUTH_URL}/refresh`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

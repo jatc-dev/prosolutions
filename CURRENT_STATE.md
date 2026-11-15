@@ -165,3 +165,11 @@ No repo-level test command; run per workspace.
 - Prepared minimal fix in `apps/core/src/pages/LandingPage.tsx`: both session requests use a 10-second `AbortController` timeout, and `authLoading` is cleared unconditionally in `finally`. Timeout, 401, 429, and network failures therefore fall through the existing unauthenticated path and expose the login link without refresh loops.
 - Validation: Core TypeScript/Vite build passed; targeted ESLint passed; `git diff --check` passed. No production request, authentication write, database change, or deployment was performed.
 - Hotfix is prepared locally for review and has not been published.
+
+## 17. ProCV session-loading hotfix prepared
+
+- ProCV had the same unbounded-request defect: `AuthProvider` waited on the shared refresh coordinator and then `/api/auth/me`, but neither request had a timeout. The single-flight coordinator prevented duplicate refreshes but could not resolve a network promise that never settled.
+- Prepared the minimum fix in `apps/procv/frontend/src/services/authRefresh.ts` and `apps/procv/frontend/src/stores/authStore.tsx`: one shared 10-second `AbortController` wrapper now covers `/identity-api/api/auth/refresh` and `/identity-api/api/auth/me`.
+- `AuthProvider` already finalizes `loading` in `finally`; timeout, 401, 429, and network failures therefore reach that path and leave the user unauthenticated without clearing an existing valid session as a side effect of the timeout wrapper. Refresh single-flight and cooldown behavior remain unchanged.
+- Validation: ProCV frontend TypeScript/Vite build and targeted ESLint passed; `git diff --check` passed. No QA or production requests and no writes were performed.
+- Both Core and ProCV P0 fixes are local only and await review. No deployment was activated.
