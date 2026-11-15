@@ -3,9 +3,6 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { useTheme } from '@prosolutions/ui';
-import { LanguageSelector } from "../../../../shared/components/ui/LanguageSelector";
 import { useCVEditorStore } from "../../../../shared/stores/cvEditorStore";
 import { useAuthStore } from "../../../../shared/stores/authStore";
 import { CVData, SectionType, SkillItem } from "../../../../shared/types";
@@ -26,8 +23,10 @@ import {
 import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
 import { TemplateSelector } from "./components/TemplateSelector";
 import { BlockPalette, createEmptyItem } from "./components/DraggableBlock";
-import { AIPanel } from "./components/AIPanel";
 import { CustomizerPanel } from "./components/CustomizerPanel";
+import { EditorDisclosure } from "./components/EditorDisclosure";
+import { AIPanel } from "./components/AIPanel";
+import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 
 // Import all section components
 import { PersonalSection } from "./sections/PersonalSection";
@@ -40,7 +39,7 @@ import { LinksSection } from "./sections/LinksSection";
 import { EmploymentApplicationSection } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
-import { TemplateSuggestions, AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
+import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 
 // Import custom styles
 import "../../styles/cv-editor.css";
@@ -333,11 +332,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   className = '',
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const { toggle } = useTheme();
-  const { user, isAuthenticated } = useAuthStore((state) => ({
+  const { user, isAuthenticated, authLoading } = useAuthStore((state) => ({
     user: state.user,
     isAuthenticated: state.isAuthenticated,
+    authLoading: state.loading,
   }));
   const {
     // State
@@ -366,7 +364,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     validateField,
     validateSection,
     getSectionCompletion,
-    loadTemplates,
     setTemplate,
     setIsGuest,
   } = useCVEditorStore();
@@ -390,8 +387,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [pendingImportData, setPendingImportData] = useState<ParsedCvDraft | null>(null);
   const [pendingMergedData, setPendingMergedData] = useState<Partial<CVData> | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [showBlockPalette, setShowBlockPalette] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(false);
+  const showAIPanel = false;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -403,20 +399,21 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     })
   );
 
-  // Load CV data on mount
+  // Activate guest mode when there is no authenticated session and no cvId.
   useEffect(() => {
-    // Activate guest mode when there is no authenticated session and no cvId
     if (!isAuthenticated && !cvId) {
       setIsGuest(true);
     } else if (isAuthenticated && isGuest) {
       setIsGuest(false);
     }
+  }, [cvId, isAuthenticated, isGuest, setIsGuest]);
 
-    if (cvId) {
-      loadCV(cvId);
-    }
-    loadTemplates();
-  }, [cvId, loadCV, loadTemplates, isAuthenticated, isGuest, setIsGuest]);
+  useAuthenticatedCVLoader({
+    cvId,
+    authLoading,
+    isAuthenticated,
+    loadCV,
+  });
 
   // Auto-save functionality
   useEffect(() => {
@@ -845,7 +842,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         sensors={sensors}
         collisionDetection={closestCenter}
       >
-        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-gradient-to-br from-brand-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 ${showPreview ? "cv-editor-preview-open" : ""} ${className}`}>
+        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-ui-bg ${showPreview ? "cv-editor-preview-open" : ""} ${className}`}>
           <ImportReviewModal
             isOpen={importReviewOpen}
             fileName={pendingImportFileName}
@@ -860,51 +857,15 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
-              {/* Left: platform brand + module switcher (shared ProSolutions nav) */}
-              <Link to="/" className="shrink-0" aria-label={t("brand.platformAria", "ProSolutions home")}>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center dark:bg-brand-950">
-                    <EditorBrandGlyph />
-                  </div>
-                  <div>
-                    <h1 className="text-sm font-bold text-gray-900 dark:text-slate-100">
-                      <span className="text-procv-600 dark:text-procv-300">{t("procv.name", "ProCV")}</span>
-                      <span className="ml-2 font-normal text-gray-600 dark:text-slate-300">- {cvData.title}</span>
-                    </h1>
-                  </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
+                  <EditorBrandGlyph />
                 </div>
-              </Link>
-
-              <nav aria-label={t("shell.modules", "Modules")} className="flex items-center gap-1">
-                <Link
-                  to="/procv/editor"
-                  aria-current="page"
-                  className="inline-flex min-h-9 items-center rounded-lg bg-procv-600 px-2.5 py-1.5 text-xs font-bold text-white"
-                >
-                  {t("procv.name", "ProCV")}
-                </Link>
-                <Link
-                  to="/projobs"
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-projobs-50 hover:text-projobs-700 dark:text-slate-300 dark:hover:bg-projobs-950/40 dark:hover:text-projobs-300"
-                >
-                  {t("projobs.name", "ProJobs")}
-                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
-                    {t("shell.beta", "Beta")}
-                  </span>
-                </Link>
-                <Link
-                  to="/"
-                  className="hidden min-h-9 items-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 md:inline-flex"
-                >
-                  {t("shell.platformHome", "Plataforma")}
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-600 dark:hover:bg-slate-700 dark:hover:text-white"
-                >
-                  {t("navigation.dashboardShort", "Dashboard")}
-                </Link>
-              </nav>
+                <h1 className="truncate text-sm font-bold text-gray-900 dark:text-slate-100">
+                  <span className="text-procv-600 dark:text-procv-300">{t("procv.name", "ProCV")}</span>
+                  <span className="ml-2 font-normal text-gray-600 dark:text-slate-300">- {cvData.title}</span>
+                </h1>
+              </div>
 
               <AutoSaveIndicator
                 isSaving={isSaving}
@@ -913,18 +874,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
 
             </div>
-
-              <section className="w-full min-w-0" aria-label={t("editor.templateSelector.title", "Selector de plantilla")}>
-                <div className="mb-1 flex items-center gap-2 sm:mb-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t("editor.templateSelector.title", "Plantilla")}</span>
-                  <span className="hidden text-[10px] text-slate-400 dark:text-slate-500 lg:inline">{t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}</span>
-                </div>
-                <TemplateSelector
-                  templates={CURATED_CV_TEMPLATES}
-                  currentTemplate={cvData.template}
-                  onTemplateSelect={setTemplate}
-                />
-              </section>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-2">
               <input
@@ -1035,27 +984,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={toggle}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-                  aria-label={theme === "dark" ? t("theme.light", "Light") : t("theme.dark", "Dark")}
-                  title={theme === "dark" ? t("theme.light", "Light") : t("theme.dark", "Dark")}
-                >
-                  {theme === "dark" ? (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                  )}
-                  <span className="hidden text-sm font-medium sm:inline">
-                    {theme === "dark" ? t("theme.light", "Light") : t("theme.dark", "Dark")}
-                  </span>
-                </button>
-                <LanguageSelector />
               </div>
             </div>
         </div>
@@ -1077,6 +1005,19 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             style={{ width: showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
             <div className="p-4 sm:p-6">
+              <EditorDisclosure
+                storageKey="procv.editor.template-selector"
+                title={t("editor.templateSelector.title", "Selector de plantilla")}
+                description={t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}
+              >
+                <TemplateSelector
+                  templates={CURATED_CV_TEMPLATES}
+                  currentTemplate={cvData.template}
+                  onTemplateSelect={setTemplate}
+                />
+              </EditorDisclosure>
+              <div className="h-4" />
+              <EditorDisclosure storageKey="procv.editor.ats" title={t("editor.ats.title", "ATS Optimizer")} description={t("editor.ats.analyzeAgainstVacancy", "Analiza el ajuste contra una vacante")}>
               <ATSOptimizationPanel
                 jobDescription={jobDescription}
                 onJobDescriptionChange={setJobDescription}
@@ -1091,40 +1032,29 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 history={atsHistory}
                 comparison={atsComparison}
               />
-              <div className="mt-4">
+              </EditorDisclosure>
+              <EditorDisclosure storageKey="procv.editor.customizer" title={t("customizer.title", "Personalizar plantilla")} description={t("editor.customizer.hint", "Ajusta tipografía, color y distribución")}>
                 <CustomizerPanel
                   settings={cvData.settings || {}}
                   onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
                 />
-              </div>
+              </EditorDisclosure>
 
 
 
-              {/* Block Palette - Drag & Drop style block addition */}
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowBlockPalette(!showBlockPalette)}
-                  className="inline-flex items-center rounded-md border border-emerald-300 bg-white px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:border-emerald-700 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  {t('editor.block.paletteToggle', '+Añadir bloque')}
-                </button>
-              </div>
-
-              {showBlockPalette && (
-                <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20">
-                  <BlockPalette onAdd={handleAddBlock} />
-                </div>
-              )}
+              <EditorDisclosure
+                storageKey="procv.editor.blocks"
+                title={t('editor.block.paletteToggle', 'Añadir bloque')}
+                description={t('editor.block.paletteDescription', 'Agrega una sección sin perder tu progreso')}
+              >
+                <BlockPalette onAdd={handleAddBlock} />
+              </EditorDisclosure>
 
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => setShowAIPanel(!showAIPanel)}
-                  className="inline-flex items-center rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:border-blue-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-blue-950/40"
+                  onClick={() => undefined}
+                  className="hidden"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 6.364m-.707 7.507a4 4 0 11-5.656-5.656 4 4 0 015.656 5.656m-5.656-5.656a4 4 0 10-5.656 5.656 4 4 0 005.656-5.656" />
@@ -1159,9 +1089,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 </div>
               )}
 
-              {/* Template Suggestions */}
-              <TemplateSuggestions section={activeSection} />
-
+              <EditorDisclosure
+                storageKey="procv.editor.form"
+                title={t("editor.form.title", "Contenido del currículum")}
+                description={t("editor.form.description", "Completa cada sección; los cambios se reflejan inmediatamente en la vista previa")}
+                defaultOpen
+              >
               {/* Validation Summary */}
               <ValidationSummary errors={validationErrors} section={activeSection} />
 
@@ -1169,6 +1102,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               <div className="mt-6">
                 {renderActiveSection()}
               </div>
+              </EditorDisclosure>
             </div>
           </div>
 
@@ -1198,7 +1132,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     {t('editor.cvPreview')}
                   </h3>
 
-                  <div className="transform scale-75 origin-top" ref={previewRef}>
+                  <div className="origin-top" ref={previewRef}>
                     <WithCustomStyles
                       template={cvData.template}
                       data={transformCVDataForRenderer(cvData)}

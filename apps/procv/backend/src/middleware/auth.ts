@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { logger } from '../utils/logger';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -128,11 +129,28 @@ export async function authMiddleware(
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    const payload = jwt.verify(token, config.jwtSecret, {
-      issuer: config.issuer,
-      audience: config.identityAudience,
-      algorithms: ['HS256'],
-    }) as {
+    // Production verifies the signature locally and then introspects the
+    // active session. Local development may use a remote Identity environment
+    // whose signing secret must not be copied into the developer's .env file;
+    // in that case, Identity's HTTPS introspection is the authority for the
+    // token and session validity.
+    const introspectionOnlyForLocal =
+      process.env.NODE_ENV === 'development' &&
+      !config.isProduction &&
+      process.env.IDENTITY_INTROSPECTION_ONLY === 'true';
+    const tokenPayload = introspectionOnlyForLocal
+      ? jwt.decode(token)
+      : jwt.verify(token, config.jwtSecret, {
+          issuer: config.issuer,
+          audience: config.identityAudience,
+          algorithms: ['HS256'],
+        });
+
+    if (!tokenPayload || typeof tokenPayload === 'string') {
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+
+    const payload = tokenPayload as {
       sub: string;
       email?: string;
       role?: string;
@@ -151,6 +169,11 @@ export async function authMiddleware(
     const introspection = await introspectSession(token);
     const contract = validateIntrospectionContract(introspection, payload.sub);
     if (!contract.valid) {
+      logger.warn('Identity introspection rejected the session', {
+        reason: contract.reason,
+        hasSubject: Boolean(payload.sub),
+        hasJti: Boolean(payload.jti),
+      });
       return res.status(401).json({
         message: 'Session revoked or expired',
         reason: contract.reason,
@@ -177,7 +200,10 @@ export async function authMiddleware(
     req.permissions = permissions;
 
     return next();
-  } catch {
+  } catch (error: unknown) {
+    logger.warn('JWT authentication failed', {
+      reason: error instanceof Error ? error.message : 'unknown',
+    });
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 }

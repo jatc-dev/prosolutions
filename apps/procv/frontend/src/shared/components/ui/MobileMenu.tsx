@@ -46,7 +46,7 @@ export function MobileMenu() {
           role="menu"
         >
           <div className="mb-4 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500 text-white">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-600 text-white">
               <span className="text-sm font-bold">P</span>
             </div>
             <span className="text-sm font-bold text-slate-800 dark:text-slate-100">

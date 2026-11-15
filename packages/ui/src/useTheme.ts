@@ -54,6 +54,7 @@ function systemTheme(): ResolvedTheme {
 
 function applyTheme(resolved: ResolvedTheme) {
   document.documentElement.classList.toggle("dark", resolved === "dark");
+  document.documentElement.dataset.theme = resolved;
   document.documentElement.style.colorScheme = resolved;
 }
 

@@ -5,13 +5,14 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string;
   error?: string;
   helperText?: string;
+  endAdornment?: React.ReactNode;
 }
 
 /**
  * Campo de entrada de texto del ecosistema ProSolutions.
  * Incluye soporte opcional para etiqueta, mensaje de error y texto de ayuda.
  */
-export function Input({ label, error, helperText, className, id, ...props }: InputProps) {
+export function Input({ label, error, helperText, endAdornment, className, id, ...props }: InputProps) {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
   return (
@@ -21,15 +22,23 @@ export function Input({ label, error, helperText, className, id, ...props }: Inp
           {label}
         </label>
       )}
-      <input
-        id={inputId}
-        {...props}
-        className={cn(
-          "flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:ring-brand-400 dark:focus:border-brand-400",
-          className,
-          error ? "border-red-500 dark:border-red-400" : "",
+      <div className="relative">
+        <input
+          id={inputId}
+          {...props}
+          className={cn(
+            "flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:ring-brand-400 dark:focus:border-brand-400",
+            endAdornment ? "pr-11" : "",
+            className,
+            error ? "border-red-500 dark:border-red-400" : "",
+          )}
+        />
+        {endAdornment && (
+          <div className="absolute inset-y-0 right-0 flex items-center pr-1">
+            {endAdornment}
+          </div>
         )}
-      />
+      </div>
       {error && (
         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}

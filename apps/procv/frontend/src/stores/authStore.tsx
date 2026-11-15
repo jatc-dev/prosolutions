@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import React from "react";
 import { api } from "../services/api";
 import { identityAuthApiUrl } from "../lib/identityUrl";
+import { refreshAccessToken } from "../services/authRefresh";
 
 interface UserProfile {
   id: string;
@@ -24,7 +25,6 @@ interface AuthState {
 
 const IDENTITY_AUTH_URL = identityAuthApiUrl();
 const IDENTITY_ME_URL = `${IDENTITY_AUTH_URL}/me`;
-
 async function fetchIdentity(path: string, options: RequestInit = {}) {
   return fetch(`${IDENTITY_AUTH_URL}${path}`, {
     credentials: "include",
@@ -54,30 +54,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   refreshToken: async () => {
-    try {
-      const response = await fetchIdentity("/refresh", { method: "POST" });
-      if (!response.ok) throw new Error("Session refresh failed");
-
-      const { accessToken } = await response.json();
-      if (!accessToken) throw new Error("Identity did not return an access token");
-
-      const meResponse = await fetch(IDENTITY_ME_URL, {
-        method: "GET",
-        credentials: "include",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!meResponse.ok) throw new Error("Identity session validation failed");
-
-      const data = await meResponse.json();
-      const user = data?.user as UserProfile | null;
-      if (!user) throw new Error("Identity did not return a user profile");
-
-      api.setToken(accessToken);
-      set({ user, accessToken, isAuthenticated: true });
-    } catch {
+    const accessToken = await refreshAccessToken();
+    const meResponse = await fetch(IDENTITY_ME_URL, {
+      method: "GET",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!meResponse.ok) {
       api.setToken(null);
       set({ user: null, accessToken: null, isAuthenticated: false });
+      throw new Error("Identity session validation failed");
     }
+
+    const data = await meResponse.json();
+    const user = data?.user as UserProfile | null;
+    if (!user) {
+      api.setToken(null);
+      set({ user: null, accessToken: null, isAuthenticated: false });
+      throw new Error("Identity did not return a user profile");
+    }
+
+    api.setToken(accessToken);
+    set({ user, accessToken, isAuthenticated: true });
   },
 }));
 

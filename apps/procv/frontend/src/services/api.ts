@@ -1,9 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "react-hot-toast";
-import { identityAuthApiUrl } from "../lib/identityUrl";
+import { RefreshRateLimitedError, refreshAccessToken } from "./authRefresh";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "/api";
-const IDENTITY_AUTH_URL = identityAuthApiUrl();
 
 const MAX_GET_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 300;
@@ -119,31 +118,10 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-let refreshPromise: Promise<string | null> | null = null;
-
 function redirectToLogin() {
   const centralLogin = `${import.meta.env.VITE_PROSOLUTIONS_URL || "https://prosolutions.page"}/login`;
   if (window.location.href !== centralLogin) {
     window.location.assign(centralLogin);
-  }
-}
-
-async function doRefresh(): Promise<string | null> {
-  try {
-    const response = await fetch(`${IDENTITY_AUTH_URL}/refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) return null;
-    const { accessToken } = await response.json();
-    if (accessToken) {
-      instance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-      return accessToken;
-    }
-    return null;
-  } catch {
-    return null;
   }
 }
 
@@ -200,13 +178,13 @@ instance.interceptors.response.use(
 
     originalRequest._retried = true;
 
-    if (!refreshPromise) {
-      refreshPromise = doRefresh();
-    }
-    const newToken = await refreshPromise;
-    refreshPromise = null;
-
-    if (!newToken) {
+    let newToken: string;
+    try {
+      newToken = await refreshAccessToken();
+    } catch (refreshError) {
+      if (refreshError instanceof RefreshRateLimitedError) {
+        return Promise.reject(refreshError);
+      }
       instance.defaults.headers.common.Authorization = "";
       redirectToLogin();
       return Promise.reject(error);

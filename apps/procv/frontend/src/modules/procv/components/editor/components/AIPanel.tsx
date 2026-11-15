@@ -46,10 +46,10 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
   };
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4 dark:border-blue-800 dark:from-blue-950/30 dark:to-slate-900">
+    <div className="rounded-lg border border-ui-border bg-ui-surface p-4">
       <div className="flex items-center space-x-2 mb-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-          <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50">
+          <svg className="w-4 h-4 text-brand-700 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 6.364m-.707 7.507a4 4 0 11-5.656-5.656 4 4 0 015.656 5.656m-5.656-5.656a4 4 0 10-5.656 5.656 4 4 0 005.656-5.656" />
           </svg>
         </div>
@@ -63,7 +63,7 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
         onChange={(e) => setPrompt(e.target.value)}
         placeholder={t("ai.placeholder", "Ej: 'Mejora mi resumen profesional para un rol de senior developer'")}
         rows={2}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        className="w-full rounded-md border border-ui-border-strong bg-ui-surface px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-500"
       />
 
       <div className="mt-2 flex flex-wrap gap-2">
@@ -73,7 +73,7 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
             type="button"
             onClick={() => handleGenerate(section.key)}
             disabled={isGenerating || !prompt.trim()}
-            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center rounded-md bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isGenerating ? (
               <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
@@ -87,16 +87,16 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
       </div>
 
       {result && (
-        <div className="mt-3 rounded-md border border-blue-200 bg-white p-3 dark:border-blue-800 dark:bg-slate-900">
+        <div className="mt-3 rounded-md border border-ui-border bg-ui-surface p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+            <span className="text-xs font-semibold text-brand-700 dark:text-brand-300">
               {t("ai.result", "Resultado de IA")}
             </span>
             <div className="flex space-x-2">
               <button
                 type="button"
                 onClick={handleApply}
-                className="text-xs font-medium text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100"
+                className="text-xs font-medium text-brand-700 hover:text-brand-900 dark:text-brand-300 dark:hover:text-brand-100"
               >
                 {t("ai.apply", "Aplicar")}
               </button>

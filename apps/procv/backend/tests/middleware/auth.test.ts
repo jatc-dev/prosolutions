@@ -4,10 +4,11 @@ import { authMiddleware, AuthRequest } from '../../src/middleware/auth';
 
 jest.mock('jsonwebtoken', () => ({
   __esModule: true,
-  default: { verify: jest.fn() },
+  default: { verify: jest.fn(), decode: jest.fn() },
 }));
 
 const originalFetch = globalThis.fetch;
+const originalNodeEnv = process.env.NODE_ENV;
 
 type IntrospectionResponse = {
   valid: boolean;
@@ -109,10 +110,35 @@ describe('ProCV Identity authorization middleware', () => {
 
   afterAll(() => {
     globalThis.fetch = originalFetch;
+    process.env.NODE_ENV = originalNodeEnv;
+    delete process.env.IDENTITY_INTROSPECTION_ONLY;
   });
 
   beforeAll(() => {
     globalThis.fetch = mockFetch;
+  });
+
+  it('does not authorize a forged token in introspection-only mode', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.IDENTITY_INTROSPECTION_ONLY = 'true';
+    (jwt.decode as jest.Mock).mockReturnValue({
+      sub: 'forged-user',
+      jti: 'forged-jti',
+    });
+    setIntrospectionResponse({ valid: false, reason: 'invalid_signature' });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest('forged-token'), res as unknown as ExpressResponse, next);
+
+    expect(jwt.verify).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({
+      message: 'Session revoked or expired',
+      reason: 'invalid_signature',
+    });
+    expect(next).not.toHaveBeenCalled();
+    delete process.env.IDENTITY_INTROSPECTION_ONLY;
   });
 
   it('accepts an Identity token with PROCV entitlement and exposes the subject', async () => {
