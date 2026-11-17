@@ -1,5 +1,8 @@
+import { pathToFileURL } from 'node:url';
 import mammoth from 'mammoth';
-import pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
+
+PDFParse.setWorker(pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')).href);
 
 type ParsedDraft = {
   personal: {
@@ -307,8 +310,17 @@ async function extractTextFromFile(
   const lowerName = fileName.toLowerCase();
 
   if (mimeType === 'application/pdf' || lowerName.endsWith('.pdf')) {
-    const result = await pdfParse(buffer);
-    return result.text || '';
+    const options: ConstructorParameters<typeof PDFParse>[0] & { disableWorker: boolean } = {
+      data: buffer,
+      disableWorker: true,
+    };
+    const parser = new PDFParse(options);
+    try {
+      const result = await parser.getText();
+      return result.text || '';
+    } finally {
+      await parser.destroy();
+    }
   }
 
   if (
