@@ -16,10 +16,10 @@
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
     "format": "prettier --write src/**/*.ts tests/**/*.ts",
-    "test": "jest",
+    "test": "node scripts/run-jest.cjs",
     "test:rls:integration": "jest --runInBand tests/rls.integration.test.ts",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:watch": "node scripts/run-jest.cjs --watch",
+    "test:coverage": "node scripts/run-jest.cjs --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy"
