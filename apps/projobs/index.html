@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <script>
+      // Apply the shared ProSolutions theme before first paint (same precedence as Core).
+      (function () {
+        try {
+          var preference = "system";
+          var themeCookie = document.cookie.split("; ").find(function (part) { return part.indexOf("prosolutions_theme=") === 0; });
+          var cookiePreference = themeCookie ? themeCookie.split("=").slice(1).join("=") : "";
+          if (cookiePreference === "light" || cookiePreference === "dark") preference = cookiePreference;
+          var saved = localStorage.getItem("theme-storage");
+          if (saved) {
+            var parsed = JSON.parse(saved);
+            var stored = parsed && parsed.state && (parsed.state.preference || parsed.state.theme);
+            if (!cookiePreference && (stored === "light" || stored === "dark")) preference = stored;
+          }
+          var dark = preference === "dark" || (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {
+          /* ignore: light default */
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ProJobs — Empleos tech y postulación en un clic | ProSolutions</title>
+    <meta name="description" content="Encuentra empleos tech en Latinoamérica, filtra por modalidad, salario y habilidades, y postúlate en un clic con tu CV de ProCV." />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#047857" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ProSolutions" />
+    <meta property="og:title" content="ProJobs — Empleos tech y postulación en un clic" />
+    <meta property="og:description" content="Busca vacantes, conoce tu afinidad y postúlate con tu CV de ProCV." />
+    <!-- Google AdSense (client injected at build time from VITE_ADSENSE_CLIENT). -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%VITE_ADSENSE_CLIENT%" crossorigin="anonymous" data-adsense-client="%VITE_ADSENSE_CLIENT%"></script>
+  </head>
+  <body>
+    <noscript>ProJobs necesita JavaScript para mostrar las vacantes.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
