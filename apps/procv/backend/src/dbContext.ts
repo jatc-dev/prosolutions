@@ -12,12 +12,25 @@ type ContextRole = 'user' | 'public';
 interface SignedContext {
   iss: 'procv-backend';
   aud: 'procv-rls';
-  kid: 'v1';
+  kid: string;
   role: ContextRole;
   sub: string | null;
   iat: number;
   exp: number;
   jti: string;
+}
+
+/**
+ * Key id of PROCV_RLS_CONTEXT_KEY in procv_private.context_signing_keys.
+ * Zero-downtime rotation: insert the new key under a new id (e.g. v2), then
+ * deploy PROCV_RLS_CONTEXT_KEY + PROCV_RLS_CONTEXT_KID=v2, then delete v1.
+ */
+export function signingKeyId(): string {
+  const kid = (process.env.PROCV_RLS_CONTEXT_KID || 'v1').trim();
+  if (!/^[A-Za-z0-9_-]{1,32}$/.test(kid)) {
+    throw new Error('PROCV_RLS_CONTEXT_KID must be 1-32 safe characters');
+  }
+  return kid;
 }
 
 function signingKey(): Buffer {
@@ -36,7 +49,7 @@ function encodeContext(
   const context: SignedContext = {
     iss: 'procv-backend',
     aud: 'procv-rls',
-    kid: 'v1',
+    kid: signingKeyId(),
     role,
     sub: userId,
     iat: now,
@@ -93,7 +106,7 @@ export function createDbContext(
         verified.claims.sub !== userId
       ) {
         throw new Error(
-          'ProCV RLS context was rejected; verify PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
+          `ProCV RLS context was rejected; verify PROCV_RLS_CONTEXT_KEY matches the database verifier key '${signingKeyId()}'`,
         );
       }
       return operation(tx);
