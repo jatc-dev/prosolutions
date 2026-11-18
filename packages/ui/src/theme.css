@@ -1,0 +1,49 @@
+/* Shared ProSolutions design tokens. Keep the visual system consistent across apps. */
+:root {
+  color-scheme: light;
+  --ui-bg: #f4f5f3;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #eceeea;
+  --ui-surface-raised: #fbfcfa;
+  --ui-surface-floating: #ffffff;
+  --ui-border: #d9ddd7;
+  --ui-border-strong: #737b70;
+  --ui-text: #202520;
+  --ui-text-muted: #505a51;
+  --ui-accent: #047857;
+  --ui-accent-hover: #065f46;
+  --ui-accent-soft: #d1fae5;
+  --ui-focus: #047857;
+  --ui-success: #047857;
+  --ui-warning: #854d0e;
+  --ui-danger: #b42336;
+  --ui-radius-sm: 0.625rem;
+  --ui-radius-md: 0.875rem;
+  --ui-radius-lg: 1rem;
+  --ui-shadow-sm: 0 1px 2px rgba(25, 32, 25, 0.05), 0 1px 1px rgba(25, 32, 25, 0.03);
+  --ui-shadow-md: 0 2px 4px rgba(25, 32, 25, 0.05), 0 8px 18px -12px rgba(25, 32, 25, 0.18);
+  --ui-shadow-floating: 0 4px 8px rgba(25, 32, 25, 0.06), 0 16px 32px -22px rgba(25, 32, 25, 0.25);
+}
+
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --ui-bg: #111210;
+  --ui-surface: #191a17;
+  --ui-surface-soft: #22241f;
+  --ui-surface-raised: #292b26;
+  --ui-surface-floating: #30332d;
+  --ui-border: #3b3f38;
+  --ui-border-strong: #777f73;
+  --ui-text: #f2f4ef;
+  --ui-text-muted: #c0c7bd;
+  --ui-accent: #34d399;
+  --ui-accent-hover: #6ee7b7;
+  --ui-accent-soft: #153b2e;
+  --ui-focus: #6ee7b7;
+  --ui-success: #6ee7b7;
+  --ui-warning: #facc72;
+  --ui-danger: #ff8792;
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 1px 1px rgba(0, 0, 0, 0.16);
+  --ui-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.22), 0 8px 18px -12px rgba(0, 0, 0, 0.42);
+  --ui-shadow-floating: 0 4px 8px rgba(0, 0, 0, 0.22), 0 16px 32px -22px rgba(0, 0, 0, 0.55);
+}

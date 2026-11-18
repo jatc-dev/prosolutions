@@ -2,6 +2,7 @@ import { ProHeader, ProFooter, Input, Button } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { useState } from "react";
 import { identityAuthApiUrl } from "../identityApi";
+import { Eye, EyeOff } from "lucide-react";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
@@ -10,6 +11,7 @@ export function HomePage() {
   const language = locale === "es" ? "es" : "en";
 
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
@@ -49,7 +51,14 @@ export function HomePage() {
         "https://procv.prosolutions.page",
         ...configuredModuleOrigins,
       ]);
-      if (destination.protocol !== "https:" || !allowedOrigins.has(destination.origin)) {
+      const isConfiguredLocalOrigin =
+        destination.protocol === "http:" &&
+        (destination.hostname === "localhost" || destination.hostname === "127.0.0.1") &&
+        allowedOrigins.has(destination.origin);
+      if (
+        (destination.protocol !== "https:" && !isConfiguredLocalOrigin) ||
+        !allowedOrigins.has(destination.origin)
+      ) {
         return fallback;
       }
       return destination.toString();
@@ -128,7 +137,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-ui-bg text-ui-text">
       <ProHeader
         activeApp="core"
         locale={language === "es" ? "es" : "en"}
@@ -141,7 +150,7 @@ export function HomePage() {
             {/* Product marketing belongs on the public landing page, not the login form. */}
             {/* Right Column: Login Form */}
             <div className="w-full max-w-md">
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-8 dark:bg-slate-900 shadow-lg dark:shadow-black/30 max-w-md w-full">
+              <div className="w-full max-w-md rounded-xl border border-ui-border bg-ui-surface p-8 shadow-panel">
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
                     {copy.auth.loginTitle}
@@ -177,10 +186,25 @@ export function HomePage() {
 
                   <Input
                     label={copy.auth.password}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder={copy.auth.passwordPlaceholder}
+                    autoComplete="current-password"
                     required
+                    endAdornment={(
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((visible) => !visible)}
+                        aria-label={showPassword ? copy.auth.hidePassword : copy.auth.showPassword}
+                        aria-pressed={showPassword}
+                        title={showPassword ? copy.auth.hidePassword : copy.auth.showPassword}
+                        className="inline-flex h-8 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                      >
+                        {showPassword
+                          ? <EyeOff className="h-4 w-4" aria-hidden="true" />
+                          : <Eye className="h-4 w-4" aria-hidden="true" />}
+                      </button>
+                    )}
                   />
 
                   <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">

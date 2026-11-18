@@ -2,14 +2,14 @@
 
 /* CSS Variables for consistent branding */
 :root {
-  --cv-brand-primary: #4f46e5; /* brand.600 */
-  --cv-brand-primary-hover: #4338ca; /* brand.700 */
-  --cv-brand-primary-focus: #6366f1; /* brand.500 */
-  --cv-brand-secondary: #eef2ff; /* brand.50 */
-  --cv-brand-accent: #e0e7ff; /* brand.100 */
-  --cv-brand-border: #c7d2fe; /* brand.200 */
-  --cv-brand-text: #4338ca; /* brand.700 */
-  --cv-brand-text-light: #4f46e5; /* brand.600 */
+  --cv-brand-primary: #047857;
+  --cv-brand-primary-hover: #065f46;
+  --cv-brand-primary-focus: #047857;
+  --cv-brand-secondary: #ecfdf5;
+  --cv-brand-accent: #d1fae5;
+  --cv-brand-border: #a7f3d0;
+  --cv-brand-text: #065f46;
+  --cv-brand-text-light: #047857;
 }
 
 /* Override default blue colors with brand colors */
@@ -57,11 +57,11 @@
 }
 
 .cv-editor .text-blue-800 {
-  color: #312e81; /* brand-like dark blue */
+  color: #064e3b;
 }
 
 .cv-editor .text-blue-900 {
-  color: #1e1b4b; /* brand-like darker blue */
+  color: #022c22;
 }
 
 /* Border colors */
@@ -84,24 +84,24 @@
 
 /* Custom utility classes */
 .cv-editor-gradient {
-  background: linear-gradient(135deg, var(--cv-brand-secondary) 0%, theme('colors.blue.50') 100%);
+  background: var(--ui-bg, #f4f5f3);
 }
 
 .cv-editor-header {
-  background: linear-gradient(135deg, white 0%, var(--cv-brand-secondary) 100%);
+  background: var(--ui-surface, #ffffff);
   border-bottom: 1px solid var(--cv-brand-border);
 }
 
 .cv-editor-card {
-  background: white;
-  border: 1px solid theme('colors.gray.200');
+  background: var(--ui-surface, #ffffff);
+  border: 1px solid var(--ui-border, #d9ddd7);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: var(--ui-shadow-sm, 0 1px 2px rgba(25, 32, 25, 0.05));
   transition: all 0.2s ease-in-out;
 }
 
 .cv-editor-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--ui-shadow-md, 0 2px 4px rgba(25, 32, 25, 0.05));
 }
 
 /* Loading animations */
@@ -147,7 +147,7 @@
 .cv-editor select:focus,
 .cv-editor textarea:focus {
   border-color: var(--cv-brand-primary-focus);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cv-brand-primary-focus) 20%, transparent);
 }
 
 /* Button enhancements */
@@ -184,12 +184,21 @@
   }
 }
 
-/* Dark mode support (future enhancement) */
-@media (prefers-color-scheme: dark) {
-  .cv-editor {
-    --cv-brand-secondary: #1e1b4b; /* Dark brand color */
-    --cv-brand-accent: #312e81; /* Darker brand color */
-  }
+.dark .cv-editor,
+[data-theme="dark"] .cv-editor {
+  --cv-brand-primary: #34d399;
+  --cv-brand-primary-hover: #6ee7b7;
+  --cv-brand-primary-focus: #6ee7b7;
+  --cv-brand-secondary: #153b2e;
+  --cv-brand-accent: #1d503c;
+  --cv-brand-border: #2f7659;
+  --cv-brand-text: #a7f3d0;
+  --cv-brand-text-light: #6ee7b7;
+}
+
+.dark .cv-editor .cv-btn-primary,
+[data-theme="dark"] .cv-editor .cv-btn-primary {
+  color: #111210;
 }
 
 /* ============================================

@@ -12,18 +12,18 @@ export const tokens = {
   // Colores semánticos
   // ---------------------------------------------------------------------------
   color: {
-    // Primaria (azul índigo principal de la marca)
+    // Primaria (esmeralda técnica)
     primary: {
-      50: "#e5edff",
-      100: "#dce8ff",
-      200: "#b9d0ff",
-      300: "#93b5ff",
-      400: "#73a0ff",
-      500: "#3563e9",
-      600: "#264fc7",
-      700: "#203f9f",
-      800: "#1d347d",
-      900: "#172554",
+      50: "#ecfdf5",
+      100: "#d1fae5",
+      200: "#a7f3d0",
+      300: "#6ee7b7",
+      400: "#34d399",
+      500: "#047857",
+      600: "#065f46",
+      700: "#064e3b",
+      800: "#022c22",
+      900: "#022c22",
     },
     // Secundaria (cian acento)
     secondary: {
@@ -40,42 +40,42 @@ export const tokens = {
     },
     // Superficies
     surface: {
-      base: "#ffffff",
-      elevated: "#eef2fa",
-      raised: "#e5edff",
-      inset: "#dce4f0",
-      dark: "#111827",
-      darkElevated: "#1b2638",
-      darkRaised: "#25334a",
-      darkInset: "#111827",
+      base: "#f4f5f3",
+      elevated: "#ffffff",
+      raised: "#eceeea",
+      inset: "#e4e7e2",
+      dark: "#111210",
+      darkElevated: "#191a17",
+      darkRaised: "#292b26",
+      darkInset: "#22241f",
     },
     // Texto
     text: {
-      primary: "#20304a",
-      secondary: "#52617a",
-      muted: "#52617a",
+      primary: "#202520",
+      secondary: "#505a51",
+      muted: "#505a51",
       inverted: "#ffffff",
       onPrimary: "#ffffff",
       onSecondary: "#ffffff",
     },
     // Bordes
     border: {
-      light: "#dce4f0",
-      medium: "#aab8ca",
-      dark: "#71839b",
-      darkSurface: "#34445c",
-      focus: "#3563e9",
+      light: "#d9ddd7",
+      medium: "#737b70",
+      dark: "#737b70",
+      darkSurface: "#777f73",
+      focus: "#047857",
     },
     // Estados
     state: {
-      success: "#087f72",
-      warning: "#975900",
-      error: "#c7364f",
-      info: "#3563e9",
-      successBg: "#e6f7f3",
+      success: "#047857",
+      warning: "#854d0e",
+      error: "#b42336",
+      info: "#047857",
+      successBg: "#d1fae5",
       warningBg: "#fff4db",
       errorBg: "#ffebef",
-      infoBg: "#e5edff",
+      infoBg: "#d1fae5",
     },
   },
 
@@ -157,11 +157,11 @@ export const tokens = {
   // Sombras
   // ---------------------------------------------------------------------------
   shadow: {
-    sm: "0 1px 2px 0 rgb(15 23 42 / 0.05)",
-    base: "0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1)",
-    md: "0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1)",
-    lg: "0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.1)",
-    xl: "0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.1)",
+    sm: "0 1px 2px rgba(25, 32, 25, 0.05), 0 1px 1px rgba(25, 32, 25, 0.03)",
+    base: "0 1px 2px rgba(25, 32, 25, 0.05), 0 1px 1px rgba(25, 32, 25, 0.03)",
+    md: "0 2px 4px rgba(25, 32, 25, 0.05), 0 8px 18px -12px rgba(25, 32, 25, 0.18)",
+    lg: "0 4px 8px rgba(25, 32, 25, 0.06), 0 16px 32px -22px rgba(25, 32, 25, 0.25)",
+    xl: "0 4px 8px rgba(25, 32, 25, 0.06), 0 16px 32px -22px rgba(25, 32, 25, 0.25)",
   },
 
   // ---------------------------------------------------------------------------

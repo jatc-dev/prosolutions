@@ -33,7 +33,7 @@ export function CVEditorPage() {
   }, [isAuthenticated]);
 
   return (
-    <div className="ui-page min-h-screen bg-gradient-to-br from-brand-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+    <div className="ui-page min-h-screen bg-ui-bg">
       <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => i18n.changeLanguage(language === "es" ? "en" : "es")} />
       {!isAuthenticated && (
         <div className="fixed top-4 left-4 right-4 max-w-md z-50 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg dark:border-amber-900/30 dark:bg-amber-900/20">

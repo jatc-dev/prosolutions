@@ -1,49 +1,8 @@
+@import "../../../packages/ui/src/theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  color-scheme: light;
-  --ui-bg: #f5f7fc;
-  --ui-surface: #ffffff;
-  --ui-surface-soft: #eef2fa;
-  --ui-border: #dce4f0;
-  --ui-border-strong: #aab8ca;
-  --ui-text: #20304a;
-  --ui-text-muted: #52617a;
-  --ui-accent: #3563e9;
-  --ui-accent-hover: #264fc7;
-  --ui-accent-soft: #e5edff;
-  --ui-focus: #1769aa;
-  --ui-success: #087f72;
-  --ui-warning: #975900;
-  --ui-danger: #c7364f;
-  --ui-radius-sm: 0.625rem;
-  --ui-radius-md: 0.875rem;
-  --ui-radius-lg: 1rem;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
-  --ui-shadow-md: 0 10px 24px -16px rgba(15, 23, 42, 0.35);
-}
-
-.dark {
-  color-scheme: dark;
-  --ui-bg: #111827;
-  --ui-surface: #1b2638;
-  --ui-surface-soft: #25334a;
-  --ui-border: #34445c;
-  --ui-border-strong: #52627a;
-  --ui-text: #f1f5fc;
-  --ui-text-muted: #b2c0d4;
-  --ui-accent: #73a0ff;
-  --ui-accent-hover: #93b5ff;
-  --ui-accent-soft: #2b4165;
-  --ui-focus: #93b5ff;
-  --ui-success: #56d6b0;
-  --ui-warning: #ffc56b;
-  --ui-danger: #ff8293;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
-  --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
-}
 
 @layer base {
   h1, h2, h3, h4 {
@@ -104,25 +63,39 @@
     @apply ui-surface p-6;
   }
 
+  .ui-surface-raised {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface-raised);
+    box-shadow: var(--ui-shadow-md);
+  }
+
+  .ui-surface-floating {
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface-floating);
+    box-shadow: var(--ui-shadow-floating);
+  }
+
   .ui-muted {
     color: var(--ui-text-muted);
   }
 
   .ui-gradient-text {
-    @apply bg-gradient-to-r from-brand-600 via-brand-500 to-blue-500 bg-clip-text text-transparent dark:from-brand-400 dark:via-blue-300 dark:to-blue-200;
+    color: var(--ui-accent);
   }
 
   .ui-glass-card {
-    border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+    border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-lg);
-    background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+    background: var(--ui-surface);
     box-shadow: var(--ui-shadow-sm);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
   }
 
   .ui-halo {
-    @apply pointer-events-none absolute -z-10 h-72 w-72 rounded-full bg-brand-400/20 blur-3xl dark:bg-brand-500/10;
+    @apply pointer-events-none absolute -z-10 h-72 w-72 rounded-full;
+    background: color-mix(in srgb, var(--ui-accent) 7%, transparent);
+    filter: blur(48px);
   }
 }
 

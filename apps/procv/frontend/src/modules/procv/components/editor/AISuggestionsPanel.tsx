@@ -345,10 +345,10 @@ export function AISuggestionsPanel({
   const jobCategories = analyzeJobTitle(jobTitle, language);
 
   return (
-    <div className={`rounded-lg border border-slate-200 bg-gradient-to-r from-blue-50 to-white p-3 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800 ${className}`}>
+    <div className={`rounded-lg border border-ui-border bg-ui-surface p-3 ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-brand-700 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
@@ -365,7 +365,7 @@ export function AISuggestionsPanel({
             {jobCategories.map(category => (
               <span
                 key={category}
-                className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium capitalize text-blue-700 dark:bg-blue-900/60 dark:text-blue-100"
+                className="rounded-full bg-brand-100 px-3 py-1 text-xs font-medium capitalize text-brand-800 dark:bg-brand-900/60 dark:text-brand-100"
               >
                 {t(`ai.categories.${category}`)}
               </span>
@@ -392,7 +392,7 @@ export function AISuggestionsPanel({
                 setActiveTab('verbs');
                 setIsMinimized(false);
               }}
-              className="rounded border border-blue-300 bg-white px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:bg-slate-900 dark:text-blue-200 dark:hover:bg-blue-950/40"
+              className="rounded border border-brand-200 bg-ui-surface px-3 py-1.5 text-xs text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-200 dark:hover:bg-brand-900/40"
             >
               {t('ai.powerVerbs')} ({suggestedVerbs.length})
             </button>
@@ -417,7 +417,7 @@ export function AISuggestionsPanel({
           onClick={() => setActiveTab('verbs')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex-1 sm:flex-none ${
             activeTab === 'verbs'
-              ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-100'
+              ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/60 dark:text-brand-100'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -427,7 +427,7 @@ export function AISuggestionsPanel({
           onClick={() => setActiveTab('achievements')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex-1 sm:flex-none ${
             activeTab === 'achievements'
-              ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-100'
+              ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/60 dark:text-brand-100'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -453,7 +453,7 @@ export function AISuggestionsPanel({
             <select
               value={seniority}
               onChange={(e) => setSeniority(e.target.value as SeniorityLevel)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-md border border-ui-border-strong bg-ui-surface px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="junior">{t('ai.seniorityLevels.junior')}</option>
               <option value="mid">{t('ai.seniorityLevels.mid')}</option>
@@ -467,7 +467,7 @@ export function AISuggestionsPanel({
             <select
               value={industry}
               onChange={(e) => setIndustry(e.target.value as IndustryFocus)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-md border border-ui-border-strong bg-ui-surface px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="general">{t('ai.industries.general')}</option>
               <option value="technology">{t('ai.industries.technology')}</option>
@@ -491,7 +491,7 @@ export function AISuggestionsPanel({
               {suggestedVerbs.map((verb, index) => (
                 <div
                   key={index}
-                  className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-600 dark:hover:bg-blue-950/40"
+                  className="rounded-md border border-ui-border bg-ui-surface px-3 py-2 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50 dark:hover:border-brand-600 dark:hover:bg-brand-900/40"
                 >
                   <p className="mb-2 font-medium text-slate-700 dark:text-slate-200">{verb}</p>
                   <div className="flex items-center gap-2">
@@ -503,7 +503,7 @@ export function AISuggestionsPanel({
                     </button>
                     <button
                       onClick={() => handleVerbInsert(verb)}
-                      className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-900/40"
+                      className="rounded border border-brand-200 px-2 py-1 text-xs text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:text-brand-200 dark:hover:bg-brand-900/40"
                     >
                       {t('ai.insertAction')}
                     </button>

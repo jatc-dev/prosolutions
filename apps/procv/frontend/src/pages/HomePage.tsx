@@ -42,7 +42,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-ui-bg text-ui-text">
       {/* Header */}
       <ProHeader
         activeApp="procv"
@@ -131,7 +131,7 @@ export function HomePage() {
 
             {/* Right Column: SSO Login Delegate */}
             <div className="lg:sticky lg:top-24">
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-8 dark:bg-slate-900 shadow-lg dark:shadow-black/30 max-w-md w-full">
+              <div className="w-full max-w-md rounded-xl border border-ui-border bg-ui-surface p-8 shadow-panel">
                 <div className="text-center mb-8">
                   <BrandLogo variant="large" className="mx-auto mb-4" />
                   <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">

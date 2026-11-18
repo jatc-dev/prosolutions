@@ -1,13 +1,12 @@
 import { identityAuthApiUrl } from "./identityUrl";
+import { useAuthStore } from "../stores/authStore";
 
 type GlobalPreferences = { theme?: "light" | "dark" | "system"; locale?: "es" | "en" };
-
-const TOKEN_KEY = "pro_identity_token";
 
 export async function saveGlobalPreferences(preferences: GlobalPreferences): Promise<void> {
   const authApi = identityAuthApiUrl();
   const identityApi = authApi.replace(/\/api\/auth$/i, "");
-  let token = sessionStorage.getItem(TOKEN_KEY);
+  let token = useAuthStore.getState().accessToken;
   if (!token) return;
 
   const save = async (accessToken: string) => {
@@ -29,12 +28,9 @@ export async function saveGlobalPreferences(preferences: GlobalPreferences): Pro
 
   let response = await save(token);
   if (response.status === 401) {
-    const refresh = await fetch(`${authApi}/refresh`, { method: "POST", credentials: "include" });
-    if (!refresh.ok) return;
-    const data = await refresh.json();
-    token = data.accessToken;
+    await useAuthStore.getState().refreshToken();
+    token = useAuthStore.getState().accessToken;
     if (!token) return;
-    sessionStorage.setItem(TOKEN_KEY, token);
     response = await save(token);
   }
   if (!response.ok) throw new Error("Unable to save global preferences.");

@@ -8,6 +8,7 @@ import { identityAuthApiUrl } from "../identityApi";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 const ACCESS_TOKEN_KEY = "pro_identity_token";
+const SESSION_REQUEST_TIMEOUT_MS = 10000;
 
 interface LandingUser {
   id: string;
@@ -17,8 +18,19 @@ interface LandingUser {
   modules?: string[];
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), SESSION_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 async function fetchCurrentUser(token: string): Promise<Response> {
-  return fetch(`${IDENTITY_API_URL}/me`, {
+  return fetchWithTimeout(`${IDENTITY_API_URL}/me`, {
     credentials: "include",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -38,7 +50,7 @@ export function LandingPage() {
         let response = token ? await fetchCurrentUser(token) : null;
 
         if (!response?.ok) {
-          const refresh = await fetch(`${IDENTITY_API_URL}/refresh`, {
+          const refresh = await fetchWithTimeout(`${IDENTITY_API_URL}/refresh`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -73,7 +85,7 @@ export function LandingPage() {
       } catch {
         if (active) setUser(null);
       } finally {
-        if (active) setAuthLoading(false);
+        setAuthLoading(false);
       }
     };
 

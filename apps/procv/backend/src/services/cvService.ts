@@ -139,11 +139,6 @@ export class CVService {
    * Note: This invalidates relevant cache entries
    */
   static async createCV(userId: string, title: string, template: string, data: unknown) {
-    console.log('[DEBUG introspect] createCV called:', {
-      userId,
-      title,
-      template,
-    });
     const cv = await withUserContext(userId, async tx => {
       const created = await tx.cV.create({
         data: {

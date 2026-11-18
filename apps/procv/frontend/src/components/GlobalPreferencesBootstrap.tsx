@@ -2,15 +2,13 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@prosolutions/ui";
 type ThemePreference = "light" | "dark" | "system";
-import { useAuth } from "../stores/authStore";
+import { useAuth, useAuthStore } from "../stores/authStore";
 import { identityAuthApiUrl } from "../lib/identityUrl";
 
-const AUTH_API = identityAuthApiUrl();
-const IDENTITY_API = AUTH_API.replace(/\/api\/auth$/i, "");
-const TOKEN_KEY = "pro_identity_token";
+const IDENTITY_API = identityAuthApiUrl().replace(/\/api\/auth$/i, "");
 
 export function GlobalPreferencesBootstrap() {
-  const { isAuthenticated, loading } = useAuth();
+  const { accessToken, isAuthenticated, loading, refreshToken } = useAuth();
   const { setPreference } = useTheme();
   const { i18n } = useTranslation();
 
@@ -18,27 +16,17 @@ export function GlobalPreferencesBootstrap() {
     if (loading || !isAuthenticated) return;
     let active = true;
     const load = async () => {
-      let token = sessionStorage.getItem(TOKEN_KEY);
+      let token = accessToken;
+      if (!token) return;
       const request = (bearer: string) => fetch(`${IDENTITY_API}/api/preferences/me`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${bearer}` },
       });
-      if (!token) {
-        const refresh = await fetch(`${AUTH_API}/refresh`, { method: "POST", credentials: "include" });
-        if (!refresh.ok) return;
-        const data = await refresh.json();
-        token = data.accessToken;
-        if (!token) return;
-        sessionStorage.setItem(TOKEN_KEY, token);
-      }
       let response = await request(token);
       if (response.status === 401) {
-        const refresh = await fetch(`${AUTH_API}/refresh`, { method: "POST", credentials: "include" });
-        if (!refresh.ok) return;
-        const data = await refresh.json();
-        token = data.accessToken;
+        await refreshToken();
+        token = useAuthStore.getState().accessToken;
         if (!token) return;
-        sessionStorage.setItem(TOKEN_KEY, token);
         response = await request(token);
       }
       if (!response.ok) return;
@@ -51,7 +39,7 @@ export function GlobalPreferencesBootstrap() {
     };
     void load().catch(() => undefined);
     return () => { active = false; };
-  }, [isAuthenticated, loading, i18n, setPreference]);
+  }, [accessToken, isAuthenticated, loading, i18n, refreshToken, setPreference]);
 
   return null;
 }

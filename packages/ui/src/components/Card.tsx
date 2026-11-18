@@ -26,10 +26,10 @@ export function Card({
   };
 
   const variantStyles: Record<string, string> = {
-    default: "border border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95",
+    default: "border border-ui-border bg-ui-surface shadow-card",
     elevated:
-      "border border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700/90 dark:bg-slate-900/95 dark:shadow-lg",
-    outlined: "border-2 border-slate-300 bg-transparent dark:border-slate-600 dark:bg-transparent",
+      "border border-ui-border bg-ui-raised shadow-panel",
+    outlined: "border border-ui-border-strong bg-transparent",
   };
 
   return (
@@ -70,7 +70,7 @@ interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
  */
 export function CardTitle({ children, className, ...props }: CardTitleProps) {
   return (
-    <h3 {...props} className={cn("text-lg font-semibold text-slate-900 dark:text-white", className)}>
+    <h3 {...props} className={cn("text-lg font-semibold text-ui-text", className)}>
       {children}
     </h3>
   );
@@ -87,7 +87,7 @@ interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement
  */
 export function CardDescription({ children, className, ...props }: CardDescriptionProps) {
   return (
-    <p {...props} className={cn("text-sm text-slate-600 dark:text-slate-400", className)}>
+    <p {...props} className={cn("text-sm text-ui-muted", className)}>
       {children}
     </p>
   );
@@ -121,7 +121,7 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export function CardFooter({ children, className, ...props }: CardFooterProps) {
   return (
-    <div {...props} className={cn("mt-6 pt-6 flex items-center gap-2 border-t border-slate-200 dark:border-slate-700", className)}>
+    <div {...props} className={cn("mt-6 pt-6 flex items-center gap-2 border-t border-ui-border", className)}>
       {children}
     </div>
   );

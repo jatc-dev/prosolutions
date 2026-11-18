@@ -36,7 +36,7 @@ const MODULES: ModuleDefinition[] = [
     haloClass: "bg-brand-400/20 group-hover:bg-brand-400/30",
     accentTextClass: "text-brand-600 dark:text-brand-300",
     checkClass: "text-brand-500",
-    ctaClass: "bg-brand-600 hover:bg-brand-700 shadow-brand-600/30 dark:bg-brand-500 dark:hover:bg-brand-400",
+    ctaClass: "bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:text-white dark:hover:bg-brand-400",
     status: "Beta",
   },
   {

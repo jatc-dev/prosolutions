@@ -1,28 +1,10 @@
+@import "../../../../packages/ui/src/theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --ui-bg: #f5f7fc;
-  --ui-surface: #ffffff;
-  --ui-surface-soft: #eef2fa;
-  --ui-border: #dce4f0;
-  --ui-border-strong: #aab8ca;
-  --ui-text: #20304a;
-  --ui-text-muted: #52617a;
-  --ui-accent: #3563e9;
-  --ui-accent-hover: #264fc7;
-  --ui-accent-soft: #e5edff;
-  --ui-focus: #1769aa;
-  --ui-success: #087f72;
-  --ui-warning: #975900;
-  --ui-danger: #c7364f;
-  --ui-radius-sm: 0.625rem;
-  --ui-radius-md: 0.875rem;
-  --ui-radius-lg: 1rem;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
-  --ui-shadow-md: 0 10px 24px -16px rgba(15, 23, 42, 0.35);
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
   --ui-space-3: 0.75rem;
@@ -31,68 +13,50 @@
   --ui-space-6: 1.5rem;
 
   /* Module tokens: ProCV */
-  --module-procv-bg: #eef2fa;
+  --module-procv-bg: #eceeea;
   --module-procv-surface: #ffffff;
-  --module-procv-border: #dce4f0;
-  --module-procv-text: #20304a;
-  --ui-procv-accent: #3563e9;
-  --ui-procv-accent-hover: #264fc7;
-  --ui-procv-accent-soft: #e5edff;
-  --ui-procv-success: #087f72;
-  --ui-procv-gradient: linear-gradient(135deg, #3563e9 0%, #264fc7 100%);
+  --module-procv-border: #d9ddd7;
+  --module-procv-text: #202520;
+  --ui-procv-accent: #047857;
+  --ui-procv-accent-hover: #065f46;
+  --ui-procv-accent-soft: #d1fae5;
+  --ui-procv-success: #047857;
+  --ui-procv-gradient: linear-gradient(135deg, #047857 0%, #065f46 100%);
 
   /* Module tokens: ProJobs */
-  --module-projobs-bg: #eef2fa;
+  --module-projobs-bg: #eceeea;
   --module-projobs-surface: #ffffff;
-  --module-projobs-border: #dce4f0;
-  --module-projobs-text: #20304a;
-  --ui-projobs-accent: #0f766e;
-  --ui-projobs-accent-hover: #059669;
-  --ui-projobs-accent-soft: #ccfbf1;
-  --ui-projobs-success: #059669;
-  --ui-projobs-gradient: linear-gradient(135deg, #0f766e 0%, #059669 100%);
+  --module-projobs-border: #d9ddd7;
+  --module-projobs-text: #202520;
+  --ui-projobs-accent: #047857;
+  --ui-projobs-accent-hover: #065f46;
+  --ui-projobs-accent-soft: #d1fae5;
+  --ui-projobs-success: #047857;
+  --ui-projobs-gradient: linear-gradient(135deg, #047857 0%, #065f46 100%);
 }
 
-.dark {
-  color-scheme: dark;
-  --ui-bg: #111827;
-  --ui-surface: #1b2638;
-  --ui-surface-soft: #25334a;
-  --ui-border: #34445c;
-  --ui-border-strong: #52627a;
-  --ui-text: #f1f5fc;
-  --ui-text-muted: #b2c0d4;
-  --ui-accent: #73a0ff;
-  --ui-accent-hover: #93b5ff;
-  --ui-accent-soft: #2b4165;
-  --ui-focus: #93b5ff;
-  --ui-success: #56d6b0;
-  --ui-warning: #ffc56b;
-  --ui-danger: #ff8293;
-  --ui-shadow-sm: 0 1px 2px 0 rgba(2, 6, 23, 0.55);
-  --ui-shadow-md: 0 14px 30px -18px rgba(2, 6, 23, 0.85);
-
+.dark, [data-theme="dark"] {
   /* Module tokens: ProCV (dark) */
-  --module-procv-bg: #1b2638;
-  --module-procv-surface: #1b2638;
-  --module-procv-border: #34445c;
-  --module-procv-text: #f1f5fc;
-  --ui-procv-accent: #73a0ff;
-  --ui-procv-accent-hover: #93b5ff;
-  --ui-procv-accent-soft: #2b4165;
-  --ui-procv-success: #56d6b0;
-  --ui-procv-gradient: linear-gradient(135deg, #73a0ff 0%, #264fc7 100%);
+  --module-procv-bg: #22241f;
+  --module-procv-surface: #191a17;
+  --module-procv-border: #3b3f38;
+  --module-procv-text: #f2f4ef;
+  --ui-procv-accent: #34d399;
+  --ui-procv-accent-hover: #6ee7b7;
+  --ui-procv-accent-soft: #153b2e;
+  --ui-procv-success: #6ee7b7;
+  --ui-procv-gradient: linear-gradient(135deg, #34d399 0%, #047857 100%);
 
   /* Module tokens: ProJobs (dark) */
-  --module-projobs-bg: #1b2638;
-  --module-projobs-surface: #1b2638;
-  --module-projobs-border: #34445c;
-  --module-projobs-text: #f1f5fc;
+  --module-projobs-bg: #22241f;
+  --module-projobs-surface: #191a17;
+  --module-projobs-border: #3b3f38;
+  --module-projobs-text: #f2f4ef;
   --ui-projobs-accent: #34d399;
-  --ui-projobs-accent-hover: #56d6b0;
-  --ui-projobs-accent-soft: #064e3b;
-  --ui-projobs-success: #34d399;
-  --ui-projobs-gradient: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  --ui-projobs-accent-hover: #6ee7b7;
+  --ui-projobs-accent-soft: #153b2e;
+  --ui-projobs-success: #6ee7b7;
+  --ui-projobs-gradient: linear-gradient(135deg, #34d399 0%, #047857 100%);
 }
 
 @layer base {
@@ -188,7 +152,7 @@
   }
 
   .ui-empty-state {
-    @apply rounded-xl border border-slate-200 bg-white px-6 py-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300;
+    @apply rounded-xl border border-ui-border bg-ui-surface px-6 py-8 text-center text-ui-muted;
   }
 }
 
