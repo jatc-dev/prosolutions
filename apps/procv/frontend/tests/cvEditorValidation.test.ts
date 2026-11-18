@@ -145,6 +145,100 @@ describe("CV editor validation", () => {
     expect(useCVEditorStore.getState().validationErrors).toEqual({});
   });
 
+  it("saves a valid imported CV through the existing CV API", async () => {
+    const imported = createInitialCVData();
+    imported.id = "cv-imported";
+    imported.personal = { ...imported.personal, ...personalValid };
+    imported.experience = [{
+      id: "experience-1",
+      position: "Ingeniera",
+      company: "Analytical Engines",
+      employmentType: "full-time",
+      startDate: "2020-01",
+      isCurrentPosition: false,
+      description: "Diseñó y desarrolló soluciones tecnológicas para clientes.",
+      achievements: [],
+      technologies: [],
+      order: 0,
+    }];
+    imported.education = [{
+      id: "education-1",
+      degree: "Ingeniería",
+      institution: "Universidad",
+      fieldOfStudy: "",
+      startDate: "2015-01",
+      isCurrentlyStudying: false,
+      activities: [],
+      achievements: [],
+      order: 0,
+    }];
+    imported.certificates = [{
+      id: "certificate-1",
+      title: "Cloud Architect",
+      issuingOrganization: "Cloud Institute",
+      issueDate: "",
+      order: 0,
+    }];
+    useCVEditorStore.setState({ cvData: imported, isGuest: false });
+    apiPutMock.mockResolvedValue({});
+
+    await useCVEditorStore.getState().saveCV();
+
+    expect(apiPutMock).toHaveBeenCalledWith("/cvs/cv-imported", expect.objectContaining({
+      data: imported,
+    }));
+  });
+
+  it("keeps imported CVs blocked when required personal data is incomplete", async () => {
+    const imported = createInitialCVData();
+    imported.personal = {
+      ...imported.personal,
+      fullName: "Ada Lovelace",
+      professionalTitle: "Ingeniera de software",
+      summary: "corto",
+    };
+    useCVEditorStore.setState({ cvData: imported, isGuest: false });
+
+    await expect(useCVEditorStore.getState().saveCV()).rejects.toThrow("VALIDATION_ERROR");
+    expect(apiPutMock).not.toHaveBeenCalled();
+    expect(apiPostMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts imported CVs with optional sections empty", async () => {
+    const imported = createInitialCVData();
+    imported.id = "cv-imported-empty-sections";
+    imported.personal = { ...imported.personal, ...personalValid };
+    useCVEditorStore.setState({ cvData: imported, isGuest: false });
+    apiPutMock.mockResolvedValue({});
+
+    await useCVEditorStore.getState().saveCV();
+
+    expect(apiPutMock).toHaveBeenCalledWith("/cvs/cv-imported-empty-sections", expect.any(Object));
+  });
+
+  it("keeps imported state synchronized after editing a required field", async () => {
+    const imported = createInitialCVData();
+    imported.id = "cv-imported-edited";
+    imported.personal = { ...imported.personal, ...personalValid };
+    useCVEditorStore.setState({ cvData: imported, isGuest: false });
+    useCVEditorStore.getState().updatePersonal({
+      ...imported.personal,
+      summary: "Lidera equipos técnicos y desarrolla productos digitales escalables con resultados medibles.",
+    });
+    apiPutMock.mockResolvedValue({});
+
+    expect(useCVEditorStore.getState().validateCV()).toBe(true);
+    await useCVEditorStore.getState().saveCV();
+
+    expect(apiPutMock).toHaveBeenCalledWith("/cvs/cv-imported-edited", expect.objectContaining({
+      data: expect.objectContaining({
+        personal: expect.objectContaining({
+          summary: "Lidera equipos técnicos y desarrolla productos digitales escalables con resultados medibles.",
+        }),
+      }),
+    }));
+  });
+
     describe("Persistence - saveCV gatekeeping", () => {
     const proJobsIdentityUser = {
       ...createInitialCVData().personal,

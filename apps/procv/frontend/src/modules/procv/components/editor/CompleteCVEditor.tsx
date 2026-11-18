@@ -73,7 +73,7 @@ function mergeUniqueBy<T>(current: T[], incoming: T[], keySelector: (item: T) =>
   return [...current, ...additions];
 }
 
-function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<CVData> {
+export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<CVData> {
   const safePersonal = parsed.personal ?? {};
 
   const incomingEmails = (safePersonal.emails || [])
@@ -124,7 +124,12 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
     achievements: Array.isArray(item.achievements) ? item.achievements.map((value) => String(value)) : [],
     technologies: Array.isArray(item.technologies) ? item.technologies.map((value) => String(value)) : [],
     order: current.experience.length + index,
-  })).filter((item) => item.position && item.company);
+  })).filter((item) =>
+    item.position &&
+    item.company &&
+    item.startDate &&
+    item.description.trim().length >= 10,
+  );
 
   const incomingEducation = (parsed.education || []).map((item, index) => ({
     id: `import-edu-${makeId()}`,
@@ -139,7 +144,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
     activities: Array.isArray(item.activities) ? item.activities.map((value) => String(value)) : [],
     achievements: Array.isArray(item.achievements) ? item.achievements.map((value) => String(value)) : [],
     order: current.education.length + index,
-  })).filter((item) => item.degree && item.institution);
+  })).filter((item) => item.degree && item.institution && item.startDate);
 
   const incomingSkills = (parsed.skills || []).map((item, index) => ({
     id: `import-skill-${makeId()}`,
@@ -174,7 +179,7 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
     description: '',
     fileUrl: '',
     order: current.certificates.length + index,
-  })).filter((item) => item.title);
+  })).filter((item) => item.title && item.issuingOrganization.trim().length >= 2);
 
   const incomingCertificatesFromSkills = (parsed.skills || [])
     .filter((item) => String((item as any).category || '').toLowerCase() === 'certification')
@@ -189,8 +194,8 @@ function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): Partial<
       description: '',
       fileUrl: '',
       order: current.certificates.length + incomingCertificates.length + index,
-    }))
-    .filter((item) => item.title);
+      }))
+      .filter((item) => item.title && item.issuingOrganization.trim().length >= 2);
 
   const incomingLinks = (parsed.links || []).map((item, index) => ({
     id: `import-link-${makeId()}`,
@@ -617,15 +622,15 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     setPendingImportFileName('');
   }, []);
 
-  const handleApplyImportReview = useCallback(() => {
+  const handleApplyImportReview = useCallback((reviewedData: ParsedCvDraft) => {
     if (!pendingMergedData) {
       return;
     }
 
-    updateCvData(pendingMergedData);
+    updateCvData(mergeCvDataWithParsed(cvData, reviewedData));
     toast.success(t('editor.importer.success'));
     handleCancelImportReview();
-  }, [handleCancelImportReview, pendingMergedData, t, updateCvData]);
+  }, [cvData, handleCancelImportReview, pendingMergedData, t, updateCvData]);
 
   // Export PDF using html2pdf.js - works with local guest state (no cvId required)
   const handleExportPdf = useCallback(async () => {
