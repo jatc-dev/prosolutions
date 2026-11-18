@@ -18,6 +18,7 @@ import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
 import moduleRoutes from './routes/modules';
 import adminRoutes from './routes/admin';
+import { getSigningKeySet } from './services/signingKeys';
 import preferencesRoutes from './routes/preferences';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
@@ -91,6 +92,12 @@ export function createApp() {
   app.get('/health', (_req, res) =>
     res.json({ status: 'ok', service: 'proidentity', timestamp: new Date().toISOString() }),
   );
+
+  // Public keys for verifying access tokens (consumed by ProCV, ProJobs, ...).
+  app.get('/.well-known/jwks.json', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json(getSigningKeySet().jwks);
+  });
 
   app.use(apiLimiter);
 

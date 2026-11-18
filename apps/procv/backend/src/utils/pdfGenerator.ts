@@ -41,6 +41,18 @@ export async function renderToPdf(html: string): Promise<Buffer> {
   const browserInstance = await getBrowser();
   const page = await browserInstance.newPage();
   try {
+    // The document is fully self-contained (inline images, no scripts needed):
+    // block every network request so rendered HTML can never reach out (SSRF).
+    await page.setJavaScriptEnabled(false);
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      const url = request.url();
+      if (url.startsWith('data:') || url === 'about:blank') {
+        void request.continue();
+      } else {
+        void request.abort('blockedbyclient');
+      }
+    });
     await page.setContent(html, { waitUntil: 'load' });
     // Force predictable print behavior across templates to reduce broken blocks and orphaned headings.
     await page.addStyleTag({

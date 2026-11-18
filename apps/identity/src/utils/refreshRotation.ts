@@ -3,17 +3,17 @@ import crypto from 'crypto';
 export const REFRESH_ROTATION_RECOVERY_WINDOW_MS = 10_000;
 
 /**
- * Derive one stable successor session id for a refresh-token rotation.
- * The HMAC prevents the predecessor token from being used directly as a
- * database identifier while ensuring concurrent requests derive the same id.
+ * Derive one stable successor session id for a refresh-token rotation from the
+ * predecessor's stored SHA-256 hash. Concurrent requests derive the same id,
+ * and the middleware can recompute it without ever seeing a plaintext token.
  */
 export function deriveRefreshSuccessorJti(
-  predecessorRefreshToken: string,
+  predecessorRefreshTokenHash: string,
   secret: string,
 ): string {
   return crypto
     .createHmac('sha256', secret)
-    .update(`prosolutions-refresh-rotation:${predecessorRefreshToken}`)
+    .update(`prosolutions-refresh-rotation:${predecessorRefreshTokenHash}`)
     .digest('hex');
 }
 

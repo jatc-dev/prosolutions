@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { verifyAccessToken } from '../services/tokenService';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
@@ -33,17 +32,8 @@ export async function introspectToken(req: Request, res: Response) {
   }
 
   try {
-    const payload = jwt.verify(token, config.jwtSecret, {
-      issuer: config.issuer,
-      audience: config.audience,
-    }) as {
-      sub: string;
-      email?: string;
-      role?: string;
-      modules?: string[];
-      jti?: string;
-      exp?: number;
-    };
+    // Only access tokens (token_use: "access") can be introspected as valid.
+    const payload = verifyAccessToken(token);
 
     if (!payload.sub || !payload.jti) {
       return res.status(401).json({

@@ -44,7 +44,7 @@ model User {
 model Session {
   id               String   @id @default(cuid())
   userId           String
-  refreshToken     String   @unique
+  refreshTokenHash String   @unique
   jti              String   @unique
   expiresAt        DateTime
   createdAt        DateTime  @default(now())

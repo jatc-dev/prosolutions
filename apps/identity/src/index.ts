@@ -3,6 +3,7 @@ import { config } from './config';
 import { createApp } from './app';
 import prisma from './prismaClient';
 import { logger } from './utils/logger';
+import { startSessionMaintenance } from './services/sessionMaintenance';
 
 const port = config.port;
 const app = createApp();
@@ -16,6 +17,8 @@ async function bootstrap() {
     logger.info(`   Audience: ${config.audience}`);
     logger.info(`   Environment: ${config.isProduction ? 'production' : 'development'}`);
   });
+
+  startSessionMaintenance();
 
   server.keepAliveTimeout = 65_000;
   server.headersTimeout = 70_000;
