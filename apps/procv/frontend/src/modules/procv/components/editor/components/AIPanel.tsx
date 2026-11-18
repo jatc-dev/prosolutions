@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { generateCVContent, AIGenerationResponse } from "../../../../../shared/services/cvAIGeneration";
+import { generateCVContent, AIGenerationResponse, type AISection } from "../../../../../shared/services/cvAIGeneration";
 import { CVData } from "../../../../../shared/types";
 
 interface AIPanelProps {
@@ -13,16 +13,18 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<AIGenerationResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const sections = [
+  const sections: Array<{ key: AISection; label: string }> = [
     { key: "summary", label: t("ai.summary", "Resumen profesional") },
     { key: "experience", label: t("ai.experience", "Experiencia laboral") },
     { key: "skills", label: t("ai.skills", "Habilidades") },
   ];
 
-  const handleGenerate = async (section: string) => {
+  const handleGenerate = async (section: AISection) => {
     if (!prompt.trim()) return;
     setIsGenerating(true);
+    setError(null);
     try {
       const response = await generateCVContent({
         prompt,
@@ -30,8 +32,8 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
         currentCV: cvData,
       });
       setResult(response);
-    } catch (error) {
-      console.error("AI generation error:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("ai.error", "No se pudo generar la sugerencia."));
     } finally {
       setIsGenerating(false);
     }
@@ -112,8 +114,27 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
           <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
             {result.suggestion}
           </p>
+          {result.changes.length > 0 && (
+            <ul className="mt-2 list-disc pl-5 text-xs text-ui-muted">
+              {result.changes.map((change) => <li key={change}>{change}</li>)}
+            </ul>
+          )}
+          {result.needsUserInput.length > 0 && (
+            <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+              <p className="font-semibold">{t("ai.needsInput", "Completa con datos reales (la IA no inventa información):")}</p>
+              <ul className="mt-1 list-disc pl-4">
+                {result.needsUserInput.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
       )}
+      {error && (
+        <p role="alert" className="mt-3 text-xs text-red-700 dark:text-red-400">{error}</p>
+      )}
+      <p className="mt-3 text-[11px] text-ui-subtle">
+        {t("ai.disclaimer", "Sugerencias generadas con IA a partir de tu propio texto. Revísalas antes de aplicarlas.")}
+      </p>
     </div>
   );
 }

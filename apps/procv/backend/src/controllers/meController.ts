@@ -24,7 +24,9 @@ export async function exportMyData(req: AuthRequest, res: Response) {
     res.setHeader('Content-Disposition', 'attachment; filename="prosolutions-procv-export.json"');
     return res.json({ service: 'ProCV', exportedAt: new Date().toISOString(), cvs });
   } catch (error) {
-    logger.error('ProCV export failed', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('ProCV export failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return res.status(500).json({ message: 'Export failed' });
   }
 }
@@ -38,7 +40,9 @@ export async function deleteMyData(req: AuthRequest, res: Response) {
     logger.info('ProCV user data erased', { deletedCvs: result.count });
     return res.json({ message: 'ProCV data deleted', deletedCvs: result.count });
   } catch (error) {
-    logger.error('ProCV erasure failed', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('ProCV erasure failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return res.status(500).json({ message: 'Deletion failed' });
   }
 }

@@ -1075,6 +1075,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     onApply={(section, content) => {
                       if (section === 'summary') {
                         updatePersonal({ ...cvData.personal, summary: content });
+                      } else if (section === 'experience' && cvData.experience.length > 0) {
+                        const [latest, ...rest] = cvData.experience;
+                        updateExperience([{ ...latest, description: content }, ...rest]);
                       } else if (section === 'skills') {
                         const newSkills = content.split(',').map((name, index) => ({
                           id: `ai-skill-${Date.now()}-${index}`,
