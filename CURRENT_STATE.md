@@ -20,7 +20,7 @@ Snapshot of repository, git, and local environment as of this audit. All observa
 Core: `src/components/Hero.tsx`, `src/components/Modules.tsx`, `src/i18n.tsx`, `src/index.css`, `src/pages/HomePage.tsx`, `tailwind.config.js`, `vite.config.ts`.
 ProCV backend: `.env.example`, `src/middleware/auth.ts`.
 ProCV frontend: `src/modules/landing/pages/TemplatesGallery.tsx`, `src/modules/procv/components/editor/AISuggestionsPanel.tsx`, `CompleteCVEditor.tsx`, `components/editor/components/AIPanel.tsx`, `src/modules/procv/styles/cv-editor.css`, `src/pages/CVEditorPage.tsx`, `src/pages/HomePage.tsx`, `src/shared/components/ui/MobileMenu.tsx`, `src/styles.css`, `src/styles/cv-editor.css`, `tailwind.config.js`, `vite.config.ts`, `package.json`.
-ProJobs: `generator.py`, `index.html`.
+ProJobs v2: `apps/projobs` (React SPA) y `apps/projobs/server` (API + migraciones SQL).
 packages/ui: `src/ProSolutionsLogo.tsx`, `src/components/Button.tsx`, `Card.tsx`, `Input.tsx`, `src/tokens.ts`, `src/useTheme.ts`.
 Untracked: `packages/ui/src/theme.css`, `scripts/start-local.ps1`.
 

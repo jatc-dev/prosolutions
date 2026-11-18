@@ -1,31 +1,18 @@
-# ProJobs
+# ProJobs web v2
 
-ProJobs combina un catálogo público de oportunidades laborales con una API para funcionalidades personales autenticadas.
+React 18 + TypeScript + Vite + Tailwind SPA, using the shared ProSolutions design system (`@prosolutions/ui`).
 
-## Componentes
-- Catálogo web estático en este módulo.
-- API Node.js/Express en server/.
-- Persistencia PostgreSQL en Neon, base projobs.
-- ProIdentity como autoridad de autenticación.
+- **Search**: instant, URL-synced search (shareable links) with filters (workplace, seniority, contract type, skills, salary, recency), facet counts, sorting by relevance, recency, salary or **affinity** with the candidate's ProCV skills, and a desktop split view.
+- **Apply**: one click with a ProCV CV (affinity preview and exactly what the company will see) or a quick profile.
+- **Candidate**: saved jobs, applications with stage tracker and withdraw.
+- **Employer (ATS)**: company profile, job editor (draft → publish → close), KPIs and a kanban pipeline with candidate snapshot, notes and history. Lazy-loaded.
 
-## Desarrollo
-Desde la raíz:
+Authentication is delegated to ProIdentity: the access token is obtained from the HttpOnly refresh cookie (`POST /api/auth/refresh`) and kept in memory; login goes through Core (`/login?redirect_uri=`).
+
 ```bash
-npm install
-npm run dev:projobs
+npm run dev --workspace=apps/projobs     # http://localhost:5175 (API at VITE_PROJOBS_API_URL)
+npm test --workspace=apps/projobs
+npm run build --workspace=apps/projobs   # dist/ (includes ads.txt and privacidad.html)
 ```
 
-Para validar la API:
-```bash
-cd apps/projobs/server
-npm run build
-npm test
-```
-
-## Persistencia y seguridad
-El esquema SQL versionado está en server/sql/. No existe un historial Prisma para ProJobs. Ejecuta los scripts únicamente en la base projobs, nunca en procv o proidentity. El rol runtime debe ser restringido, no propietario de tablas y sin BYPASSRLS. Mantén FORCE RLS y prueba aislamiento por usuario.
-
-La API valida tokens de ProIdentity. Las variables activas del código están descritas en ../../docs/deployment/ENVIRONMENT_VARIABLES.md.
-
-## Despliegue
-La configuración real debe verificarse en Render antes de cada release. En la observación del 2026-11-06, ProJobs Frontend tenía AutoDeploy activo y ProJobs API no. El manifiesto render.yaml no refleja fielmente la configuración actual; no usar Blueprint Sync para cambiar los servicios. Consulta ../../docs/deployment/PRODUCTION_ARCHITECTURE.md y ../../docs/deployment/PRODUCTION_RELEASE.md.
+The API lives in [`server/`](server/README.md).

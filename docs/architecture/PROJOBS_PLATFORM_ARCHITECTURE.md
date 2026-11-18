@@ -1,3 +1,5 @@
+> **Histórico (ProJobs v1).** Este documento describe la implementación estática anterior (generador Python + API PoC), reemplazada el 2026-11-17 por ProJobs v2. Arquitectura vigente: [apps/projobs/server/README.md](../../apps/projobs/server/README.md) y [apps/projobs/README.md](../../apps/projobs/README.md).
+
 # ProJobs platform architecture
 
 ## Decision

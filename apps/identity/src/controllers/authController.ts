@@ -28,7 +28,7 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
-import { ensureDefaultModuleAccess, getDefaultModules, isAvailableModule } from '../services/moduleAccessService';
+import { ensureDefaultModuleAccess, getDefaultModules, isEffectiveModule } from '../services/moduleAccessService';
 import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
 
@@ -383,7 +383,7 @@ export async function me(req: Request, res: Response) {
 
   const modules = user.moduleAccess
     .map((ma) => ma.module)
-    .filter(isAvailableModule);
+    .filter(isEffectiveModule);
   const [permissionSets, adminRoles] = await Promise.all([
     getUserPermissionSets(userId),
     getUserAdminAssignments(userId),

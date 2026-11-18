@@ -1,0 +1,32 @@
+@import "../../../packages/ui/src/theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-ui-bg font-sans text-ui-text antialiased;
+  }
+
+  h1, h2, h3 {
+    color: var(--ui-text);
+    letter-spacing: -0.01em;
+  }
+
+  dialog::backdrop {
+    background: rgb(17 18 16 / 0.5);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
