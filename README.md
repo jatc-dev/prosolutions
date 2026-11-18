@@ -19,7 +19,6 @@ ProSolutions reúne un portal central y módulos especializados para identidad, 
 | ProIdentity | Registro, inicio de sesión, sesiones y autoridad de identidad | Node.js, Express, Prisma, PostgreSQL |
 | ProCV | Editor de hojas de vida, análisis ATS y generación PDF | React/Vite + Express/Prisma |
 | ProJobs | Catálogo de empleo y funcionalidades de seguimiento | Sitio estático + API Node.js |
-| `packages/auth` | Integración de autenticación compartida para frontends | React/TypeScript |
 | `packages/ui` | Componentes y estilos compartidos | React/TypeScript |
 
 ProIdentity es la autoridad de autenticación. Los módulos protegidos validan los tokens y permisos que les corresponden; no deben implementar mecanismos paralelos de identidad.
@@ -132,7 +131,6 @@ Se recomienda Conventional Commits:
 - [ProIdentity](apps/identity/README.md)
 - [ProCV](apps/procv/README.md)
 - [ProJobs](apps/projobs/README.md)
-- [Autenticación compartida](packages/auth/README.md)
 - [Componentes compartidos](packages/ui/README.md)
 
 ## Alcance de este repositorio
