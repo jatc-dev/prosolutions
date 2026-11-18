@@ -209,3 +209,26 @@ model UserConsent {
 
   @@index([userId, purpose, createdAt])
 }
+
+/// Platform-wide settings edited in ProAdmin (JSON value per key).
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+}
+
+/// Contact form and personal-data (Habeas Data) requests.
+model ContactRequest {
+  id        String   @id @default(cuid())
+  topic     String
+  name      String
+  email     String
+  message   String
+  status    String   @default("new")
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([topic, status])
+}

@@ -21,6 +21,7 @@ import adminRoutes from './routes/admin';
 import { getSigningKeySet } from './services/signingKeys';
 import preferencesRoutes from './routes/preferences';
 import accountRoutes from './routes/account';
+import publicRoutes from './routes/public';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
@@ -105,6 +106,8 @@ export function createApp() {
   // Auth routes are mounted BEFORE CSRF middleware so that login/register
   // and other public auth endpoints do not require a CSRF token.
   app.use('/api/auth', authRoutes);
+  // Public, unauthenticated endpoints (no session, so no CSRF exposure).
+  app.use('/api/public', publicRoutes);
 
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);

@@ -37,7 +37,11 @@ export type AuditEventType =
   | 'authorization.module_access_denied'
   | 'authorization.module_access_granted'
   | 'authorization.module_access_revoked'
-  | 'maintenance.sessions_purged';
+  | 'maintenance.sessions_purged'
+  | 'platform.settings_updated'
+  | 'account.contact_request'
+  | 'projobs.company_moderated'
+  | 'projobs.job_moderated';
 
 /**
  * High-volume events stay in the application log only; everything else is a
