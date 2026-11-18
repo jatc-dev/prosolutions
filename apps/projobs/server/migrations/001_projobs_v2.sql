@@ -14,13 +14,22 @@ DROP TABLE IF EXISTS public.projobs_application_events,
 -- Restricted runtime role. The API login (e.g. projobs_runtime) is granted
 -- membership and switches to it per transaction; it never owns tables.
 -- ---------------------------------------------------------------------------
+-- Managed Postgres (Neon) owners cannot set BYPASSRLS/SUPERUSER attributes, so
+-- the role is created with safe defaults and an existing role is verified
+-- instead of altered: the migration aborts if it carries dangerous privileges.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'projobs_api') THEN
-    CREATE ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
+    CREATE ROLE projobs_api NOLOGIN NOINHERIT;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_roles
+    WHERE rolname = 'projobs_api'
+      AND (rolcanlogin OR rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb)
+  ) THEN
+    RAISE EXCEPTION 'projobs_api must be NOLOGIN, NOSUPERUSER, NOBYPASSRLS, NOCREATEROLE and NOCREATEDB';
   END IF;
 END $$;
-ALTER ROLE projobs_api NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
 GRANT USAGE ON SCHEMA public TO projobs_api;
 
 -- ---------------------------------------------------------------------------
