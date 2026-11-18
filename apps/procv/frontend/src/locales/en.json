@@ -178,23 +178,23 @@
   },
   "home": {
     "title": "Your professional career, powered by one ecosystem",
-    "subtitle": "Crea CVs optimizados para ATS, encuentra empleos tech remotos y gestiona tu perfil profesional en un solo ecosistema.",
-    "platformTitle": "Todo lo que necesitas para tu carrera tech",
-    "platformDescription": "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
+    "subtitle": "Create ATS-optimized CVs, find jobs, and manage your professional profile in one ecosystem.",
+    "platformTitle": "Everything you need for your professional career",
+    "platformDescription": "Access specialized tools to create CVs, find jobs, and manage your professional identity with a single login.",
     "moduleProcv": {
       "title": "ProCV Platform",
-      "badge": "Creador de CVs · Optimización ATS",
-      "description": "Creador y optimizador de currículums técnicos adaptados a filtros ATS, con exportación en PDF, JSON y XML. Diseña tu CV profesional en minutos.",
-      "action": "Crear CV sin registro"
+      "badge": "CV Builder · ATS Optimization",
+      "description": "Build and optimize ATS-friendly resumes and export them to PDF, JSON, and XML. Design your professional CV in minutes.",
+      "action": "Create a CV without signing up"
     },
     "moduleProjobs": {
       "title": "ProJobs Platform",
-      "badge": "Búsqueda de empleo tech · Remoto",
-      "description": "Buscador especializado en ofertas de empleo tecnológico remoto con filtros avanzados por stack técnico, seniority y modalidad.",
-      "feature1": "Búsqueda rápida por stack técnico",
-      "feature2": "Tarjetas con coincidencia ATS",
-      "feature3": "Filtros de búsqueda compartibles",
-      "action": "Ver empleos tech"
+      "badge": "Job Search · Every Field",
+      "description": "Job board for every field with filters by workplace, salary, experience level, and skills.",
+      "feature1": "Instant search by role, company, or skill",
+      "feature2": "Cards with ATS match",
+      "feature3": "Shareable search filters",
+      "action": "View jobs"
     }
   },
   "cv": {
@@ -222,7 +222,7 @@
     "currentPosition": "Current Position",
     "description": "Description",
     "achievements": "Achievements",
-    "technologies": "Technologies Used",
+    "technologies": "Tools and Skills",
     "institution": "Institution",
     "degree": "Degree",
     "fieldOfStudy": "Field of Study",
@@ -320,7 +320,7 @@
     "skills": "Skills",
     "result": "AI Result",
     "title": "AI Assistant",
-    "placeholder": "E.g., Improve my summary for a senior developer role",
+    "placeholder": "E.g., Improve my summary for a coordinator role",
     "apply": "Apply",
     "discard": "Discard"
   },
@@ -353,7 +353,7 @@
     "minimal": "Minimal",
     "sidebar": "Sidebar",
     "corporate": "Corporate",
-    "developer": "Developer",
+    "developer": "Contrast",
     "creative": "Creative",
     "classic": "Classic",
     "modern": "Modern",
@@ -575,7 +575,7 @@
         "nationality": "Nationality (country)"
       },
       "help": {
-        "professionalTitle": "e.g. Full Stack Developer, UX/UI Designer",
+        "professionalTitle": "e.g. Sales Associate, Accounting Assistant, Nurse",
         "profileImage": "Square image, max 5MB. Formats: JPG, PNG. You can choose whether to show it.",
         "birthDate": "Age is calculated automatically from the selected date",
         "address": "Optional - Street or full address",
@@ -596,8 +596,8 @@
         "linkedin": "https://linkedin.com/in/your-profile",
         "github": "https://github.com/your-username",
         "twitter": "https://twitter.com/your-username",
-        "valueProposition": "e.g. I shorten tech hiring cycles by up to 30% through automation and talent analytics, enabling teams to deliver faster.",
-        "summary": "e.g. Full Stack Developer with 5 years of experience in modern web technologies...",
+        "valueProposition": "e.g. I grow regional sales by up to 30% by building customer loyalty and opening new distribution channels.",
+        "summary": "e.g. Sales associate with 5 years of experience in customer service and meeting sales targets...",
         "nationality": "Select a nationality"
       },
       "alerts": {
@@ -621,7 +621,7 @@
       "achievementsTitle": "Key Achievements",
       "addAchievement": "Add Achievement",
       "emptyAchievements": "Add measurable achievements to highlight your impact",
-      "technologiesTitle": "Technologies and Tools",
+      "technologiesTitle": "Tools and Skills",
       "employmentTypes": {
         "fullTime": "Full-time",
         "partTime": "Part-time",
@@ -644,12 +644,12 @@
         "jobDescription": "Describe your main responsibilities and duties"
       },
       "placeholders": {
-        "position": "e.g. Full Stack Developer",
-        "company": "e.g. Tech Solutions Inc.",
+        "position": "e.g. Logistics Coordinator",
+        "company": "e.g. Northern Distributors Inc.",
         "location": "e.g. New York, USA",
         "jobDescription": "Describe your responsibilities, duties, and contributions in this role...",
         "achievement": "e.g. Increased website load speed by 40% by optimizing images and code",
-        "searchTechnology": "Search technology..."
+        "searchTechnology": "Add a tool or skill..."
       }
     },
     "education": {
@@ -695,12 +695,12 @@
       },
       "help": {
         "degree": "Select the academic type",
-        "fieldOfStudy": "e.g. Computer Engineering, Business Administration",
+        "fieldOfStudy": "e.g. Business Administration, Nursing",
         "location": "City, Country (optional)",
         "gpa": "GPA, grade average, or grading scale (optional)"
       },
       "placeholders": {
-        "fieldOfStudy": "e.g. Computer Engineering",
+        "fieldOfStudy": "e.g. Accounting",
         "institution": "e.g. National University",
         "location": "e.g. New York, USA",
         "gpa": "e.g. 3.8/4.0, 85%, Excellent",
@@ -1174,7 +1174,7 @@
       "sidebar": "Sidebar",
       "minimal": "Minimal",
       "corporate": "Professional",
-      "developer": "Developer",
+      "developer": "Contrast",
       "creative": "Creative",
       "classic": "Classic",
       "executive": "Executive",

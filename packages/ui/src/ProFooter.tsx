@@ -37,8 +37,8 @@ export function ProFooter({ locale = "es" }: { locale?: "es" | "en" }) {
             <ProSolutionsLogo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-600 dark:text-slate-300">
               {locale === "en"
-                ? "The ecosystem of professional tech tools. Build an ATS-optimized resume with ProCV and find your next remote job with ProJobs."
-                : "El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo remoto con ProJobs."}
+                ? "The ecosystem of tools for your professional career. Build an ATS-optimized resume with ProCV and find your next job with ProJobs."
+                : "El ecosistema de herramientas para tu carrera profesional. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs."}
             </p>
           </div>
 
@@ -78,7 +78,7 @@ export function ProFooter({ locale = "es" }: { locale?: "es" | "en" }) {
               JATC.DEV
             </a>
           </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">{locale === "en" ? "Made for tech professionals" : "Hecho para profesionales tech"}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{locale === "en" ? "Made for professionals in every field" : "Hecho para profesionales de todas las áreas"}</p>
         </div>
       </div>
     </footer>

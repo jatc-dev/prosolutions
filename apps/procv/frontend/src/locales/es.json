@@ -177,24 +177,24 @@
     }
   },
   "home": {
-    "title": "ProSolutions — Plataforma técnica para tu carrera profesional",
-    "subtitle": "Crea CVs optimizados para ATS, encuentra empleos tech remotos y gestiona tu perfil profesional en un solo ecosistema.",
-    "platformTitle": "Todo lo que necesitas para tu carrera tech",
+    "title": "ProSolutions — Plataforma para tu carrera profesional",
+    "subtitle": "Crea CVs optimizados para ATS, encuentra empleo y gestiona tu perfil profesional en un solo ecosistema.",
+    "platformTitle": "Todo lo que necesitas para tu carrera profesional",
     "platformDescription": "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
     "moduleProcv": {
       "title": "ProCV Platform",
       "badge": "Creador de CVs · Optimización ATS",
-      "description": "Creador y optimizador de currículums técnicos adaptados a filtros ATS, con exportación en PDF, JSON y XML. Diseña tu CV profesional en minutos.",
+      "description": "Creador y optimizador de currículums adaptados a filtros ATS, con exportación en PDF, JSON y XML. Diseña tu CV profesional en minutos.",
       "action": "Crear CV sin registro"
     },
     "moduleProjobs": {
       "title": "ProJobs Platform",
-      "badge": "Búsqueda de empleo tech · Remoto",
-      "description": "Buscador especializado en ofertas de empleo tecnológico remoto con filtros avanzados por stack técnico, seniority y modalidad.",
-      "feature1": "Búsqueda rápida por stack técnico",
+      "badge": "Búsqueda de empleo · Todos los sectores",
+      "description": "Bolsa de empleo para todos los sectores con filtros por modalidad, salario, nivel de experiencia y habilidades.",
+      "feature1": "Búsqueda instantánea por cargo, empresa o habilidad",
       "feature2": "Tarjetas con coincidencia ATS",
       "feature3": "Filtros de búsqueda compartibles",
-      "action": "Ver empleos tech"
+      "action": "Ver empleos"
     }
   },
   "cv": {
@@ -222,7 +222,7 @@
     "currentPosition": "Cargo Actual",
     "description": "Descripción",
     "achievements": "Logros",
-    "technologies": "Tecnologías Utilizadas",
+    "technologies": "Herramientas y habilidades",
     "institution": "Institución",
     "degree": "Título",
     "fieldOfStudy": "Campo de Estudio",
@@ -320,7 +320,7 @@
     "skills": "Habilidades",
     "result": "Resultado de IA",
     "title": "Asistente de IA",
-    "placeholder": "Ej: Mejora mi resumen profesional para un rol de senior developer",
+    "placeholder": "Ej: Mejora mi resumen profesional para un cargo de coordinación",
     "apply": "Aplicar",
     "discard": "Descartar"
   },
@@ -353,7 +353,7 @@
     "minimal": "Minimalista",
     "sidebar": "Panel Lateral",
     "corporate": "Corporativo",
-    "developer": "Desarrollador",
+    "developer": "Contraste",
     "creative": "Creativo",
     "classic": "Clásico",
     "modern": "Moderno",
@@ -590,7 +590,7 @@
         "nationality": "Nacionalidad (país)"
       },
       "help": {
-        "professionalTitle": "Ej: Desarrollador Full Stack, Diseñador UX/UI",
+        "professionalTitle": "Ej: Asesor Comercial, Auxiliar Contable, Enfermera",
         "profileImage": "Imagen cuadrada, máximo 5MB. Formatos: JPG, PNG. Puedes decidir si mostrarla en el CV.",
         "birthDate": "Edad calculada automáticamente en función de la fecha seleccionada",
         "address": "Opcional - Direccion de residencia",
@@ -611,8 +611,8 @@
         "linkedin": "https://linkedin.com/in/tu-perfil",
         "github": "https://github.com/tu-usuario",
         "twitter": "https://twitter.com/tu-usuario",
-        "valueProposition": "Ej: Acelero el time-to-hire en equipos tech reduciendo hasta un 30% el ciclo de selección mediante automatización y analítica de talento.",
-        "summary": "Ej: Desarrollador Full Stack con 5 años de experiencia en tecnologías web modernas...",
+        "valueProposition": "Ej: Aumento las ventas de mi zona hasta un 30% fidelizando clientes y abriendo nuevos canales de distribución.",
+        "summary": "Ej: Asesora comercial con 5 años de experiencia en atención al cliente y cumplimiento de metas de venta...",
         "nationality": "Selecciona una nacionalidad"
       },
       "alerts": {
@@ -636,7 +636,7 @@
       "achievementsTitle": "Logros Destacados",
       "addAchievement": "Agregar Logro",
       "emptyAchievements": "Agrega logros cuantificables para destacar tu impacto en el cargo",
-      "technologiesTitle": "Tecnologías y Herramientas",
+      "technologiesTitle": "Herramientas y habilidades",
       "employmentTypes": {
         "fullTime": "Tiempo completo",
         "partTime": "Medio tiempo",
@@ -659,12 +659,12 @@
         "jobDescription": "Describe tus responsabilidades principales y funciones"
       },
       "placeholders": {
-        "position": "Ej: Desarrollador Full Stack",
-        "company": "Ej: Tech Solutions S.A.",
+        "position": "Ej: Coordinador de Logística",
+        "company": "Ej: Distribuidora del Norte S.A.",
         "location": "Ej: Bogotá, Colombia",
         "jobDescription": "Describe tus responsabilidades, funciones y contribuciones en este cargo...",
         "achievement": "Ej: Aumenté la velocidad de carga del sitio web en un 40% optimizando imágenes y código",
-        "searchTechnology": "Buscar tecnología..."
+        "searchTechnology": "Agrega una herramienta o habilidad..."
       }
     },
     "education": {
@@ -710,12 +710,12 @@
       },
       "help": {
         "degree": "Selecciona el tipo de formacion academica",
-        "fieldOfStudy": "Ej: Ingeniería de Sistemas, Licenciatura en Administración",
+        "fieldOfStudy": "Ej: Administración de Empresas, Enfermería",
         "location": "Ciudad, País (opcional)",
         "gpa": "GPA, promedio o escala de calificación (opcional)"
       },
       "placeholders": {
-        "fieldOfStudy": "Ej: Ingeniería de Sistemas",
+        "fieldOfStudy": "Ej: Contaduría Pública",
         "institution": "Ej: Universidad Nacional de Colombia",
         "location": "Ej: Bogotá, Colombia",
         "gpa": "Ej: 4.2/5.0, 85%, Excelente",
@@ -1174,7 +1174,7 @@
       "sidebar": "Panel lateral",
       "minimal": "Minimalista",
       "corporate": "Profesional",
-      "developer": "Desarrollador",
+      "developer": "Contraste",
       "creative": "Creativa",
       "classic": "Clásica",
       "executive": "Ejecutiva",

@@ -16,7 +16,7 @@ export function LandingPage() {
         ProSolutions
       </h1>
       <p className="text-lg text-slate-600 dark:text-slate-300 mb-8">
-        Tu plataforma profesional para crear CVs y encontrar empleos tech.
+        Tu plataforma profesional para crear CVs y encontrar empleo.
       </p>
 
       {/* Module catalog */}
@@ -34,7 +34,7 @@ export function LandingPage() {
           href="https://projobs.prosolutions.page" target="_blank" rel="noreferrer"
           className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-800"
         >
-          Ver empleos tech
+          Ver empleos
         </a>
       </div>
     </div>

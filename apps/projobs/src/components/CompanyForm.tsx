@@ -62,7 +62,7 @@ export function CompanyForm({ company, onSaved, onCancel }: CompanyFormProps) {
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Nombre de la empresa" required minLength={2} maxLength={120} value={form.name} onChange={set("name")} error={fieldErrors.name} />
-        <Input label="Industria" maxLength={80} value={form.industry} onChange={set("industry")} placeholder="Ej. Fintech" />
+        <Input label="Industria" maxLength={80} value={form.industry} onChange={set("industry")} placeholder="Ej. Comercio minorista" />
         <div className="sm:col-span-2">
           <Input label="Frase corta" maxLength={160} value={form.tagline} onChange={set("tagline")} placeholder="Qué hace tu empresa en una línea" />
         </div>

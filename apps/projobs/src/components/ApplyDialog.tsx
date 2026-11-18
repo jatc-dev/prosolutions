@@ -212,10 +212,10 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
               )
             )}
             <Input label="Nombre completo" required minLength={2} value={manual.fullName} onChange={(e) => setManual({ ...manual, fullName: e.target.value })} />
-            <Input label="Titular profesional" placeholder="Ej. Desarrolladora Frontend" value={manual.headline} onChange={(e) => setManual({ ...manual, headline: e.target.value })} />
+            <Input label="Titular profesional" placeholder="Ej. Asesora Comercial" value={manual.headline} onChange={(e) => setManual({ ...manual, headline: e.target.value })} />
             <Input
               label="Habilidades"
-              placeholder="react, typescript, sql"
+              placeholder="excel, atención al cliente, ventas"
               helperText="Separadas por comas. Se usan para calcular tu afinidad."
               value={manual.skills}
               onChange={(e) => setManual({ ...manual, skills: e.target.value })}

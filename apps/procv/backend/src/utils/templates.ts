@@ -752,7 +752,7 @@ function buildDeveloperTemplate(cv: CV) {
       <header class="header">
         <div>
           <h1 class="name">${escapeHtml(personal.name || 'Tu Nombre')}</h1>
-          <p class="role">${escapeHtml(personal.role || 'Desarrollador')}</p>
+          <p class="role">${escapeHtml(personal.role || '')}</p>
           ${
             formatLocation(personal.city, personal.country)
               ? `<p class="role">${escapeHtml(formatLocation(personal.city, personal.country))}</p>`

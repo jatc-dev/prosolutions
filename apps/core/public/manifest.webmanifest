@@ -1,7 +1,7 @@
 {
   "name": "ProSolutions",
   "short_name": "ProSolutions",
-  "description": "Ecosistema de herramientas profesionales tech: ProCV y ProJobs.",
+  "description": "Ecosistema de herramientas para tu carrera profesional: ProCV y ProJobs.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
