@@ -264,7 +264,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
             type="button"
             onClick={expandAllItems}
             disabled={allExpanded}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.expandAll', { defaultValue: 'Expandir todo' })}
           </button>
@@ -272,7 +272,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
             type="button"
             onClick={collapseAllItems}
             disabled={allCollapsed}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.collapseAll', { defaultValue: 'Colapsar todo' })}
           </button>
@@ -281,18 +281,18 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 
       {sortedData.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0V8a2 2 0 01-2 2H8a2 2 0 01-2-2V6m8 0H8" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('editor.experience.emptyTitle')}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">{t('editor.experience.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {t('editor.experience.emptyDescription')}
           </p>
           <div className="mt-6">
             <button
               type="button"
               onClick={addExperience}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600"
             >
               <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -306,11 +306,11 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
           {sortedData.map((experience, index) => (
             <div
               key={experience.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+              className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden"
             >
               {/* Header */}
               <div
-                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="px-6 py-4 bg-slate-50 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => toggleExpandedItem(experience.id)}
               >
                 <div className="flex items-center justify-between">
@@ -319,7 +319,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       {/* Drag handle */}
                       <button
                         type="button"
-                        className="text-gray-400 hover:text-gray-600 p-1"
+                        className="text-slate-400 hover:text-slate-600 p-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           // TODO: Implement drag and drop
@@ -331,14 +331,14 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       </button>
 
                       {/* Position indicator */}
-                      <span className="text-sm font-medium text-gray-500">#{experience.order + 1}</span>
+                      <span className="text-sm font-medium text-slate-500">#{experience.order + 1}</span>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">
+                      <h4 className="text-sm font-medium text-slate-900">
                         {experience.position || t('editor.experience.noPosition')}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {experience.company || t('editor.experience.noCompany')}
                         {experience.location && ` • ${experience.location}`}
                       </p>
@@ -361,7 +361,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                           moveExperience(experience.id, 'up');
                         }}
                         disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -374,7 +374,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                           moveExperience(experience.id, 'down');
                         }}
                         disabled={index === sortedData.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -385,7 +385,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                     {/* Expand/collapse button */}
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-slate-400 hover:text-slate-600"
                     >
                       <svg
                         className={`w-5 h-5 transition-transform ${expandedItems.includes(experience.id) ? 'rotate-180' : ''}`}
@@ -499,9 +499,9 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                             isCurrentPosition: e.target.checked,
                             endDate: e.target.checked ? '' : experience.endDate
                           })}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-slate-300 text-brand-700 focus:ring-brand-600"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{t('editor.experience.currentJobCheckbox')}</span>
+                        <span className="ml-2 text-sm text-slate-700">{t('editor.experience.currentJobCheckbox')}</span>
                       </div>
                     </FormField>
                   </div>
@@ -530,7 +530,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                         disabled={toCheckedBoolean(experience.isCurrentPosition as unknown)}
                        allowPartial/>
                       {toCheckedBoolean(experience.isCurrentPosition as unknown) && (
-                        <p className="text-xs text-gray-500 mt-1">{t('editor.experience.untilCurrentDate')}</p>
+                        <p className="text-xs text-slate-500 mt-1">{t('editor.experience.untilCurrentDate')}</p>
                       )}
                     </FormField>
                   </div>
@@ -552,11 +552,11 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                   {/* Achievements */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-sm font-medium text-gray-700">{t('editor.experience.achievementsTitle')}</h5>
+                      <h5 className="text-sm font-medium text-slate-700">{t('editor.experience.achievementsTitle')}</h5>
                       <button
                         type="button"
                         onClick={() => addAchievement(experience.id)}
-                        className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-2 py-1 border border-slate-300 rounded-md text-xs font-medium text-slate-700 bg-white hover:bg-slate-50"
                       >
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -567,8 +567,8 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 
                     {experience.achievements.map((achievement, achievementIndex) => (
                       <div key={achievementIndex} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
-                          <span className="text-xs font-medium text-blue-600">{achievementIndex + 1}</span>
+                        <div className="flex-shrink-0 w-6 h-6 bg-brand-100 rounded-full flex items-center justify-center mt-1">
+                          <span className="text-xs font-medium text-brand-700">{achievementIndex + 1}</span>
                         </div>
                         <div className="flex-1">
                           <TextareaField
@@ -591,7 +591,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                     ))}
 
                     {experience.achievements.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">
+                      <p className="text-sm text-slate-500 italic">
                         {t('editor.experience.emptyAchievements')}
                       </p>
                     )}
@@ -600,7 +600,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                   {/* Technologies */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-sm font-medium text-gray-700">{t('editor.experience.technologiesTitle')}</h5>
+                      <h5 className="text-sm font-medium text-slate-700">{t('editor.experience.technologiesTitle')}</h5>
                     </div>
 
                     {/* Current technologies */}
@@ -608,13 +608,13 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       {experience.technologies.map((tech) => (
                         <span
                           key={tech}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-brand-100 text-brand-900"
                         >
                           {tech}
                           <button
                             type="button"
                             onClick={() => removeTechnology(experience.id, tech)}
-                            className="ml-2 text-blue-600 hover:text-blue-800"
+                            className="ml-2 text-brand-700 hover:text-brand-900"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -639,10 +639,10 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                             }
                           }
                         }}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
                       />
                       {/* Technology suggestions */}
-                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
                         {technologySuggestions
                           .filter(tech => !experience.technologies.includes(tech))
                           .slice(0, 8)
@@ -651,7 +651,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                               key={tech}
                               type="button"
                               onClick={() => addTechnology(experience.id, tech)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                              className="w-full text-left px-3 py-2 hover:bg-slate-100 text-sm"
                             >
                               {tech}
                             </button>
@@ -669,7 +669,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
             <button
               type="button"
               onClick={addExperience}
-              className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

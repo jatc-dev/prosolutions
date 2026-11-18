@@ -158,7 +158,7 @@ export const ImportReviewModal: React.FC<ImportReviewModalProps> = ({
                             <h4 className="font-semibold text-slate-900 dark:text-slate-100">
                               {t(`editor.tabs.${section}`)} {index + 1}
                             </h4>
-                            <p className={`mt-1 text-sm ${isExcluded ? 'text-slate-500' : complete ? 'text-emerald-700' : 'text-amber-700'}`}>
+                            <p className={`mt-1 text-sm ${isExcluded ? 'text-slate-500' : complete ? 'text-brand-700' : 'text-amber-700'}`}>
                               {isExcluded ? 'Se excluirá de la importación.' : complete ? 'Completo: se incorporará al editor.' : 'Necesita revisión antes de aplicar.'}
                             </p>
                           </div>
@@ -218,7 +218,7 @@ export const ImportReviewModal: React.FC<ImportReviewModalProps> = ({
             type="button"
             onClick={applyDraft}
             disabled={totalDetected === 0 || incompleteItems.length > 0}
-            className="inline-flex items-center rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+            className="inline-flex items-center rounded-md bg-brand-800 px-4 py-2 text-sm font-medium text-white hover:bg-brand-900 disabled:opacity-50"
           >
             {t('editor.importer.apply')}
           </button>

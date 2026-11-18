@@ -93,7 +93,7 @@ function Textarea({ id, label, hint, value, onChange, rows = 4, required, maxLen
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error)}
-        className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 aria-[invalid=true]:border-red-500"
+        className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30 aria-[invalid=true]:border-red-500"
       />
       {error ? <p className="mt-1 text-sm text-red-600">{error}</p> : hint && <p className="mt-1 text-xs text-ui-muted">{hint}</p>}
     </div>
@@ -119,9 +119,9 @@ function SkillsInput({ skills, onChange }: { skills: string[]; onChange: (skills
   return (
     <div>
       <label htmlFor="skills" className="mb-1 block text-sm font-medium">Habilidades requeridas</label>
-      <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-ui-border bg-ui-surface p-2 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/30">
+      <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-ui-border bg-ui-surface p-2 focus-within:border-brand-700 focus-within:ring-2 focus-within:ring-brand-700/30">
         {skills.map((skill) => (
-          <span key={skill} className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
+          <span key={skill} className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-900 dark:bg-brand-700/15 dark:text-brand-200">
             {skill}
             <button type="button" onClick={() => onChange(skills.filter((item) => item !== skill))} aria-label={`Quitar ${skill}`}><X className="h-3 w-3" /></button>
           </span>

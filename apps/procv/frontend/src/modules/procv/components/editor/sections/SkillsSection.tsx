@@ -94,14 +94,14 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     setExpandedItems((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
   };
     const skillCategories: { value: SkillsSectionCategory; label: string; color: string }[] = [
-      { value: 'technical', label: t('editor.skills.categories.technical'), color: 'bg-blue-100 text-blue-800' },
+      { value: 'technical', label: t('editor.skills.categories.technical'), color: 'bg-brand-100 text-brand-900' },
       { value: 'soft', label: t('editor.skills.categories.soft'), color: 'bg-green-100 text-green-800' },
     ];
 
     const skillLevels: { value: SkillLevel; label: string; description: string; color: string }[] = [
       { value: 'beginner', label: t('editor.skills.levels.beginner'), description: t('editor.skills.levelDescriptions.beginner'), color: 'bg-red-100 text-red-800' },
       { value: 'intermediate', label: t('editor.skills.levels.intermediate'), description: t('editor.skills.levelDescriptions.intermediate'), color: 'bg-yellow-100 text-yellow-800' },
-      { value: 'advanced', label: t('editor.skills.levels.advanced'), description: t('editor.skills.levelDescriptions.advanced'), color: 'bg-blue-100 text-blue-800' },
+      { value: 'advanced', label: t('editor.skills.levels.advanced'), description: t('editor.skills.levelDescriptions.advanced'), color: 'bg-brand-100 text-brand-900' },
       { value: 'expert', label: t('editor.skills.levels.expert'), description: t('editor.skills.levelDescriptions.expert'), color: 'bg-green-100 text-green-800' },
     ];
 
@@ -230,9 +230,9 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     const percentage = ((levelIndex + 1) / skillLevels.length) * 100;
 
     return (
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-slate-200 rounded-full h-2">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          className="bg-brand-700 h-2 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         ></div>
       </div>
@@ -247,15 +247,15 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
       isLoading={isLoading}
     >
       {/* Add new skill */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h4 className="text-sm font-medium text-gray-900">{t('editor.skills.addNew')}</h4>
+      <div className="bg-slate-50 rounded-lg p-6 space-y-4">
+        <h4 className="text-sm font-medium text-slate-900">{t('editor.skills.addNew')}</h4>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField label={t('editor.skills.fields.category')}>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value as SkillsSectionCategory)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
             >
               {skillCategories.map(category => (
                 <option key={category.value} value={category.value}>
@@ -293,7 +293,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
             type="button"
             onClick={() => addSkill(newSkillName)}
             disabled={!newSkillName.trim()}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -309,7 +309,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
             type="button"
             onClick={expandAllItems}
             disabled={allExpanded}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.expandAll', { defaultValue: 'Expandir todo' })}
           </button>
@@ -317,7 +317,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
             type="button"
             onClick={collapseAllItems}
             disabled={allCollapsed}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.collapseAll', { defaultValue: 'Colapsar todo' })}
           </button>
@@ -332,7 +332,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
         return (
           <div key={category.value} className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-lg font-medium text-gray-900 flex items-center">
+              <h4 className="text-lg font-medium text-slate-900 flex items-center">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryInfo.color} mr-3`}>
                   {categoryInfo.label}
                 </span>
@@ -341,11 +341,11 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
             </div>
 
             {categorySkills.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-8 bg-slate-50 rounded-lg">
+                <svg className="mx-auto h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-slate-500">
                   {t('editor.skills.emptyByCategory')}
                 </p>
               </div>
@@ -354,7 +354,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                 {categorySkills.map((skill, index) => (
                   <div
                     key={skill.id}
-                    className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow ${draggedSkillId === skill.id ? 'border-blue-300 bg-blue-50/30' : 'border-gray-200'}`}
+                    className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow ${draggedSkillId === skill.id ? 'border-brand-300 bg-brand-50/30' : 'border-slate-200'}`}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => handleDrop(skill.id, event)}
                   >
@@ -363,7 +363,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                       onClick={() => toggleExpandedItem(skill.id)}
                     >
                       <div className="flex-1">
-                        <h5 className="text-sm font-medium text-gray-900">{skill.name}</h5>
+                        <h5 className="text-sm font-medium text-slate-900">{skill.name}</h5>
                         <label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500" onClick={(event) => event.stopPropagation()}><input type="checkbox" checked={skill.isVisible !== false} onChange={(event) => updateSkill(skill.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
                         <div className="flex items-center mt-1 space-x-2">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -386,7 +386,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                           onClick={(event) => event.stopPropagation()}
                           onDragStart={(event) => handleDragStart(skill.id, event)}
                           onDragEnd={() => setDraggedSkillId(null)}
-                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          className="text-slate-400 hover:text-slate-600 p-0.5"
                           title={t('editor.skills.reorderHint', { defaultValue: 'Arrastra para reordenar' })}
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +403,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                               moveSkill(skill.id, 'up');
                             }}
                             disabled={index === 0}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50 p-0.5"
+                            className="text-slate-400 hover:text-slate-600 disabled:opacity-50 p-0.5"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -416,7 +416,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                               moveSkill(skill.id, 'down');
                             }}
                             disabled={index === categorySkills.length - 1}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-50 p-0.5"
+                            className="text-slate-400 hover:text-slate-600 disabled:opacity-50 p-0.5"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -430,7 +430,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                             event.stopPropagation();
                             toggleExpandedItem(skill.id);
                           }}
-                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          className="text-slate-400 hover:text-slate-600 p-0.5"
                         >
                           <svg
                             className={`w-4 h-4 transition-transform ${expandedItems.includes(skill.id) ? 'rotate-180' : ''}`}
@@ -469,11 +469,11 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                     <div className="space-y-2">
                       {/* Level selector */}
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">{t('editor.skills.fields.level')}:</span>
+                        <span className="text-slate-500">{t('editor.skills.fields.level')}:</span>
                         <select
                           value={skill.level}
                           onChange={(e) => updateSkill(skill.id, { level: e.target.value as SkillLevel })}
-                          className="text-xs border-0 p-0 text-gray-900 bg-transparent focus:ring-0"
+                          className="text-xs border-0 p-0 text-slate-900 bg-transparent focus:ring-0"
                         >
                           {skillLevels.map(level => (
                             <option key={level.value} value={level.value}>
@@ -485,13 +485,13 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
 
                       {/* Years of experience */}
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">{t('editor.skills.fields.yearsOfExperience')}:</span>
+                        <span className="text-slate-500">{t('editor.skills.fields.yearsOfExperience')}:</span>
                         <select
                           value={skill.yearsOfExperience || ''}
                           onChange={(e) => updateSkill(skill.id, {
                             yearsOfExperience: e.target.value ? parseInt(e.target.value) : undefined
                           })}
-                          className="text-xs border-0 p-0 text-gray-900 bg-transparent focus:ring-0"
+                          className="text-xs border-0 p-0 text-slate-900 bg-transparent focus:ring-0"
                         >
                           <option value="">{t('editor.skills.years.unspecified')}</option>
                           <option value="1">{t('editor.skills.years.1')}</option>
@@ -506,12 +506,12 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
 
                       {/* Certification */}
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">{t('editor.skills.fields.certified')}:</span>
+                        <span className="text-slate-500">{t('editor.skills.fields.certified')}:</span>
                         <input
                           type="checkbox"
                           checked={skill.isCertified}
                           onChange={(e) => updateSkill(skill.id, { isCertified: e.target.checked })}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 scale-75"
+                          className="rounded border-slate-300 text-brand-700 focus:ring-brand-600 scale-75"
                         />
                       </div>
                     </div>

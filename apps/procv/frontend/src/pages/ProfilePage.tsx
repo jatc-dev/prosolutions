@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../stores/authStore";
 import { AppHeader } from "../components/AppHeader";
-import { Footer } from "../components/Footer";
 import { Input, Button } from "@prosolutions/ui";
 import { useApi } from "../hooks/useApi";
 import { identityAuthApiUrl } from "../lib/identityUrl";
@@ -104,7 +103,7 @@ export function ProfilePage() {
             {/* Profile Avatar Section */}
           {/* Profile Avatar Section */}
           <div className="flex items-center gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
-            <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-brand-700 rounded-full flex items-center justify-center">
               <span className="text-xl font-semibold text-white">
                 {(user?.name || user?.email || 'U')[0].toUpperCase()}
               </span>
@@ -195,7 +194,7 @@ export function ProfilePage() {
         </div>
       </main>
 
-      <Footer />
+
     </div>
   );
 }

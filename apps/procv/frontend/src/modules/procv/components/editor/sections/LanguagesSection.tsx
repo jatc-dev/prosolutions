@@ -74,7 +74,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
     { value: 'A2', label: 'A2', description: t('editor.languages.levels.a2'), color: 'bg-red-200 text-red-900' },
     { value: 'B1', label: 'B1', description: t('editor.languages.levels.b1'), color: 'bg-yellow-100 text-yellow-800' },
     { value: 'B2', label: 'B2', description: t('editor.languages.levels.b2'), color: 'bg-yellow-200 text-yellow-900' },
-    { value: 'C1', label: 'C1', description: t('editor.languages.levels.c1'), color: 'bg-blue-100 text-blue-800' },
+    { value: 'C1', label: 'C1', description: t('editor.languages.levels.c1'), color: 'bg-brand-100 text-brand-900' },
     { value: 'C2', label: 'C2', description: t('editor.languages.levels.c2'), color: 'bg-green-100 text-green-800' },
   ];
 
@@ -193,7 +193,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
   };
 
   const getLevelColor = (level: LanguageLevel) => {
-    return languageLevels.find(l => l.value === level)?.color || 'bg-gray-100 text-gray-800';
+    return languageLevels.find(l => l.value === level)?.color || 'bg-slate-100 text-slate-800';
   };
 
   const getLevelBar = (level: LanguageLevel) => {
@@ -201,9 +201,9 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
     const percentage = ((levelIndex + 1) / languageLevels.length) * 100;
 
     return (
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-slate-200 rounded-full h-2">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          className="bg-brand-700 h-2 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         ></div>
       </div>
@@ -224,8 +224,8 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
       isLoading={isLoading}
     >
       {/* Add new language */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h4 className="text-sm font-medium text-gray-900">{t('editor.languages.addNew')}</h4>
+      <div className="bg-slate-50 rounded-lg p-6 space-y-4">
+        <h4 className="text-sm font-medium text-slate-900">{t('editor.languages.addNew')}</h4>
 
         <div className="relative">
           <FormField label={t('editor.languages.fields.language')}>
@@ -252,7 +252,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
             type="button"
             onClick={() => addLanguage(newLanguage)}
             disabled={!newLanguage.trim()}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -269,7 +269,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
             type="button"
             onClick={expandAllItems}
             disabled={allExpanded}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.expandAll', { defaultValue: 'Expandir todo' })}
           </button>
@@ -277,7 +277,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
             type="button"
             onClick={collapseAllItems}
             disabled={allCollapsed}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.collapseAll', { defaultValue: 'Colapsar todo' })}
           </button>
@@ -286,11 +286,11 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 
       {sortedData.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M9 3v2m6-2v2M7 9h.01M7 12h.01M7 15h.01M10 12h.01M10 15h.01M13 12h.01M13 15h.01M16 12h.01M16 15h.01M19 12h.01M19 15h.01M3 9a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('editor.languages.emptyTitle')}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">{t('editor.languages.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {t('editor.languages.emptyDescription')}
           </p>
         </div>
@@ -299,13 +299,13 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
           {sortedData.map((language, index) => (
             <div
               key={language.id}
-              className={`bg-white border rounded-lg shadow-sm overflow-hidden transition-colors ${draggedLanguageId === language.id ? 'border-blue-300 bg-blue-50/30' : 'border-gray-200'}`}
+              className={`bg-white border rounded-lg shadow-sm overflow-hidden transition-colors ${draggedLanguageId === language.id ? 'border-brand-300 bg-brand-50/30' : 'border-slate-200'}`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => handleDrop(language.id, event)}
             >
               {/* Header */}
               <div
-                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="px-6 py-4 bg-slate-50 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => toggleExpandedItem(language.id)}
               >
                 <div className="flex items-center justify-between">
@@ -316,7 +316,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                       onClick={(event) => event.stopPropagation()}
                       onDragStart={(event) => handleDragStart(language.id, event)}
                       onDragEnd={() => setDraggedLanguageId(null)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-slate-400 hover:text-slate-600 p-1"
                       title={t('editor.languages.reorderHint', { defaultValue: 'Arrastra para reordenar' })}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,7 +326,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 
                     {/* Language name and flag */}
                     <div>
-                      <h4 className="text-lg font-medium text-gray-900">{language.language}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={language.isVisible !== false} onChange={(event) => updateLanguage(language.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
+                      <h4 className="text-lg font-medium text-slate-900">{language.language}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={language.isVisible !== false} onChange={(event) => updateLanguage(language.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
                       <div className="flex items-center space-x-2 mt-1">
                         {language.certification && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
@@ -334,7 +334,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                           </span>
                         )}
                         {language.yearsOfStudy && (
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-slate-600">
                             {t('editor.languages.yearsOfStudyLabel', { count: language.yearsOfStudy })}
                           </span>
                         )}
@@ -352,7 +352,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                           moveLanguage(language.id, 'up');
                         }}
                         disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -365,7 +365,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                           moveLanguage(language.id, 'down');
                         }}
                         disabled={index === sortedData.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -379,7 +379,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                         event.stopPropagation();
                         toggleExpandedItem(language.id);
                       }}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-slate-400 hover:text-slate-600"
                     >
                       <svg
                         className={`w-5 h-5 transition-transform ${expandedItems.includes(language.id) ? 'rotate-180' : ''}`}
@@ -416,7 +416,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                     <div key={skill.key} className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{skill.icon}</span>
-                        <span className="text-sm font-medium text-gray-700">{skill.label}</span>
+                        <span className="text-sm font-medium text-slate-700">{skill.label}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getLevelColor(language[skill.key])}`}>
                           {language[skill.key]}
                         </span>
@@ -425,7 +425,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                       <select
                         value={language[skill.key]}
                         onChange={(e) => updateLanguage(language.id, { [skill.key]: e.target.value as LanguageLevel })}
-                        className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="block w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600"
                       >
                         {languageLevels.map(level => (
                           <option key={level.value} value={level.value}>
@@ -438,7 +438,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                 </div>
 
                 {/* Additional information */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="mt-6 pt-6 border-t border-slate-200">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       label={t('editor.languages.fields.certification')}
@@ -460,7 +460,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
                         onChange={(e) => updateLanguage(language.id, {
                           yearsOfStudy: e.target.value ? parseInt(e.target.value) : undefined
                         })}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
                       >
                         <option value="">{t('editor.languages.years.unspecified')}</option>
                         <option value="1">{t('editor.languages.years.1')}</option>

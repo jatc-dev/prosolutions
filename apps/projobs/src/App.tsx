@@ -18,7 +18,7 @@ const PipelinePage = lazy(() => import("./pages/employer/PipelinePage").then((m)
 function NotFound() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <EmptyState icon={<SearchX className="h-10 w-10" />} title="Página no encontrada" action={<Link to="/" className="font-semibold text-brand-600 hover:underline">Ir a empleos</Link>} />
+      <EmptyState icon={<SearchX className="h-10 w-10" />} title="Página no encontrada" action={<Link to="/" className="font-semibold text-brand-800 hover:underline">Ir a empleos</Link>} />
     </div>
   );
 }

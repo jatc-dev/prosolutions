@@ -8,12 +8,12 @@ export function Hero() {
   return (
     <section id="inicio" className="relative overflow-hidden">
       <div className="ui-halo left-[-6rem] top-[-4rem]" aria-hidden="true" />
-      <div className="ui-halo right-[-8rem] top-24 bg-blue-400/20 dark:bg-blue-500/10" aria-hidden="true" />
+      <div className="ui-halo right-[-8rem] top-24 bg-brand-400/20 dark:bg-brand-700/10" aria-hidden="true" />
 
       <div className="ui-container relative py-20 md:py-28">
         <div className="mx-auto max-w-3xl text-center animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-400">
-            <Sparkles className="h-3.5 w-3.5 text-brand-500" />
+            <Sparkles className="h-3.5 w-3.5 text-brand-700" />
             {copy.hero.badge}
           </span>
 
@@ -34,7 +34,7 @@ export function Hero() {
               href={`${APP_URLS.procv.replace(/\/+$/, "")}/dashboard`}
               target="_blank"
               rel="noreferrer"
-              className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 active:scale-[0.99] sm:w-auto dark:bg-brand-500 dark:text-slate-950 dark:hover:bg-brand-400"
+              className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-800 px-7 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-900 active:scale-[0.99] sm:w-auto dark:bg-brand-700 dark:text-slate-950 dark:hover:bg-brand-400"
             >
               <FileText className="h-5 w-5" />
               {copy.hero.procvCta}
@@ -46,7 +46,7 @@ export function Hero() {
               rel="noreferrer"
               className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-7 text-base font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.99] sm:w-auto dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              <Briefcase className="h-5 w-5 text-emerald-500" />
+              <Briefcase className="h-5 w-5 text-brand-500" />
               {copy.hero.projobsCta}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>

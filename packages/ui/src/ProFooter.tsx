@@ -54,7 +54,7 @@ export function ProFooter({ locale = "es" }: { locale?: "es" | "en" }) {
                       href={link.href}
                       target={link.external ? "_blank" : undefined}
                       rel={link.external ? "noreferrer" : undefined}
-                      className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-300"
+                      className="inline-flex items-center gap-1 text-sm text-slate-600 transition-colors hover:text-brand-800 dark:text-slate-300 dark:hover:text-brand-300"
                     >
                       {link.label}
                       {link.external ? <ArrowUpRight className="h-3.5 w-3.5 opacity-60" /> : null}
@@ -73,7 +73,7 @@ export function ProFooter({ locale = "es" }: { locale?: "es" | "en" }) {
               href={JATC_URL}
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-slate-700 transition-colors hover:text-brand-600 dark:text-slate-200 dark:hover:text-brand-300"
+              className="font-semibold text-slate-700 transition-colors hover:text-brand-800 dark:text-slate-200 dark:hover:text-brand-300"
             >
               JATC.DEV
             </a>

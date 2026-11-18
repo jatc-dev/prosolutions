@@ -198,7 +198,7 @@ export function HomePage() {
                         aria-label={showPassword ? copy.auth.hidePassword : copy.auth.showPassword}
                         aria-pressed={showPassword}
                         title={showPassword ? copy.auth.hidePassword : copy.auth.showPassword}
-                        className="inline-flex h-8 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        className="inline-flex h-8 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                       >
                         {showPassword
                           ? <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -208,13 +208,13 @@ export function HomePage() {
                   />
 
                   <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <input type="checkbox" name="rememberMe" className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
+                    <input type="checkbox" name="rememberMe" className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-800 focus:ring-brand-700" />
                     <span><span className="font-medium">Permanecer conectado en este equipo</span><span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">Mantendremos tu sesión hasta 30 días. No actives esta opción en equipos compartidos.</span></span>
                   </label>
                   <div className="flex justify-end mb-2">
                     <a
                       href="/forgot-password"
-                      className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                      className="text-sm text-brand-800 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-300"
                     >
                       {copy.auth.forgotPassword}
                     </a>
@@ -224,7 +224,7 @@ export function HomePage() {
                     type="submit"
                     size="lg"
                     disabled={isSubmitting}
-                    className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors"
+                    className="w-full py-3 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-lg transition-colors"
                   >
                     {isSubmitting ? copy.auth.signingIn : copy.auth.signIn}
                   </Button>
@@ -236,7 +236,7 @@ export function HomePage() {
                   </p>
                   <a
                     href="/register"
-                    className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                    className="text-sm font-medium text-brand-800 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-300"
                   >
                     {copy.auth.createAccount}
                   </a>

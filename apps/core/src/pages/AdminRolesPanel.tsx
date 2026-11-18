@@ -118,7 +118,7 @@ export function AdminRolesPanel({
         </p>
       </div>
       {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">{error}</p>}
-      {notice && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{notice}</p>}
+      {notice && <p role="status" className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-800 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-200">{notice}</p>}
       {loading ? <p className="py-10 text-center text-slate-500">{english ? "Loading role catalog…" : "Cargando catálogo de roles…"}</p> : (
         <>
           {canManage && <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
@@ -145,7 +145,7 @@ export function AdminRolesPanel({
                 <input type="datetime-local" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950" />
               </label>
             </div>
-            <button type="button" disabled={busy || !userId || !roleKey} onClick={() => void assign()} className="mt-4 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <button type="button" disabled={busy || !userId || !roleKey} onClick={() => void assign()} className="mt-4 rounded-xl bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
               {busy ? (english ? "Saving…" : "Guardando…") : (english ? "Assign role" : "Asignar rol")}
             </button>
           </article>}

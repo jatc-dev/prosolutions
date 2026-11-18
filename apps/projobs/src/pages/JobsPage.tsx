@@ -93,7 +93,7 @@ export function JobsPage() {
 
   return (
     <>
-      <section className="border-b border-ui-border bg-gradient-to-b from-brand-50/70 to-transparent dark:from-brand-500/5">
+      <section className="border-b border-ui-border bg-gradient-to-b from-brand-50/70 to-transparent dark:from-brand-700/5">
         <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Encuentra tu próximo empleo</h1>
           <p className="mt-2 max-w-2xl text-ui-muted">
@@ -126,7 +126,7 @@ export function JobsPage() {
             </label>
           </form>
           {mySkills.length > 0 && (
-            <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-700 dark:text-brand-300">
+            <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-900 dark:text-brand-300">
               <Sparkles className="h-4 w-4" aria-hidden="true" /> Mostrando tu afinidad según las {mySkills.length} habilidades de tu CV en ProCV.
             </p>
           )}
@@ -185,10 +185,10 @@ export function JobsPage() {
               title="Aún no hay vacantes publicadas"
               action={
                 <div className="flex flex-col items-center gap-3 sm:flex-row">
-                  <a href={`${PROCV_URL}/dashboard`} className="inline-flex h-10 items-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">
+                  <a href={`${PROCV_URL}/dashboard`} className="inline-flex h-10 items-center rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white hover:bg-brand-900">
                     Prepara tu CV en ProCV
                   </a>
-                  <Link to="/empresa" className="text-sm font-semibold text-brand-600 hover:underline">
+                  <Link to="/empresa" className="text-sm font-semibold text-brand-800 hover:underline">
                     ¿Eres empresa? Publica tu primera vacante
                   </Link>
                 </div>
@@ -202,7 +202,7 @@ export function JobsPage() {
               icon={<SearchX className="h-10 w-10" />}
               title="No encontramos vacantes con esos criterios"
               action={filterCount > 0 || filters.q ? (
-                <button type="button" className="font-semibold text-brand-600 hover:underline" onClick={() => setParams(new URLSearchParams())}>
+                <button type="button" className="font-semibold text-brand-800 hover:underline" onClick={() => setParams(new URLSearchParams())}>
                   Limpiar búsqueda y filtros
                 </button>
               ) : undefined}

@@ -12,10 +12,10 @@ import { useSession } from "../../lib/session";
 
 const COLUMN_TONE: Record<PipelineStage, string> = {
   applied: "border-t-amber-400",
-  screening: "border-t-sky-400",
-  interview: "border-t-brand-500",
+  screening: "border-t-brand-400",
+  interview: "border-t-brand-700",
   offer: "border-t-violet-400",
-  hired: "border-t-emerald-500",
+  hired: "border-t-brand-500",
   rejected: "border-t-slate-400",
 };
 
@@ -59,11 +59,11 @@ function CandidateDrawer({ application, job, onClose, onMoved }: {
         </div>
 
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ui-muted">
-          {candidate.email && <a href={`mailto:${candidate.email}`} className="inline-flex items-center gap-1 hover:text-brand-600"><Mail className="h-4 w-4" />{candidate.email}</a>}
+          {candidate.email && <a href={`mailto:${candidate.email}`} className="inline-flex items-center gap-1 hover:text-brand-800"><Mail className="h-4 w-4" />{candidate.email}</a>}
           {candidate.phone && <span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" />{candidate.phone}</span>}
           {candidate.location && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{candidate.location}</span>}
           {candidate.links.map((link) => (
-            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 capitalize text-brand-600 hover:underline">
+            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 capitalize text-brand-800 hover:underline">
               {link.label} <ExternalLink className="h-3 w-3" />
             </a>
           ))}
@@ -112,7 +112,7 @@ function CandidateDrawer({ application, job, onClose, onMoved }: {
         {application.coverLetter && (
           <section>
             <h3 className="mb-1 text-sm font-semibold">Mensaje del candidato</h3>
-            <blockquote className="whitespace-pre-line rounded-xl border-l-4 border-brand-500 bg-ui-soft/60 p-3 text-sm">{application.coverLetter}</blockquote>
+            <blockquote className="whitespace-pre-line rounded-xl border-l-4 border-brand-700 bg-ui-soft/60 p-3 text-sm">{application.coverLetter}</blockquote>
           </section>
         )}
 
@@ -139,7 +139,7 @@ function CandidateDrawer({ application, job, onClose, onMoved }: {
             </Select>
             <div>
               <label htmlFor="stage-note" className="mb-1 block text-sm font-medium">Nota interna <span className="font-normal text-ui-muted">(opcional, visible en el historial)</span></label>
-              <textarea id="stage-note" rows={2} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
+              <textarea id="stage-note" rows={2} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30" />
             </div>
             {error && <ErrorNotice message={error} />}
             <div className="flex justify-end">
@@ -181,7 +181,7 @@ export function PipelinePage() {
           <h1 className="text-3xl font-bold">{job.data.job.title}</h1>
           <p className="text-ui-muted">{applications.length - withdrawn.length} {applications.length - withdrawn.length === 1 ? "candidato activo" : "candidatos activos"} · ordenados por afinidad</p>
         </div>
-        <Link to={`/empresa/vacantes/${jobId}/editar`} className="text-sm font-semibold text-brand-600 hover:underline">Editar vacante</Link>
+        <Link to={`/empresa/vacantes/${jobId}/editar`} className="text-sm font-semibold text-brand-800 hover:underline">Editar vacante</Link>
       </header>
 
       {applications.length === 0 ? (
@@ -198,7 +198,7 @@ export function PipelinePage() {
               <ul className="flex-1 space-y-2 px-3 pb-3">
                 {items.map((item) => (
                   <li key={item.id}>
-                    <button type="button" onClick={() => setOpenId(item.id)} className="w-full rounded-xl border border-ui-border bg-ui-surface p-3 text-left shadow-card transition hover:border-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500">
+                    <button type="button" onClick={() => setOpenId(item.id)} className="w-full rounded-xl border border-ui-border bg-ui-surface p-3 text-left shadow-card transition hover:border-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-700">
                       <span className="block truncate text-sm font-semibold">{item.candidate.fullName}</span>
                       {item.candidate.headline && <span className="block truncate text-xs text-ui-muted">{item.candidate.headline}</span>}
                       <span className="mt-2 flex items-center justify-between gap-2">

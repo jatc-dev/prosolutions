@@ -4,8 +4,8 @@
   "description": "Ecosistema de herramientas para tu carrera profesional: ProCV y ProJobs.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "background_color": "#f8fafc",
+  "theme_color": "#047857",
   "icons": [
     {
       "src": "/favicon.svg",

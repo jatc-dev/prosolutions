@@ -46,7 +46,7 @@ export function ApplicationsPage() {
       ) : error ? (
         <ErrorNotice message={errorMessage(error)} onRetry={reload} />
       ) : applications.length === 0 ? (
-        <EmptyState icon={<FileCheck2 className="h-10 w-10" />} title="Aún no te has postulado" action={<Link to="/" className="font-semibold text-brand-600 hover:underline">Explorar vacantes</Link>}>
+        <EmptyState icon={<FileCheck2 className="h-10 w-10" />} title="Aún no te has postulado" action={<Link to="/" className="font-semibold text-brand-800 hover:underline">Explorar vacantes</Link>}>
           Cuando te postules, aquí verás en qué etapa está cada proceso.
         </EmptyState>
       ) : (
@@ -59,7 +59,7 @@ export function ApplicationsPage() {
                 <div className="flex flex-wrap items-start gap-4">
                   <CompanyLogo company={application.job.company} />
                   <div className="min-w-0 flex-1">
-                    <Link to={`/empleos/${application.job.slug}`} className="font-semibold hover:text-brand-600 hover:underline">
+                    <Link to={`/empleos/${application.job.slug}`} className="font-semibold hover:text-brand-800 hover:underline">
                       {application.job.title}
                     </Link>
                     <p className="text-sm text-ui-muted">{application.job.company.name} · Postulado el {formatDate(application.createdAt)}</p>

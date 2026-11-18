@@ -42,6 +42,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Design system tokens and palette guard
+        run: |
+          node packages/ui/scripts/build-tokens.mjs --check
+          node packages/ui/scripts/check-palette.mjs
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

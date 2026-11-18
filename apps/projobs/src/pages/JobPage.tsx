@@ -33,7 +33,7 @@ export function JobPage() {
       {loading && !data ? (
         <Spinner label="Cargando vacante" />
       ) : error instanceof ApiError && error.status === 404 ? (
-        <EmptyState icon={<SearchX className="h-10 w-10" />} title="Esta vacante no existe o ya no está disponible" action={<Link to="/" className="font-semibold text-brand-600 hover:underline">Ver vacantes abiertas</Link>} />
+        <EmptyState icon={<SearchX className="h-10 w-10" />} title="Esta vacante no existe o ya no está disponible" action={<Link to="/" className="font-semibold text-brand-800 hover:underline">Ver vacantes abiertas</Link>} />
       ) : error ? (
         <ErrorNotice message={errorMessage(error)} onRetry={reload} />
       ) : data ? (

@@ -33,7 +33,7 @@ function BulletList({ title, items }: { title: string; items: string[] }) {
       <ul className="space-y-1.5 text-sm leading-relaxed text-ui-muted">
         {items.map((item) => (
           <li key={item} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden="true" />
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-700" aria-hidden="true" />
             <span>{item}</span>
           </li>
         ))}
@@ -89,7 +89,7 @@ export function JobDetailView({ job, similar = [], mySkills = [], onChange, onTo
           <div className="min-w-0">
             <h1 className={cn("font-bold leading-tight", compact ? "text-2xl" : "text-3xl")}>{job.title}</h1>
             <p className="mt-1 text-ui-muted">
-              <Link to={`/empresas/${job.company.slug}`} className="font-medium text-ui-text hover:text-brand-600 hover:underline">
+              <Link to={`/empresas/${job.company.slug}`} className="font-medium text-ui-text hover:text-brand-800 hover:underline">
                 {job.company.name}
               </Link>
               {job.company.industry && <> · {job.company.industry}</>}
@@ -156,7 +156,7 @@ export function JobDetailView({ job, similar = [], mySkills = [], onChange, onTo
           {job.companyProfile.sizeRange && <span>{job.companyProfile.sizeRange} personas</span>}
           {job.companyProfile.headquarters && <span>{job.companyProfile.headquarters}</span>}
           {job.companyProfile.website && (
-            <a href={job.companyProfile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+            <a href={job.companyProfile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-800 hover:underline">
               <Globe2 className="h-4 w-4" aria-hidden="true" /> Sitio web <ExternalLink className="h-3 w-3" aria-hidden="true" />
             </a>
           )}

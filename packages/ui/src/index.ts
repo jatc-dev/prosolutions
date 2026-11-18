@@ -23,4 +23,4 @@ export { cn } from "./utils.js";
 
 // Tokens de diseño
 export { tokens } from "./tokens.js";
-export type { TokenColor, TokenFontSize, TokenFontWeight, TokenRadius, TokenSpace, TokenShadow, TokenTransition } from "./tokens.js";
+export type { BrandStep, NeutralStep, SemanticToken, TokenRadius } from "./tokens.js";

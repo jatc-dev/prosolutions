@@ -20,7 +20,7 @@ function Kpi({ icon, label, value }: { icon: ReactNode; label: string; value: nu
 }
 
 const STATUS_TONE: Record<EmployerJob["status"], string> = {
-  published: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  published: "bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-300",
   draft: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
   closed: "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
 };
@@ -112,7 +112,7 @@ export function EmployerPage() {
                 {jobs.data.jobs.map((job) => (
                   <tr key={job.id} className="hover:bg-ui-soft/50">
                     <td className="px-4 py-3">
-                      <Link to={`/empresa/vacantes/${job.id}/candidatos`} className="font-semibold hover:text-brand-600 hover:underline">{job.title}</Link>
+                      <Link to={`/empresa/vacantes/${job.id}/candidatos`} className="font-semibold hover:text-brand-800 hover:underline">{job.title}</Link>
                       <p className="text-xs text-ui-muted">{WORKPLACE_LABEL[job.workplace]} · {EMPLOYMENT_LABEL[job.employmentType]} · actualizada {timeAgo(job.updatedAt)}</p>
                     </td>
                     <td className="px-4 py-3"><span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_TONE[job.status])}>{STATUS_LABEL[job.status]}</span></td>

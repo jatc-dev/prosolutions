@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Briefcase, FileText, House, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
+import { Briefcase, Building2, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -18,10 +18,20 @@ interface HeaderProfile {
   name?: string | null;
   email: string;
   avatarUrl?: string | null;
+  /** Capability modules from ProIdentity (e.g. PRORECRUIT shows the company panel). */
+  modules?: string[] | null;
+  /** Shows the Administration entry (the server still enforces permissions). */
+  isAdmin?: boolean;
+}
+
+interface MenuLink {
+  label: string;
+  href: string;
+  icon: LucideIcon;
 }
 
 interface ProHeaderProps {
-  /** App actual: resalta su enlace con un badge "Activo". */
+  /** App actual: marca su enlace como página activa (aria-current). */
   activeApp: ActiveApp;
   /** Usuario autenticado; cuando existe, muestra el menú unificado de cuenta. */
   profile?: HeaderProfile | null;
@@ -54,7 +64,7 @@ function ThemeToggle({ locale }: { locale: "es" | "en" }) {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
       aria-label={isDark ? (locale === "en" ? "Switch to light mode" : "Activar modo claro") : (locale === "en" ? "Switch to dark mode" : "Activar modo oscuro")}
       title={isDark ? (locale === "en" ? "Light mode" : "Modo claro") : (locale === "en" ? "Dark mode" : "Modo oscuro")}
     >
@@ -63,13 +73,33 @@ function ThemeToggle({ locale }: { locale: "es" | "en" }) {
   );
 }
 
-function navItems(): NavItem[] {
-  const labels = { home: "ProSolutions" };
+const trimUrl = (url: string) => url.replace(/\/+$/, "");
+
+/** Task-based navigation shared by every app (BRAND_AND_DESIGN_SYSTEM.md §5.1). */
+function navItems(locale: "es" | "en"): NavItem[] {
+  const en = locale === "en";
   return [
-    { label: labels.home, href: APP_URLS.core, app: "core", icon: House },
-    { label: "ProCV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
-    { label: "ProJobs", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
+    { label: en ? "Jobs" : "Empleos", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
+    { label: en ? "Create CV" : "Crear CV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
+    { label: en ? "For employers" : "Para empresas", href: `${trimUrl(APP_URLS.projobs)}/empresa`, icon: Building2 },
   ];
+}
+
+/** Account menu entries for candidate, recruiter and admin roles. */
+function accountLinks(locale: "es" | "en", profile: HeaderProfile): MenuLink[] {
+  const en = locale === "en";
+  const links: MenuLink[] = [
+    { label: en ? "My dashboard" : "Mi panel", href: `${trimUrl(APP_URLS.core)}/dashboard`, icon: LayoutDashboard },
+    { label: en ? "My CVs" : "Mis CV", href: APP_URLS.procvLogin, icon: FileText },
+    { label: en ? "My applications" : "Mis postulaciones", href: `${trimUrl(APP_URLS.projobs)}/postulaciones`, icon: ClipboardList },
+  ];
+  if (profile.modules?.includes("PRORECRUIT")) {
+    links.push({ label: en ? "Company panel" : "Panel de empresa", href: `${trimUrl(APP_URLS.projobs)}/empresa`, icon: Building2 });
+  }
+  if (profile.isAdmin) {
+    links.push({ label: en ? "Administration" : "Administración", href: `${trimUrl(APP_URLS.core)}/admin`, icon: ShieldCheck });
+  }
+  return links;
 }
 
 /**
@@ -78,7 +108,7 @@ function navItems(): NavItem[] {
  */
 export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref, securityHref, loginHref, authLoading = false }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = navItems();
+  const items = navItems(locale);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -112,11 +142,6 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
       >
         <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{item.label}</span>
-        {isActive ? (
-          <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
-            {locale === "en" ? "Active" : "Activo"}
-          </span>
-        ) : null}
       </a>
     );
   };
@@ -134,7 +159,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
             href={APP_URLS.core}
             target={isExternalUrl(APP_URLS.core) ? "_blank" : undefined}
             rel={isExternalUrl(APP_URLS.core) ? "noreferrer" : undefined}
-            className="flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
           >
             <ProSolutionsLogo />
           </a>
@@ -153,7 +178,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
             ) : null}
 
             {!authLoading && !profile && loginHref ? (
-              <a href={loginHref} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
+              <a href={loginHref} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
                 <UserRound className="h-4 w-4" aria-hidden="true" />
                 {locale === "en" ? "Sign in" : "Iniciar sesión"}
               </a>
@@ -161,11 +186,11 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
 
             {profile ? (
               <details className="group relative">
-                <summary className="inline-flex h-10 max-w-56 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                <summary className="inline-flex h-10 max-w-56 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
                   {profile.avatarUrl ? (
                     <img src={profile.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                   ) : (
-                    <span aria-hidden="true" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-brand-900/60 dark:text-brand-200">
+                    <span aria-hidden="true" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-900 dark:bg-brand-950/60 dark:text-brand-200">
                       {(profile.name || profile.email).trim().charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -176,6 +201,14 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
                     <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{profile.name || (locale === "en" ? "Signed in" : "Sesión iniciada")}</p>
                     <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{profile.email}</p>
                   </div>
+                  <nav aria-label={locale === "en" ? "Account" : "Cuenta"} className="mt-1 border-b border-slate-100 pb-1 dark:border-slate-700">
+                    {accountLinks(locale, profile).map((link) => (
+                      <a key={link.href + link.label} href={link.href} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700">
+                        <link.icon className="h-4 w-4" aria-hidden="true" />
+                        {link.label}
+                      </a>
+                    ))}
+                  </nav>
                   {profileHref ? <a href={profileHref} className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"><UserRound className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "My profile" : "Mi perfil"}</a> : null}
                   {settingsHref ? <a href={settingsHref} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"><Settings className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "Settings" : "Configuración"}</a> : null}
                   {securityHref ? <a href={securityHref} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"><ShieldCheck className="h-4 w-4" aria-hidden="true" />{locale === "en" ? "Security and sessions" : "Seguridad y sesiones"}</a> : null}
@@ -188,7 +221,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               <button
                 type="button"
                 onClick={onLocaleChange}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 aria-label={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
                 title={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
               >
@@ -224,14 +257,22 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
                 <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                   <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{profile.name || (locale === "en" ? "Signed in" : "Sesión iniciada")}</p>
                   <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{profile.email}</p>
+                  <div className="mt-2 grid gap-1">
+                    {accountLinks(locale, profile).map((link) => (
+                      <a key={link.href + link.label} href={link.href} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700">
+                        <link.icon className="h-4 w-4" aria-hidden="true" />
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-3">
-                    {profileHref ? <a href={profileHref} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">{locale === "en" ? "My account" : "Mi cuenta"}</a> : null}
-                    {securityHref ? <a href={securityHref} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">{locale === "en" ? "Security and sessions" : "Seguridad y sesiones"}</a> : null}
+                    {profileHref ? <a href={profileHref} className="text-sm font-medium text-brand-900 hover:underline dark:text-brand-300">{locale === "en" ? "My account" : "Mi cuenta"}</a> : null}
+                    {securityHref ? <a href={securityHref} className="text-sm font-medium text-brand-900 hover:underline dark:text-brand-300">{locale === "en" ? "Security and sessions" : "Seguridad y sesiones"}</a> : null}
                     {onSignOut ? <button type="button" onClick={() => void onSignOut()} className="text-sm font-medium text-red-600 hover:underline dark:text-red-400">{locale === "en" ? "Sign out" : "Cerrar sesión"}</button> : null}
                   </div>
                 </div>
               ) : !authLoading && loginHref ? (
-                <a href={loginHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+                <a href={loginHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">
                   <UserRound className="h-4 w-4" aria-hidden="true" />
                   {locale === "en" ? "Sign in" : "Iniciar sesión"}
                 </a>

@@ -79,7 +79,7 @@ export function RegisterPage() {
         <section className="px-6 pt-8 pb-16">
           <div className="ui-container max-w-md mx-auto">
             <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center mx-auto mb-4 dark:bg-brand-500">
+              <div className="w-12 h-12 rounded-xl bg-brand-800 flex items-center justify-center mx-auto mb-4 dark:bg-brand-700">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -114,7 +114,7 @@ export function RegisterPage() {
                   {!verificationEmailSent && (
                     <div className="space-y-3">
                       <button type="button" onClick={handleResendVerification} disabled={isResending}
-                        className="rounded-lg border border-brand-600 px-5 py-2 font-medium text-brand-700 disabled:opacity-60 dark:text-brand-300">
+                        className="rounded-lg border border-brand-800 px-5 py-2 font-medium text-brand-900 disabled:opacity-60 dark:text-brand-300">
                         {isResending ? "Solicitando..." : "Reenviar verificación"}
                       </button>
                       {resendMessage && <p className="text-sm text-slate-600 dark:text-slate-300">{resendMessage}</p>}
@@ -123,7 +123,7 @@ export function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => (window.location.href = "/login")}
-                    className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
+                    className="px-6 py-2 bg-brand-800 text-white rounded-lg hover:bg-brand-900 transition-colors font-medium"
                   >
                     Iniciar sesión
                   </button>
@@ -141,7 +141,7 @@ export function RegisterPage() {
                       placeholder="Ingresa tu nombre completo"
                       required
                       autoComplete="name"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                   </div>
 
@@ -156,7 +156,7 @@ export function RegisterPage() {
                       placeholder={copy.auth.emailPlaceholder}
                       required
                       autoComplete="email"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                   </div>
 
@@ -171,7 +171,7 @@ export function RegisterPage() {
                       placeholder={copy.auth.passwordPlaceholder}
                       required
                       autoComplete="new-password"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     />
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       Mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número.
@@ -190,7 +190,7 @@ export function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => (window.location.href = "/login")}
-                    className="font-medium text-brand-600 hover:underline dark:text-brand-300"
+                    className="font-medium text-brand-800 hover:underline dark:text-brand-300"
                   >
                     Inicia sesión
                   </button>

@@ -18,7 +18,7 @@ export function CompanyPage() {
   if (error instanceof ApiError && error.status === 404) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <EmptyState icon={<Building2 className="h-10 w-10" />} title="Empresa no encontrada" action={<Link to="/" className="font-semibold text-brand-600">Ver empleos</Link>} />
+        <EmptyState icon={<Building2 className="h-10 w-10" />} title="Empresa no encontrada" action={<Link to="/" className="font-semibold text-brand-800">Ver empleos</Link>} />
       </div>
     );
   }
@@ -39,7 +39,7 @@ export function CompanyPage() {
           </p>
         </div>
         {company.website && (
-          <a href={company.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
+          <a href={company.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-800 hover:underline">
             Sitio web <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
