@@ -24,7 +24,7 @@ La búsqueda de código encontró, como mínimo, estos puntos en la línea base 
 - ProCV: `apps/procv/frontend/src/modules/monetization/components/FeatureGate.tsx` y `UpgradeBanner.tsx` contienen paywalls y promociones.
 - ProCV: `apps/procv/frontend/src/modules/monetization/components/AdSlot.tsx` asocia el entitlement `platform_no_ads` a la carga de anuncios; revisar cuidadosamente para que el retiro de Premium no desactive AdSense.
 - ProJobs: `apps/projobs/generator.py` incluye enlaces de navegación y footer a `#planes`.
-- Documentación histórica: `docs/PROJOBS-ROADMAP.md` y `docs/PROSOLUTIONS-COMPETITIVE-ROADMAP.md` describen Premium/planes como monetización futura. Marcar esos apartados como obsoletos o actualizarlos, sin reescribir decisiones históricas fechadas que deban conservarse.
+- Documentación histórica: `docs/PROSOLUTIONS-COMPETITIVE-ROADMAP.md` describe Premium/planes como monetización futura. Marcar esos apartados como obsoletos o actualizarlos, sin reescribir decisiones históricas fechadas que deban conservarse.
 
 La búsqueda inicial de código se realizó sobre el índice de GitHub de la rama por defecto; los paths listados deben confirmarse contra el HEAD de `qa` antes de editarlos. Realizar búsqueda exhaustiva sobre el checkout real de `qa`.
 

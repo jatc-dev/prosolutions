@@ -21,7 +21,6 @@
     "dev:projobs-api": "npm run dev --prefix apps/projobs/server"
   },
   "dependencies": {
-    "@supabase/server": "^1.9.2",
     "@types/pg": "8.23.1",
     "pg": "8.23.1"
   },
