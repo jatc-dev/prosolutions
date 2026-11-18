@@ -3,6 +3,7 @@ import { useCoreLocale } from "../i18n";
 import { useState } from "react";
 import { identityAuthApiUrl } from "../identityApi";
 import { Eye, EyeOff } from "lucide-react";
+import { GoogleSignInButton, oauthErrorMessage } from "../components/GoogleSignInButton";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
@@ -16,6 +17,7 @@ export function HomePage() {
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const oauthError = oauthErrorMessage(new URLSearchParams(window.location.search).get("oauth_error"));
 
   // Preserve the requesting first-party module after central authentication.
   // Exact-origin allowlisting prevents open redirects to untrusted sites.
@@ -160,6 +162,11 @@ export function HomePage() {
                   </p>
                 </div>
 
+                {oauthError && !loginError && (
+                  <div role="alert" className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50">
+                    <p className="text-sm text-red-600 dark:text-red-400">{oauthError}</p>
+                  </div>
+                )}
                 {loginError && (
                   <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50">
                     <p className="text-sm text-red-600 dark:text-red-400">{loginError}</p>
@@ -229,6 +236,15 @@ export function HomePage() {
                     {isSubmitting ? copy.auth.signingIn : copy.auth.signIn}
                   </Button>
                 </form>
+
+                <div className="mt-4 space-y-2">
+                  <GoogleSignInButton next={getPostLoginDestination()} privacyAccepted />
+                  <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                    Al continuar con Google aceptas la{" "}
+                    <a href="https://projobs.prosolutions.page/privacidad.html" target="_blank" rel="noreferrer" className="underline">política de privacidad</a>{" "}
+                    si es una cuenta nueva.
+                  </p>
+                </div>
 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">

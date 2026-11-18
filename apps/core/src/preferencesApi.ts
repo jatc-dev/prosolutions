@@ -6,7 +6,7 @@ const TOKEN_KEY = "pro_identity_token";
 
 export type UserPreferences = { theme?: "light" | "dark" | "system"; locale?: "es" | "en" };
 
-async function getAccessToken(forceRefresh = false): Promise<string> {
+export async function getAccessToken(forceRefresh = false): Promise<string> {
   const cached = sessionStorage.getItem(TOKEN_KEY);
   if (cached && !forceRefresh) return cached;
   const response = await fetch(`${AUTH_API}/refresh`, { method: "POST", credentials: "include" });

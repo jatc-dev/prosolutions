@@ -4,6 +4,7 @@ type ThemePreference = "light" | "dark" | "system";
 import { useNavigate } from "react-router-dom";
 import { useCoreLocale } from "../i18n";
 import { identityRequest, loadUserPreferences, saveUserPreferences } from "../preferencesApi";
+import { PrivacyDataSection } from "../components/PrivacyDataSection";
 
 type Account = { name?: string | null; email: string };
 
@@ -97,6 +98,7 @@ export function PreferencesPage() {
           <button type="button" onClick={() => void save()} disabled={loading || saving} className="min-h-11 rounded-xl bg-brand-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50">{saving ? (english ? "Saving…" : "Guardando…") : (english ? "Save preferences" : "Guardar preferencias")}</button>
         </div>
         {loading && <p role="status" className="mt-4 text-sm text-slate-500">{english ? "Loading your preferences…" : "Cargando tus preferencias…"}</p>}
+        <PrivacyDataSection />
       </main>
       <ProFooter locale={locale} />
     </div>

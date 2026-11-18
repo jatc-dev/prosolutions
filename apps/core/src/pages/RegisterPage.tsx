@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { identityAuthApiUrl } from "../identityApi";
+import { GoogleSignInButton } from "../components/GoogleSignInButton";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
@@ -18,6 +19,7 @@ export function RegisterPage() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -29,7 +31,7 @@ export function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, acceptPrivacyPolicy: acceptPrivacy }),
       });
 
       if (!response.ok) {
@@ -178,9 +180,36 @@ export function RegisterPage() {
                     </p>
                   </div>
 
-                  <Button type="submit" disabled={isSubmitting} className="w-full">
+                  <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={acceptPrivacy}
+                      onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-400 text-brand-700 focus:ring-brand-700"
+                    />
+                    <span>
+                      Acepto la{" "}
+                      <a href="https://projobs.prosolutions.page/privacidad.html" target="_blank" rel="noreferrer" className="font-medium text-brand-800 underline dark:text-brand-300">
+                        política de privacidad
+                      </a>{" "}
+                      y autorizo el tratamiento de mis datos personales (Ley 1581 de 2012).
+                    </span>
+                  </label>
+
+                  <Button type="submit" disabled={isSubmitting || !acceptPrivacy} className="w-full">
                     {isSubmitting ? "Creando cuenta..." : "Regístrate"}
                   </Button>
+
+                  <div className="relative py-1 text-center text-xs text-slate-500 dark:text-slate-400">
+                    <span className="bg-white px-2 dark:bg-slate-900">o</span>
+                  </div>
+                  <GoogleSignInButton
+                    next={`${window.location.origin}/dashboard`}
+                    privacyAccepted={acceptPrivacy}
+                    disabled={!acceptPrivacy}
+                    label="Registrarme con Google"
+                  />
                 </form>
               )}
 

@@ -20,6 +20,7 @@ import moduleRoutes from './routes/modules';
 import adminRoutes from './routes/admin';
 import { getSigningKeySet } from './services/signingKeys';
 import preferencesRoutes from './routes/preferences';
+import accountRoutes from './routes/account';
 
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
 
@@ -140,6 +141,7 @@ export function createApp() {
   app.use('/api/admin', adminRoutes);
   app.use('/api/modules', moduleRoutes);
   app.use('/api/preferences', preferencesRoutes);
+  app.use('/api/account', accountRoutes);
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Resource not found' });

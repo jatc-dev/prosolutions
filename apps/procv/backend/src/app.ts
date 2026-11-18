@@ -12,6 +12,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { monitorRequests, healthCheck } from './utils/monitoring';
 import { config } from './config';
 import cvRoutes from './routes/cv';
+import meRoutes from './routes/me';
 import adminRoutes from './routes/admin';
 import { withPublicContext } from './dbContext';
 import { logger } from './utils/logger';
@@ -154,6 +155,7 @@ export function createApp() {
 
   app.use('/api/admin', adminLimiter, adminRoutes);
   app.use('/api/cvs', cvLimiter, cvRoutes);
+  app.use('/api/me', cvLimiter, meRoutes);
   app.use(apiLimiter); // General API limiter for all remaining routes
 
   // JSON 404 for unmatched API routes (never leak the HTML fallback).

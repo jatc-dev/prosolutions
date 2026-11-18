@@ -27,6 +27,7 @@ import {
   extractRequestInfo,
 } from '../utils/auditLog';
 import { createTokenPair, hashRefreshToken, revokeSession } from '../services/tokenService';
+import { recordConsent } from '../services/consentService';
 import { ensureDefaultModuleAccess, getDefaultModules, isEffectiveModule } from '../services/moduleAccessService';
 import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
 
@@ -73,6 +74,15 @@ export async function register(req: Request, res: Response) {
           tokenHash,
           expiresAt,
         },
+      });
+
+      await recordConsent({
+        userId: createdUser.id,
+        purpose: 'privacy_policy',
+        granted: true,
+        source: 'registration',
+        ...extractRequestInfo(req),
+        client: tx,
       });
 
       return { user: createdUser, verificationToken: tokenHash };
