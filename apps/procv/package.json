@@ -4,7 +4,7 @@
   "private": true,
   "description": "Modulo de creacion y edicion de hojas de vida profesionales del ecosistema ProSolutions (frontend Vite + backend Express/Prisma)",
   "scripts": {
-    "dev": "node scripts/dev-all.mjs",
+    "dev": "npm run prisma:generate && node scripts/dev-all.mjs",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
     "build": "npm run build:frontend && npm run build:backend",

@@ -1,0 +1,2 @@
+# Binary assets: never apply CRLF conversion (PDF fixtures rely on exact byte offsets)
+*.pdf binary

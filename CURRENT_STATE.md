@@ -87,7 +87,7 @@ No repo-level test command; run per workspace.
 - Uncommitted local changes across 32 files; do not discard.
 - ProIdentity and ProJobs API not running locally.
 - QA/Neon authentication remains unverified.
-- `test-neon.js` contains a hard-coded provider credential; it was not executed. The credential should be revoked/rotated outside this documentation task.
+- `test-neon.js` (hard-coded Neon API key) was removed on 2026-11-17; the Neon and Render API keys exposed in `test-neon.js` and `.mcp.json` were revoked by the owner. `.mcp.json` now reads `NEON_API_KEY` / `RENDER_API_KEY` from the environment.
 - Stashes on `fix/qa-session-block-1` and `main` must not be dropped/popped without authorization.
 - Do not work on `main`; no commits/merges/pushes without authorization; no migrations against QA/production; no RLS/auth changes as frontend side effect.
 

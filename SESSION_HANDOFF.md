@@ -20,7 +20,7 @@ Handoff note for the next agent session. Summarizes what was done, what is known
 - `render.yaml` is NOT reconciled with live Render services.
 - Test frameworks: Vitest (Core, ProCV frontend), Jest (ProIdentity, ProCV backend), Node --test (ProJobs server).
 - No secret-bearing `.env` values were read, exposed, or used. ProCV health reported a connected database, but QA/Neon authentication and the exact secret-backed target were not independently verified.
-- `test-neon.js` contains a hard-coded Neon provider credential and was not executed; it requires provider-side revocation/rotation.
+- `test-neon.js` was removed on 2026-11-17 and the exposed Neon/Render API keys were revoked. MCP keys now come from `NEON_API_KEY` / `RENDER_API_KEY` environment variables.
 
 ## 3. What remains / next steps
 
