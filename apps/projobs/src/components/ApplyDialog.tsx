@@ -1,4 +1,4 @@
-import { Button, Input, cn } from "@prosolutions/ui";
+import { LEGAL_URLS, Button, Input, cn } from "@prosolutions/ui";
 import { CheckCircle2, FileText, PencilLine } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -250,7 +250,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
           />
           <span>
             Autorizo compartir mi hoja de vida y datos de contacto con <strong>{job.company.name}</strong> para este proceso de selección,
-            según la <a href="/privacidad.html" target="_blank" rel="noreferrer" className="font-medium text-brand-800 underline dark:text-brand-300">política de privacidad</a> (Ley 1581 de 2012).
+            según la <a href={LEGAL_URLS.privacy} target="_blank" rel="noreferrer" className="font-medium text-brand-800 underline dark:text-brand-300">política de privacidad</a> (Ley 1581 de 2012).
           </span>
         </label>
 
@@ -264,7 +264,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
         </div>
         <p className="text-xs text-ui-muted">
           Al postularte compartes estos datos solo con {job.company.name}.{" "}
-          <a href="/privacidad.html" className="underline">Política de privacidad</a>.
+          <a href={LEGAL_URLS.privacy} className="underline">Política de privacidad</a>.
         </p>
       </form>
     </Dialog>

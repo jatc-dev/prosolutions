@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { Router } from 'express';
 import { asyncHandler, notFound, parse, unauthorized } from '../http/errors.js';
-import { companyVerification, eventsQuery } from '../http/schemas.js';
+import { companyListQuery, companyVerification, eventsQuery, jobModeration, moderationListQuery } from '../http/schemas.js';
 import { UUID } from '../repositories/jobs.js';
 import { listEvents } from '../repositories/outbox.js';
 import type { AppDeps } from './context.js';
@@ -58,6 +58,117 @@ export function internalRouter({ db, config }: AppDeps): Router {
       );
       if (!rows[0]) throw notFound('Company not found');
       res.json({ company: { id: rows[0].id, verificationStatus: rows[0].verification_status } });
+    }),
+  );
+
+  /** Companies for ProAdmin review, oldest first. */
+  router.get(
+    '/companies',
+    asyncHandler(async (req, res) => {
+      const { status } = parse(companyListQuery, req.query);
+      const { rows } = await db.withContext({ userId: null }, (tx) =>
+        tx.query<Record<string, any>>(
+          `SELECT c.id, c.slug, c.name, c.website, c.industry, c.verification_status, c.verification_method,
+                  c.verification_note, c.verified_at, c.created_at,
+                  (SELECT count(*)::int FROM public.company_members m WHERE m.company_id = c.id) AS members,
+                  (SELECT string_agg(m.email, ', ') FROM public.company_members m WHERE m.company_id = c.id AND m.email IS NOT NULL) AS member_emails,
+                  (SELECT count(*)::int FROM public.jobs j WHERE j.company_id = c.id AND j.status = 'published') AS published_jobs
+           FROM public.companies c
+           WHERE ($1 = 'all' OR c.verification_status = $1)
+           ORDER BY c.created_at ASC
+           LIMIT 200`,
+          [status],
+        ),
+      );
+      res.set('Cache-Control', 'no-store');
+      res.json({
+        companies: rows.map((row) => ({
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          website: row.website,
+          industry: row.industry,
+          verificationStatus: row.verification_status,
+          verificationMethod: row.verification_method,
+          verificationNote: row.verification_note,
+          verifiedAt: row.verified_at,
+          createdAt: row.created_at,
+          members: Number(row.members),
+          memberEmails: row.member_emails,
+          publishedJobs: Number(row.published_jobs),
+        })),
+      });
+    }),
+  );
+
+  /** Jobs needing moderation: open reports and/or paused. */
+  router.get(
+    '/jobs/moderation',
+    asyncHandler(async (req, res) => {
+      const { filter } = parse(moderationListQuery, req.query);
+      const { rows } = await db.withContext({ userId: null }, (tx) =>
+        tx.query<Record<string, any>>(
+          `SELECT j.id, j.slug, j.title, j.status, j.moderation_status, j.moderation_note, j.published_at,
+                  c.name AS company_name, c.verification_status,
+                  (count(r.id) FILTER (WHERE r.resolved_at IS NULL))::int AS open_reports,
+                  array_remove(array_agg(DISTINCT r.reason) FILTER (WHERE r.resolved_at IS NULL), NULL) AS reasons,
+                  max(r.created_at) AS last_report_at
+           FROM public.jobs j
+           JOIN public.companies c ON c.id = j.company_id
+           LEFT JOIN public.job_reports r ON r.job_id = j.id
+           GROUP BY j.id, c.id
+           HAVING ($1 = 'all' AND (count(r.id) > 0 OR j.moderation_status = 'paused'))
+               OR ($1 = 'reported' AND count(r.id) FILTER (WHERE r.resolved_at IS NULL) > 0)
+               OR ($1 = 'paused' AND j.moderation_status = 'paused')
+           ORDER BY open_reports DESC, last_report_at DESC NULLS LAST
+           LIMIT 200`,
+          [filter],
+        ),
+      );
+      res.set('Cache-Control', 'no-store');
+      res.json({
+        jobs: rows.map((row) => ({
+          id: row.id,
+          slug: row.slug,
+          title: row.title,
+          status: row.status,
+          moderationStatus: row.moderation_status,
+          moderationNote: row.moderation_note,
+          publishedAt: row.published_at,
+          companyName: row.company_name,
+          companyStatus: row.verification_status,
+          openReports: Number(row.open_reports),
+          reasons: row.reasons ?? [],
+          lastReportAt: row.last_report_at,
+        })),
+      });
+    }),
+  );
+
+  /** pause: hide from every public surface; restore: show again and close reports; dismiss: close reports. */
+  router.post(
+    '/jobs/:jobId/moderation',
+    asyncHandler(async (req, res) => {
+      const input = parse(jobModeration, req.body);
+      const jobId = String(req.params.jobId);
+      if (!UUID.test(jobId)) throw notFound('Job not found');
+      const result = await db.withContext({ userId: null }, async (tx) => {
+        const exists = await tx.query('SELECT 1 FROM public.jobs WHERE id = $1', [jobId]);
+        if (!exists.rows.length) return null;
+        if (input.action !== 'dismiss') {
+          await tx.query(
+            'UPDATE public.jobs SET moderation_status = $2, moderation_note = $3, moderated_at = now() WHERE id = $1',
+            [jobId, input.action === 'pause' ? 'paused' : 'ok', input.note],
+          );
+        }
+        if (input.action !== 'pause') {
+          await tx.query('UPDATE public.job_reports SET resolved_at = now() WHERE job_id = $1 AND resolved_at IS NULL', [jobId]);
+        }
+        const { rows } = await tx.query<{ moderation_status: string }>('SELECT moderation_status FROM public.jobs WHERE id = $1', [jobId]);
+        return rows[0]!;
+      });
+      if (!result) throw notFound('Job not found');
+      res.json({ job: { id: jobId, moderationStatus: result.moderation_status } });
     }),
   );
 

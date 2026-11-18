@@ -150,6 +150,26 @@ export const alertInput = z.object({
 });
 
 export const companyVerification = z.object({
-  status: z.enum(['pending', 'verified', 'rejected']),
+  status: z.enum(['pending', 'verified', 'rejected', 'suspended']),
   note: optionalText(500),
+});
+
+export const REPORT_REASONS = ['fraude', 'discriminacion', 'informacion-falsa', 'spam', 'otro'] as const;
+
+export const jobReportInput = z.object({
+  reason: z.enum(REPORT_REASONS),
+  details: optionalText(1000),
+});
+
+export const jobModeration = z.object({
+  action: z.enum(['pause', 'restore', 'dismiss']),
+  note: optionalText(500),
+});
+
+export const companyListQuery = z.object({
+  status: z.enum(['pending', 'verified', 'rejected', 'suspended', 'all']).default('pending'),
+});
+
+export const moderationListQuery = z.object({
+  filter: z.enum(['reported', 'paused', 'all']).default('reported'),
 });

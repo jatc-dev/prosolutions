@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Briefcase, Building2, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
-import { APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl } from "./links.js";
+import { BookOpen, Briefcase, Building2, Calculator, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
+import { APP_URLS, RESOURCE_URLS, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
 import { cn } from "./utils.js";
@@ -11,6 +11,8 @@ interface NavItem {
   label: string;
   href: string;
   app?: ActiveApp;
+  /** Within the app, the item is active only under this path prefix. */
+  matchPath?: string;
   icon: LucideIcon;
 }
 
@@ -81,6 +83,8 @@ function navItems(locale: "es" | "en"): NavItem[] {
   return [
     { label: en ? "Jobs" : "Empleos", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
     { label: en ? "Create CV" : "Crear CV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
+    { label: en ? "Tools" : "Herramientas", href: RESOURCE_URLS.tools, app: "core", matchPath: "/tools", icon: Calculator },
+    { label: en ? "Academy" : "Academia", href: RESOURCE_URLS.academy, app: "core", matchPath: "/academy", icon: BookOpen },
     { label: en ? "For employers" : "Para empresas", href: `${trimUrl(APP_URLS.projobs)}/empresa`, icon: Building2 },
   ];
 }
@@ -127,7 +131,8 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
     );
 
   const renderLink = (item: NavItem, onNavigate?: () => void) => {
-    const isActive = item.app === activeApp;
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    const isActive = item.app === activeApp && (!item.matchPath || currentPath.startsWith(item.matchPath));
     const external = isExternalUrl(item.href);
 
     return (

@@ -37,6 +37,8 @@ export async function submitApplication(tx: Queryable, input: NewApplication): P
      SELECT j.id, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, now(), $10
      FROM public.jobs j
      WHERE j.id = $1 AND j.status = 'published' AND (j.closes_at IS NULL OR j.closes_at > now())
+       AND j.moderation_status = 'ok'
+       AND EXISTS (SELECT 1 FROM public.companies c WHERE c.id = j.company_id AND c.verification_status NOT IN ('rejected', 'suspended'))
      ON CONFLICT ON CONSTRAINT applications_one_per_job DO NOTHING
      RETURNING id, created_at, (SELECT company_id FROM public.jobs WHERE id = $1) AS company_id`,
     [

@@ -1,6 +1,6 @@
-import { cn } from "@prosolutions/ui";
+import { AdSlot, cn } from "@prosolutions/ui";
 import { ArrowLeft, ArrowRight, BellRing, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { JobDetail, JobSearchResponse, JobSummary } from "../../server/src/contracts";
 import { FiltersPanel } from "../components/FiltersPanel";
@@ -213,16 +213,23 @@ export function JobsPage() {
           ) : (
             <>
               <ul className={cn("space-y-3 transition-opacity", search.loading && "opacity-60")} aria-busy={search.loading}>
-                {results.items.map((job) => (
-                  <li key={job.id}>
-                    <JobCard
-                      job={job}
-                      href={`/empleos/${job.slug}`}
-                      selected={activeSlug === job.slug}
-                      onSelect={isDesktop ? selectJob : undefined}
-                      onToggleSave={(item) => toggleSave(item, patchJob)}
-                    />
-                  </li>
+                {results.items.map((job, index) => (
+                  <Fragment key={job.id}>
+                    <li>
+                      <JobCard
+                        job={job}
+                        href={`/empleos/${job.slug}`}
+                        selected={activeSlug === job.slug}
+                        onSelect={isDesktop ? selectJob : undefined}
+                        onToggleSave={(item) => toggleSave(item, patchJob)}
+                      />
+                    </li>
+                    {index === 4 && results.items.length > 7 && (
+                      <li className="list-none">
+                        <AdSlot placement="jobs-listing" format="in-article" className="my-2" />
+                      </li>
+                    )}
+                  </Fragment>
                 ))}
               </ul>
               {totalPages > 1 && (

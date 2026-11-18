@@ -8,7 +8,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { fetchCSRFToken } from "./services/api";
 import { GlobalPreferencesBootstrap } from "./components/GlobalPreferencesBootstrap";
-import { ProFooter } from "@prosolutions/ui";
+import { ConsentBanner, ProFooter } from "@prosolutions/ui";
 
 const PROSOLUTIONS_URL =
   import.meta.env.VITE_PROSOLUTIONS_URL ||
@@ -61,8 +61,13 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
 /** Shared ecosystem footer on every page except the full-screen editor. */
 function SiteFooter() {
   const { pathname } = useLocation();
-  if (pathname.startsWith("/editor")) return null;
-  return <ProFooter />;
+  if (pathname.startsWith("/editor")) return <ConsentBanner />;
+  return (
+    <>
+      <ProFooter />
+      <ConsentBanner />
+    </>
+  );
 }
 
 export default function App() {

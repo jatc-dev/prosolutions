@@ -228,6 +228,7 @@ export async function publishJob(tx: Queryable, userId: string, jobId: string) {
   if (job.description.trim().length < 50) throw conflict('Add a description of at least 50 characters before publishing', 'job_incomplete');
   const status = job.companyProfile.verificationStatus;
   if (status === 'rejected') throw forbidden('This company did not pass verification', 'company_rejected');
+  if (status === 'suspended') throw forbidden('This company is suspended. Contact support.', 'company_suspended');
   if (status === 'pending') {
     const { rows: published } = await tx.query<{ total: string }>(
       `SELECT count(*)::text AS total FROM public.jobs WHERE company_id = $1 AND status = 'published'`,

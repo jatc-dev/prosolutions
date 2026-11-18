@@ -7,6 +7,9 @@ import type {
   Salary,
 } from '../contracts.js';
 
+/** Public visibility: not paused by moderation, company not rejected or suspended (aliases j, c). */
+export const PUBLICLY_VISIBLE = `j.moderation_status = 'ok' AND c.verification_status NOT IN ('rejected', 'suspended')`;
+
 /** Columns selected for job summaries (alias j = jobs, c = companies). */
 export const JOB_SUMMARY_COLUMNS = `
   j.id, j.slug, j.title, j.summary, j.employment_type, j.workplace, j.seniority,

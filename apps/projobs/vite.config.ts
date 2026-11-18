@@ -2,9 +2,6 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// index.html references %VITE_ADSENSE_CLIENT%; keep the ecosystem default when unset.
-process.env.VITE_ADSENSE_CLIENT ||= "ca-pub-3956322934366702";
-
 export default defineConfig({
   plugins: [react()],
   resolve: {

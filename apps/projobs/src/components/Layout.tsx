@@ -1,4 +1,4 @@
-import { ProFooter, ProHeader, cn } from "@prosolutions/ui";
+import { ConsentBanner, ProFooter, ProHeader, cn } from "@prosolutions/ui";
 import { Bookmark, Briefcase, Building2, FileCheck2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
@@ -60,6 +60,7 @@ export function Layout() {
         <Outlet />
       </main>
       <ProFooter />
+      <ConsentBanner />
     </div>
   );
 }

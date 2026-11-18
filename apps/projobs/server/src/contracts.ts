@@ -32,7 +32,7 @@ export interface Salary {
   period: SalaryPeriod;
 }
 
-export type CompanyVerificationStatus = 'pending' | 'verified' | 'rejected';
+export type CompanyVerificationStatus = 'pending' | 'verified' | 'rejected' | 'suspended';
 
 export interface CompanySummary {
   id: string;

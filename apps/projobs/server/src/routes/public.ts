@@ -2,10 +2,11 @@ import { Router } from 'express';
 import type { JobSummary } from '../contracts.js';
 import { optionalAuth } from '../auth/identity.js';
 import { asyncHandler, notFound, parse } from '../http/errors.js';
-import { jobSearchQuery } from '../http/schemas.js';
+import { jobReportInput, jobSearchQuery } from '../http/schemas.js';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { appliedJobIds } from '../repositories/applications.js';
-import { findPublicJob, findSimilarJobs, searchJobs } from '../repositories/jobs.js';
-import { COMPANY_COLUMNS, JOB_SUMMARY_COLUMNS, toCompany, toJobSummary } from '../repositories/mappers.js';
+import { findPublicJob, findSimilarJobs, searchJobs, UUID } from '../repositories/jobs.js';
+import { COMPANY_COLUMNS, JOB_SUMMARY_COLUMNS, PUBLICLY_VISIBLE, toCompany, toJobSummary } from '../repositories/mappers.js';
 import { savedJobIds } from '../repositories/saved-jobs.js';
 import { unsubscribeAlert } from '../repositories/alerts.js';
 import type { Queryable } from '../db/database.js';
@@ -77,7 +78,7 @@ export function publicRouter({ db, verify, config }: AppDeps): Router {
         const jobs = await tx.query(
           `SELECT ${JOB_SUMMARY_COLUMNS}
            FROM public.jobs j JOIN public.companies c ON c.id = j.company_id
-           WHERE c.slug = $1 AND j.status = 'published' AND (j.closes_at IS NULL OR j.closes_at > now())
+           WHERE c.slug = $1 AND j.status = 'published' AND (j.closes_at IS NULL OR j.closes_at > now()) AND ${PUBLICLY_VISIBLE}
            ORDER BY j.published_at DESC LIMIT 50`,
           [req.params.slug],
         );
@@ -117,15 +118,16 @@ export function publicRouter({ db, verify, config }: AppDeps): Router {
       const { jobs, companies } = await db.withContext({ userId: null }, async (tx) => ({
         jobs: (
           await tx.query<{ slug: string; updated_at: Date }>(
-            `SELECT slug, updated_at FROM public.jobs
-             WHERE status = 'published' AND (closes_at IS NULL OR closes_at > now())
-             ORDER BY published_at DESC LIMIT 45000`,
+            `SELECT j.slug, j.updated_at FROM public.jobs j JOIN public.companies c ON c.id = j.company_id
+             WHERE j.status = 'published' AND (j.closes_at IS NULL OR j.closes_at > now()) AND ${PUBLICLY_VISIBLE}
+             ORDER BY j.published_at DESC LIMIT 45000`,
           )
         ).rows,
         companies: (
           await tx.query<{ slug: string; updated_at: Date }>(
             `SELECT DISTINCT c.slug, c.updated_at FROM public.companies c
              JOIN public.jobs j ON j.company_id = c.id AND j.status = 'published'
+             WHERE ${PUBLICLY_VISIBLE}
              LIMIT 5000`,
           )
         ).rows,
@@ -143,6 +145,37 @@ export function publicRouter({ db, verify, config }: AppDeps): Router {
         .type('application/xml')
         .send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
+    }),
+  );
+
+  const reportLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: config.env === 'test' ? 1000 : 10,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: (req) => req.principal?.userId ?? ipKeyGenerator(req.ip ?? '0.0.0.0'),
+    message: { error: { code: 'rate_limited', message: 'Too many reports, try again later' } },
+  });
+
+  /** Anyone can report a suspicious job; ProAdmin reviews it. */
+  router.post(
+    '/jobs/:jobId/reports',
+    reportLimiter,
+    asyncHandler(async (req, res) => {
+      const input = parse(jobReportInput, req.body);
+      const jobId = String(req.params.jobId);
+      if (!UUID.test(jobId)) throw notFound('Job not found');
+      const created = await db.withContext({ userId: req.principal?.userId ?? null }, async (tx) => {
+        const { rows } = await tx.query<{ id: string }>(
+          `INSERT INTO public.job_reports (job_id, reason, details, reporter_id)
+           SELECT j.id, $2, $3, $4 FROM public.jobs j WHERE j.id = $1 AND j.status IN ('published', 'closed')
+           RETURNING id`,
+          [jobId, input.reason, input.details, req.principal?.userId ?? null],
+        );
+        return rows[0] ?? null;
+      });
+      if (!created) throw notFound('Job not found');
+      res.status(201).json({ received: true });
     }),
   );
 

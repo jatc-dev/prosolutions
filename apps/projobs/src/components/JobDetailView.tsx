@@ -7,6 +7,7 @@ import { EMPLOYMENT_LABEL, SENIORITY_LABEL, WORKPLACE_LABEL, formatDate, formatL
 import { useSession } from "../lib/session";
 import { ApplyDialog } from "./ApplyDialog";
 import { CompanyLogo, MatchBadge, SkillChip } from "./primitives";
+import { ReportJob } from "./ReportJob";
 
 interface JobDetailViewProps {
   job: JobDetail;
@@ -162,6 +163,8 @@ export function JobDetailView({ job, similar = [], mySkills = [], onChange, onTo
           )}
         </div>
       </section>
+
+      <ReportJob jobId={job.id} />
 
       {similar.length > 0 && (
         <section>

@@ -123,15 +123,17 @@ jobs:
       - name: Verify published static assets
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
-          const ads = readFileSync("apps/projobs/dist/ads.txt", "utf8").trim();
-          if (ads !== "google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0") throw new Error("ProJobs ads.txt mismatch");
+          import { existsSync, readFileSync } from "node:fs";
           const html = readFileSync("apps/projobs/dist/index.html", "utf8");
-          if (html.includes("%VITE_ADSENSE_CLIENT%")) throw new Error("AdSense placeholder was not substituted");
-          if (!readFileSync("apps/projobs/dist/privacidad.html", "utf8").includes("Política de Privacidad")) {
-            throw new Error("privacidad.html (linked from the shared footer) is missing");
+          // AdSense is consent-gated at runtime: the loader must never be in the static HTML.
+          if (html.includes("adsbygoogle.js")) throw new Error("AdSense loader must not be hard-coded in index.html");
+          // ads.txt lives only on the root domain (prosolutions.page), generated from ADS_TXT_CONTENT.
+          if (existsSync("apps/projobs/dist/ads.txt")) throw new Error("ProJobs must not ship a static ads.txt");
+          if (!readFileSync("apps/projobs/dist/privacidad.html", "utf8").includes("prosolutions.page/legal/privacidad")) {
+            throw new Error("privacidad.html must redirect to the central privacy policy");
           }
-          console.log("ProJobs dist: ads.txt, AdSense loader and privacy page verified");
+          if (!readFileSync("apps/projobs/dist/robots.txt", "utf8").includes("Sitemap:")) throw new Error("robots.txt must reference the sitemap");
+          console.log("ProJobs dist: consent-gated ads, central privacy redirect and robots verified");
           NODE
 
   procv-frontend-build:
