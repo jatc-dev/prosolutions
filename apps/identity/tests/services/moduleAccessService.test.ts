@@ -61,7 +61,7 @@ test('login/refresh never reactivate revoked or expired module grants', async ()
   assert.equal(upserts.length, 2);
   assert.ok(upserts.every((call) => Object.keys(call.update).length === 0));
   assert.equal(findManyArgs?.where.active, true);
-  assert.deepEqual(findManyArgs?.where.module.in, ['PROCV', 'PROJOBS']);
+  assert.deepEqual(findManyArgs?.where.module.in, ['PROCV', 'PROJOBS', 'PRORECRUIT']);
   assert.equal(findManyArgs?.where.OR.length, 2);
 });
 
@@ -81,4 +81,22 @@ test('only active, unexpired supported grants are returned', async () => {
     await ensureDefaultModuleAccess('user-2', 'user', fakeClient),
     ['PROCV', 'PROJOBS'],
   );
+});
+
+test('PRORECRUIT is effective only through an explicit grant, never created by default', async () => {
+  const upsertedModules: string[] = [];
+  const fakeClient = {
+    moduleAccess: {
+      upsert: async (args: Record<string, any>) => {
+        upsertedModules.push(args.create.module);
+        return {};
+      },
+      findMany: async () => [{ module: 'PROJOBS' }, { module: 'PRORECRUIT' }],
+    },
+  } as unknown as typeof prisma;
+
+  const modules = await ensureDefaultModuleAccess('recruiter-1', 'user', fakeClient);
+
+  assert.deepEqual(upsertedModules, ['PROCV', 'PROJOBS']);
+  assert.deepEqual(modules, ['PROJOBS', 'PRORECRUIT']);
 });
