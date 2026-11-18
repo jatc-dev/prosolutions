@@ -7,11 +7,18 @@
         "NEON_API_KEY": "${NEON_API_KEY}"
       }
     },
-    "render": {
+    "render-psl-pcv": {
       "command": "npx",
       "args": ["-y", "@render/mcp-server"],
       "env": {
-        "RENDER_API_KEY": "${RENDER_API_KEY}"
+        "RENDER_API_KEY": "${RENDER_API_KEY_PSL_PCV}"
+      }
+    },
+    "render-pid-pjb": {
+      "command": "npx",
+      "args": ["-y", "@render/mcp-server"],
+      "env": {
+        "RENDER_API_KEY": "${RENDER_API_KEY_PID_PJB}"
       }
     }
   }
