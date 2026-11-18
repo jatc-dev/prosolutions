@@ -4,14 +4,14 @@
       "command": "npx",
       "args": ["-y", "@neondatabase/mcp-server"],
       "env": {
-        "NEON_API_KEY": "napi_tix5f0x2t1ncg7silwiuqs2xytfru9se1163obnvu1akadit2n36849rx0rnjj6b"
+        "NEON_API_KEY": "${NEON_API_KEY}"
       }
     },
     "render": {
       "command": "npx",
       "args": ["-y", "@render/mcp-server"],
       "env": {
-        "RENDER_API_KEY": "rnd_rRuNPVYLIuDioc4BIXlNewcgKUGT"
+        "RENDER_API_KEY": "${RENDER_API_KEY}"
       }
     }
   }
