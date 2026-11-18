@@ -1,17 +1,24 @@
 {
   "mcpServers": {
     "neon": {
-      "command": "npx",
-      "args": ["-y", "@neondatabase/mcp-server"],
-      "env": {
-        "NEON_API_KEY": "napi_tix5f0x2t1ncg7silwiuqs2xytfru9se1163obnvu1akadit2n36849rx0rnjj6b"
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp?readonly=true",
+      "headers": {
+        "Authorization": "Bearer ${NEON_API_KEY}"
       }
     },
-    "render": {
-      "command": "npx",
-      "args": ["-y", "@render/mcp-server"],
-      "env": {
-        "RENDER_API_KEY": "rnd_rRuNPVYLIuDioc4BIXlNewcgKUGT"
+    "render-psl-pcv": {
+      "type": "http",
+      "url": "https://mcp.render.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${RENDER_API_KEY_PSL_PCV}"
+      }
+    },
+    "render-pid-pjb": {
+      "type": "http",
+      "url": "https://mcp.render.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${RENDER_API_KEY_PID_PJB}"
       }
     }
   }
