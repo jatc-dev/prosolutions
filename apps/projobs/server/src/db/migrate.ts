@@ -35,7 +35,8 @@ export async function runMigrations(db: Database, dir = MIGRATIONS_DIR): Promise
   const report: MigrationReport = { applied: [], skipped: [] };
 
   for (const file of files) {
-    const sql = await readFile(join(dir, file), 'utf8');
+    // Normalize line endings so Windows (CRLF) and Linux (LF) checkouts hash identically.
+    const sql = (await readFile(join(dir, file), 'utf8')).replace(/\r\n/g, '\n');
     const checksum = createHash('sha256').update(sql).digest('hex');
     const previous = applied.get(file);
     if (previous) {
