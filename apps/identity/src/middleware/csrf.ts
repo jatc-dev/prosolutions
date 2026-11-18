@@ -4,7 +4,7 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 
 const CSRF_HEADER_NAME = 'x-csrf-token';
-const CSRF_SESSION_NAME = 'csrfToken';
+const CSRF_SESSION_NAME = `csrfToken${config.cookieNameSuffix}`;
 const CSRF_COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
 const CLOCK_SKEW_TOLERANCE_MS = 60 * 1000;
 

@@ -37,10 +37,8 @@ out/
 # el build del workspace. Su dist se versiona a propósito.
 !packages/ui/dist/
 
-# ProJobs generados (se regeneran con generator.py, no se versionan)
+# ProJobs build output
 /jobs.json
-apps/projobs/jobs.json
-apps/projobs/index.html
 apps/projobs/dist/
 
 # Caché de Python

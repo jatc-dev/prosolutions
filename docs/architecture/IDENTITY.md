@@ -214,7 +214,7 @@ window.location.href = `${IDENTITY_URL}/api/auth/login?redirect=${encodeURICompo
 
 ### 6.4 Ejemplo de cliente (ProJobs — `auth.js`)
 
-El archivo `apps/projobs/auth.js` implementa este patrón:
+ProJobs v2 implementa este patrón en `apps/projobs/src/lib/session.tsx` (antes `apps/projobs/auth.js`):
 
 - `window.proJobsAuth.isAuthenticated()` — devuelve boolean
 - `window.proJobsAuth.getUser()` — devuelve el perfil (`userId`, `email`, `role`, `modules`)

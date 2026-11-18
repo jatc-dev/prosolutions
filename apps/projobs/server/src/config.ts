@@ -1,6 +1,78 @@
-import 'dotenv/config';
-function env(){return process.env.NODE_ENV==='production'?'production':'development'}
-function port(){const n=Number(process.env.PORT||5176);if(!Number.isInteger(n)||n<1||n>65535)throw new Error('PORT must be a valid integer between 1 and 65535');return n}
-function identityUrl(){const u=process.env.IDENTITY_URL||'http://localhost:4001';try{new URL(u);return u}catch{throw new Error('IDENTITY_URL must be a valid URL')}}
-function jwtSecret(){const s=process.env.IDENTITY_JWT_SECRET||process.env.JWT_SECRET;if(env()==='production'&&!s)throw new Error('IDENTITY_JWT_SECRET must be set in production environment');return s||'change-me-for-development-only'}
-export const config={port:port(),identityUrl:identityUrl(),jwtSecret:jwtSecret(),issuer:process.env.IDENTITY_ISSUER||'https://identity.prosolutions.page',audience:process.env.IDENTITY_AUDIENCE||'prosolutions-api',isProduction:env()==='production',cookieSecure:process.env.COOKIE_SECURE==='true'||env()==='production',databaseUrl:process.env.DATABASE_URL||'',corsOrigins:(process.env.CORS_ORIGIN||'https://projobs.prosolutions.page,https://prosolutions.page').split(',').map(x=>x.trim()).filter(Boolean)};
+import { z } from 'zod';
+
+const DEFAULT_ISSUER = 'https://identity.prosolutions.page';
+const DEFAULT_AUDIENCE = 'prosolutions-api';
+const DEFAULT_CORS = 'https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page';
+
+export interface AppConfig {
+  env: 'development' | 'test' | 'production';
+  port: number;
+  /** Runtime connection (pooled). Empty outside production = in-memory PGlite. */
+  databaseUrl: string | null;
+  /** Restricted role assumed per transaction (production: projobs_api). */
+  runtimeRole: string | null;
+  poolMax: number;
+  jwt: { secret: string; issuer: string; audience: string };
+  corsOrigins: string[];
+  procvApiUrl: string;
+  procvTimeoutMs: number;
+  /** Shared secret for /internal/* consumers. Internal API disabled when null. */
+  internalToken: string | null;
+  trustProxy: boolean;
+}
+
+const identifier = /^[a-z_][a-z0-9_]{0,62}$/;
+
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(5176),
+  DATABASE_URL: z.string().trim().optional(),
+  PROJOBS_DB_RUNTIME_ROLE: z.string().trim().regex(identifier).optional(),
+  PG_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
+  IDENTITY_JWT_SECRET: z.string().optional(),
+  JWT_SECRET: z.string().optional(),
+  IDENTITY_ISSUER: z.string().trim().default(DEFAULT_ISSUER),
+  IDENTITY_AUDIENCE: z.string().trim().default(DEFAULT_AUDIENCE),
+  CORS_ORIGIN: z.string().default(DEFAULT_CORS),
+  PROCV_API_URL: z.string().trim().url().optional(),
+  PROCV_TIMEOUT_MS: z.coerce.number().int().min(500).max(30_000).default(6000),
+  PROJOBS_INTERNAL_TOKEN: z.string().trim().min(32).optional(),
+  TRUST_PROXY: z.enum(['true', 'false']).optional(),
+});
+
+export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
+  const parsed = schema.safeParse(source);
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((issue) => issue.path.join('.')).join(', ');
+    throw new Error(`Invalid ProJobs configuration: ${fields}`);
+  }
+  const env = parsed.data;
+  const isProduction = env.NODE_ENV === 'production';
+  const secret = env.IDENTITY_JWT_SECRET || env.JWT_SECRET || '';
+
+  if (isProduction) {
+    const missing: string[] = [];
+    if (!env.DATABASE_URL) missing.push('DATABASE_URL');
+    if (secret.length < 32) missing.push('IDENTITY_JWT_SECRET (>=32 chars)');
+    if (!env.PROCV_API_URL) missing.push('PROCV_API_URL');
+    if (missing.length) throw new Error(`Missing production configuration: ${missing.join(', ')}`);
+  }
+
+  return {
+    env: env.NODE_ENV,
+    port: env.PORT,
+    databaseUrl: env.DATABASE_URL || null,
+    runtimeRole: env.PROJOBS_DB_RUNTIME_ROLE ?? (isProduction ? 'projobs_api' : null),
+    poolMax: env.PG_POOL_MAX,
+    jwt: {
+      secret: secret || 'projobs-local-development-secret-not-for-production',
+      issuer: env.IDENTITY_ISSUER,
+      audience: env.IDENTITY_AUDIENCE,
+    },
+    corsOrigins: env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean),
+    procvApiUrl: (env.PROCV_API_URL ?? 'http://localhost:4000').replace(/\/+$/, ''),
+    procvTimeoutMs: env.PROCV_TIMEOUT_MS,
+    internalToken: env.PROJOBS_INTERNAL_TOKEN ?? null,
+    trustProxy: env.TRUST_PROXY ? env.TRUST_PROXY === 'true' : isProduction,
+  };
+}

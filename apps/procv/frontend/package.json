@@ -9,7 +9,6 @@
     "lint": "eslint src --ext ts,tsx",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:projobs-search": "node --test src/modules/projobs/lib/searchParams.test.mjs",
     "test:e2e:qa": "playwright test --project chromium"
   },
   "dependencies": {

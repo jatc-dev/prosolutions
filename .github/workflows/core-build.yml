@@ -49,8 +49,6 @@ jobs:
           cache: npm
       - name: Install Core workspace dependencies
         run: npm ci --include=dev --workspace=apps/core --include-workspace-root
-      - name: Validate ProJobs auth client syntax
-        run: node --check apps/projobs/auth.js
       - name: Build Core and shared UI
         run: npm run build --workspace=apps/core
         env:
@@ -76,8 +74,33 @@ jobs:
           console.log("ProSolutions ads.txt and global AdSense loader verified in dist/");
           NODE
 
-  projobs-build:
-    name: ProJobs (generator + static build)
+  projobs-api:
+    name: ProJobs API (typecheck, PostgreSQL/RLS tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/projobs/server
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/projobs/server/package-lock.json
+      # Same install command as the Render service (standalone lockfile).
+      - name: Install ProJobs API dependencies
+        run: npm ci --include=dev --workspaces=false
+      - name: Typecheck ProJobs API
+        run: npm run typecheck
+      - name: Test migrations, RLS, auth and API flows (PGlite)
+        run: npm test
+      - name: Build ProJobs API
+        run: npm run build
+
+  projobs-web:
+    name: ProJobs web (TypeScript + Vite build)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -86,45 +109,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Compile ProJobs generator
-        run: python -m py_compile apps/projobs/generator.py
-      - name: Run ProJobs generator tests
-        working-directory: apps/projobs
-        run: cp tests/fixtures/jobs.json jobs.json && python tests/test_generator.py && python tests/test_catalog_quality.py
-        env:
-          PROJOBS_SKIP_FETCH: "1"
-      - name: Install ProJobs API dependencies
-        run: npm ci --prefix apps/projobs/server
-      - name: Build ProJobs API
-        run: npm run build --prefix apps/projobs/server
-      - name: Test ProJobs API authorization and validation
-        run: npm test --prefix apps/projobs/server
-      - name: Build ProJobs from cached job data
-        run: npm run build --workspace=@prosolutions/projobs
-        env:
-          PROJOBS_SKIP_FETCH: "1"
-      - name: Validate ProJobs embedded JavaScript
-        run: node scripts/validate-projobs-js.mjs apps/projobs/dist/index.html
-
-      - name: Validate embedded localization scripts
+          cache: npm
+      - name: Install ProJobs web workspace dependencies
+        run: npm ci --include=dev --workspace=apps/projobs --include-workspace-root
+      - name: Test ProJobs web
+        run: npm test --workspace=apps/projobs
+      - name: Build ProJobs web
+        run: npm run build --workspace=apps/projobs
+      - name: Verify published static assets
         run: |
           node --input-type=module <<'NODE'
           import { readFileSync } from "node:fs";
-
-          for (const file of ["apps/projobs/dist/index.html", "apps/projobs/dist/privacidad.html", "apps/projobs/dist/mi-cuenta.html"]) {
-            const html = readFileSync(file, "utf8");
-            const marker = html.indexOf("const COPY");
-            if (marker < 0) throw new Error(`Localization script missing in ${file}`);
-            const start = html.lastIndexOf("<script>", marker);
-            const end = html.indexOf("</script>", start);
-            if (start < 0 || end < 0) throw new Error(`Invalid inline script in ${file}`);
-            new Function(html.slice(start + "<script>".length, end));
-            console.log(`${file}: localization script syntax OK`);
+          const ads = readFileSync("apps/projobs/dist/ads.txt", "utf8").trim();
+          if (ads !== "google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0") throw new Error("ProJobs ads.txt mismatch");
+          const html = readFileSync("apps/projobs/dist/index.html", "utf8");
+          if (html.includes("%VITE_ADSENSE_CLIENT%")) throw new Error("AdSense placeholder was not substituted");
+          if (!readFileSync("apps/projobs/dist/privacidad.html", "utf8").includes("Política de Privacidad")) {
+            throw new Error("privacidad.html (linked from the shared footer) is missing");
           }
+          console.log("ProJobs dist: ads.txt, AdSense loader and privacy page verified");
           NODE
 
   procv-frontend-build:

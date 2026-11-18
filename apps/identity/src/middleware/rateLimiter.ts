@@ -1,4 +1,6 @@
+import type { Request } from 'express';
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
+import { REFRESH_TOKEN_COOKIE_NAME } from '../utils/cookies';
 import { logger } from '../utils/logger';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -9,6 +11,8 @@ function createRateLimiter(options: {
   max: number;
   message: string;
   skipSuccessful?: boolean;
+  /** Requests for which the limiter must not count at all. */
+  skip?: (req: Request) => boolean;
 }): RateLimitRequestHandler {
   return rateLimit({
     windowMs: options.windowMs,
@@ -17,7 +21,7 @@ function createRateLimiter(options: {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: options.skipSuccessful,
-    skip: DISABLE_RATE_LIMIT ? () => true : undefined,
+    skip: DISABLE_RATE_LIMIT ? () => true : options.skip,
     handler: (req, res) => {
       const resetHeader = res.getHeader('RateLimit-Reset');
       const parsedReset = Number(resetHeader);
@@ -47,11 +51,24 @@ export const authLimiter = createRateLimiter({
   skipSuccessful: true,
 });
 
+/**
+ * Anonymous visitors call /refresh on every page load of every module and get
+ * a cheap 401 (no cookie). Those requests cannot be used to guess tokens, so
+ * they must not consume the budget: otherwise anonymous browsing (or several
+ * people behind one NAT IP) exhausts it and blocks the next real session.
+ */
+export function hasRefreshCookie(req: Pick<Request, 'cookies'>): boolean {
+  const value = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
+  return typeof value === 'string' && value.length > 0;
+}
+
 export const refreshLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  max: isDevelopment ? 100 : 10,
+  // Only failed refreshes that carry a cookie count (successes are skipped).
+  max: isDevelopment ? 300 : 60,
   message: 'Demasiados intentos de renovación de token. Intenta de nuevo en 1 hora.',
   skipSuccessful: true,
+  skip: (req) => !hasRefreshCookie(req),
 });
 
 export const apiLimiter = createRateLimiter({

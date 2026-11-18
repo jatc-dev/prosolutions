@@ -1,33 +1,44 @@
-# ProJobs API
+# ProJobs API v2
 
-API de persistencia y funcionalidades de usuario de ProJobs. El catálogo público se mantiene desacoplado de esta API.
+Job marketplace and lightweight ATS for ProSolutions. Express + `pg` (no ORM), PostgreSQL on Neon.
 
-## Responsabilidades
-- Proteger rutas de usuario mediante tokens emitidos por ProIdentity.
-- Validar emisor, audiencia, expiración y autorización de módulo.
-- Persistir datos de usuario en PostgreSQL, base Neon projobs.
-- Aplicar aislamiento por usuario mediante RLS y contexto transaccional.
+## Responsibilities and boundaries
 
-## Desarrollo y validación
+| Concern | Owner | How ProJobs uses it |
+|---|---|---|
+| Accounts, sessions, roles | **ProIdentity** | Verifies access tokens locally (HS256, issuer, audience, expiry). Capabilities come from the `modules[]` claim: `PROJOBS` = candidate, `PRORECRUIT` = recruiter (granted by an admin through `POST /api/modules/grant`). |
+| CV data | **ProCV** | One-click apply calls `GET /api/cvs` and `GET /api/cvs/:id` on ProCV **with the candidate's own bearer token**; an immutable snapshot is stored with the application. |
+| Jobs, companies, applications, pipeline | **ProJobs** | Dedicated `projobs` database. |
+
+Company-level authorization (who can manage which company/jobs) is ProJobs domain data (`company_members`), enforced in SQL and by row level security.
+
+## API
+
+Public (optional auth adds `viewer` flags):
+- `GET /api/jobs` — instant search. Params: `q`, `workplace`, `type`, `seniority`, `skills`, `mySkills`, `country`, `location`, `salaryMin`, `postedWithin`, `sort=relevance|recent|salary|match`, `page`, `pageSize`. Returns items + facets.
+- `GET /api/jobs/:idOrSlug` — detail + similar jobs. `GET /api/companies/:slug`.
+
+Candidate (`PROJOBS`): `GET /api/me`, `GET /api/me/cvs`, `GET /api/me/skills`, `GET /api/jobs/:id/match?cvId=`, `POST /api/jobs/:id/applications` (`{cvId}` or `{profile}`), `GET /api/me/applications`, `POST /api/me/applications/:id/withdraw`, `GET|PUT|DELETE /api/me/saved-jobs[/:jobId]`.
+
+Employer (`PRORECRUIT`): `GET|POST /api/employer/companies`, `PATCH /api/employer/companies/:id`, `GET|POST /api/employer/jobs`, `GET|PUT /api/employer/jobs/:id`, `POST /api/employer/jobs/:id/publish|close`, `GET /api/employer/jobs/:id/applications`, `PATCH /api/employer/applications/:id` (`{stage, note}`).
+
+Internal (service token): `GET /internal/events?after=<id>&limit=` — transactional outbox (`projobs.job.published|closed`, `projobs.application.submitted|stage_changed|withdrawn`).
+
+Contracts: [`src/contracts.ts`](src/contracts.ts) (pure types shared with the web app and future modules).
+
+## Database
+
+`migrations/001_projobs_v2.sql`: companies, company_members, jobs (generated `tsvector` + GIN indexes, partial index on published jobs), applications (+ events), saved_jobs, outbox_events. Candidate-private tables use RLS bound to `projobs.user_id`; every request runs in a transaction that assumes the restricted role `projobs_api`.
+
+## Commands
+
 ```bash
-npm run dev
-npm run build
-npm test
-npm start
+npm ci --workspaces=false   # standalone lockfile (same as Render)
+npm run dev                 # no DATABASE_URL -> in-memory PGlite with demo data
+npm test                    # vitest: real PostgreSQL (PGlite) incl. RLS under projobs_api
+npm run build && npm start
+MIGRATION_DATABASE_URL=<owner URL> npm run migrate
+MIGRATION_DATABASE_URL=<owner URL> SEED_RECRUITER_ID=<user id> npm run seed   # QA/dev only
 ```
 
-La API usa DATABASE_URL, IDENTITY_JWT_SECRET (JWT_SECRET es fallback de compatibilidad), IDENTITY_URL, IDENTITY_ISSUER, IDENTITY_AUDIENCE y CORS_ORIGIN. Consulta ../../../docs/deployment/ENVIRONMENT_VARIABLES.md. Usa credenciales locales de desarrollo, nunca producción.
-
-## Esquema y migraciones
-Los scripts SQL versionados están en sql/. No se usa Prisma ni _prisma_migrations para ProJobs. Revisa el SQL, confirma proyecto/rama/base Neon y prueba en entorno aislado antes de aplicar con administrador temporal. Nunca ejecutes estos scripts en ProCV o ProIdentity.
-
-Después de migrar, verifica FORCE RLS, políticas, grants y que el login runtime no sea propietario ni tenga BYPASSRLS. La existencia de un archivo SQL en Git no demuestra que esté aplicado en producción.
-
-## Seguridad
-- No confíes en IDs de usuario enviados por el cliente.
-- El contexto de usuario debe proceder del token verificado y establecerse dentro de la transacción.
-- No expongas SQL, credenciales ni detalles internos.
-- Las búsquedas guardadas no implican notificaciones por correo mientras no exista un worker de entrega validado.
-
-## Producción
-Consulta ../../../docs/deployment/DATABASE_MIGRATIONS.md, PRODUCTION_ARCHITECTURE.md y PRODUCTION_RELEASE.md. Verifica el servicio y su AutoDeploy directamente en Render; no asumas que render.yaml representa la infraestructura desplegada.
+See [.env.example](.env.example) for configuration.
