@@ -131,46 +131,60 @@ services:
       - key: DIRECT_DATABASE_URL
         sync: false
 
+  # ProJobs v2 web (React SPA). Mirrors the live static site "ProJobs" (rootDir apps/projobs).
   - type: web
     name: projobs-frontend
-    env: docker
+    env: static
     region: oregon
     plan: free
-    dockerfilePath: ./apps/projobs/Dockerfile
-    dockerContext: .
-    healthCheckPath: /
+    rootDir: apps/projobs
+    buildCommand: npm install --include=dev && npm run build
+    publishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     autoDeploy: false
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: VITE_PROJOBS_API_URL
+        value: https://projobs-api-0clw.onrender.com
       - key: VITE_IDENTITY_API_URL
         value: https://identity.prosolutions.page/api/auth
-      - key: VITE_PROSOLUTIONS_URL
+      - key: VITE_CORE_URL
         value: https://prosolutions.page
       - key: VITE_PROCV_URL
         value: https://procv.prosolutions.page
+      - key: VITE_ADSENSE_CLIENT
+        value: ca-pub-3956322934366702
 
+  # ProJobs v2 API. Mirrors the live native Node service "ProJobs API" (rootDir apps/projobs/server).
+  # Schema changes run separately: MIGRATION_DATABASE_URL=<owner URL> npm run migrate.
   - type: web
     name: projobs-api
-    env: docker
+    env: node
     region: oregon
     plan: free
-    dockerfilePath: ./apps/projobs/server/Dockerfile
-    dockerContext: .
+    rootDir: apps/projobs/server
+    buildCommand: npm ci --include=dev --workspaces=false && npm run build
+    startCommand: npm start
     healthCheckPath: /health
     autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
-      - key: IDENTITY_JWT_SECRET
-        sync: false
       - key: DATABASE_URL
         sync: false
-      - key: IDENTITY_URL
-        value: https://identity.prosolutions.page
+      - key: PROJOBS_DB_RUNTIME_ROLE
+        value: projobs_api
+      - key: IDENTITY_JWT_SECRET
+        sync: false
       - key: IDENTITY_ISSUER
         value: https://identity.prosolutions.page
       - key: IDENTITY_AUDIENCE
         value: prosolutions-api
+      - key: PROCV_API_URL
+        value: https://procvbkn.onrender.com
+      - key: PROJOBS_INTERNAL_TOKEN
+        sync: false
       - key: CORS_ORIGIN
         value: https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page

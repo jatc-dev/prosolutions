@@ -1,18 +1,35 @@
 {
   "name": "@prosolutions/projobs",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Modulo de ofertas de empleo tech y remotas dentro del ecosistema ProSolutions de JATC.DEV",
   "type": "module",
+  "description": "ProJobs web: job search, one-click apply with ProCV and employer ATS",
   "scripts": {
-    "dev": "node scripts/serve.mjs",
-    "build": "node scripts/build.mjs",
-    "start": "node scripts/serve.mjs",
-    "dev:server": "npm run dev --prefix server",
-    "build:server": "npm run build --prefix server",
-    "start:server": "npm run start --prefix server"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5175",
+    "test": "vitest run"
   },
-  "workspaces": [
-    "server"
-  ]
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.400.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.30.6",
+    "tailwind-merge": "^2.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/react": "^18.2.39",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.3.2",
+    "vite": "^5.1.7",
+    "vitest": "^2.1.9"
+  }
 }

@@ -16,8 +16,9 @@
     "dev:identity": "npm run dev --workspace=apps/identity",
     "build:ui": "npm run build --workspace=packages/ui",
     "build:procv": "npm run build:ui && npm --prefix apps/procv run build",
-    "build:projobs": "npm run build --workspace=apps/projobs",
-    "build:core": "npm run build:ui && npm --prefix apps/core run build"
+    "build:projobs": "npm run build --workspace=apps/projobs && npm run build --prefix apps/projobs/server",
+    "build:core": "npm run build:ui && npm --prefix apps/core run build",
+    "dev:projobs-api": "npm run dev --prefix apps/projobs/server"
   },
   "dependencies": {
     "@supabase/server": "^1.9.2",
