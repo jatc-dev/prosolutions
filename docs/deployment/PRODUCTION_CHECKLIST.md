@@ -11,6 +11,6 @@ Desde la adopción de Neon y la separación de los servicios, las instrucciones 
 3. [Variables de entorno](ENVIRONMENT_VARIABLES.md)
 4. [Release de producción](PRODUCTION_RELEASE.md)
 
-El material heredado sobre Supabase se conserva como referencia histórica en [docs/archive/PROCV_LEGACY_SUPABASE_DEPLOYMENT_NOTES.md](../archive/PROCV_LEGACY_SUPABASE_DEPLOYMENT_NOTES.md). No contiene comandos válidos para desplegar ni migrar la infraestructura actual.
+La plataforma ya no usa Supabase; el material heredado se eliminó del repositorio (sigue disponible en el historial de git).
 
 **Prohibido inferir de este documento** que se debe crear otro servicio, cambiar dominios/cookies, migrar usuarios o ejecutar comandos Prisma en producción.
