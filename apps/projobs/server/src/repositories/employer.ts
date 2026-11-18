@@ -17,6 +17,7 @@ import { conflict, forbidden, notFound } from '../http/errors.js';
 import { findJobForMember, UUID } from './jobs.js';
 import { COMPANY_COLUMNS, iso, toCompany } from './mappers.js';
 import { publishEvent } from './outbox.js';
+import { decideVerification, PENDING_COMPANY_PUBLISHED_JOB_LIMIT } from '../domain/companyVerification.js';
 
 export interface CompanyInput {
   name: string;
@@ -61,23 +62,31 @@ export async function listMemberCompanies(tx: Queryable, userId: string): Promis
   return rows.map((row) => ({ ...toCompany(row), role: (row as { role: 'owner' | 'recruiter' }).role }));
 }
 
-export async function createCompany(tx: Queryable, userId: string, input: CompanyInput): Promise<EmployerCompany> {
+export async function createCompany(
+  tx: Queryable,
+  userId: string,
+  input: CompanyInput,
+  creator: { email: string | null; grantedRecruiter: boolean } = { email: null, grantedRecruiter: false },
+): Promise<EmployerCompany> {
   const base = slugify(input.slug || input.name, 60);
   const taken = await tx.query('SELECT 1 FROM public.companies WHERE slug = $1', [base]);
   const slug = taken.rows.length ? `${base}-${randomSuffix(4)}` : base;
+  const verification = decideVerification({ email: creator.email, website: input.website, grantedRecruiter: creator.grantedRecruiter });
   const { rows } = await tx.query<Record<string, any>>(
-    `INSERT INTO public.companies (slug, name, tagline, description, website, logo_url, industry, size_range, headquarters, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-     RETURNING id, slug, name, logo_url, industry, tagline, description, website, size_range, headquarters`,
+    `INSERT INTO public.companies (slug, name, tagline, description, website, logo_url, industry, size_range, headquarters, created_by,
+       verification_status, verification_method, verified_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CASE WHEN $11 = 'verified' THEN now() END)
+     RETURNING id, slug, name, logo_url, industry, tagline, description, website, size_range, headquarters, verification_status`,
     [
       slug, input.name, input.tagline ?? null, input.description ?? null, input.website ?? null,
       input.logoUrl ?? null, input.industry ?? null, input.sizeRange ?? null, input.headquarters ?? null, userId,
+      verification.status, verification.method,
     ],
   );
   const company = rows[0]!;
   await tx.query(
-    `INSERT INTO public.company_members (company_id, user_id, role) VALUES ($1, $2, 'owner')`,
-    [company.id, userId],
+    `INSERT INTO public.company_members (company_id, user_id, role, email) VALUES ($1, $2, 'owner', $3)`,
+    [company.id, userId, creator.email],
   );
   return { ...toCompany(company), role: 'owner' };
 }
@@ -217,6 +226,20 @@ export async function publishJob(tx: Queryable, userId: string, jobId: string) {
   if (!job) throw notFound('Job not found');
   if (job.status === 'published') return job;
   if (job.description.trim().length < 50) throw conflict('Add a description of at least 50 characters before publishing', 'job_incomplete');
+  const status = job.companyProfile.verificationStatus;
+  if (status === 'rejected') throw forbidden('This company did not pass verification', 'company_rejected');
+  if (status === 'pending') {
+    const { rows: published } = await tx.query<{ total: string }>(
+      `SELECT count(*)::text AS total FROM public.jobs WHERE company_id = $1 AND status = 'published'`,
+      [job.company.id],
+    );
+    if (Number(published[0]?.total ?? 0) >= PENDING_COMPANY_PUBLISHED_JOB_LIMIT) {
+      throw conflict(
+        `Unverified companies can keep up to ${PENDING_COMPANY_PUBLISHED_JOB_LIMIT} published jobs. Use a corporate email on your company domain or wait for review.`,
+        'verification_pending_limit',
+      );
+    }
+  }
   await tx.query(
     `UPDATE public.jobs SET status = 'published', published_at = now(),
        closes_at = CASE WHEN closes_at IS NOT NULL AND closes_at <= now() THEN NULL ELSE closes_at END

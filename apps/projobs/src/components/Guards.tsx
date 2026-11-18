@@ -9,7 +9,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 /** Renders children only for signed-in users with the given ProIdentity capability. */
-export function RequireCapability({ capability, children }: { capability: "candidate" | "recruiter"; children: ReactNode }) {
+export function RequireCapability({ capability, children }: { capability: "user" | "candidate" | "recruiter"; children: ReactNode }) {
   const { status, session, signIn } = useSession();
 
   if (status === "loading") {
@@ -35,9 +35,12 @@ export function RequireCapability({ capability, children }: { capability: "candi
   if (capability === "recruiter" && !session.isRecruiter) {
     return (
       <Shell>
-        <EmptyState icon={<Building2 className="h-10 w-10" />} title="Panel exclusivo para empresas">
-          Tu cuenta aún no tiene acceso de reclutador. Solicítalo a un administrador de ProSolutions: se habilita con el módulo
-          <strong> PRORECRUIT</strong> en tu cuenta.
+        <EmptyState
+          icon={<Building2 className="h-10 w-10" />}
+          title="Primero registra tu empresa"
+          action={<a href="/empresa" className="font-semibold text-brand-800 underline dark:text-brand-300">Registrar mi empresa</a>}
+        >
+          Crea el perfil de tu empresa para publicar vacantes y gestionar candidatos. Es gratis y toma un minuto.
         </EmptyState>
       </Shell>
     );

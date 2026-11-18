@@ -10,7 +10,7 @@ const job: JobSummary = {
   slug: "frontend-react",
   title: "Frontend Developer",
   summary: "React y TypeScript",
-  company: { id: "c1", slug: "acme", name: "Acme Labs", logoUrl: null, industry: "Software" },
+  company: { id: "c1", slug: "acme", name: "Acme Labs", logoUrl: null, industry: "Software", verified: true },
   employmentType: "full_time",
   workplace: "remote",
   seniority: "senior",

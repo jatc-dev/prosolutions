@@ -117,3 +117,16 @@ export function activeFilterCount(filters: JobFilters): number {
     (filters.location ? 1 : 0)
   );
 }
+
+/** Filters as stored in a job alert (API search keys). Empty values are omitted. */
+export function filtersToAlertQuery(filters: JobFilters): Record<string, string> {
+  const query: Record<string, string> = {};
+  if (filters.q.trim()) query.q = filters.q.trim();
+  if (filters.location.trim()) query.location = filters.location.trim();
+  if (filters.workplace.length) query.workplace = filters.workplace.join(",");
+  if (filters.type.length) query.type = filters.type.join(",");
+  if (filters.seniority.length) query.seniority = filters.seniority.join(",");
+  if (filters.skills.length) query.skills = filters.skills.join(",");
+  if (filters.salaryMin != null) query.salaryMin = String(filters.salaryMin);
+  return query;
+}

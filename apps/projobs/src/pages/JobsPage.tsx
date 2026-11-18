@@ -1,5 +1,5 @@
 import { cn } from "@prosolutions/ui";
-import { ArrowLeft, ArrowRight, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BellRing, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { JobDetail, JobSearchResponse, JobSummary } from "../../server/src/contracts";
@@ -11,7 +11,7 @@ import { errorMessage } from "../lib/api";
 import { PROCV_URL } from "../lib/env";
 import { useMySkills, useSaveToggle } from "../lib/candidate";
 import { useAsync, useDebouncedValue, useIsDesktop } from "../lib/hooks";
-import { DEFAULT_FILTERS, activeFilterCount, filtersToParams, parseFilters, toApiQuery, type JobFilters } from "../lib/search-params";
+import { DEFAULT_FILTERS, activeFilterCount, filtersToAlertQuery, filtersToParams, parseFilters, toApiQuery, type JobFilters } from "../lib/search-params";
 import { useSession } from "../lib/session";
 
 const PAGE_SIZE = 20;
@@ -152,6 +152,7 @@ export function JobsPage() {
               {search.loading && !results ? "Buscando…" : `${results?.total ?? 0} ${results?.total === 1 ? "vacante" : "vacantes"}`}
             </h2>
             <div className="flex items-center gap-2">
+              <CreateAlertButton filters={filters} />
               <button
                 type="button"
                 onClick={() => setShowFilters((value) => !value)}
@@ -266,5 +267,43 @@ export function JobsPage() {
         )}
       </div>
     </>
+  );
+}
+
+/** Saves the current search as an email alert (signed-in users only). */
+function CreateAlertButton({ filters }: { filters: JobFilters }) {
+  const { status, request } = useSession();
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  if (status !== "authenticated") return null;
+  const save = async () => {
+    setState("saving");
+    try {
+      await request("/api/me/alerts", {
+        method: "POST",
+        body: { label: filters.q.trim() || null, frequency: "daily", query: filtersToAlertQuery(filters) },
+      });
+      setState("saved");
+    } catch {
+      setState("error");
+    }
+  };
+  if (state === "saved") {
+    return (
+      <Link to="/alertas" className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-brand-800 dark:text-brand-300">
+        <BellRing className="h-4 w-4" aria-hidden="true" /> Alerta creada
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => void save()}
+      disabled={state === "saving"}
+      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ui-border px-3 text-sm font-medium hover:bg-ui-soft disabled:opacity-60"
+      title="Recibe por correo las vacantes nuevas de esta búsqueda"
+    >
+      <BellRing className="h-4 w-4" aria-hidden="true" />
+      {state === "error" ? "Reintentar alerta" : "Crear alerta"}
+    </button>
   );
 }

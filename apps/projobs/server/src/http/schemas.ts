@@ -108,6 +108,8 @@ export const applicationInput = z
   .object({
     cvId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,64}$/).optional(),
     coverLetter: optionalText(5000),
+    /** Explicit consent to share the CV with the hiring company (Ley 1581 / GDPR). */
+    consentToShare: z.literal(true, { message: 'Consent to share your CV with the company is required' }),
     /** Manual profile for candidates without a ProCV CV. */
     profile: z
       .object({
@@ -138,4 +140,16 @@ export const eventsQuery = z.object({
 
 export const matchQuery = z.object({
   cvId: z.string().trim().regex(/^[A-Za-z0-9_-]{1,64}$/),
+});
+
+export const alertInput = z.object({
+  label: optionalText(120),
+  frequency: z.enum(['daily', 'weekly']).default('daily'),
+  /** Public search filters (same keys as the /empleos URL). */
+  query: z.record(z.string(), z.string().max(200)).default({}),
+});
+
+export const companyVerification = z.object({
+  status: z.enum(['pending', 'verified', 'rejected']),
+  note: optionalText(500),
 });

@@ -20,6 +20,10 @@ export interface AppConfig {
   /** Shared secret for /internal/* consumers. Internal API disabled when null. */
   internalToken: string | null;
   trustProxy: boolean;
+  /** Public web origin used in emails, sitemap and structured data. */
+  webUrl: string;
+  /** Public origin of this API (unsubscribe links). */
+  apiUrl: string;
 }
 
 const identifier = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -40,6 +44,8 @@ const schema = z.object({
   PROCV_TIMEOUT_MS: z.coerce.number().int().min(500).max(30_000).default(6000),
   PROJOBS_INTERNAL_TOKEN: z.string().trim().min(32).optional(),
   TRUST_PROXY: z.enum(['true', 'false']).optional(),
+  PUBLIC_WEB_URL: z.string().trim().url().default('https://projobs.prosolutions.page'),
+  PUBLIC_API_URL: z.string().trim().url().optional(),
 });
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -77,5 +83,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     procvTimeoutMs: env.PROCV_TIMEOUT_MS,
     internalToken: env.PROJOBS_INTERNAL_TOKEN ?? null,
     trustProxy: env.TRUST_PROXY ? env.TRUST_PROXY === 'true' : isProduction,
+    webUrl: env.PUBLIC_WEB_URL.replace(/\/+$/, ''),
+    apiUrl: (env.PUBLIC_API_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
   };
 }

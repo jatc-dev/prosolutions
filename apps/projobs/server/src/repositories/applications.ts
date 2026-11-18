@@ -20,6 +20,10 @@ export interface NewApplication {
   profile: CandidateProfile;
   coverLetter: string | null;
   match: MatchResult;
+  /** Address for transactional emails (from the identity token). */
+  candidateEmail: string | null;
+  jobTitle: string;
+  companyName: string;
 }
 
 const TERMINAL: ApplicationStage[] = ['hired', 'rejected', 'withdrawn'];
@@ -29,8 +33,8 @@ export async function submitApplication(tx: Queryable, input: NewApplication): P
   const { rows } = await tx.query<{ id: string; created_at: Date; company_id: string }>(
     `INSERT INTO public.applications (
        job_id, candidate_id, source, procv_cv_id, candidate_snapshot, cover_letter,
-       match_score, matched_skills, missing_skills)
-     SELECT j.id, $2, $3, $4, $5::jsonb, $6, $7, $8, $9
+       match_score, matched_skills, missing_skills, consent_at, candidate_email)
+     SELECT j.id, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, now(), $10
      FROM public.jobs j
      WHERE j.id = $1 AND j.status = 'published' AND (j.closes_at IS NULL OR j.closes_at > now())
      ON CONFLICT ON CONSTRAINT applications_one_per_job DO NOTHING
@@ -38,6 +42,7 @@ export async function submitApplication(tx: Queryable, input: NewApplication): P
     [
       input.jobId, input.candidateId, input.source, input.procvCvId, JSON.stringify(input.profile),
       input.coverLetter, input.match.score, input.match.matchedSkills, input.match.missingSkills,
+      input.candidateEmail,
     ],
   );
   const created = rows[0];
@@ -54,6 +59,12 @@ export async function submitApplication(tx: Queryable, input: NewApplication): P
      VALUES ($1, NULL, 'applied', $2, 'candidate')`,
     [created.id, input.candidateId],
   );
+  // Recipients are resolved now (company_members has no RLS) so the
+  // notification worker never needs to read candidate-private rows.
+  const { rows: members } = await tx.query<{ email: string }>(
+    `SELECT email FROM public.company_members WHERE company_id = $1 AND email IS NOT NULL`,
+    [created.company_id],
+  );
   await publishEvent(tx, 'projobs.application.submitted', 'application', created.id, {
     applicationId: created.id,
     jobId: input.jobId,
@@ -62,6 +73,11 @@ export async function submitApplication(tx: Queryable, input: NewApplication): P
     source: input.source,
     procvCvId: input.procvCvId,
     matchScore: input.match.score,
+    jobTitle: input.jobTitle,
+    companyName: input.companyName,
+    candidateName: input.profile.fullName,
+    candidateEmail: input.candidateEmail,
+    recruiterEmails: members.map((member) => member.email),
   });
   return { id: created.id, createdAt: iso(created.created_at) ?? '' };
 }
@@ -180,7 +196,10 @@ export async function moveApplication(
   note: string | null,
 ) {
   if (!UUID.test(applicationId)) throw notFound('Application not found');
-  const { rows } = await tx.query<{ from_stage: string; job_id: string; candidate_id: string }>(
+  const { rows } = await tx.query<{
+    from_stage: string; job_id: string; candidate_id: string; candidate_email: string | null;
+    candidate_name: string | null; job_title: string; company_name: string;
+  }>(
     `WITH previous AS (
        SELECT id, stage FROM public.applications WHERE id = $1 FOR UPDATE
      )
@@ -188,7 +207,10 @@ export async function moveApplication(
      FROM previous
      WHERE a.id = previous.id AND previous.stage <> 'withdrawn'
        AND public.projobs_is_job_member(a.job_id)
-     RETURNING previous.stage AS from_stage, a.job_id, a.candidate_id`,
+     RETURNING previous.stage AS from_stage, a.job_id, a.candidate_id, a.candidate_email,
+       a.candidate_snapshot->>'fullName' AS candidate_name,
+       (SELECT j.title FROM public.jobs j WHERE j.id = a.job_id) AS job_title,
+       (SELECT c.name FROM public.jobs j JOIN public.companies c ON c.id = j.company_id WHERE j.id = a.job_id) AS company_name`,
     [applicationId, toStage],
   );
   const changed = rows[0];
@@ -212,6 +234,10 @@ export async function moveApplication(
       candidateId: changed.candidate_id,
       fromStage: changed.from_stage,
       toStage,
+      candidateEmail: changed.candidate_email,
+      candidateName: changed.candidate_name,
+      jobTitle: changed.job_title,
+      companyName: changed.company_name,
     });
   }
 }

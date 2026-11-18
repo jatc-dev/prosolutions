@@ -68,8 +68,9 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
     try {
       const body =
         mode === "procv"
-          ? { cvId, coverLetter: coverLetter.trim() || null }
+          ? { cvId, coverLetter: coverLetter.trim() || null, consentToShare: true }
           : {
+              consentToShare: true,
               coverLetter: coverLetter.trim() || null,
               profile: {
                 fullName: manual.fullName.trim(),
@@ -108,7 +109,8 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
     );
   }
 
-  const canSubmit = mode === "procv" ? Boolean(cvId) : manual.fullName.trim().length >= 2;
+  const [consent, setConsent] = useState(false);
+  const canSubmit = consent && (mode === "procv" ? Boolean(cvId) : manual.fullName.trim().length >= 2);
 
   return (
     <Dialog open onClose={onClose} title={`Postularme a ${job.title}`} description={job.company.name} wide>
@@ -237,6 +239,20 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
             className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm text-ui-text focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30"
           />
         </div>
+
+        <label className="flex items-start gap-3 rounded-lg border border-ui-border bg-ui-soft p-3 text-sm">
+          <input
+            type="checkbox"
+            required
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-ui-border-strong text-brand-700 focus:ring-brand-700"
+          />
+          <span>
+            Autorizo compartir mi hoja de vida y datos de contacto con <strong>{job.company.name}</strong> para este proceso de selección,
+            según la <a href="/privacidad.html" target="_blank" rel="noreferrer" className="font-medium text-brand-800 underline dark:text-brand-300">política de privacidad</a> (Ley 1581 de 2012).
+          </span>
+        </label>
 
         {submitError && <ErrorNotice message={submitError} />}
 

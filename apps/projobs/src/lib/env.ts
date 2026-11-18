@@ -20,3 +20,6 @@ export const PROCV_URL = APP_URLS.procv;
 export function loginUrl(returnUrl = window.location.href): string {
   return `${CORE_URL}/login?redirect_uri=${encodeURIComponent(returnUrl)}`;
 }
+
+/** Public origin of this web app (canonical URLs and structured data). */
+export const WEB_URL = trimSlash(APP_URLS.projobs);

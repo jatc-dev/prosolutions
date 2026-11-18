@@ -8,6 +8,8 @@ import { ApiError, errorMessage } from "../lib/api";
 import { useMySkills, useSaveToggle } from "../lib/candidate";
 import { useAsync } from "../lib/hooks";
 import { useSession } from "../lib/session";
+import { applyJobSeo } from "../lib/jobPosting";
+import { WEB_URL } from "../lib/env";
 
 export function JobPage() {
   const { slug = "" } = useParams();
@@ -20,7 +22,9 @@ export function JobPage() {
 
   useEffect(() => {
     if (data) document.title = `${data.job.title} en ${data.job.company.name} | ProJobs`;
+    const restoreSeo = applyJobSeo(data?.job ?? null, WEB_URL);
     return () => {
+      restoreSeo();
       document.title = "ProJobs — Empleos y postulación en un clic | ProSolutions";
     };
   }, [data]);
