@@ -104,7 +104,7 @@ export function PortalPage() {
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="7" width="17" height="13" rx="2" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3.5 12h17M10 12v2h4v-2" /></svg>
                 </div>
                 <h2 className="mt-5 text-2xl font-bold">ProJobs</h2>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Descubre oportunidades profesionales y explora vacantes tech para tu próximo paso laboral.</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Descubre oportunidades profesionales y explora vacantes de todos los sectores para tu próximo paso laboral.</p>
                 <span className="mt-7 inline-flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-300">Entrar a ProJobs <span aria-hidden="true">→</span></span>
               </a>)}
             </div>

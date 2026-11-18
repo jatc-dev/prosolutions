@@ -95,7 +95,7 @@ export function JobsPage() {
     <>
       <section className="border-b border-ui-border bg-gradient-to-b from-brand-50/70 to-transparent dark:from-brand-500/5">
         <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Encuentra tu próximo empleo tech</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Encuentra tu próximo empleo</h1>
           <p className="mt-2 max-w-2xl text-ui-muted">
             Filtra por modalidad, salario y habilidades. Postúlate en un clic con tu CV de ProCV y descubre tu afinidad con cada vacante.
           </p>

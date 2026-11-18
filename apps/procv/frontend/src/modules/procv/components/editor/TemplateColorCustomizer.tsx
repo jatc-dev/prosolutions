@@ -14,7 +14,7 @@ interface TemplateColorCustomizerProps {
 
 const TEMPLATE_LABELS: Record<string, string> = {
   sidebar: "panel lateral",
-  developer: "fondo developer",
+  developer: "fondo de la plantilla",
   creative: "degradados creativa",
   executive: "top ejecutiva",
   extensa: "cabecera extensa",

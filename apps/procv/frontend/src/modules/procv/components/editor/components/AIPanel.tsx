@@ -61,7 +61,7 @@ export function AIPanel({ cvData, onApply }: AIPanelProps) {
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder={t("ai.placeholder", "Ej: 'Mejora mi resumen profesional para un rol de senior developer'")}
+        placeholder={t("ai.placeholder", "Ej: 'Mejora mi resumen profesional para un cargo de coordinación'")}
         rows={2}
         className="w-full rounded-md border border-ui-border-strong bg-ui-surface px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-500"
       />

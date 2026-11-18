@@ -766,20 +766,20 @@ export const useCVEditorStore = create<CVEditorState>()(
             // Simulate loading templates
             const templates = {
               experience: {
-                developer: {
-                  description: 'Desarrollé aplicaciones web utilizando tecnologías modernas, incluyendo React, Node.js y bases de datos SQL/NoSQL. Implementé APIs RESTful y trabajé en equipos ágiles.',
+                operations: {
+                  description: 'Coordiné las operaciones diarias del área, asegurando el cumplimiento de metas, tiempos y estándares de calidad.',
                   achievements: [
-                    'Incrementé el rendimiento de la aplicación en un 40% mediante optimizaciones de código y consultas a base de datos eficientes',
-                    'Desarrollé nuevas funcionalidades solicitadas por el cliente, incluyendo sistema de autenticación de usuarios y procesamiento de pagos en línea',
-                    'Colaboré estrechamente con el equipo de diseño para mejorar la experiencia de usuario y garantizar la accesibilidad del sitio web',
+                    'Reduje los tiempos de respuesta al cliente en un 30% reorganizando los turnos y el flujo de trabajo',
+                    'Implementé controles de inventario que disminuyeron las pérdidas en un 15%',
+                    'Capacité a nuevos integrantes del equipo y acompañé su adaptación al puesto',
                   ],
                 },
                 manager: {
-                  description: 'Gestioné equipos de desarrollo y proyectos tecnológicos, coordinando recursos, plazos y entregables. Lideré implementaciones de nuevas tecnologías y procesos de mejora continua.',
+                  description: 'Lideré equipos de trabajo, coordinando recursos, presupuestos y plazos para cumplir los objetivos del área.',
                   achievements: [
-                    'Dirigí un equipo de 5 desarrolladores en proyectos críticos, garantizando entregas puntuales y estándares de calidad del código',
-                    'Completé proyectos por debajo del presupuesto y tiempo estimado mediante gestión eficiente de recursos y mitigación proactiva de riesgos',
-                    'Introduje metodologías ágiles (Scrum/Kanban) incrementando la productividad del equipo en un 30%',
+                    'Dirigí un equipo de 12 personas, logrando superar las metas trimestrales durante dos años consecutivos',
+                    'Completé proyectos por debajo del presupuesto mediante una gestión eficiente de recursos',
+                    'Estandaricé procesos clave que aumentaron la productividad del equipo en un 20%',
                   ],
                 },
               },
@@ -787,75 +787,75 @@ export const useCVEditorStore = create<CVEditorState>()(
                 summary: {
                   description: 'Resumen profesional conciso destacando experiencia, habilidades y objetivos profesionales.',
                   achievements: [
-                    'Acumulé más de 5 años de experiencia sólida en desarrollo web full-stack',
-                    'Especialicé en tecnologías JavaScript/TypeScript, React y Node.js con expertise comprobada',
-                    'Demostré liderazgo técnico efectivo en la gestión y dirección de equipos de desarrollo',
+                    'Acumulé más de 5 años de experiencia en atención al cliente y coordinación de equipos',
+                    'Me destaco por la comunicación clara, la organización y el cumplimiento de metas',
+                    'Demostré liderazgo en la mejora de procesos y la formación de nuevos colaboradores',
                   ],
                 },
               },
               skills: {
                 technical: {
-                  description: 'Habilidades técnicas avanzadas en desarrollo web, bases de datos y herramientas de desarrollo.',
+                  description: 'Conocimientos y herramientas propios del cargo que respaldan tu experiencia.',
                   achievements: [
-                    'Dominé JavaScript/TypeScript avanzado con experiencia demostrada en frameworks modernos (React, Vue, Angular)',
-                    'Especialicé en desarrollo backend con Node.js, Express y bases de datos SQL/NoSQL (PostgreSQL, MongoDB)',
-                    'Certifiqué experiencia en DevOps, CI/CD y deployment en la nube (AWS, Azure, Heroku)',
+                    'Manejo avanzado de Microsoft Excel para reportes, indicadores y control de presupuestos',
+                    'Experiencia con sistemas de gestión como SAP o software contable',
+                    'Conocimiento de normas de calidad y de seguridad y salud en el trabajo',
                   ],
                 },
                 soft: {
                   description: 'Habilidades interpersonales y de liderazgo desarrolladas a través de experiencia profesional.',
                   achievements: [
-                    'Ejercí liderazgo efectivo de equipos técnicos y mentoría de desarrolladores junior',
-                    'Establecí comunicación efectiva con stakeholders y equipos multidisciplinarios',
-                    'Demostré capacidad para resolver problemas complejos y tomar decisiones estratégicas bajo presión',
+                    'Ejercí liderazgo efectivo de equipos y acompañamiento de colaboradores nuevos',
+                    'Establecí comunicación efectiva con clientes, proveedores y equipos de distintas áreas',
+                    'Demostré capacidad para resolver problemas y tomar decisiones bajo presión',
                   ],
                 },
               },
               education: {
-                computerScience: {
-                  description: 'Formación académica en Ciencias de la Computación o áreas relacionadas con el desarrollo de software.',
+                technical: {
+                  description: 'Formación técnica o tecnológica relacionada con tu área de trabajo.',
                   achievements: [
-                    'Completé Ingeniería en Sistemas/Informática con énfasis especializado en desarrollo web y móvil',
-                    'Cursé programas especializados en inteligencia artificial y machine learning',
-                    'Desarrollé proyecto de grado: Plataforma de e-commerce utilizando tecnologías modernas y escalables',
+                    'Completé un programa técnico con prácticas en empresas del sector',
+                    'Obtuve reconocimiento académico por desempeño destacado',
+                    'Desarrollé un proyecto de grado aplicado a una necesidad real de la comunidad',
                   ],
                 },
                 business: {
-                  description: 'Formación en administración de empresas complementada con conocimientos técnicos.',
+                  description: 'Formación en administración de empresas y áreas afines.',
                   achievements: [
-                    'Obtuve Licenciatura en Administración de Empresas con especialización en Tecnologías de la Información',
-                    'Certifiqué competencias en gestión de proyectos (PMP, Scrum Master)',
-                    'Demostré experiencia en análisis de requisitos y gestión efectiva de stakeholders',
+                    'Obtuve el título de Administración de Empresas con énfasis en gestión comercial',
+                    'Certifiqué competencias en gestión de proyectos',
+                    'Demostré experiencia en análisis de procesos y relación con clientes',
                   ],
                 },
               },
               languages: {
                 multilingual: {
-                  description: 'Dominio de múltiples idiomas incluyendo inglés técnico y español nativo.',
+                  description: 'Dominio de varios idiomas útiles para el trabajo.',
                   achievements: [
-                    'Alcanzé nivel avanzado de inglés (C1) con puntuación TOEIC de 950 puntos',
-                    'Dominó español nativo con experiencia comprobada en redacción técnica especializada',
-                    'Desarrollé competencia intermedia en francés para comunicación internacional efectiva',
+                    'Alcancé nivel avanzado de inglés (C1) certificado',
+                    'Español nativo con excelente redacción y ortografía',
+                    'Desarrollé competencia intermedia en francés para comunicación internacional',
                   ],
                 },
               },
               certificates: {
-                technical: {
-                  description: 'Certificaciones profesionales en tecnologías y metodologías de desarrollo.',
+                professional: {
+                  description: 'Certificaciones profesionales que respaldan tus competencias.',
                   achievements: [
-                    'Obtuve certificación de Arquitecto de Soluciones AWS - experiencia demostrada en arquitectura de nube',
-                    'Certifiqué competencias como Desarrollador Profesional de Google Cloud - desarrollo de aplicaciones en la nube',
-                    'Completé certificación Scrum Master - liderazgo efectivo de equipos ágiles',
+                    'Obtuve certificación en servicio al cliente de alto nivel',
+                    'Certifiqué competencias en manejo seguro de alimentos y primeros auxilios',
+                    'Completé certificación en gestión de proyectos',
                   ],
                 },
               },
               links: {
                 professional: {
-                  description: 'Perfiles profesionales en plataformas de desarrollo y redes sociales.',
+                  description: 'Perfiles profesionales y portafolio en línea.',
                   achievements: [
-                    'Mantengo GitHub con más de 50 repositorios de código abierto y contribuciones activas',
-                    'Desarrollé red profesional en LinkedIn con más de 500 conexiones en el sector tecnológico',
-                    'Creé portfolio personal showcaseando proyectos destacados y casos de estudio detallados',
+                    'Mantengo un perfil de LinkedIn actualizado con recomendaciones de jefes y clientes',
+                    'Desarrollé una red profesional con más de 500 contactos en mi sector',
+                    'Creé un portafolio con mis proyectos y resultados más destacados',
                   ],
                 },
               },

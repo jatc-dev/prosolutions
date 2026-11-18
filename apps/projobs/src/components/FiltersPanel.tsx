@@ -105,7 +105,7 @@ export function FiltersPanel({ filters, facets, onChange, onReset }: FiltersPane
             id="skill-filter"
             value={skillDraft}
             onChange={(event) => setSkillDraft(event.target.value)}
-            placeholder="Ej. react, sql…"
+            placeholder="Ej. excel, ventas…"
             maxLength={40}
             className="h-9 min-w-0 flex-1 rounded-lg border border-ui-border bg-ui-surface px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />

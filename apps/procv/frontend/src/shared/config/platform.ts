@@ -21,10 +21,10 @@ export const MODULES: PlatformModule[] = [
   {
     id: "projobs",
     name: "ProJobs",
-    tagline: "Empleos tech remotos",
+    tagline: "Empleo en todos los sectores",
     path: "/projobs",
     status: "beta",
-    description: "Vacantes tech remotas curadas con filtros por stack y búsqueda en vivo.",
+    description: "Vacantes de todos los sectores con búsqueda instantánea y postulación en un clic.",
   },
 ];
 

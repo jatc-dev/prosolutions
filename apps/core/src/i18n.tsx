@@ -5,11 +5,11 @@ export type Locale = "es" | "en";
 export const messages = {
   es: {
     seo: {
-      title: "ProSolutions — Ecosistema de herramientas profesionales tech",
-      description: "ProSolutions es el ecosistema de herramientas profesionales tech: crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs.",
-      socialDescription: "Crea tu CV optimizado para ATS con ProCV y encuentra empleos tech remotos con ProJobs. Un solo ecosistema para tu carrera.",
+      title: "ProSolutions — Herramientas para tu carrera profesional",
+      description: "ProSolutions reúne herramientas para tu carrera profesional: crea tu CV optimizado para ATS con ProCV y encuentra empleo en cualquier sector con ProJobs.",
+      socialDescription: "Crea tu CV optimizado para ATS con ProCV y encuentra empleo en cualquier sector con ProJobs. Un solo ecosistema para tu carrera.",
       locale: "es_ES",
-      structuredDescription: "Ecosistema de herramientas profesionales tech: ProCV (hojas de vida) y ProJobs (empleos tech remotos).",
+      structuredDescription: "Ecosistema de herramientas profesionales: ProCV (hojas de vida) y ProJobs (bolsa de empleo para todos los sectores).",
     },
     navigation: {
       home: "Inicio",
@@ -28,18 +28,18 @@ export const messages = {
       language: "Cambiar idioma a inglés",
     },
     hero: {
-      badge: "El ecosistema de herramientas tech",
+      badge: "El ecosistema para tu carrera profesional",
       titleLead: "Tu carrera profesional,",
       titleAccent: "potenciada por un solo ecosistema",
-      descriptionLead: "ProSolutions reúne las herramientas que todo profesional tech necesita: crea hojas de vida optimizadas para ATS con",
-      connector: "y encuentra empleos remotos con",
+      descriptionLead: "ProSolutions reúne las herramientas que todo profesional necesita, sin importar su área: crea hojas de vida optimizadas para ATS con",
+      connector: "y encuentra empleo con",
       conclusion: "Una cuenta, un ecosistema, cero fricción.",
       procvCta: "Probar ProCV",
       projobsCta: "Explorar Empleos (ProJobs)",
       stats: [
         { value: "2", label: "Módulos activos" },
         { value: "ATS", label: "Plantillas optimizadas" },
-        { value: "100%", label: "Enfocado en tech" },
+        { value: "1 clic", label: "Para postularte" },
       ],
     },
     modules: {
@@ -53,14 +53,14 @@ export const messages = {
         cta: "Ir a ProCV",
       },
       projobs: {
-        tagline: "Empleos tech remotos",
-        description: "Vacantes tech remotas seleccionadas, con filtros por stack y búsqueda en vivo para encontrar tu próximo rol.",
-        features: ["Vacantes tech remotas", "Filtros por stack y búsqueda", "Listado actualizado a diario"],
+        tagline: "Empleo en todos los sectores",
+        description: "Vacantes de todos los sectores, con búsqueda instantánea y filtros por modalidad, salario y habilidades para encontrar tu próximo empleo.",
+        features: ["Vacantes de todos los sectores", "Búsqueda y filtros al instante", "Postulación en un clic con tu CV"],
         cta: "Explorar vacantes",
       },
       comingSoon: "Próximamente",
       newModules: "Nuevos módulos SaaS",
-      futureDescription: "Estamos construyendo nuevos módulos para el ecosistema ProSolutions: analítica de carrera, portafolios y más herramientas para profesionales tech.",
+      futureDescription: "Estamos construyendo nuevos módulos para el ecosistema ProSolutions: analítica de carrera, portafolios y más herramientas para profesionales de todas las áreas.",
       soon: "Muy pronto",
     },
     footer: {
@@ -69,9 +69,9 @@ export const messages = {
       home: "Inicio",
       privacy: "Privacidad",
       terms: "Términos",
-      description: "El ecosistema de herramientas profesionales tech. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo remoto con ProJobs.",
+      description: "El ecosistema de herramientas para tu carrera profesional. Crea tu hoja de vida optimizada para ATS con ProCV y encuentra tu próximo empleo con ProJobs.",
       credit: "Un producto desarrollado por",
-      tagline: "Hecho para profesionales tech",
+      tagline: "Hecho para profesionales de todas las áreas",
     },
     ads: { label: "Espacios publicitarios" },
     auth: {
@@ -92,8 +92,8 @@ export const messages = {
     },
     home: {
       title: "Tu carrera profesional, potenciada por un solo ecosistema",
-      subtitle: "Crea CVs optimizados para ATS, encuentra empleos tech remotos y gestiona tu perfil profesional en un solo ecosistema.",
-      platformTitle: "Todo lo que necesitas para tu carrera tech",
+      subtitle: "Crea CVs optimizados para ATS, encuentra empleo y gestiona tu perfil profesional en un solo ecosistema.",
+      platformTitle: "Todo lo que necesitas para tu carrera profesional",
       platformDescription: "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
       moduleProcv: {
         title: "ProCV Platform",
@@ -103,19 +103,19 @@ export const messages = {
       },
       moduleProjobs: {
         title: "ProJobs Platform",
-        badge: "Búsqueda de empleo tech · Remoto",
-        description: "Encuentra empleo remoto en tecnología según tu stack técnico, seniority y preferencias.",
+        badge: "Búsqueda de empleo · Todos los sectores",
+        description: "Encuentra empleo según tus habilidades, tu experiencia y la modalidad que prefieras.",
         action: "Explorar vacantes"
       }
     }
   },
   en: {
     seo: {
-      title: "ProSolutions — Professional tech tools ecosystem",
-      description: "ProSolutions is the professional tech tools ecosystem: build an ATS-optimized resume with ProCV and find remote tech jobs with ProJobs.",
-      socialDescription: "Build an ATS-optimized resume with ProCV and find remote tech jobs with ProJobs. One ecosystem for your career.",
+      title: "ProSolutions — Tools for your professional career",
+      description: "ProSolutions brings together tools for your career: build an ATS-optimized resume with ProCV and find jobs in any field with ProJobs.",
+      socialDescription: "Build an ATS-optimized resume with ProCV and find jobs in any field with ProJobs. One ecosystem for your career.",
       locale: "en_US",
-      structuredDescription: "Professional tech tools ecosystem: ProCV (resumes) and ProJobs (remote tech jobs).",
+      structuredDescription: "Professional tools ecosystem: ProCV (resumes) and ProJobs (job board for every field).",
     },
     navigation: {
       home: "Home",
@@ -134,18 +134,18 @@ export const messages = {
       language: "Switch language to Spanish",
     },
     hero: {
-      badge: "The tech tools ecosystem",
+      badge: "The ecosystem for your professional career",
       titleLead: "Your professional career,",
       titleAccent: "powered by one ecosystem",
-      descriptionLead: "ProSolutions brings together the tools every tech professional needs: create ATS-optimized resumes with",
-      connector: "and find remote jobs with",
+      descriptionLead: "ProSolutions brings together the tools every professional needs, whatever their field: create ATS-optimized resumes with",
+      connector: "and find jobs with",
       conclusion: "One account, one ecosystem, zero friction.",
       procvCta: "Try ProCV",
       projobsCta: "Explore jobs (ProJobs)",
       stats: [
         { value: "2", label: "Active modules" },
         { value: "ATS", label: "Optimized templates" },
-        { value: "100%", label: "Built for tech" },
+        { value: "1 click", label: "To apply" },
       ],
     },
     modules: {
@@ -159,14 +159,14 @@ export const messages = {
         cta: "Go to ProCV",
       },
       projobs: {
-        tagline: "Remote tech jobs",
-        description: "Curated remote tech openings, with stack filters and live search to find your next role.",
-        features: ["Remote tech openings", "Stack filters and search", "Updated daily"],
+        tagline: "Jobs in every field",
+        description: "Openings in every field, with instant search and filters by workplace, salary, and skills to find your next job.",
+        features: ["Openings in every field", "Instant search and filters", "One-click apply with your CV"],
         cta: "Explore jobs",
       },
       comingSoon: "Coming soon",
       newModules: "New SaaS modules",
-      futureDescription: "We are building new modules for the ProSolutions ecosystem: career analytics, portfolios, and more tools for tech professionals.",
+      futureDescription: "We are building new modules for the ProSolutions ecosystem: career analytics, portfolios, and more tools for professionals in every field.",
       soon: "Coming soon",
     },
     footer: {
@@ -175,9 +175,9 @@ export const messages = {
       home: "Home",
       privacy: "Privacy",
       terms: "Terms",
-      description: "The ecosystem of professional tech tools. Build an ATS-optimized resume with ProCV and find your next remote job with ProJobs.",
+      description: "The ecosystem of tools for your professional career. Build an ATS-optimized resume with ProCV and find your next job with ProJobs.",
       credit: "A product developed by",
-      tagline: "Made for tech professionals",
+      tagline: "Made for professionals in every field",
     },
     ads: { label: "Advertising spaces" },
     auth: {
@@ -198,8 +198,8 @@ export const messages = {
     },
     home: {
       title: "Your professional career, powered by one ecosystem",
-      subtitle: "Create ATS-optimized CVs, find remote tech jobs, and manage your professional profile in one ecosystem.",
-      platformTitle: "Everything you need for your tech career",
+      subtitle: "Create ATS-optimized CVs, find jobs, and manage your professional profile in one ecosystem.",
+      platformTitle: "Everything you need for your professional career",
       platformDescription: "Access specialized tools to create CVs, find jobs, and manage your professional identity with a single login.",
       moduleProcv: {
         title: "ProCV Platform",
@@ -209,8 +209,8 @@ export const messages = {
       },
       moduleProjobs: {
         title: "ProJobs Platform",
-        badge: "Remote Tech Jobs · Search",
-        description: "Find remote tech jobs based on your technical stack, seniority, and preferences.",
+        badge: "Job Search · Every Field",
+        description: "Find jobs based on your skills, experience, and preferred workplace.",
         action: "Explore vacancies"
       }
     }
