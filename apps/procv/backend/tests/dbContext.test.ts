@@ -153,7 +153,7 @@ describe('ProCV signed transaction database context', () => {
     const operation = jest.fn();
 
     await expect(withUserContext('identity-user-a', operation)).rejects.toThrow(
-      'PROCV_RLS_CONTEXT_KEY matches the database verifier key 'v1'',
+      "PROCV_RLS_CONTEXT_KEY matches the database verifier key 'v1'",
     );
     expect(operation).not.toHaveBeenCalled();
     expect(queryRaw).toHaveBeenCalledTimes(4);
