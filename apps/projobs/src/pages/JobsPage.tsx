@@ -1,13 +1,14 @@
 import { cn } from "@prosolutions/ui";
-import { ArrowLeft, ArrowRight, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { JobDetail, JobSearchResponse, JobSummary } from "../../server/src/contracts";
 import { FiltersPanel } from "../components/FiltersPanel";
 import { JobCard, JobCardSkeleton } from "../components/JobCard";
 import { JobDetailView } from "../components/JobDetailView";
 import { EmptyState, ErrorNotice, Spinner } from "../components/primitives";
 import { errorMessage } from "../lib/api";
+import { PROCV_URL } from "../lib/env";
 import { useMySkills, useSaveToggle } from "../lib/candidate";
 import { useAsync, useDebouncedValue, useIsDesktop } from "../lib/hooks";
 import { DEFAULT_FILTERS, activeFilterCount, filtersToParams, parseFilters, toApiQuery, type JobFilters } from "../lib/search-params";
@@ -86,6 +87,8 @@ export function JobsPage() {
 
   const totalPages = results ? Math.max(1, Math.ceil(results.total / PAGE_SIZE)) : 1;
   const filterCount = activeFilterCount(filters);
+  // No results and no criteria at all: the catalog itself is empty (e.g. right after launch).
+  const catalogEmpty = Boolean(results && results.total === 0 && filterCount === 0 && !filters.q.trim());
   const sortOptions = SORT_OPTIONS.filter(([value]) => value !== "match" || mySkills.length > 0);
 
   return (
@@ -130,7 +133,13 @@ export function JobsPage() {
         </div>
       </section>
 
-      <div ref={resultsRef} className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:px-8 xl:grid-cols-[16rem_minmax(0,26rem)_minmax(0,1fr)]">
+      <div
+        ref={resultsRef}
+        className={cn(
+          "mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:px-8",
+          !catalogEmpty && "xl:grid-cols-[16rem_minmax(0,26rem)_minmax(0,1fr)]",
+        )}
+      >
         <aside className={cn("lg:block", showFilters ? "block" : "hidden")} aria-label="Filtros de búsqueda">
           <div className="rounded-2xl border border-ui-border bg-ui-surface p-4 lg:sticky lg:top-4">
             <FiltersPanel filters={filters} facets={results?.facets ?? null} onChange={(patch) => update(patch)} onReset={() => setParams(filtersToParams(DEFAULT_FILTERS))} />
@@ -170,6 +179,24 @@ export function JobsPage() {
             <ErrorNotice message={errorMessage(search.error)} onRetry={search.reload} />
           ) : !results ? (
             <div className="space-y-3">{Array.from({ length: 5 }, (_, index) => <JobCardSkeleton key={index} />)}</div>
+          ) : results.items.length === 0 && catalogEmpty ? (
+            <EmptyState
+              icon={<Briefcase className="h-10 w-10" />}
+              title="Aún no hay vacantes publicadas"
+              action={
+                <div className="flex flex-col items-center gap-3 sm:flex-row">
+                  <a href={`${PROCV_URL}/dashboard`} className="inline-flex h-10 items-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">
+                    Prepara tu CV en ProCV
+                  </a>
+                  <Link to="/empresa" className="text-sm font-semibold text-brand-600 hover:underline">
+                    ¿Eres empresa? Publica tu primera vacante
+                  </Link>
+                </div>
+              }
+            >
+              ProJobs acaba de abrir y las empresas están publicando sus primeras ofertas. Mientras tanto, deja listo tu CV para
+              postularte en un clic en cuanto aparezcan.
+            </EmptyState>
           ) : results.items.length === 0 ? (
             <EmptyState
               icon={<SearchX className="h-10 w-10" />}
@@ -212,7 +239,7 @@ export function JobsPage() {
           )}
         </section>
 
-        {isDesktop && (
+        {isDesktop && !catalogEmpty && (
           <section aria-label="Detalle de la vacante" className="min-w-0">
             <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-ui-border bg-ui-surface p-6 shadow-card">
               {detail.loading && !detail.data ? (
