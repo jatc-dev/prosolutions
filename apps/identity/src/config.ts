@@ -73,6 +73,21 @@ function getCookieSameSite(): 'lax' | 'strict' | 'none' {
   return getEnvironment() === 'production' ? 'none' : 'lax';
 }
 
+/**
+ * Optional suffix for every cookie ProIdentity sets (refresh + CSRF), e.g. "_qa".
+ * Lets a non-production environment share the parent cookie domain with
+ * production (".prosolutions.page") without overwriting production cookies.
+ * Empty by default: production cookie names stay "refreshToken" / "csrfToken".
+ */
+export function getCookieNameSuffix(raw = process.env.COOKIE_NAME_SUFFIX): string {
+  const suffix = (raw || '').trim();
+  if (!suffix) return '';
+  if (!/^[_-][A-Za-z0-9_-]{1,15}$/.test(suffix)) {
+    throw new Error('COOKIE_NAME_SUFFIX must start with "_" or "-" and contain up to 16 safe characters');
+  }
+  return suffix;
+}
+
 function getJwtSecret(): string {
   const secret = process.env.IDENTITY_JWT_SECRET;
   const isProduction = getEnvironment() === 'production';
@@ -118,5 +133,6 @@ export const config = {
   cookieDomain: process.env.COOKIE_DOMAIN?.trim().toLowerCase() === 'host-only'
     ? undefined
     : process.env.COOKIE_DOMAIN || '.prosolutions.page',
+  cookieNameSuffix: getCookieNameSuffix(),
   allowedOrigins: [...new Set([...configuredAllowedOrigins, ...additionalAllowedOrigins])],
 };

@@ -1,7 +1,7 @@
 import { Response, CookieOptions } from 'express';
 import { config } from '../config';
 
-export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
+export const REFRESH_TOKEN_COOKIE_NAME = `refreshToken${config.cookieNameSuffix}`;
 
 function refreshCookieOptions(): CookieOptions {
   return {
