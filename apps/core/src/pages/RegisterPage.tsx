@@ -204,7 +204,7 @@ export function RegisterPage() {
       <footer className="bg-slate-900 px-6 py-6 text-white dark:bg-slate-950">
         <div className="ui-container max-w-md mx-auto text-center">
           <div className="text-sm text-slate-300 dark:text-slate-400">
-            El ecosistema de herramientas profesionales tech
+            El ecosistema de herramientas para tu carrera profesional
           </div>
         </div>
       </footer>

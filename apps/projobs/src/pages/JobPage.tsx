@@ -21,7 +21,7 @@ export function JobPage() {
   useEffect(() => {
     if (data) document.title = `${data.job.title} en ${data.job.company.name} | ProJobs`;
     return () => {
-      document.title = "ProJobs — Empleos tech y postulación en un clic | ProSolutions";
+      document.title = "ProJobs — Empleos y postulación en un clic | ProSolutions";
     };
   }, [data]);
 

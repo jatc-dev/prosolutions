@@ -12,9 +12,9 @@ export interface AIGenerationResponse {
 export async function generateCVContent(request: AIGenerationRequest): Promise<AIGenerationResponse> {
   // Simulated AI response - in production this would call an LLM API
   const responses: Record<string, string> = {
-    summary: "Profesional con más de 5 años de experiencia en desarrollo de software, especializado en tecnologías JavaScript/TypeScript y arquitecturas cloud. Lideré equipos de desarrollo y optimicé aplicaciones para mejorar el rendimiento.",
-    experience: "Desarrollé y mantuve aplicaciones web utilizando React, Node.js y bases de datos SQL/NoSQL. Implementé APIs RESTful y trabajé en equipos ágiles.",
-    skills: "JavaScript, TypeScript, React, Node.js, Express, PostgreSQL, Docker, AWS, CI/CD, Leadership, Agile",
+    summary: "Profesional con más de 5 años de experiencia en atención al cliente, coordinación de equipos y mejora de procesos. Me enfoco en cumplir metas, comunicar con claridad y ofrecer un servicio de calidad.",
+    experience: "Coordiné las operaciones diarias del área, atendí a clientes y proveedores, y propuse mejoras que redujeron los tiempos de respuesta. Trabajé con equipos de distintas áreas para cumplir los objetivos.",
+    skills: "Atención al cliente, Comunicación, Trabajo en equipo, Microsoft Excel, Gestión del tiempo, Negociación, Liderazgo, Resolución de problemas",
   };
 
   const section = request.section || 'summary';

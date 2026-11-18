@@ -36,43 +36,43 @@ describe('public job search', () => {
     expect(res.status).toBe(200);
     expect(res.body.total).toBe(10);
     expect(res.body.items).toHaveLength(10);
-    expect(res.body.items[0].slug).toBe('frontend-react-senior-andes');
+    expect(res.body.items[0].slug).toBe('asesor-credito-senior-andes');
     expect(res.body.facets.workplace.map((f: any) => f.value).sort()).toEqual(['hybrid', 'onsite', 'remote']);
     expect(res.body.facets.skills.length).toBeGreaterThan(5);
     expect(res.body.items[0].viewer).toBeUndefined();
   });
 
   it('supports instant prefix search, accent-insensitive', async () => {
-    const prefix = await api.request('/api/jobs?q=desarroll');
+    const prefix = await api.request('/api/jobs?q=aseso');
     expect(prefix.body.items.map((j: any) => j.slug)).toEqual(
-      expect.arrayContaining(['frontend-react-senior-andes', 'fullstack-junior-cobalto']),
+      expect.arrayContaining(['asesor-credito-senior-andes', 'asesor-comercial-junior-cobalto']),
     );
     const accents = await api.request(`/api/jobs?q=${encodeURIComponent('pasantía')}`);
-    expect(accents.body.items.map((j: any) => j.slug)).toEqual(['pasantia-datos-verde']);
+    expect(accents.body.items.map((j: any) => j.slug)).toEqual(['pasantia-logistica-verde']);
     const byCompany = await api.request('/api/jobs?q=cobalto');
     expect(byCompany.body.total).toBe(3);
   });
 
   it('combines structured filters', async () => {
-    const res = await api.request('/api/jobs?workplace=remote&skills=TypeScript&seniority=senior,mid');
+    const res = await api.request('/api/jobs?workplace=remote&skills=Excel&seniority=senior,mid');
     const slugs = res.body.items.map((j: any) => j.slug).sort();
-    expect(slugs).toEqual(['frontend-react-senior-andes', 'qa-automation-andes']);
+    expect(slugs).toEqual(['asesor-credito-senior-andes', 'ejecutivo-cobranza-andes']);
 
     const salary = await api.request('/api/jobs?salaryMin=100000&country=MX');
-    expect(salary.body.items.map((j: any) => j.slug)).toEqual(['engineering-manager-cobalto']);
+    expect(salary.body.items.map((j: any) => j.slug)).toEqual(['gerente-regional-tiendas-cobalto']);
 
     // Seeded 1 and 2 days ago; the job seeded exactly 3 days ago sits just outside the window.
     const recent = await api.request('/api/jobs?postedWithin=3&sort=recent');
-    expect(recent.body.items.map((j: any) => j.slug)).toEqual(['frontend-react-senior-andes', 'data-analyst-nodo']);
+    expect(recent.body.items.map((j: any) => j.slug)).toEqual(['asesor-credito-senior-andes', 'auxiliar-enfermeria-nodo']);
   });
 
   it('ranks by candidate skill affinity and returns match details', async () => {
-    const res = await api.request('/api/jobs?sort=match&mySkills=react,typescript,testing,css&pageSize=3');
-    expect(res.body.items[0].slug).toBe('frontend-react-senior-andes');
+    const res = await api.request('/api/jobs?sort=match&mySkills=credito,negociacion,excel,ventas&pageSize=3');
+    expect(res.body.items[0].slug).toBe('asesor-credito-senior-andes');
     expect(res.body.items[0].match).toEqual({
       score: 80,
-      matchedSkills: ['react', 'typescript', 'testing', 'css'],
-      missingSkills: ['accessibility'],
+      matchedSkills: ['credito', 'negociacion', 'excel', 'ventas'],
+      missingSkills: ['cartera'],
     });
     expect(res.body.items).toHaveLength(3);
   });
@@ -87,13 +87,13 @@ describe('public job search', () => {
   });
 
   it('returns job detail with similar jobs and company profile', async () => {
-    const res = await api.request('/api/jobs/backend-node-mid-andes');
+    const res = await api.request('/api/jobs/analista-riesgo-andes');
     expect(res.status).toBe(200);
-    expect(res.body.job.companyProfile.name).toBe('Andes Fintech');
+    expect(res.body.job.companyProfile.name).toBe('Banco Andes');
     expect(res.body.job.requirements.length).toBeGreaterThan(0);
     expect(res.body.similar.length).toBeGreaterThan(0);
     expect((await api.request('/api/jobs/does-not-exist')).status).toBe(404);
-    expect((await api.request('/api/companies/andes-fintech')).body.jobs).toHaveLength(3);
+    expect((await api.request('/api/companies/banco-andes')).body.jobs).toHaveLength(3);
   });
 });
 

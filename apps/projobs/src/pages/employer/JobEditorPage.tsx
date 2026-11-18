@@ -235,7 +235,7 @@ export function JobEditorPage() {
       <form onSubmit={submit} className="mt-6 space-y-8">
         <section className="space-y-4 rounded-2xl border border-ui-border bg-ui-surface p-6">
           <h2 className="text-lg font-semibold">Lo esencial</h2>
-          <Input label="Título del cargo" required minLength={3} maxLength={140} value={form.title} onChange={(e) => set("title")(e.target.value)} error={fieldErrors.title} placeholder="Ej. Desarrollador/a Backend Senior" />
+          <Input label="Título del cargo" required minLength={3} maxLength={140} value={form.title} onChange={(e) => set("title")(e.target.value)} error={fieldErrors.title} placeholder="Ej. Coordinador/a de Ventas" />
           <Input label="Resumen para la tarjeta" maxLength={300} value={form.summary} onChange={(e) => set("summary")(e.target.value)} helperText="Una frase atractiva que se muestra en los resultados." />
           <div className="grid gap-4 sm:grid-cols-3">
             <Select label="Modalidad" value={form.workplace} onChange={(e) => set("workplace")(e.target.value)}>

@@ -1189,7 +1189,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
             />
           )}
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || ""}</h1>
-          <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || "Desarrollador"}</p>
+          <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || ""}</p>
         </div>
         <div className="space-y-1 text-xs" style={{ color: textMuted }}>
           {emails.map((email, idx) => (
