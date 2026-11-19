@@ -64,7 +64,7 @@ writeFileSync(
 
 // Sitemap index: Core pages plus the other public apps of the ecosystem
 // (same registrable domain, covered by a Search Console domain property).
-const extraSitemaps = (process.env.EXTRA_SITEMAPS ?? "https://procv.prosolutions.page/sitemap.xml")
+const extraSitemaps = (process.env.EXTRA_SITEMAPS ?? "https://procv.prosolutions.page/sitemap.xml,https://projobs.prosolutions.page/sitemap.xml")
   .split(",")
   .map((url) => url.trim())
   .filter((url) => /^https:\/\/([a-z0-9-]+\.)*prosolutions\.page\//.test(url));
