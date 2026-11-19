@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { verifyIdentityAccessToken } from '../auth/identityToken';
 import { logger } from '../utils/logger';
 
 export interface AuthRequest extends Request {
@@ -140,11 +141,7 @@ export async function authMiddleware(
       process.env.IDENTITY_INTROSPECTION_ONLY === 'true';
     const tokenPayload = introspectionOnlyForLocal
       ? jwt.decode(token)
-      : jwt.verify(token, config.jwtSecret, {
-          issuer: config.issuer,
-          audience: config.identityAudience,
-          algorithms: ['HS256'],
-        });
+      : verifyIdentityAccessToken(token);
 
     if (!tokenPayload || typeof tokenPayload === 'string') {
       return res.status(401).json({ message: 'Invalid or expired token' });

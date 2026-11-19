@@ -5,6 +5,7 @@ import prisma from '../../src/prismaClient';
 import { config } from '../../src/config';
 import { identityMiddleware, type IdentityRequest } from '../../src/middleware/auth';
 import { deriveRefreshSuccessorJti } from '../../src/utils/refreshRotation';
+import { hashRefreshToken } from '../../src/services/tokenService';
 
 const originalFindUnique = prisma.session.findUnique;
 const originalUpdate = prisma.session.update;
@@ -16,7 +17,7 @@ after(() => {
 
 function signedToken(sub: string, jti: string): string {
   return jwt.sign(
-    { sub, jti, email: 'qa@example.invalid', role: 'user', modules: ['PROCV'] },
+    { sub, jti, email: 'qa@example.invalid', role: 'user', modules: ['PROCV'], token_use: 'access' },
     config.jwtSecret,
     { issuer: config.issuer, audience: config.audience, expiresIn: '15m' },
   );
@@ -26,7 +27,7 @@ function session(overrides: Record<string, unknown> = {}) {
   return {
     id: 'session-current',
     userId: 'user-123',
-    refreshToken: 'refresh-current',
+    refreshTokenHash: hashRefreshToken('refresh-current'),
     jti: 'successor-jti',
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     createdAt: new Date(),
@@ -76,23 +77,23 @@ function harness(cookieToken: string | undefined) {
 test('accepts a stale app access token only when the current cookie is its exact rotation successor', async () => {
   const rotationAt = new Date();
   const predecessorRefreshToken = 'refresh-old';
-  const successorJti = deriveRefreshSuccessorJti(predecessorRefreshToken, config.jwtSecret);
+  const successorJti = deriveRefreshSuccessorJti(hashRefreshToken(predecessorRefreshToken), config.jwtSecret);
   const predecessor = session({
     id: 'session-predecessor',
-    refreshToken: predecessorRefreshToken,
+    refreshTokenHash: hashRefreshToken(predecessorRefreshToken),
     jti: 'predecessor-jti',
     revokedAt: rotationAt,
     lastAccessedAt: rotationAt,
   });
-  const successor = session({ jti: successorJti, createdAt: rotationAt });
-  const refreshToken = signedToken('user-123', successorJti);
+  const refreshToken = 'refresh-successor';
+  const successor = session({ jti: successorJti, createdAt: rotationAt, refreshTokenHash: hashRefreshToken(refreshToken) });
   const { req, res, response } = harness(refreshToken);
   let updatedSessionId: string | undefined;
   let nextCalled = false;
 
   (prisma.session as any).findUnique = async ({ where }: any) =>
     where.jti === 'predecessor-jti' ? predecessor :
-      where.refreshToken === refreshToken ? successor : null;
+      where.refreshTokenHash === hashRefreshToken(refreshToken) ? successor : null;
   (prisma.session as any).update = async ({ where }: any) => {
     updatedSessionId = where.id;
     return successor;
@@ -110,20 +111,20 @@ test('accepts a stale app access token only when the current cookie is its exact
 test('rejects an explicitly revoked session when another same-user browser session is active', async () => {
   const predecessor = session({
     id: 'session-explicitly-revoked',
-    refreshToken: 'refresh-revoked',
+    refreshTokenHash: hashRefreshToken('refresh-revoked'),
     jti: 'predecessor-jti',
     revokedAt: new Date(),
     // Explicit revocation does not stamp the rotation marker on lastAccessedAt.
     lastAccessedAt: new Date(Date.now() - 60_000),
   });
+  const refreshToken = 'refresh-current';
   const unrelatedSuccessor = session();
-  const refreshToken = signedToken('user-123', unrelatedSuccessor.jti);
   const { req, res, response } = harness(refreshToken);
   let nextCalled = false;
 
   (prisma.session as any).findUnique = async ({ where }: any) =>
     where.jti === 'predecessor-jti' ? predecessor :
-      where.refreshToken === refreshToken ? unrelatedSuccessor : null;
+      where.refreshTokenHash === hashRefreshToken(refreshToken) ? unrelatedSuccessor : null;
 
   await identityMiddleware(req, res, () => { nextCalled = true; });
 
@@ -142,16 +143,16 @@ test('rejects and clears a refresh cookie belonging to another user', async () =
     id: 'other-user-session',
     userId: 'user-456',
     jti: 'other-user-jti',
-    refreshToken: 'refresh-other-user',
+    refreshTokenHash: hashRefreshToken('refresh-other-user'),
     userAgent: 'Chrome/156 Windows',
   });
-  const refreshToken = signedToken('user-456', 'other-user-jti');
+  const refreshToken = 'refresh-other-user';
   const { req, res, response } = harness(refreshToken);
   let nextCalled = false;
 
   (prisma.session as any).findUnique = async ({ where }: any) =>
     where.jti === 'predecessor-jti' ? predecessor :
-      where.refreshToken === refreshToken ? otherUserSession : null;
+      where.refreshTokenHash === hashRefreshToken(refreshToken) ? otherUserSession : null;
 
   await identityMiddleware(req, res, () => { nextCalled = true; });
 

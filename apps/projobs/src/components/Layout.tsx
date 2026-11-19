@@ -1,4 +1,4 @@
-import { ProFooter, ProHeader, cn } from "@prosolutions/ui";
+import { ConsentBanner, ProFooter, ProHeader, cn } from "@prosolutions/ui";
 import { Bookmark, Briefcase, Building2, FileCheck2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
@@ -26,7 +26,7 @@ function ModuleNav() {
               className={({ isActive }) =>
                 cn(
                   "inline-flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors",
-                  isActive ? "border-brand-600 text-ui-text" : "border-transparent text-ui-muted hover:text-ui-text",
+                  isActive ? "border-brand-800 text-ui-text" : "border-transparent text-ui-muted hover:text-ui-text",
                 )
               }
             >
@@ -40,7 +40,7 @@ function ModuleNav() {
 }
 
 export function Layout() {
-  const { status, profile, signOut } = useSession();
+  const { status, session, profile, signOut } = useSession();
   return (
     <div className="flex min-h-screen flex-col bg-ui-bg text-ui-text">
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-ui-surface focus:px-4 focus:py-2">
@@ -49,7 +49,7 @@ export function Layout() {
       <ProHeader
         activeApp="projobs"
         authLoading={status === "loading"}
-        profile={status === "authenticated" && profile ? { name: profile.name, email: profile.email, avatarUrl: profile.avatarUrl } : null}
+        profile={status === "authenticated" && profile ? { name: profile.name, email: profile.email, avatarUrl: profile.avatarUrl, modules: session?.isRecruiter ? ["PRORECRUIT"] : [] } : null}
         onSignOut={signOut}
         profileHref={`${CORE_URL}/dashboard`}
         settingsHref={`${CORE_URL}/dashboard`}
@@ -60,6 +60,7 @@ export function Layout() {
         <Outlet />
       </main>
       <ProFooter />
+      <ConsentBanner />
     </div>
   );
 }

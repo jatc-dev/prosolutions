@@ -12,13 +12,18 @@ export interface AppConfig {
   /** Restricted role assumed per transaction (production: projobs_api). */
   runtimeRole: string | null;
   poolMax: number;
-  jwt: { secret: string; issuer: string; audience: string };
+  /** jwksUrl: ProIdentity public keys. secret: legacy HS256 (accepted only while set). */
+  jwt: { secret: string | null; jwksUrl: string | null; issuer: string; audience: string };
   corsOrigins: string[];
   procvApiUrl: string;
   procvTimeoutMs: number;
   /** Shared secret for /internal/* consumers. Internal API disabled when null. */
   internalToken: string | null;
   trustProxy: boolean;
+  /** Public web origin used in emails, sitemap and structured data. */
+  webUrl: string;
+  /** Public origin of this API (unsubscribe links). */
+  apiUrl: string;
 }
 
 const identifier = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -33,11 +38,14 @@ const schema = z.object({
   JWT_SECRET: z.string().optional(),
   IDENTITY_ISSUER: z.string().trim().default(DEFAULT_ISSUER),
   IDENTITY_AUDIENCE: z.string().trim().default(DEFAULT_AUDIENCE),
+  IDENTITY_JWKS_URL: z.string().trim().url().optional(),
   CORS_ORIGIN: z.string().default(DEFAULT_CORS),
   PROCV_API_URL: z.string().trim().url().optional(),
   PROCV_TIMEOUT_MS: z.coerce.number().int().min(500).max(30_000).default(6000),
   PROJOBS_INTERNAL_TOKEN: z.string().trim().min(32).optional(),
   TRUST_PROXY: z.enum(['true', 'false']).optional(),
+  PUBLIC_WEB_URL: z.string().trim().url().default('https://projobs.prosolutions.page'),
+  PUBLIC_API_URL: z.string().trim().url().optional(),
 });
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -53,7 +61,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   if (isProduction) {
     const missing: string[] = [];
     if (!env.DATABASE_URL) missing.push('DATABASE_URL');
-    if (secret.length < 32) missing.push('IDENTITY_JWT_SECRET (>=32 chars)');
+    if (!env.IDENTITY_JWKS_URL && secret.length < 32) missing.push('IDENTITY_JWKS_URL (or legacy IDENTITY_JWT_SECRET >=32 chars)');
     if (!env.PROCV_API_URL) missing.push('PROCV_API_URL');
     if (missing.length) throw new Error(`Missing production configuration: ${missing.join(', ')}`);
   }
@@ -65,7 +73,8 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     runtimeRole: env.PROJOBS_DB_RUNTIME_ROLE ?? (isProduction ? 'projobs_api' : null),
     poolMax: env.PG_POOL_MAX,
     jwt: {
-      secret: secret || 'projobs-local-development-secret-not-for-production',
+      secret: secret || (isProduction ? null : 'projobs-local-development-secret-not-for-production'),
+      jwksUrl: env.IDENTITY_JWKS_URL ?? null,
       issuer: env.IDENTITY_ISSUER,
       audience: env.IDENTITY_AUDIENCE,
     },
@@ -74,5 +83,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     procvTimeoutMs: env.PROCV_TIMEOUT_MS,
     internalToken: env.PROJOBS_INTERNAL_TOKEN ?? null,
     trustProxy: env.TRUST_PROXY ? env.TRUST_PROXY === 'true' : isProduction,
+    webUrl: env.PUBLIC_WEB_URL.replace(/\/+$/, ''),
+    apiUrl: (env.PUBLIC_API_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
   };
 }

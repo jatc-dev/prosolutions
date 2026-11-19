@@ -319,8 +319,8 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
       isLoading={isLoading}
     >
       {/* Add new certificate */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h4 className="text-sm font-medium text-gray-900">{t('editor.certificates.addNew')}</h4>
+      <div className="bg-slate-50 rounded-lg p-6 space-y-4">
+        <h4 className="text-sm font-medium text-slate-900">{t('editor.certificates.addNew')}</h4>
 
         <div className="relative">
           <FormField label={t('editor.certificates.fields.title')}>
@@ -347,7 +347,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
             type="button"
             onClick={() => addCertificate(newCertificate)}
             disabled={!newCertificate.trim()}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -364,7 +364,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
             type="button"
             onClick={expandAllItems}
             disabled={allExpanded}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.expandAll', { defaultValue: 'Expandir todo' })}
           </button>
@@ -372,7 +372,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
             type="button"
             onClick={collapseAllItems}
             disabled={allCollapsed}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.collapseAll', { defaultValue: 'Colapsar todo' })}
           </button>
@@ -381,11 +381,11 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
 
       {sortedData.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('editor.certificates.emptyTitle')}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">{t('editor.certificates.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {t('editor.certificates.emptyDescription')}
           </p>
         </div>
@@ -394,13 +394,13 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
           {sortedData.map((certificate, index) => (
             <div
               key={certificate.id}
-              className={`bg-white border rounded-lg shadow-sm overflow-hidden transition-colors ${draggedCertificateId === certificate.id ? 'border-blue-300 bg-blue-50/30' : 'border-gray-200'}`}
+              className={`bg-white border rounded-lg shadow-sm overflow-hidden transition-colors ${draggedCertificateId === certificate.id ? 'border-brand-300 bg-brand-50/30' : 'border-slate-200'}`}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => handleDrop(certificate.id, event)}
             >
               {/* Header */}
               <div
-                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="px-6 py-4 bg-slate-50 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => toggleExpandedItem(certificate.id)}
               >
                 <div className="flex items-center justify-between">
@@ -411,7 +411,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                       onClick={(event) => event.stopPropagation()}
                       onDragStart={(event) => handleDragStart(certificate.id, event)}
                       onDragEnd={() => setDraggedCertificateId(null)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-slate-400 hover:text-slate-600 p-1"
                       title={t('editor.certificates.reorderHint', { defaultValue: 'Arrastra para reordenar' })}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,8 +429,8 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-900">{certificate.title}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={certificate.isVisible !== false} onChange={(event) => updateCertificate(certificate.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="text-sm font-medium text-slate-900">{certificate.title}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={certificate.isVisible !== false} onChange={(event) => updateCertificate(certificate.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
+                      <p className="text-sm text-slate-600">
                         {certificate.issuingOrganization}
                         {certificate.issueDate && ` • ${t('editor.certificates.issuedOn')}: ${new Date(certificate.issueDate).toLocaleDateString()}`}
                       </p>
@@ -466,7 +466,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                           moveCertificate(certificate.id, 'up');
                         }}
                         disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -479,7 +479,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                           moveCertificate(certificate.id, 'down');
                         }}
                         disabled={index === sortedData.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -493,7 +493,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                         event.stopPropagation();
                         toggleExpandedItem(certificate.id);
                       }}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-slate-400 hover:text-slate-600"
                     >
                       <svg
                         className={`w-5 h-5 transition-transform ${expandedItems.includes(certificate.id) ? 'rotate-180' : ''}`}
@@ -644,7 +644,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                         />
                         <label
                           htmlFor={`certificate-file-${certificate.id}`}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                          className="inline-flex items-center px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />

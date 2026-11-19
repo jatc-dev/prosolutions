@@ -11,15 +11,22 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./dist/ui.css": "./dist/ui.css"
+    "./dist/ui.css": "./dist/ui.css",
+    "./tailwind-preset": "./tailwind-preset.js",
+    "./theme.css": "./src/theme.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/tokens.json",
+    "src/theme.css",
+    "tailwind-preset.js"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "build:tokens": "node scripts/build-tokens.mjs",
+    "check:tokens": "node scripts/build-tokens.mjs --check"
   },
   "peerDependencies": {
     "clsx": "^2.1.1",

@@ -29,7 +29,7 @@ export function CompanyLogo({ company, size = "md" }: { company: Pick<CompanySum
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-xl bg-brand-100 font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300",
+        "inline-flex shrink-0 items-center justify-center rounded-xl bg-brand-100 font-bold text-brand-900 dark:bg-brand-700/20 dark:text-brand-300",
         sizes[size],
       )}
     >
@@ -39,7 +39,7 @@ export function CompanyLogo({ company, size = "md" }: { company: Pick<CompanySum
 }
 
 export function matchTone(score: number) {
-  if (score >= 75) return "bg-emerald-100 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300";
+  if (score >= 75) return "bg-brand-100 text-brand-800 ring-brand-600/20 dark:bg-brand-500/15 dark:text-brand-300";
   if (score >= 45) return "bg-amber-100 text-amber-800 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300";
   return "bg-slate-100 text-slate-700 ring-slate-500/20 dark:bg-slate-800 dark:text-slate-300";
 }
@@ -60,7 +60,7 @@ export function SkillChip({ skill, state }: { skill: string; state?: "matched" |
     <span
       className={cn(
         "inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium",
-        state === "matched" && "bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+        state === "matched" && "bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-600/20 dark:bg-brand-500/10 dark:text-brand-300",
         state === "missing" && "bg-ui-soft text-ui-muted line-through decoration-slate-400/60",
         !state && "bg-ui-soft text-ui-text",
       )}
@@ -102,9 +102,9 @@ export function FilterPill({ active, onClick, children, count }: { active: boole
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500",
+        "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700",
         active
-          ? "border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-500/15 dark:text-brand-200"
+          ? "border-brand-700 bg-brand-50 text-brand-900 dark:border-brand-400 dark:bg-brand-700/15 dark:text-brand-200"
           : "border-ui-border bg-ui-surface text-ui-text hover:bg-ui-soft",
       )}
     >

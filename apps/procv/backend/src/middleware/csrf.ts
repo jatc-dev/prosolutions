@@ -16,7 +16,7 @@ declare module 'express-serve-static-core' {
 }
 
 function signPayload(payload: string): string {
-  return createHmac('sha256', config.jwtSecret).update(payload).digest('hex');
+  return createHmac('sha256', config.csrfSecret).update(payload).digest('hex');
 }
 
 function constantTimeCompare(a: string, b: string): boolean {

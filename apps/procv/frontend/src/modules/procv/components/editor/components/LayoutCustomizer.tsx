@@ -34,7 +34,7 @@ export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) 
               onClick={() => onChange({ density: d.value as "compact" | "balanced" | "spacious" })}
               className={`p-2 rounded-lg border-2 text-left transition-all duration-150 ${
                 settings.density === d.value
-                  ? "border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
+                  ? "border-brand-700 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
                   : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
               }`}
             >
@@ -61,7 +61,7 @@ export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) 
           step={1}
           value={settings.sectionSpacing ?? 2}
           onChange={(e) => onChange({ sectionSpacing: Number(e.target.value) })}
-          className="w-full accent-brand-500"
+          className="w-full accent-brand-700"
         />
         <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
           <span>{t("layout.tight", "Cerrado")}</span>
@@ -80,7 +80,7 @@ export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) 
           aria-checked={settings.showSectionIcons ?? true}
           onClick={() => onChange({ showSectionIcons: !(settings.showSectionIcons ?? true) })}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.showSectionIcons ?? true ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-700"
+            settings.showSectionIcons ?? true ? "bg-brand-700" : "bg-slate-300 dark:bg-slate-700"
           }`}
         >
           <span

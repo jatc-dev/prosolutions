@@ -233,3 +233,23 @@ export async function sendVerificationEmail({
     return false;
   }
 }
+
+/** Generic transactional email (e.g. contact form notifications). Returns delivery success. */
+export async function sendPlainEmail({
+  to,
+  subject,
+  text,
+  replyTo,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+  replyTo?: string;
+}): Promise<boolean> {
+  const transporter = await resolveTransporter();
+  if (!transporter) {
+    logger.warn('Email not sent: SMTP is not configured', { subject });
+    return false;
+  }
+  return sendWithRetry(transporter, { from: getFromAddress(), to, subject, text, ...(replyTo ? { replyTo } : {}) });
+}

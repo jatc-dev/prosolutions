@@ -45,10 +45,10 @@ export const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="border-b border-gray-200 pb-4 dark:border-slate-700">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">{title}</h3>
+      <div className="border-b border-slate-200 pb-4 dark:border-slate-700">
+        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{title}</h3>
         {description && (
-          <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">{description}</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{description}</p>
         )}
         {hasErrors && (
           <div className="mt-2 text-sm text-red-600">
@@ -66,8 +66,8 @@ export const FormSection: React.FC<FormSectionProps> = ({
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white bg-opacity-75 dark:bg-slate-900/75">
           <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-gray-600 dark:text-slate-300">{t('common.saving')}</span>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-700"></div>
+            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.saving')}</span>
           </div>
         </div>
       )}
@@ -86,7 +86,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   const { t } = useTranslation();
   return (
     <div className={`space-y-1 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-slate-200">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -97,7 +97,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         <p className="text-sm text-red-600">{error}</p>
       )}
       {help && !error && (
-        <p className="text-sm text-gray-500 dark:text-slate-400">{help}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{help}</p>
       )}
     </div>
   );
@@ -119,13 +119,13 @@ export const FormActions: React.FC<FormActionsProps> = ({
   const effectiveAddLabel = addLabel || t('common.add');
 
   return (
-    <div className={`flex justify-between items-center pt-6 border-t border-gray-200 dark:border-slate-700 ${className}`}>
+    <div className={`flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-700 ${className}`}>
       <div className="flex space-x-3">
         {onAdd && (
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             disabled={isLoading}
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             disabled={isLoading}
           >
             {effectiveCancelLabel}
@@ -152,7 +152,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
             type="button"
             onClick={onSave}
             disabled={isLoading}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-800 hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading && (
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       placeholder={placeholder}
       disabled={disabled}
       required={required}
-      className="block w-full rounded-md border border-brand-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-brand-500 focus:outline-none focus:ring-brand-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+      className="block w-full rounded-md border border-brand-300 bg-white px-3 py-2 shadow-sm placeholder-slate-400 focus:border-brand-700 focus:outline-none focus:ring-brand-700 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
     />
   );
 };
@@ -231,7 +231,7 @@ export const TextareaField: React.FC<TextareaFieldProps> = ({
       rows={rows}
       disabled={disabled}
       required={required}
-      className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+      className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm placeholder-slate-400 focus:border-brand-600 focus:outline-none focus:ring-brand-600 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
     />
   );
 };
@@ -260,7 +260,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       required={required}
-      className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+      className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-brand-600 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
     >
       <option value="">{placeholder || t('editor.common.select')}</option>
       {options.map((option) => (
@@ -335,5 +335,5 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, disabled 
     else if (!/^\d{4}-\d{2}-\d{2}$/.test(inputValue)) { setInputValue(''); onChange(''); }
   };
   const inputType = !allowPartial || precision === 'day' ? 'date' : precision === 'month' ? 'month' : 'number';
-  return <div className="space-y-2">{allowPartial ? <select aria-label="Precisión de fecha" value={precision} onChange={(event) => handlePrecisionChange(event.target.value as 'day' | 'month' | 'year')} disabled={disabled} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs text-gray-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="day">Día, mes y año</option><option value="month">Mes y año</option><option value="year">Solo año</option></select> : null}<input type={inputType} value={inputValue} min={inputType === 'number' ? 1900 : undefined} max={inputType === 'number' ? 2100 : undefined} step={inputType === 'number' ? 1 : undefined} onChange={handleChange} disabled={disabled} required={required} placeholder={inputType === 'number' ? 'AAAA' : undefined} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500" /></div>;
+  return <div className="space-y-2">{allowPartial ? <select aria-label="Precisión de fecha" value={precision} onChange={(event) => handlePrecisionChange(event.target.value as 'day' | 'month' | 'year')} disabled={disabled} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"><option value="day">Día, mes y año</option><option value="month">Mes y año</option><option value="year">Solo año</option></select> : null}<input type={inputType} value={inputValue} min={inputType === 'number' ? 1900 : undefined} max={inputType === 'number' ? 2100 : undefined} step={inputType === 'number' ? 1 : undefined} onChange={handleChange} disabled={disabled} required={required} placeholder={inputType === 'number' ? 'AAAA' : undefined} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-brand-600 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500" /></div>;
 };

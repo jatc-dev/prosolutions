@@ -20,7 +20,7 @@ function Kpi({ icon, label, value }: { icon: ReactNode; label: string; value: nu
 }
 
 const STATUS_TONE: Record<EmployerJob["status"], string> = {
-  published: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  published: "bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-300",
   draft: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
   closed: "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
 };
@@ -50,7 +50,11 @@ export function EmployerPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
         <h1 className="text-3xl font-bold">Crea el perfil de tu empresa</h1>
-        <p className="mb-6 mt-2 text-ui-muted">Es lo que verán los candidatos en cada vacante. Podrás editarlo cuando quieras.</p>
+        <p className="mb-2 mt-2 text-ui-muted">Es lo que verán los candidatos en cada vacante. Podrás editarlo cuando quieras.</p>
+        <p className="mb-6 text-sm text-ui-muted">
+          Si usas un correo corporativo del mismo dominio que el sitio web de tu empresa, la verificamos al instante. Si no, puedes publicar
+          hasta 3 vacantes mientras nuestro equipo la revisa.
+        </p>
         <div className="rounded-2xl border border-ui-border bg-ui-surface p-6">
           <CompanyForm onSaved={() => void refreshSession()} />
         </div>
@@ -65,6 +69,15 @@ export function EmployerPage() {
         <div className="min-w-0 flex-1">
           <h1 className="text-3xl font-bold">{company.name}</h1>
           <p className="text-ui-muted">Panel de reclutamiento · {company.role === "owner" ? "Propietario" : "Reclutador"}</p>
+          {company.verificationStatus === "verified" ? (
+            <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-800 dark:text-brand-300">Empresa verificada</p>
+          ) : company.verificationStatus === "pending" ? (
+            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              Verificación pendiente: puedes tener hasta 3 vacantes publicadas mientras revisamos tu empresa.
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-red-700 dark:text-red-300">No pudimos verificar tu empresa. Escríbenos para revisarlo.</p>
+          )}
         </div>
         {companies.length > 1 && (
           <select
@@ -112,7 +125,7 @@ export function EmployerPage() {
                 {jobs.data.jobs.map((job) => (
                   <tr key={job.id} className="hover:bg-ui-soft/50">
                     <td className="px-4 py-3">
-                      <Link to={`/empresa/vacantes/${job.id}/candidatos`} className="font-semibold hover:text-brand-600 hover:underline">{job.title}</Link>
+                      <Link to={`/empresa/vacantes/${job.id}/candidatos`} className="font-semibold hover:text-brand-800 hover:underline">{job.title}</Link>
                       <p className="text-xs text-ui-muted">{WORKPLACE_LABEL[job.workplace]} · {EMPLOYMENT_LABEL[job.employmentType]} · actualizada {timeAgo(job.updatedAt)}</p>
                     </td>
                     <td className="px-4 py-3"><span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_TONE[job.status])}>{STATUS_LABEL[job.status]}</span></td>

@@ -7,13 +7,17 @@ import type {
   Salary,
 } from '../contracts.js';
 
+/** Public visibility: not paused by moderation, company not rejected or suspended (aliases j, c). */
+export const PUBLICLY_VISIBLE = `j.moderation_status = 'ok' AND c.verification_status NOT IN ('rejected', 'suspended')`;
+
 /** Columns selected for job summaries (alias j = jobs, c = companies). */
 export const JOB_SUMMARY_COLUMNS = `
   j.id, j.slug, j.title, j.summary, j.employment_type, j.workplace, j.seniority,
   j.location_city, j.location_country, j.salary_min, j.salary_max, j.salary_currency,
   j.salary_period, j.skills, j.published_at,
   c.id AS company_id, c.slug AS company_slug, c.name AS company_name,
-  c.logo_url AS company_logo_url, c.industry AS company_industry`;
+  c.logo_url AS company_logo_url, c.industry AS company_industry,
+  c.verification_status AS company_verification_status`;
 
 export const JOB_DETAIL_COLUMNS = `${JOB_SUMMARY_COLUMNS},
   j.description, j.responsibilities, j.requirements, j.benefits, j.status, j.closes_at,
@@ -22,7 +26,7 @@ export const JOB_DETAIL_COLUMNS = `${JOB_SUMMARY_COLUMNS},
 
 export const COMPANY_COLUMNS = `
   c.id, c.slug, c.name, c.logo_url, c.industry, c.tagline, c.description,
-  c.website, c.size_range, c.headquarters`;
+  c.website, c.size_range, c.headquarters, c.verification_status`;
 
 type Row = Record<string, any>;
 
@@ -48,6 +52,7 @@ export function toCompanySummary(row: Row, prefix = 'company_'): CompanySummary 
     name: row[`${prefix}name`],
     logoUrl: row[`${prefix}logo_url`] ?? null,
     industry: row[`${prefix}industry`] ?? null,
+    verified: row[`${prefix}verification_status`] === 'verified',
   };
 }
 
@@ -63,6 +68,8 @@ export function toCompany(row: Row): Company {
     website: row.website ?? null,
     sizeRange: row.size_range ?? null,
     headquarters: row.headquarters ?? null,
+    verified: row.verification_status === 'verified',
+    verificationStatus: row.verification_status ?? 'pending',
   };
 }
 
@@ -99,6 +106,7 @@ export function toJobDetail(row: Row): JobDetail {
       website: row.company_website ?? null,
       sizeRange: row.company_size_range ?? null,
       headquarters: row.company_headquarters ?? null,
+      verificationStatus: row.company_verification_status ?? 'pending',
     },
   };
 }

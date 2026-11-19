@@ -18,67 +18,67 @@
   --tw-ring-color: var(--cv-brand-primary-focus);
 }
 
-.cv-editor .focus\\:ring-blue-500:focus {
+.cv-editor .focus\\:ring-brand-600:focus {
   --tw-ring-color: var(--cv-brand-primary-focus);
 }
 
-.cv-editor .focus\\:ring-blue-600:focus {
+.cv-editor .focus\\:ring-brand-700:focus {
   --tw-ring-color: var(--cv-brand-primary-focus);
 }
 
 /* Background colors */
-.cv-editor .bg-blue-50 {
+.cv-editor .bg-brand-50 {
   background-color: var(--cv-brand-secondary);
 }
 
-.cv-editor .bg-blue-100 {
+.cv-editor .bg-brand-100 {
   background-color: var(--cv-brand-accent);
 }
 
-.cv-editor .bg-blue-600 {
+.cv-editor .bg-brand-700 {
   background-color: var(--cv-brand-primary);
 }
 
-.cv-editor .hover\\:bg-blue-50:hover {
+.cv-editor .hover\\:bg-brand-50:hover {
   background-color: var(--cv-brand-secondary);
 }
 
-.cv-editor .hover\\:bg-blue-700:hover {
+.cv-editor .hover\\:bg-brand-800:hover {
   background-color: var(--cv-brand-primary-hover);
 }
 
 /* Text colors */
-.cv-editor .text-blue-600 {
+.cv-editor .text-brand-700 {
   color: var(--cv-brand-text-light);
 }
 
-.cv-editor .text-blue-700 {
+.cv-editor .text-brand-800 {
   color: var(--cv-brand-text);
 }
 
-.cv-editor .text-blue-800 {
+.cv-editor .text-brand-900 {
   color: #064e3b;
 }
 
-.cv-editor .text-blue-900 {
+.cv-editor .text-brand-950 {
   color: #022c22;
 }
 
 /* Border colors */
-.cv-editor .border-blue-200 {
+.cv-editor .border-brand-200 {
   border-color: var(--cv-brand-border);
 }
 
-.cv-editor .border-blue-300 {
+.cv-editor .border-brand-300 {
   border-color: theme('colors.brand.400');
 }
 
-.cv-editor .hover\\:border-blue-300:hover {
+.cv-editor .hover\\:border-brand-300:hover {
   border-color: theme('colors.brand.400');
 }
 
 /* Ring colors for focus states */
-.cv-editor .focus\\:ring-blue-500:focus {
+.cv-editor .focus\\:ring-brand-600:focus {
   --tw-ring-color: var(--cv-brand-primary-focus);
 }
 
@@ -224,8 +224,8 @@
 
   .cv-custom-wrapper a,
   .cv-custom-wrapper [class*="text-brand-"],
-  .cv-custom-wrapper [class*="text-blue-600"],
-  .cv-custom-wrapper [class*="text-blue-700"] {
+  .cv-custom-wrapper [class*="text-brand-700"],
+  .cv-custom-wrapper [class*="text-brand-800"] {
     color: var(--color-link, #2563eb);
   }
 
@@ -283,18 +283,18 @@
   }
 
   /* Aplicar color de acento a elementos brand */
-  .cv-custom-wrapper .bg-brand-600,
-  .cv-custom-wrapper .bg-brand-700 {
+  .cv-custom-wrapper .bg-brand-800,
+  .cv-custom-wrapper .bg-brand-900 {
     background-color: var(--color-accent, #3b82f6) !important;
   }
 
-  .cv-custom-wrapper .text-brand-600,
-  .cv-custom-wrapper .text-brand-700 {
+  .cv-custom-wrapper .text-brand-800,
+  .cv-custom-wrapper .text-brand-900 {
     color: var(--color-accent, #3b82f6) !important;
   }
 
-  .cv-custom-wrapper .border-brand-500,
-  .cv-custom-wrapper .border-brand-600 {
+  .cv-custom-wrapper .border-brand-700,
+  .cv-custom-wrapper .border-brand-800 {
     border-color: var(--color-accent, #3b82f6) !important;
   }
 

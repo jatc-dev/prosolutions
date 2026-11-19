@@ -32,7 +32,7 @@ export function EditorDisclosure({
       <h2>
         <button
           type="button"
-          className="flex min-h-12 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+          className="flex min-h-12 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700"
           aria-expanded={open}
           aria-controls={contentId}
           onClick={() => setOpen((current) => !current)}

@@ -31,7 +31,7 @@ export function TemplateCard({
     <article
       className={`group relative rounded-xl border p-4 transition-all duration-200 ${
         selected
-          ? "border-brand-500 dark:border-brand-400 shadow-md shadow-brand-500/20 bg-brand-50/30 dark:bg-brand-900/10"
+          ? "border-brand-700 dark:border-brand-400 shadow-md shadow-brand-700/20 bg-brand-50/30 dark:bg-brand-950/10"
           : "border-slate-200 dark:border-slate-700 hover:border-brand-400/50"
       }`}
       onClick={handleClick}
@@ -48,7 +48,7 @@ export function TemplateCard({
       <span
         className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium uppercase tracking-tighter ${
           template.atsFriendly
-            ? "bg-emerald-50 text-emerald-700"
+            ? "bg-brand-50 text-brand-700"
             : "bg-slate-50 text-slate-700"
         }`}
       >
@@ -114,7 +114,7 @@ export function TemplateCard({
 
       {/* Selected indicator */}
       {selected && (
-        <div className="absolute inset-0 rounded-xl border border-brand-500/50 shadow-[0_0_0_1px_var(--ui-procv-accent)]" />
+        <div className="absolute inset-0 rounded-xl border border-brand-700/50 shadow-[0_0_0_1px_var(--ui-procv-accent)]" />
       )}
     </article>
   );

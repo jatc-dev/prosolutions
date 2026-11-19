@@ -57,7 +57,7 @@ export function FiltersPanel({ filters, facets, onChange, onReset }: FiltersPane
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold">Filtros</h2>
         {activeFilterCount(filters) > 0 && (
-          <button type="button" onClick={onReset} className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline">
+          <button type="button" onClick={onReset} className="inline-flex items-center gap-1 text-sm font-medium text-brand-800 hover:underline">
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Limpiar
           </button>
         )}
@@ -107,7 +107,7 @@ export function FiltersPanel({ filters, facets, onChange, onReset }: FiltersPane
             onChange={(event) => setSkillDraft(event.target.value)}
             placeholder="Ej. excel, ventas…"
             maxLength={40}
-            className="h-9 min-w-0 flex-1 rounded-lg border border-ui-border bg-ui-surface px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="h-9 min-w-0 flex-1 rounded-lg border border-ui-border bg-ui-surface px-3 text-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30"
           />
           <button type="submit" aria-label="Agregar habilidad" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ui-border hover:bg-ui-soft">
             <Plus className="h-4 w-4" />
@@ -120,7 +120,7 @@ export function FiltersPanel({ filters, facets, onChange, onReset }: FiltersPane
                 key={facet.value}
                 type="button"
                 onClick={() => onChange({ skills: [...filters.skills, facet.value] })}
-                className="rounded-lg bg-ui-soft px-2 py-1 text-xs text-ui-text hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-500/15"
+                className="rounded-lg bg-ui-soft px-2 py-1 text-xs text-ui-text hover:bg-brand-50 hover:text-brand-900 dark:hover:bg-brand-700/15"
               >
                 {facet.value} <span className="text-ui-muted">{facet.count}</span>
               </button>
@@ -140,7 +140,7 @@ export function FiltersPanel({ filters, facets, onChange, onReset }: FiltersPane
           value={filters.salaryMin ?? ""}
           onChange={(event) => onChange({ salaryMin: event.target.value ? Math.max(0, Number(event.target.value)) : null })}
           placeholder="En la moneda de la vacante"
-          className="h-9 w-full rounded-lg border border-ui-border bg-ui-surface px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="h-9 w-full rounded-lg border border-ui-border bg-ui-surface px-3 text-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30"
         />
         <p className="text-xs text-ui-muted">Solo muestra vacantes que publican salario.</p>
       </fieldset>

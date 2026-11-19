@@ -3,6 +3,7 @@ import { config } from './config';
 import { createApp } from './app';
 import prisma from './prismaClient';
 import { logger } from './utils/logger';
+import { startIdentityKeyRefresh } from './auth/identityToken';
 import { closeBrowser } from './utils/pdfGenerator';
 
 const port = config.port;
@@ -11,6 +12,13 @@ const app = createApp();
 let server: import('http').Server;
 
 async function bootstrap() {
+  // Best effort: a JWKS outage must not keep ProCV down; unknown keys are
+  // re-fetched on demand and HS256 stays available while its secret is set.
+  await startIdentityKeyRefresh().catch((error: unknown) => {
+    logger.warn('Identity JWKS could not be loaded at startup', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  });
   server = app.listen(port, () => {
     logger.info(`🚀 ProCV backend listening on http://localhost:${port}`);
   });

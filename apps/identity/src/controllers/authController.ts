@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import prisma from '../prismaClient';
@@ -27,9 +26,9 @@ import {
   auditLog,
   extractRequestInfo,
 } from '../utils/auditLog';
-import { createTokenPair, revokeSession, signAccessToken, verifyRefreshToken } from '../services/tokenService';
+import { createTokenPair, hashRefreshToken, revokeSession } from '../services/tokenService';
+import { recordConsent } from '../services/consentService';
 import { ensureDefaultModuleAccess, getDefaultModules, isEffectiveModule } from '../services/moduleAccessService';
-import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
@@ -75,6 +74,15 @@ export async function register(req: Request, res: Response) {
           tokenHash,
           expiresAt,
         },
+      });
+
+      await recordConsent({
+        userId: createdUser.id,
+        purpose: 'privacy_policy',
+        granted: true,
+        source: 'registration',
+        ...extractRequestInfo(req),
+        client: tx,
       });
 
       return { user: createdUser, verificationToken: tokenHash };
@@ -145,6 +153,7 @@ export async function login(req: Request, res: Response) {
     });
     if (!user) {
       logger.warn('Login failed: invalid credentials');
+      auditLog('authentication.login_failed', { ...extractRequestInfo(req), details: { reason: 'unknown_email' } });
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
     }
 
@@ -168,6 +177,7 @@ export async function login(req: Request, res: Response) {
     }
     if (!match) {
       logger.warn('Login failed: invalid credentials', { userId: user.id });
+      auditLog('authentication.login_failed', { userId: user.id, ...extractRequestInfo(req), details: { reason: 'bad_password' } });
       return res.status(401).json({ message: INVALID_CREDENTIALS_MESSAGE });
     }
 
@@ -215,7 +225,7 @@ export async function login(req: Request, res: Response) {
           data: { lastLoginAt: new Date() },
         }),
         prisma.session.update({
-          where: { refreshToken },
+          where: { refreshTokenHash: hashRefreshToken(refreshToken) },
           data: { lastAccessedAt: new Date() },
         }),
       ]);
@@ -258,94 +268,6 @@ export async function login(req: Request, res: Response) {
       email: bodyEmail,
     });
     return res.status(500).json({ message: INTERNAL_SERVER_ERROR_MESSAGE });
-  }
-}
-
-export async function refreshToken(req: Request, res: Response) {
-  const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME];
-
-  if (!refreshToken) {
-    return res.status(401).json({ message: 'Refresh token missing' });
-  }
-
-  try {
-    const payload = verifyRefreshToken(refreshToken) as {
-      sub: string;
-      jti: string;
-    };
-    const session = await prisma.session.findUnique({ where: { refreshToken } });
-    const now = new Date();
-    if (
-      !session ||
-      session.revokedAt ||
-      session.userId !== payload.sub ||
-      session.jti !== payload.jti ||
-      session.expiresAt <= now
-    ) {
-      logger.warn('Refresh token rejected');
-      clearRefreshTokenCookie(res);
-      return res.status(401).json({ message: 'Invalid or expired refresh token' });
-    }
-
-    if (isSessionIdleExpired(session.lastAccessedAt, session.rememberMe, now)) {
-      await prisma.session.updateMany({
-        where: { id: session.id, revokedAt: null },
-        data: { revokedAt: now },
-      });
-      clearRefreshTokenCookie(res);
-      return res.status(401).json({ message: 'Session timed out due to inactivity' });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: payload.sub },
-      include: { moduleAccess: true },
-    });
-    if (!user || !user.isActive) {
-      await prisma.session.updateMany({
-        where: { id: session.id, revokedAt: null },
-        data: { revokedAt: now },
-      });
-      clearRefreshTokenCookie(res);
-      return res.status(401).json({ message: 'User not found or inactive' });
-    }
-
-    const modules = await ensureDefaultModuleAccess(user.id, user.role);
-
-    const jti = crypto.randomUUID();
-    const accessToken = signAccessToken({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      modules,
-      jti,
-    });
-
-    const newRefreshToken = jwt.sign(
-      { sub: user.id, jti },
-      config.jwtSecret,
-      {
-        issuer: config.issuer,
-        audience: config.audience,
-        expiresIn: session.rememberMe ? "30d" : "12h",
-      } as jwt.SignOptions,
-    );
-    const newExpiresAt = new Date(Date.now() + (session.rememberMe ? 30 : 0.5) * 24 * 60 * 60 * 1000);
-
-    await prisma.$transaction(async (tx) => {
-      const revoked = await tx.session.updateMany({ where: { id: session.id, revokedAt: null }, data: { revokedAt: new Date() } });
-      if (revoked.count !== 1) throw new Error("Refresh token already used or revoked");
-      await tx.session.create({ data: {
-        userId: session.userId, refreshToken: newRefreshToken, jti,
-        expiresAt: newExpiresAt, lastAccessedAt: new Date(), rememberMe: session.rememberMe,
-        deviceName: session.deviceName, userAgent: session.userAgent, ipAddress: session.ipAddress,
-      } });
-    });
-
-    setRefreshTokenCookie(res, newRefreshToken, session.rememberMe);
-    return res.json({ accessToken, modules });
-  } catch {
-    logger.warn('Refresh token verification failed');
-    return res.status(401).json({ message: 'Invalid refresh token' });
   }
 }
 
@@ -538,6 +460,7 @@ export async function resetPassword(req: Request, res: Response) {
     ]);
 
     logger.info('Password reset successful', { userId: resetToken.userId });
+    auditLog('authentication.password_reset_success', { userId: resetToken.userId, ...extractRequestInfo(req) });
     return res.json({ message: 'Password has been reset successfully' });
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));

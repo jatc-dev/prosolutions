@@ -16,7 +16,7 @@ export const JWT = { secret: 'test-secret-with-at-least-32-characters!!', issuer
 export const INTERNAL_TOKEN = 'internal-token-for-tests-0123456789abcdef';
 
 export function tokenFor(userId: string, modules: string[] = ['PROCV', 'PROJOBS'], overrides: jwt.SignOptions = {}) {
-  return jwt.sign({ email: `${userId}@example.com`, role: 'user', modules }, JWT.secret, {
+  return jwt.sign({ email: `${userId}@example.com`, role: 'user', modules, token_use: 'access' }, JWT.secret, {
     subject: userId,
     issuer: JWT.issuer,
     audience: JWT.audience,

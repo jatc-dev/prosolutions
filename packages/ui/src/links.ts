@@ -16,6 +16,8 @@ function readEnv(): Record<string, string | undefined> {
     VITE_PRIVACY_URL: import.meta.env.VITE_PRIVACY_URL,
     VITE_TERMS_URL: import.meta.env.VITE_TERMS_URL,
     VITE_ADSENSE_CLIENT: import.meta.env.VITE_ADSENSE_CLIENT,
+    VITE_ADSENSE_CLIENT_ID: import.meta.env.VITE_ADSENSE_CLIENT_ID,
+    VITE_IDENTITY_API_URL: import.meta.env.VITE_IDENTITY_API_URL,
   };
 }
 
@@ -42,12 +44,38 @@ export const APP_URLS = {
 } as const;
 
 export const JATC_URL = env.VITE_JATC_URL ?? "https://github.com/jatc-dev";
-export const PRIVACY_URL =
-  env.VITE_PRIVACY_URL ?? "https://projobs.prosolutions.page/privacidad.html";
-export const TERMS_URL = env.VITE_TERMS_URL ?? "#terminos";
 
-/** Cliente de Google AdSense del ecosistema (pub-3956322934366702 / ca-pub-3956322934366702). */
-export const ADSENSE_CLIENT = normalizeAdSenseClient(env.VITE_ADSENSE_CLIENT) ?? "ca-pub-3956322934366702";
+const coreBase = APP_URLS.core;
+
+/** Public pages hosted by Core (pre-rendered): legal framework, company and resources. */
+export const LEGAL_URLS = {
+  privacy: env.VITE_PRIVACY_URL ?? `${coreBase}/legal/privacidad/`,
+  terms: env.VITE_TERMS_URL ?? `${coreBase}/legal/terminos/`,
+  cookies: `${coreBase}/legal/cookies/`,
+  ai: `${coreBase}/legal/uso-ia/`,
+  about: `${coreBase}/nosotros/`,
+  contact: `${coreBase}/contacto/`,
+} as const;
+
+export const RESOURCE_URLS = {
+  tools: `${coreBase}/tools/`,
+  academy: `${coreBase}/academy/`,
+} as const;
+
+export const PRIVACY_URL = LEGAL_URLS.privacy;
+export const TERMS_URL = LEGAL_URLS.terms;
+
+/**
+ * AdSense publisher id from the build (VITE_ADSENSE_CLIENT_ID, legacy
+ * VITE_ADSENSE_CLIENT). No default: without it, ad slots collapse.
+ */
+export const ADSENSE_CLIENT = normalizeAdSenseClient(env.VITE_ADSENSE_CLIENT_ID || env.VITE_ADSENSE_CLIENT);
+
+/** ProIdentity origin (public platform settings such as the ads configuration). */
+export const IDENTITY_ORIGIN = (env.VITE_IDENTITY_API_URL || "https://identity.prosolutions.page/api/auth")
+  .trim()
+  .replace(/\/+$/, "")
+  .replace(/\/api\/auth(\/.*)?$/i, "");
 
 /** Marca si la URL apunta a otro origen (abre en pestaña nueva). */
 export function isExternalUrl(url: string): boolean {

@@ -19,6 +19,13 @@ import {
   deleteProcvSetting,
 } from '../controllers/procvAdminProxyController';
 import { identityMiddleware, requirePermission } from '../middleware/auth';
+import { getAdminAdsSettings, updateAdminAdsSettings } from '../controllers/platformController';
+import {
+  listCompaniesForReview,
+  listJobsForModeration,
+  moderateCompany,
+  moderateJob,
+} from '../controllers/projobsAdminProxyController';
 
 const router = Router();
 
@@ -39,5 +46,15 @@ router.get('/procv/settings', requirePermission('procv.settings.read', Module.PR
 router.put('/procv/settings/:key', requirePermission('procv.settings.manage', Module.PROCV), updateProcvSetting);
 router.put('/procv/settings', requirePermission('procv.settings.manage', Module.PROCV), bulkUpdateProcvSettings);
 router.delete('/procv/settings/:key', requirePermission('procv.settings.manage', Module.PROCV), deleteProcvSetting);
+
+// Platform settings (advertising)
+router.get('/platform/ads', requirePermission('platform.settings.manage'), getAdminAdsSettings);
+router.put('/platform/ads', requirePermission('platform.settings.manage'), updateAdminAdsSettings);
+
+// ProJobs moderation (proxied to ProJobs' internal API)
+router.get('/projobs/companies', requirePermission('projobs.catalog.read', Module.PROJOBS), listCompaniesForReview);
+router.post('/projobs/companies/:companyId/verification', requirePermission('projobs.catalog.moderate', Module.PROJOBS), moderateCompany);
+router.get('/projobs/jobs', requirePermission('projobs.catalog.read', Module.PROJOBS), listJobsForModeration);
+router.post('/projobs/jobs/:jobId/moderation', requirePermission('projobs.catalog.moderate', Module.PROJOBS), moderateJob);
 
 export default router;

@@ -8,10 +8,10 @@ const PROGRESS: ApplicationStage[] = ["applied", "screening", "interview", "offe
 export function stageTone(stage: ApplicationStage): string {
   switch (stage) {
     case "hired":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300";
+      return "bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-300";
     case "offer":
     case "interview":
-      return "bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200";
+      return "bg-brand-100 text-brand-950 dark:bg-brand-700/15 dark:text-brand-200";
     case "rejected":
     case "withdrawn":
       return "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
@@ -37,7 +37,7 @@ export function StageTracker({ stage }: { stage: ApplicationStage }) {
             <span
               className={cn(
                 "flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold",
-                done ? "border-brand-600 bg-brand-600 text-white" : "border-ui-border bg-ui-surface text-ui-muted",
+                done ? "border-brand-800 bg-brand-800 text-white" : "border-ui-border bg-ui-surface text-ui-muted",
               )}
               aria-hidden="true"
             >

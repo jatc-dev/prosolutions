@@ -44,7 +44,7 @@ export function FontSelector({ label, value, onChange }: FontSelectorProps) {
             onClick={() => onChange(font.value)}
             className={`flex flex-col items-center p-2 rounded-lg border-2 transition-all duration-150 ${
               value === font.value
-                ? "border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
+                ? "border-brand-700 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
                 : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
             }`}
             style={{ fontFamily: font.family }}

@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_PROCV_URL?: string;
   readonly VITE_PROJOBS_URL?: string;
   readonly VITE_ADSENSE_CLIENT?: string;
+  readonly VITE_ADSENSE_CLIENT_ID?: string;
 }
 
 interface ImportMeta {

@@ -198,17 +198,17 @@ describe('employer workflow, applications and pipeline', () => {
     const res = await api.request(`/api/jobs/${jobId}/applications`, {
       method: 'POST',
       token: ANA,
-      body: { cvId: 'cv-1', coverLetter: 'Me encantaría sumarme.' },
+      body: { consentToShare: true, cvId: 'cv-1', coverLetter: 'Me encantaría sumarme.' },
     });
     expect(res.status).toBe(201);
     expect(res.body.match.score).toBe(75);
     applicationId = res.body.id;
 
-    const duplicate = await api.request(`/api/jobs/${jobId}/applications`, { method: 'POST', token: ANA, body: { cvId: 'cv-1' } });
+    const duplicate = await api.request(`/api/jobs/${jobId}/applications`, { method: 'POST', token: ANA, body: { consentToShare: true, cvId: 'cv-1' } });
     expect(duplicate.status).toBe(409);
     expect(duplicate.body.error.code).toBe('already_applied');
 
-    const missingCv = await api.request(`/api/jobs/${jobId}/applications`, { method: 'POST', token: BRUNO, body: { cvId: 'cv-404' } });
+    const missingCv = await api.request(`/api/jobs/${jobId}/applications`, { method: 'POST', token: BRUNO, body: { consentToShare: true, cvId: 'cv-404' } });
     expect(missingCv.status).toBe(404);
   });
 
@@ -216,14 +216,14 @@ describe('employer workflow, applications and pipeline', () => {
     const res = await api.request(`/api/jobs/${jobId}/applications`, {
       method: 'POST',
       token: BRUNO,
-      body: { profile: { fullName: 'Bruno Díaz', skills: ['GraphQL', 'Go'] } },
+      body: { consentToShare: true, profile: { fullName: 'Bruno Díaz', skills: ['GraphQL', 'Go'] } },
     });
     expect(res.status).toBe(201);
     expect(res.body.match).toEqual({ score: 25, matchedSkills: ['graphql'], missingSkills: ['react', 'typescript', 'css'] });
     const both = await api.request(`/api/jobs/${jobId}/applications`, {
       method: 'POST',
       token: BRUNO,
-      body: { cvId: 'cv-1', profile: { fullName: 'Bruno' } },
+      body: { consentToShare: true, cvId: 'cv-1', profile: { fullName: 'Bruno' } },
     });
     expect(both.status).toBe(400);
   });
@@ -304,7 +304,7 @@ describe('employer workflow, applications and pipeline', () => {
     const res = await api.request(`/api/jobs/${jobId}/applications`, {
       method: 'POST',
       token: tokenFor('dana'),
-      body: { profile: { fullName: 'Dana' } },
+      body: { consentToShare: true, profile: { fullName: 'Dana' } },
     });
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('job_not_open');

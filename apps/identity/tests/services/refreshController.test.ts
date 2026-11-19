@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
-import jwt from 'jsonwebtoken';
 import prisma from '../../src/prismaClient';
-import { config } from '../../src/config';
 import { refreshToken } from '../../src/controllers/refreshController';
+import {
+  deriveSuccessorRefreshToken,
+  generateRefreshToken,
+  hashRefreshToken,
+  verifyAccessToken,
+} from '../../src/services/tokenService';
 
 const originals = {
   findUnique: prisma.session.findUnique,
@@ -18,7 +22,7 @@ const originals = {
 type StoredSession = {
   id: string;
   userId: string;
-  refreshToken: string;
+  refreshTokenHash: string;
   jti: string;
   expiresAt: Date;
   createdAt: Date;
@@ -68,24 +72,33 @@ after(() => {
   (prisma as any).$transaction = originals.transaction;
 });
 
-test('concurrent refresh requests receive the same active successor session', async () => {
-  const userAgent = 'Chrome/156 Windows';
-  const predecessorJti = 'predecessor-jti';
-  const predecessorRefreshToken = jwt.sign(
-    { sub: 'user-123', jti: predecessorJti },
-    config.jwtSecret,
-    {
-      issuer: config.issuer,
-      audience: config.audience,
-      expiresIn: '12h',
-    },
-  );
+function stubUser() {
+  (prisma.user as any).findUnique = async () => ({
+    id: 'user-123',
+    email: 'qa@example.invalid',
+    role: 'user',
+    isActive: true,
+    moduleAccess: [],
+  });
+  (prisma.moduleAccess as any).upsert = async () => ({});
+  (prisma.moduleAccess as any).findMany = async () => [{ module: 'PROCV' }];
+}
 
+const userAgent = 'Chrome/156 Windows';
+const request = (cookie: string) => ({
+  cookies: { refreshToken: cookie },
+  get: (header: string) => (header.toLowerCase() === 'user-agent' ? userAgent : undefined),
+  headers: { 'user-agent': userAgent },
+  ip: '127.0.0.1',
+});
+
+test('stores only hashes and gives concurrent refreshes the same successor cookie', async () => {
+  const predecessorRefreshToken = generateRefreshToken();
   const predecessor: StoredSession = {
     id: 'session-before-rotation',
     userId: 'user-123',
-    refreshToken: predecessorRefreshToken,
-    jti: predecessorJti,
+    refreshTokenHash: hashRefreshToken(predecessorRefreshToken),
+    jti: 'predecessor-jti',
     expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
     createdAt: new Date(Date.now() - 60_000),
     revokedAt: null,
@@ -98,19 +111,11 @@ test('concurrent refresh requests receive the same active successor session', as
   let successor: StoredSession | null = null;
 
   (prisma.session as any).findUnique = async ({ where }: any) => {
-    if (where.refreshToken === predecessorRefreshToken) return { ...predecessor };
+    if (where.refreshTokenHash === predecessor.refreshTokenHash) return { ...predecessor };
     if (where.jti && successor?.jti === where.jti) return { ...successor };
     return null;
   };
-  (prisma.user as any).findUnique = async () => ({
-    id: 'user-123',
-    email: 'qa@example.invalid',
-    role: 'user',
-    isActive: true,
-    moduleAccess: [],
-  });
-  (prisma.moduleAccess as any).upsert = async () => ({});
-  (prisma.moduleAccess as any).findMany = async () => [{ module: 'PROCV' }];
+  stubUser();
   (prisma as any).$transaction = async (callback: (tx: any) => Promise<void>) =>
     callback({
       session: {
@@ -122,33 +127,36 @@ test('concurrent refresh requests receive the same active successor session', as
           return { count: 1 };
         },
         create: async ({ data }: any) => {
+          assert.equal('refreshToken' in data, false, 'plaintext refresh token must never be stored');
           successor = { id: 'session-after-rotation', revokedAt: null, ...data };
           return successor;
         },
       },
     });
 
-  const request = () => ({
-    cookies: { refreshToken: predecessorRefreshToken },
-    get: (header: string) => (header.toLowerCase() === 'user-agent' ? userAgent : undefined),
-    headers: { 'user-agent': userAgent },
-    ip: '127.0.0.1',
-  });
-
   const first = responseRecorder();
   const second = responseRecorder();
   await Promise.all([
-    refreshToken(request() as any, first.res),
-    refreshToken(request() as any, second.res),
+    refreshToken(request(predecessorRefreshToken) as any, first.res),
+    refreshToken(request(predecessorRefreshToken) as any, second.res),
   ]);
 
+  const expectedSuccessor = deriveSuccessorRefreshToken(predecessorRefreshToken);
   assert.equal(first.result.statusCode, 200);
   assert.equal(second.result.statusCode, 200);
   assert.ok(successor);
-  assert.equal(first.result.refreshCookie, successor!.refreshToken);
-  assert.equal(second.result.refreshCookie, successor!.refreshToken);
-  assert.equal(first.result.body.accessToken ? true : false, true);
-  assert.equal(second.result.body.accessToken ? true : false, true);
+  assert.equal(successor!.refreshTokenHash, hashRefreshToken(expectedSuccessor));
+  assert.equal(first.result.refreshCookie, expectedSuccessor);
+  assert.equal(second.result.refreshCookie, expectedSuccessor);
+  assert.equal(verifyAccessToken(first.result.body.accessToken).token_use, 'access');
   assert.equal(predecessor.revokedAt?.getTime(), predecessor.lastAccessedAt.getTime());
   assert.equal(successor!.createdAt.getTime(), predecessor.revokedAt?.getTime());
+});
+
+test('rejects an unknown refresh token and an access token presented as refresh cookie', async () => {
+  (prisma.session as any).findUnique = async () => null;
+  const unknown = responseRecorder();
+  await refreshToken(request(generateRefreshToken()) as any, unknown.res);
+  assert.equal(unknown.result.statusCode, 401);
+  assert.equal(unknown.result.clearedCookie, true);
 });

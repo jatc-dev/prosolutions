@@ -11,6 +11,11 @@ export const registerSchema = Joi.object({
       'Password must contain at least one uppercase letter, one lowercase letter, and one number',
   }),
   name: Joi.string().optional(),
+  // Ley 1581 / GDPR: explicit, affirmative acceptance of the privacy policy.
+  acceptPrivacyPolicy: Joi.boolean().valid(true).required().messages({
+    'any.only': 'You must accept the privacy policy to create an account',
+    'any.required': 'You must accept the privacy policy to create an account',
+  }),
 });
 
 export const loginSchema = Joi.object({

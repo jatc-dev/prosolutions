@@ -629,7 +629,7 @@ function rgbaFromHex(hexColor: string, alpha: number): string {
 function ProgressBar({ percent }: { percent: number }) {
   return (
     <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-      <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${percent}%` }} />
+      <div className="h-full bg-brand-700 transition-all duration-300" style={{ width: `${percent}%` }} />
     </div>
   );
 }
@@ -1036,13 +1036,13 @@ function TemplateCorporate({ data }: { data: CVData }) {
 
       {renderValuePropositionBlock({
         personal,
-        containerClassName: "mt-6 rounded-r-lg border-l-4 border-brand-500 bg-slate-50/70 pl-4 pr-3 py-2",
+        containerClassName: "mt-6 rounded-r-lg border-l-4 border-brand-700 bg-slate-50/70 pl-4 pr-3 py-2",
         titleClassName: "text-sm font-semibold uppercase tracking-wide text-slate-500",
         textClassName: "mt-2 text-sm text-slate-700 whitespace-pre-line",
       })}
 
       {personal.summary && personal.showSummaryContent !== false && (
-        <section className="mt-6 border-l-4 border-brand-500 pl-4 py-1">
+        <section className="mt-6 border-l-4 border-brand-700 pl-4 py-1">
           {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Perfil</h2> : null}
           <p className="mt-2 text-sm text-slate-700">{personal.summary}</p>
         </section>
@@ -1131,7 +1131,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
                 ) : null}
                 {cert.credentialId ? <p className="text-xs text-slate-500">Credential ID: {cert.credentialId}</p> : null}
                 {cert.url ? (
-                  <a href={cert.url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline">
+                  <a href={cert.url} target="_blank" rel="noreferrer" className="text-xs text-brand-800 hover:underline">
                     {cert.url}
                   </a>
                 ) : null}
@@ -1148,7 +1148,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
             {Object.entries(data.links || {}).map(([label, url]) => (
               <div key={label}>
                 <span className="font-semibold">{label}:</span>{" "}
-                <a href={url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">
+                <a href={url} target="_blank" rel="noreferrer" className="text-brand-800 hover:underline">
                   {url}
                 </a>
               </div>
@@ -1766,7 +1766,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
                     ) : null}
                     {cert.credentialId ? <p className="text-xs text-slate-500">Credential ID: {cert.credentialId}</p> : null}
                     {cert.url ? (
-                      <a href={cert.url} target="_blank" rel="noreferrer" className="text-xs text-brand-600 hover:underline">
+                      <a href={cert.url} target="_blank" rel="noreferrer" className="text-xs text-brand-800 hover:underline">
                         {cert.url}
                       </a>
                     ) : null}
@@ -1783,7 +1783,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
                 {Object.entries(data.links || {}).map(([label, url]) => (
                   <div key={label}>
                     <span className="font-semibold">{label}:</span>{" "}
-                    <a href={url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">
+                    <a href={url} target="_blank" rel="noreferrer" className="text-brand-800 hover:underline">
                       {url}
                     </a>
                   </div>
@@ -2009,7 +2009,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
           <div className="mt-4 space-y-5">
             {data.experience.map((item, index) => (
               <div key={item.id} className="relative pl-6">
-                <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-brand-500" />
+                <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-brand-700" />
                 {index < data.experience!.length - 1 ? (
                   <span className="absolute left-[4px] top-5 bottom-[-22px] w-px bg-slate-200" />
                 ) : null}
@@ -2378,7 +2378,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                       <span className="font-semibold">{lang.name}</span>
                       {lang.level ? <span className="ml-2">• {lang.level.toUpperCase()}</span> : null}
                       {lang.certificateUrl ? (
-                        <a href={lang.certificateUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-brand-600 hover:underline">
+                        <a href={lang.certificateUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-brand-800 hover:underline">
                           Certificado
                         </a>
                       ) : null}

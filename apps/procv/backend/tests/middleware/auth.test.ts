@@ -95,6 +95,9 @@ function mockRequest(token = 'signed-token'): AuthRequest {
 describe('ProCV Identity authorization middleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (jwt.decode as jest.Mock).mockImplementation((_token: string, options?: { complete?: boolean }) =>
+      options?.complete ? { header: { alg: 'HS256' } } : null,
+    );
     setIntrospectionResponse({
       valid: true,
       userId: 'identity-user-2',
@@ -141,8 +144,25 @@ describe('ProCV Identity authorization middleware', () => {
     delete process.env.IDENTITY_INTROSPECTION_ONLY;
   });
 
+  it('rejects a validly signed token that is not an access token (token_use)', async () => {
+    (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'refresh',
+      sub: 'identity-user-2',
+      modules: ['PROCV'],
+      jti: 'test-jti-refresh',
+    });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    await authMiddleware(mockRequest(), res as unknown as ExpressResponse, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('accepts an Identity token with PROCV entitlement and exposes the subject', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-2',
       email: 'user@example.test',
       role: 'user',
@@ -162,6 +182,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('does not let an administrative permission bypass candidate module entitlement', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-admin-1',
       email: 'admin@example.test',
       role: 'admin',
@@ -192,6 +213,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('allows a global ProCV administrator when no module-scoped grants exist', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-owner-1',
       email: 'owner@example.test',
       role: 'admin',
@@ -223,6 +245,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects a valid Identity token without PROCV entitlement', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -256,6 +279,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects a valid Identity token missing jti', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -273,6 +297,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection valid=false', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -295,6 +320,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with missing userId', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -322,6 +348,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with userId different from JWT sub', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -350,6 +377,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with missing modules array', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -377,6 +405,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with malformed modules (not an array)', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -405,6 +434,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with unparseable JSON', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -427,6 +457,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects introspection with valid=false in body', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -449,6 +480,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects when introspection times out (fail closed)', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',
@@ -471,6 +503,7 @@ describe('ProCV Identity authorization middleware', () => {
 
   it('rejects when introspection service throws network error', async () => {
     (jwt.verify as jest.Mock).mockReturnValue({
+      token_use: 'access',
       sub: 'identity-user-1',
       email: 'user@example.test',
       role: 'user',

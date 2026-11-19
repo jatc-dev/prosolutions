@@ -43,7 +43,7 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 py-2 text-xs font-medium border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-300"
+                ? "border-brand-700 text-brand-800 dark:border-brand-400 dark:text-brand-300"
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >

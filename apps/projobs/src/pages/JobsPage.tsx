@@ -1,6 +1,6 @@
-import { cn } from "@prosolutions/ui";
-import { ArrowLeft, ArrowRight, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AdSlot, cn } from "@prosolutions/ui";
+import { ArrowLeft, ArrowRight, BellRing, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { JobDetail, JobSearchResponse, JobSummary } from "../../server/src/contracts";
 import { FiltersPanel } from "../components/FiltersPanel";
@@ -11,7 +11,7 @@ import { errorMessage } from "../lib/api";
 import { PROCV_URL } from "../lib/env";
 import { useMySkills, useSaveToggle } from "../lib/candidate";
 import { useAsync, useDebouncedValue, useIsDesktop } from "../lib/hooks";
-import { DEFAULT_FILTERS, activeFilterCount, filtersToParams, parseFilters, toApiQuery, type JobFilters } from "../lib/search-params";
+import { DEFAULT_FILTERS, activeFilterCount, filtersToAlertQuery, filtersToParams, parseFilters, toApiQuery, type JobFilters } from "../lib/search-params";
 import { useSession } from "../lib/session";
 
 const PAGE_SIZE = 20;
@@ -93,7 +93,7 @@ export function JobsPage() {
 
   return (
     <>
-      <section className="border-b border-ui-border bg-gradient-to-b from-brand-50/70 to-transparent dark:from-brand-500/5">
+      <section className="border-b border-ui-border bg-gradient-to-b from-brand-50/70 to-transparent dark:from-brand-700/5">
         <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Encuentra tu próximo empleo</h1>
           <p className="mt-2 max-w-2xl text-ui-muted">
@@ -126,7 +126,7 @@ export function JobsPage() {
             </label>
           </form>
           {mySkills.length > 0 && (
-            <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-700 dark:text-brand-300">
+            <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-900 dark:text-brand-300">
               <Sparkles className="h-4 w-4" aria-hidden="true" /> Mostrando tu afinidad según las {mySkills.length} habilidades de tu CV en ProCV.
             </p>
           )}
@@ -152,6 +152,7 @@ export function JobsPage() {
               {search.loading && !results ? "Buscando…" : `${results?.total ?? 0} ${results?.total === 1 ? "vacante" : "vacantes"}`}
             </h2>
             <div className="flex items-center gap-2">
+              <CreateAlertButton filters={filters} />
               <button
                 type="button"
                 onClick={() => setShowFilters((value) => !value)}
@@ -185,10 +186,10 @@ export function JobsPage() {
               title="Aún no hay vacantes publicadas"
               action={
                 <div className="flex flex-col items-center gap-3 sm:flex-row">
-                  <a href={`${PROCV_URL}/dashboard`} className="inline-flex h-10 items-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">
+                  <a href={`${PROCV_URL}/dashboard`} className="inline-flex h-10 items-center rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white hover:bg-brand-900">
                     Prepara tu CV en ProCV
                   </a>
-                  <Link to="/empresa" className="text-sm font-semibold text-brand-600 hover:underline">
+                  <Link to="/empresa" className="text-sm font-semibold text-brand-800 hover:underline">
                     ¿Eres empresa? Publica tu primera vacante
                   </Link>
                 </div>
@@ -202,7 +203,7 @@ export function JobsPage() {
               icon={<SearchX className="h-10 w-10" />}
               title="No encontramos vacantes con esos criterios"
               action={filterCount > 0 || filters.q ? (
-                <button type="button" className="font-semibold text-brand-600 hover:underline" onClick={() => setParams(new URLSearchParams())}>
+                <button type="button" className="font-semibold text-brand-800 hover:underline" onClick={() => setParams(new URLSearchParams())}>
                   Limpiar búsqueda y filtros
                 </button>
               ) : undefined}
@@ -212,16 +213,23 @@ export function JobsPage() {
           ) : (
             <>
               <ul className={cn("space-y-3 transition-opacity", search.loading && "opacity-60")} aria-busy={search.loading}>
-                {results.items.map((job) => (
-                  <li key={job.id}>
-                    <JobCard
-                      job={job}
-                      href={`/empleos/${job.slug}`}
-                      selected={activeSlug === job.slug}
-                      onSelect={isDesktop ? selectJob : undefined}
-                      onToggleSave={(item) => toggleSave(item, patchJob)}
-                    />
-                  </li>
+                {results.items.map((job, index) => (
+                  <Fragment key={job.id}>
+                    <li>
+                      <JobCard
+                        job={job}
+                        href={`/empleos/${job.slug}`}
+                        selected={activeSlug === job.slug}
+                        onSelect={isDesktop ? selectJob : undefined}
+                        onToggleSave={(item) => toggleSave(item, patchJob)}
+                      />
+                    </li>
+                    {index === 4 && results.items.length > 7 && (
+                      <li className="list-none">
+                        <AdSlot placement="jobs-listing" format="in-article" className="my-2" />
+                      </li>
+                    )}
+                  </Fragment>
                 ))}
               </ul>
               {totalPages > 1 && (
@@ -266,5 +274,43 @@ export function JobsPage() {
         )}
       </div>
     </>
+  );
+}
+
+/** Saves the current search as an email alert (signed-in users only). */
+function CreateAlertButton({ filters }: { filters: JobFilters }) {
+  const { status, request } = useSession();
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  if (status !== "authenticated") return null;
+  const save = async () => {
+    setState("saving");
+    try {
+      await request("/api/me/alerts", {
+        method: "POST",
+        body: { label: filters.q.trim() || null, frequency: "daily", query: filtersToAlertQuery(filters) },
+      });
+      setState("saved");
+    } catch {
+      setState("error");
+    }
+  };
+  if (state === "saved") {
+    return (
+      <Link to="/alertas" className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-brand-800 dark:text-brand-300">
+        <BellRing className="h-4 w-4" aria-hidden="true" /> Alerta creada
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => void save()}
+      disabled={state === "saving"}
+      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ui-border px-3 text-sm font-medium hover:bg-ui-soft disabled:opacity-60"
+      title="Recibe por correo las vacantes nuevas de esta búsqueda"
+    >
+      <BellRing className="h-4 w-4" aria-hidden="true" />
+      {state === "error" ? "Reintentar alerta" : "Crear alerta"}
+    </button>
   );
 }

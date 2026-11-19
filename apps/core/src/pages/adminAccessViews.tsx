@@ -19,7 +19,7 @@ export function AdminAccessErrorView({ message, onRetry }: { message: string; on
       <section role="alert" className="max-w-lg rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm dark:border-amber-900 dark:bg-slate-900">
         <h1 className="text-2xl font-bold">No se pudo cargar la consola</h1>
         <p className="mt-3 text-slate-600 dark:text-slate-300">{message}</p>
-        <button type="button" onClick={onRetry} className="mt-6 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Reintentar</button>
+        <button type="button" onClick={onRetry} className="mt-6 rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">Reintentar</button>
       </section>
     </main>
   );
@@ -36,7 +36,7 @@ export function AdminAccessLoadingView() {
 export function AdminAccessHeader() {
   return (
     <div>
-      <p className="text-sm font-semibold uppercase tracking-[0.15em] text-brand-600 dark:text-brand-300">ProIdentity · Administración</p>
+      <p className="text-sm font-semibold uppercase tracking-[0.15em] text-brand-800 dark:text-brand-300">ProIdentity · Administración</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Cuentas y permisos de módulos</h1>
       <p className="mt-2 max-w-3xl text-slate-600 dark:text-slate-300">Gestiona el acceso central de ProCV, ProJobs y los módulos futuros. Los permisos se guardan en ProIdentity; cada API los vuelve a validar.</p>
     </div>
@@ -61,8 +61,8 @@ export function AdminAccessModuleControl({
   onChange: (_enabled: boolean) => void;
 }) {
   return (
-    <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-brand-300 bg-brand-50 dark:border-brand-800 dark:bg-brand-950/30" : "border-slate-200 dark:border-slate-800"} ${busy ? "opacity-60" : ""}`}>
-      <input type="checkbox" checked={checked} disabled={busy || !isActive || !canManage} onChange={(event) => onChange(event.target.checked)} className="mt-1 h-4 w-4 accent-brand-600" />
+    <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-brand-300 bg-brand-50 dark:border-brand-950 dark:bg-brand-950/30" : "border-slate-200 dark:border-slate-800"} ${busy ? "opacity-60" : ""}`}>
+      <input type="checkbox" checked={checked} disabled={busy || !isActive || !canManage} onChange={(event) => onChange(event.target.checked)} className="mt-1 h-4 w-4 accent-brand-800" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold">{label}</span>
         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{description}</span>

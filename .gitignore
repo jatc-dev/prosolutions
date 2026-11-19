@@ -8,10 +8,6 @@ build/
 .next/
 out/
 
-# Excepción: packages/ui se consume precompilado por apps/procv/frontend
-# en builds aislados (Render/Docker), donde el repo se clona sin ejecutar
-# el build del workspace. Su dist se versiona a propósito.
-!packages/ui/dist/
 
 # Variables de entorno (todos los entornos)
 .env
@@ -32,10 +28,6 @@ build/
 .next/
 out/
 
-# Excepción: packages/ui se consume precompilado por apps/procv/frontend
-# en builds aislados (Render/Docker), donde el repo se clona sin ejecutar
-# el build del workspace. Su dist se versiona a propósito.
-!packages/ui/dist/
 
 # ProJobs build output
 /jobs.json

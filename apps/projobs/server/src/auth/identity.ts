@@ -1,6 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { forbidden, unauthorized } from '../http/errors.js';
+import type { KeyStore } from './jwks.js';
 
 /** Capability modules issued by ProIdentity in the access token `modules[]` claim. */
 export const CANDIDATE_MODULE = 'PROJOBS';
@@ -17,9 +18,12 @@ export interface Principal {
 }
 
 export interface IdentityVerifierOptions {
-  secret: string;
   issuer: string;
   audience: string;
+  /** ProIdentity public keys (ES256). Preferred: consumers hold no signing secret. */
+  keyStore?: KeyStore | null;
+  /** Legacy shared HS256 secret; accepted only while configured (migration window). */
+  secret?: string | null;
 }
 
 declare module 'express-serve-static-core' {
@@ -31,20 +35,29 @@ declare module 'express-serve-static-core' {
 const SUBJECT = /^[A-Za-z0-9_-]{1,128}$/;
 
 /**
- * Verifies ProIdentity access tokens locally (HS256, issuer, audience, expiry).
- * ProIdentity remains the only authority that issues sessions and grants
- * modules; ProJobs only reads the signed claims.
+ * Verifies ProIdentity access tokens locally: ES256 signature against the
+ * published JWKS (or the legacy HS256 secret while it is still configured),
+ * issuer, audience, expiry and `token_use: "access"`. ProIdentity remains the
+ * only authority that issues sessions and grants modules.
  */
 export function createIdentityVerifier(options: IdentityVerifierOptions) {
   return function verify(token: string): Principal {
     let claims: jwt.JwtPayload;
     try {
-      const decoded = jwt.verify(token, options.secret, {
-        algorithms: ['HS256'],
-        issuer: options.issuer,
-        audience: options.audience,
-      });
+      const header = jwt.decode(token, { complete: true })?.header;
+      const verifyOptions = { issuer: options.issuer, audience: options.audience };
+      let decoded: string | jwt.JwtPayload;
+      if (header?.alg === 'ES256' && options.keyStore && header.kid) {
+        const key = options.keyStore.getKey(header.kid);
+        if (!key) throw new Error('unknown signing key');
+        decoded = jwt.verify(token, key, { ...verifyOptions, algorithms: ['ES256'] });
+      } else if (header?.alg === 'HS256' && options.secret) {
+        decoded = jwt.verify(token, options.secret, { ...verifyOptions, algorithms: ['HS256'] });
+      } else {
+        throw new Error('unsupported token');
+      }
       if (typeof decoded === 'string') throw new Error('unexpected token payload');
+      if (decoded.token_use !== 'access') throw new Error('not an access token');
       claims = decoded;
     } catch {
       throw unauthorized('Invalid or expired session');
