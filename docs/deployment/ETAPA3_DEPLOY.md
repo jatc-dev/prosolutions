@@ -6,6 +6,13 @@ Rama: `feat/prosolutions-core-v2`. Sigue los pasos en orden. Cada paso que toca 
 
 - Se borraron 4 funciones SQL residuales de la base `procv` en la rama `production` de Neon: `procv_private.current_user_id()`, `procv_private.current_is_admin()`, `procv_private.current_claims()` y `public.verified_context()`. Antes de borrarlas se comprobó que ninguna política, vista, trigger ni función dependía de ellas. ProCV en producción siguió respondiendo 200 después del cambio.
 - No hay que hacer nada más en Neon para ProCV.
+- **QA, desplegado el 2026-11-19:**
+  - ProJobs: `002` y `003` aplicadas en la base `projobs` de QA.
+  - ProIdentity: 4 migraciones aplicadas en QA (sección 3).
+  - Variables de QA configuradas en Render.
+  - PR #121 (Etapas 2 y 3) mergeado a `qa`.
+  - PR #122: corrección de la barra final.
+- **Producción: pendiente.** Repite las secciones 2, 3, 5 y 8.
 
 ## 1. Verificación local (antes de hacer push)
 
@@ -50,9 +57,32 @@ MIGRATION_DATABASE_URL='<URL directa owner de projobs production>' npm run migra
 
 Opcional, para tener un punto de restauración: antes de migrar producción, crea un snapshot o rama de respaldo de Neon.
 
-## 3. ProIdentity: migración automática
+## 3. ProIdentity: migraciones (automáticas solo en producción)
 
-Al arrancar, el contenedor ejecuta `migrate-production.mjs`, que aplica `platform_settings_contact_20261118` (tablas `PlatformSetting` y `ContactRequest`, con RLS y permisos para `proidentity_app` si ese rol existe). No hay un paso manual. Después del deploy, revisa los logs de arranque en Render.
+Hay que aplicar 4 migraciones de ProIdentity. Las 3 primeras vienen de la Etapa 2 y de esta etapa; la cuarta ya estaba en el repo, pero QA no la tenía registrada:
+
+| Migración | Cambio | Impacto |
+|---|---|---|
+| `session_refresh_token_hash_20261118` | Guarda solo el SHA-256 del refresh token | **Obligatoria antes del código nuevo**: sin la columna `refreshTokenHash` falla el login. Elimina las sesiones anteriores a la rotación del 18-nov, así que todos los usuarios vuelven a iniciar sesión |
+| `user_google_consents_20261118` | `User.googleSub` y la tabla `UserConsent` | Inicio de sesión con Google y registro de consentimientos |
+| `platform_settings_contact_20261118` | Tablas `PlatformSetting` y `ContactRequest` | Sin ellas, `/api/public/platform/ads` responde `degraded` y el formulario de contacto falla |
+| `20261110000000_user_preferences` | `User.preferences` (idempotente) | En QA la columna ya existía, pero la migración no estaba registrada |
+
+- **Producción** (servicio `ProIdentity`, Dockerfile raíz): el `CMD` ejecuta `node scripts/migrate-production.mjs` (`prisma migrate deploy`) antes de arrancar. No hay paso manual, pero revisa en los logs de arranque la línea `Applying Prisma production migrations...` y que no haya errores. Antes del deploy, verifica qué está aplicado:
+
+  ```sql
+  -- base proidentity, rama production
+  select migration_name, finished_at from "_prisma_migrations" order by started_at;
+  ```
+
+- **QA** (servicio `ProIdentity-QA`): **no migra al arrancar**. Su comando Docker es `npm run start:migrate`, que pese al nombre solo siembra el admin de QA y arranca `node dist/index.js`. Las migraciones se aplican a mano **antes** del merge a `qa`, con el owner de la base `proidentity` de QA:
+
+  ```bash
+  cd apps/identity
+  DATABASE_URL='<URL directa owner de proidentity QA>' npx prisma migrate deploy
+  ```
+
+  El 2026-11-19 se aplicaron en QA (proyecto `prosolutions-qa`, rama `qa`) con SQL equivalente en una sola transacción. Se registraron en `_prisma_migrations` con el checksum SHA-256 del `migration.sql`, así que `migrate deploy` ya no las repite. En QA no existe el rol `proidentity_app`: los bloques `DO $$` lo detectan y se saltan; no agregues verificaciones que asuman ese rol.
 
 ## 4. Push y PR hacia `qa`
 
@@ -77,15 +107,24 @@ Espera a que el CI (`core-build.yml`) quede en verde. El job de Core ahora corre
 
 - Comando de build: el mismo de siempre, `npm run build --workspace=apps/core`. Ahora incluye el SSR y el prerender.
 - Directorio publicado: `apps/core/dist` (sin cambios).
-- **Verifica la reescritura SPA.** La regla `/* -> /index.html` solo debe aplicarse cuando no existe el archivo. Después del deploy de QA:
+- **URLs con barra final.** El hosting estático de Render solo sirve `/<ruta>/index.html` si la URL termina en `/`. Sin la barra, la regla SPA `/* -> /index.html` responde con el shell genérico. Lo detectó la verificación de QA del 2026-11-19 y lo corrigió el PR #122:
+  - canonical, `og:url`, JSON-LD, sitemap y todos los enlaces internos y compartidos (`LEGAL_URLS`, `RESOURCE_URLS`) usan la forma con barra;
+  - el cliente redirige `/ruta` a `/ruta/` en las páginas públicas;
+  - el shell SPA ya no lleva un canonical fijo.
+
+  Mantén la regla `/* -> /index.html` y verifica después de cada deploy:
 
   ```bash
-  curl -s https://qa.prosolutions.page/academy/hoja-de-vida-ats-2026 | grep -c '"@type":"Article"'   # debe dar 1
-  curl -s https://qa.prosolutions.page/legal/privacidad | grep -c '<h1'                              # debe dar >= 1
-  curl -s -o /dev/null -w '%{http_code}\n' https://qa.prosolutions.page/ads.txt
+  B=https://qa.prosolutions.page   # en producción: https://prosolutions.page
+  curl -s $B/academy/hoja-de-vida-ats-2026/ | grep -c '"@type":"Article"'         # 1
+  curl -s $B/academy/hoja-de-vida-ats-2026/ | grep -o 'rel="canonical" href="[^"]*"'   # .../hoja-de-vida-ats-2026/
+  curl -s $B/legal/privacidad/ | grep -c '<h1'                                     # >= 1
+  curl -s $B/sitemap-pages.xml | grep -c '/</loc>'                                 # 21 (todas con barra final)
+  curl -s -o /dev/null -w '%{http_code}
+' $B/ads.txt                              # 200 solo si ADS_TXT_CONTENT está definida
   ```
 
-  Si la primera línea da 0, es que Render reescribe antes de servir los archivos. En ese caso cambia la regla por reescrituras explícitas a `/index.html` solo para las rutas privadas (`/login`, `/register`, `/dashboard`, `/settings`, `/admin/*`, `/security/*`, `/auth/*`, `/modules`, `/forgot-password`, `/reset-password`, `/verify-email`).
+  En Search Console, envía e inspecciona siempre las URLs **con** barra final.
 
 ### ProIdentity (QA y producción)
 
