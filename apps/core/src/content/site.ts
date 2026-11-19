@@ -8,6 +8,8 @@ export const SITE = {
   url: "https://prosolutions.page",
   locale: "es_CO",
   language: "es",
+  /** 1200×630 social card (Open Graph / X) shared by every public page. */
+  ogImage: "https://prosolutions.page/og-image.png",
   description:
     "Herramientas gratuitas para tu carrera profesional: crea tu hoja de vida, encuentra empleo en todos los sectores, calcula tu salario neto y aprende con guías prácticas.",
   /** Institutional inbox for support, companies and Habeas Data requests. */

@@ -84,6 +84,12 @@ export function createApp() {
       },
     }),
   );
+  // An API host: nothing here (health JSON, JWKS, auth endpoints) belongs in
+  // search results.
+  app.use((_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+  });
   app.use(compression());
   app.use(cookieParser());
   app.use(corsMiddleware(config));

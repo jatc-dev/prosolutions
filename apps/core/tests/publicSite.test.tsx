@@ -88,6 +88,15 @@ describe("SEO and prerender", () => {
     }
   });
 
+  it("gives the landing page its own canonical, WebSite JSON-LD and social image", () => {
+    const tags = renderHeadTags(headForPath("/")!);
+    expect(tags).toContain('<link rel="canonical" href="https://prosolutions.page/" />');
+    expect(tags).toContain('"@type":"WebSite"');
+    expect(tags).toContain('<meta property="og:image" content="https://prosolutions.page/og-image.png" />');
+    expect(tags).toContain('<meta name="twitter:card" content="summary_large_image" />');
+    expect(renderRoute("/")).toContain("<h1");
+  });
+
   it("escapes JSON-LD against script breakouts", () => {
     expect(safeJsonLd({ text: "</script><script>alert(1)</script>" })).not.toContain("</script>");
   });
