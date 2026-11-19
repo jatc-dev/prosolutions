@@ -49,17 +49,17 @@ const coreBase = APP_URLS.core;
 
 /** Public pages hosted by Core (pre-rendered): legal framework, company and resources. */
 export const LEGAL_URLS = {
-  privacy: env.VITE_PRIVACY_URL ?? `${coreBase}/legal/privacidad`,
-  terms: env.VITE_TERMS_URL ?? `${coreBase}/legal/terminos`,
-  cookies: `${coreBase}/legal/cookies`,
-  ai: `${coreBase}/legal/uso-ia`,
-  about: `${coreBase}/nosotros`,
-  contact: `${coreBase}/contacto`,
+  privacy: env.VITE_PRIVACY_URL ?? `${coreBase}/legal/privacidad/`,
+  terms: env.VITE_TERMS_URL ?? `${coreBase}/legal/terminos/`,
+  cookies: `${coreBase}/legal/cookies/`,
+  ai: `${coreBase}/legal/uso-ia/`,
+  about: `${coreBase}/nosotros/`,
+  contact: `${coreBase}/contacto/`,
 } as const;
 
 export const RESOURCE_URLS = {
-  tools: `${coreBase}/tools`,
-  academy: `${coreBase}/academy`,
+  tools: `${coreBase}/tools/`,
+  academy: `${coreBase}/academy/`,
 } as const;
 
 export const PRIVACY_URL = LEGAL_URLS.privacy;

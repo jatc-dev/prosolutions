@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { pagePath } from "./site";
 
 /**
  * Minimal, dependency-free Markdown renderer for our own editorial content
@@ -97,7 +98,7 @@ export function renderInline(text: string): ReactNode[] {
     if (match[2]) nodes.push(<strong key={key++}>{match[2]}</strong>);
     else if (match[4]) nodes.push(<em key={key++}>{match[4]}</em>);
     else if (match[6] && match[7]) {
-      const href = match[7];
+      const href = match[7].startsWith("/") ? pagePath(match[7]) : match[7];
       const external = /^https?:\/\//.test(href) && !href.includes("prosolutions.page");
       nodes.push(
         <a key={key++} href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="font-medium text-ui-accent underline underline-offset-2">

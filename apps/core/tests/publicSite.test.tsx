@@ -53,7 +53,7 @@ describe("markdown renderer", () => {
   it("opens only external links in a new tab and never renders raw HTML", () => {
     const html = renderToString(<p>{renderInline("[ext](https://example.com) [int](/tools) <script>x</script>")}</p>);
     expect(html).toContain('href="https://example.com" target="_blank" rel="noopener noreferrer"');
-    expect(html).toMatch(/href="\/tools"(?! target)/);
+    expect(html).toMatch(/href="\/tools\/"(?! target)/);
     expect(html).not.toContain("<script>");
   });
 });
@@ -75,7 +75,7 @@ describe("SEO and prerender", () => {
 
   it("emits Article + BreadcrumbList JSON-LD for articles and canonical/OG tags", () => {
     const tags = renderHeadTags(headForPath("/academy/como-negociar-salario")!);
-    expect(tags).toContain('<link rel="canonical" href="https://prosolutions.page/academy/como-negociar-salario" />');
+    expect(tags).toContain('<link rel="canonical" href="https://prosolutions.page/academy/como-negociar-salario/" />');
     expect(tags).toContain('<meta property="og:type" content="article" />');
     expect(tags).toContain('"@type":"Article"');
     expect(tags).toContain('"@type":"BreadcrumbList"');
@@ -97,6 +97,18 @@ describe("SEO and prerender", () => {
     expect(html).toContain("<h1");
     expect(html).not.toContain("adsbygoogle");
     expect(html).not.toContain('aria-label="Publicidad"');
+  });
+
+  it("links public pages only through their trailing-slash URL (served as /route/index.html)", () => {
+    const publicPaths = new Set(publicRoutes().map((route) => route.path));
+    for (const path of ["/academy", "/academy/hoja-de-vida-ats-2026", "/tools/evaluador-cv", "/legal/cookies"]) {
+      const html = renderRoute(path);
+      for (const match of html.matchAll(/href="(\/[^"#?]*)"/g)) {
+        const href = match[1]!;
+        if (href === "/" || href.endsWith("/")) continue;
+        expect(publicPaths.has(href), `${path} links to ${href} without a trailing slash`).toBe(false);
+      }
+    }
   });
 
   it("renders the full article body on the server", () => {

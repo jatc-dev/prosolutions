@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { NoAds, ProFooter, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
+import { pagePath } from "../content/site";
 import { useHeaderSession } from "../useHeaderSession";
 
 export interface Crumb {
@@ -52,7 +53,7 @@ export function PublicLayout({ children, breadcrumbs, noAds = false }: PublicLay
                     {last ? (
                       <span aria-current="page" className="line-clamp-1 text-ui-text">{crumb.name}</span>
                     ) : (
-                      <Link to={crumb.path} className="hover:text-ui-text hover:underline">{crumb.name}</Link>
+                      <Link to={pagePath(crumb.path)} className="hover:text-ui-text hover:underline">{crumb.name}</Link>
                     )}
                   </li>
                 );
