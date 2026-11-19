@@ -24,4 +24,11 @@ export const SITE = {
   },
 } as const;
 
-export const absoluteUrl = (path: string) => `${SITE.url}${path === "/" ? "" : path}`;
+/**
+ * Public pages are served as /route/index.html, and the static host only finds
+ * them with a trailing slash (without it the SPA fallback answers). Every
+ * canonical, sitemap and internal link therefore uses the slash form.
+ */
+export const pagePath = (path: string) => (path === "/" || path.endsWith("/") || /[?#.]/.test(path) ? path : `${path}/`);
+
+export const absoluteUrl = (path: string) => `${SITE.url}${pagePath(path)}`;

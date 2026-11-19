@@ -64,10 +64,10 @@ export function AboutPage() {
           <MarkdownContent source={ABOUT_PAGE.body} />
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/tools" className="rounded-ui-md bg-ui-accent px-4 py-2 text-sm font-semibold text-ui-on-accent hover:bg-ui-accent-hover">
+          <Link to="/tools/" className="rounded-ui-md bg-ui-accent px-4 py-2 text-sm font-semibold text-ui-on-accent hover:bg-ui-accent-hover">
             Probar las herramientas
           </Link>
-          <Link to="/contacto" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">
+          <Link to="/contacto/" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">
             Contáctanos
           </Link>
         </div>
@@ -180,7 +180,7 @@ export function ContactPage() {
               <dt className="font-semibold text-ui-text">Datos personales (Habeas Data)</dt>
               <dd className="text-ui-muted">
                 Consultas en máximo 10 días hábiles y reclamos en máximo 15 días hábiles, según la Ley 1581 de 2012. Detalles en la{" "}
-                <Link to="/legal/privacidad" className="underline">política de privacidad</Link>.
+                <Link to="/legal/privacidad/" className="underline">política de privacidad</Link>.
               </dd>
             </div>
             <div>
@@ -268,7 +268,7 @@ export function ContactPage() {
                   />
                   <span>
                     Autorizo el tratamiento de mis datos para responder esta solicitud, según la{" "}
-                    <Link to="/legal/privacidad" className="underline">política de privacidad</Link>.
+                    <Link to="/legal/privacidad/" className="underline">política de privacidad</Link>.
                   </span>
                 </label>
                 {errors.acceptPrivacyPolicy && <p className="mt-1 text-xs text-ui-danger">{errors.acceptPrivacyPolicy}</p>}
@@ -306,8 +306,8 @@ export function NotFoundPage() {
         <p className="mt-3 text-ui-muted">Puede que el enlace esté incompleto o que la página haya cambiado de dirección.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link to="/" className="rounded-ui-md bg-ui-accent px-4 py-2 text-sm font-semibold text-ui-on-accent hover:bg-ui-accent-hover">Ir al inicio</Link>
-          <Link to="/academy" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">Ver la academia</Link>
-          <Link to="/tools" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">Ver herramientas</Link>
+          <Link to="/academy/" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">Ver la academia</Link>
+          <Link to="/tools/" className="rounded-ui-md border border-ui-border-strong px-4 py-2 text-sm font-semibold text-ui-text hover:bg-ui-soft">Ver herramientas</Link>
         </div>
       </section>
     </PublicLayout>

@@ -155,7 +155,7 @@ function ToolShell({ slug, form, results, formula, disclaimer }: ToolShellProps)
           <strong className="text-ui-text">Aviso legal.</strong>{" "}
           {disclaimer ??
             "Esta herramienta es informativa y usa los parámetros vigentes en la fecha de actualización indicada. No constituye asesoría legal, laboral, contable ni tributaria, y no reemplaza la liquidación oficial de tu empleador, tu fondo o un profesional. Verifica tu caso concreto antes de tomar decisiones."}{" "}
-          Consulta los <Link to="/legal/terminos" className="underline">términos de uso</Link>.
+          Consulta los <Link to="/legal/terminos/" className="underline">términos de uso</Link>.
         </aside>
       </div>
     </PublicLayout>
@@ -475,7 +475,7 @@ export function OpsToolPage() {
           </p>
           <p>
             Si en la práctica cumples horario, recibes órdenes y usas los medios de la empresa, podría tratarse de una relación laboral encubierta. Lee más en{" "}
-            <Link to="/academy/salarios-prestaciones-contratos-colombia" className="underline">nuestra guía sobre contratos</Link>.
+            <Link to="/academy/salarios-prestaciones-contratos-colombia/" className="underline">nuestra guía sobre contratos</Link>.
           </p>
           {paramsNote}
         </>
@@ -557,8 +557,8 @@ export function CvCheckToolPage() {
             <li><strong>Palabras clave</strong> (10): coincidencia con los términos de la vacante que escribas.</li>
           </ul>
           <p>
-            Profundiza en <Link to="/academy/hoja-de-vida-ats-2026" className="underline">cómo hacer una hoja de vida ATS</Link> y en los{" "}
-            <Link to="/academy/errores-que-descartan-un-cv" className="underline">errores que descartan un CV</Link>.
+            Profundiza en <Link to="/academy/hoja-de-vida-ats-2026/" className="underline">cómo hacer una hoja de vida ATS</Link> y en los{" "}
+            <Link to="/academy/errores-que-descartan-un-cv/" className="underline">errores que descartan un CV</Link>.
           </p>
         </>
       }
@@ -580,7 +580,7 @@ export function ToolsIndexPage() {
           {TOOLS.map((tool) => (
             <article key={tool.slug} className="flex flex-col rounded-ui-lg border border-ui-border bg-ui-surface p-5 shadow-card">
               <h2 className="text-lg font-semibold text-ui-text">
-                <Link to={`/tools/${tool.slug}`} className="hover:underline">{tool.shortTitle}</Link>
+                <Link to={`/tools/${tool.slug}/`} className="hover:underline">{tool.shortTitle}</Link>
               </h2>
               <p className="mt-2 flex-1 text-sm leading-6 text-ui-muted">{tool.description}</p>
               <p className="mt-4 text-xs text-ui-subtle">

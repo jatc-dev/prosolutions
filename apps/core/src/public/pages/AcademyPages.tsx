@@ -11,7 +11,7 @@ function ArticleCard({ article }: { article: Article }) {
     <article className="flex h-full flex-col rounded-ui-lg border border-ui-border bg-ui-surface p-5 shadow-card transition hover:border-ui-border-strong">
       <p className="text-xs font-semibold uppercase tracking-wide text-ui-accent">{CATEGORIES[article.category].label}</p>
       <h3 className="mt-2 text-lg font-semibold leading-snug text-ui-text">
-        <Link to={`/academy/${article.slug}`} className="hover:underline">
+        <Link to={`/academy/${article.slug}/`} className="hover:underline">
           {article.title}
         </Link>
       </h3>

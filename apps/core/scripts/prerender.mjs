@@ -55,7 +55,7 @@ const urls = [
   ...routes,
 ].map(
   (route) =>
-    `  <url><loc>${xmlEscape(`${SITE.url}${route.path === "/" ? "/" : route.path}`)}</loc><lastmod>${route.lastmod}</lastmod><changefreq>${route.changefreq}</changefreq><priority>${route.priority.toFixed(1)}</priority></url>`,
+    `  <url><loc>${xmlEscape(`${SITE.url}${route.path === "/" ? "/" : `${route.path}/`}`)}</loc><lastmod>${route.lastmod}</lastmod><changefreq>${route.changefreq}</changefreq><priority>${route.priority.toFixed(1)}</priority></url>`,
 );
 writeFileSync(
   join(dist, "sitemap-pages.xml"),
