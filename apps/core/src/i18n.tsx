@@ -251,6 +251,8 @@ function writeSharedLocale(locale: Locale) {
 }
 
 function getInitialLocale(): Locale {
+  // Pre-rendering (Node) has no browser globals: public pages are Spanish.
+  if (typeof window === "undefined") return "es";
   const shared = readSharedLocale();
   if (shared) return shared;
   try {
@@ -267,6 +269,16 @@ export function CoreLocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    // Public pages (academy, tools, legal...) ship their own pre-rendered SEO
+    // head; only the landing page head is localized here.
+    const isLanding = window.location.pathname === "/";
+    try {
+      window.localStorage.setItem("prosolutions-core-locale", locale);
+    } catch {
+      // Language switching remains available when browser storage is disabled.
+    }
+    writeSharedLocale(locale);
+    if (!isLanding) return;
     document.title = messages[locale].seo.title;
 
     const updateMeta = (selector: string, content: string) => {
@@ -291,12 +303,6 @@ export function CoreLocaleProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    try {
-      window.localStorage.setItem("prosolutions-core-locale", locale);
-    } catch {
-      // Language switching remains available when browser storage is disabled.
-    }
-    writeSharedLocale(locale);
   }, [locale]);
 
   const value = useMemo(() => ({ locale, setLocale, copy: messages[locale] }), [locale]);
