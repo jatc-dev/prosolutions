@@ -68,7 +68,7 @@ Hay que aplicar 4 migraciones de ProIdentity. Las 3 primeras vienen de la Etapa 
 | `platform_settings_contact_20261118` | Tablas `PlatformSetting` y `ContactRequest` | Sin ellas, `/api/public/platform/ads` responde `degraded` y el formulario de contacto falla |
 | `20261110000000_user_preferences` | `User.preferences` (idempotente) | En QA la columna ya existía, pero la migración no estaba registrada |
 
-- **Producción** (servicio `ProIdentity`): **tampoco migra al arrancar**. Usa `apps/identity/Dockerfile` (`CMD ["node", "dist/index.js"]`) con el comando Docker vacío. El `Dockerfile` de la raíz, que sí ejecuta `migrate-production.mjs`, **no** lo usa ningún servicio. Las migraciones de producción se aplican a mano.
+- **Producción** (servicio `ProIdentity`): **tampoco migra al arrancar**. Usa `apps/identity/Dockerfile` (`CMD ["node", "dist/index.js"]`) con el comando Docker vacío. El antiguo `Dockerfile` de la raíz, que ejecutaba `migrate-production.mjs`, no lo usaba ningún servicio y se eliminó el 2026-11-19; `render.yaml` ahora apunta a `apps/identity/Dockerfile`. Las migraciones de producción se aplican a mano.
 - **Migraciones que rompen el código anterior** (como la de sesiones, que elimina `refreshToken`) se aplican en dos fases para no cortar el servicio. Así se hizo en producción el 2026-11-19:
   1. **Fase A, antes del merge a `main`.** Las migraciones aditivas completas, más la parte compatible con ambos códigos:
      - `ADD COLUMN "refreshTokenHash"` con backfill;
@@ -111,7 +111,7 @@ Espera a que el CI (`core-build.yml`) quede en verde. El job de Core ahora corre
 |---|---|---|
 | `VITE_ADSENSE_CLIENT_ID` | `ca-pub-3956322934366702` | Se lee en el build. Sin ella, los anuncios dependen del Publisher ID configurado en ProAdmin |
 | `ADS_TXT_CONTENT` | `google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0` | Se lee en el build. Sin ella, `/ads.txt` responde 404 |
-| `EXTRA_SITEMAPS` (opcional) | `https://procv.prosolutions.page/sitemap.xml` | Lista separada por comas. Solo acepta URLs `*.prosolutions.page` |
+| `EXTRA_SITEMAPS` (opcional) | Por defecto: `https://procv.prosolutions.page/sitemap.xml,https://projobs.prosolutions.page/sitemap.xml` | Lista separada por comas. Solo acepta URLs `*.prosolutions.page` |
 | `VITE_IDENTITY_API_URL` | sin cambios | El formulario de contacto envía a `${origin}/api/public/contact` |
 
 - Comando de build: el mismo de siempre, `npm run build --workspace=apps/core`. Ahora incluye el SSR y el prerender.
@@ -183,9 +183,7 @@ Repite los pasos 2 (migración de producción) y 5 (variables de producción). L
 
 1. **Search Console.** Crea una propiedad de **dominio** `prosolutions.page`, verificada por DNS TXT en Cloudflare, para cubrir todos los subdominios.
 2. Envía `https://prosolutions.page/sitemap.xml` (índice: páginas de Core + sitemap de ProCV).
-3. El sitemap de vacantes de ProJobs lo sirve la API desde un host `onrender.com`, que no se puede verificar. Opciones:
-   - Agregar en el static site de ProJobs una reescritura `/sitemap.xml -> <API>/api/sitemap.xml`. Después, añadir `https://projobs.prosolutions.page/sitemap.xml` a `EXTRA_SITEMAPS` y actualizar el `robots.txt` de ProJobs.
-   - Enviar ese sitemap a mano en Search Console una vez que tenga URL propia.
+3. El sitemap de vacantes de ProJobs lo genera la API y se sirve en `https://projobs.prosolutions.page/sitemap.xml` mediante una regla de Render en el sitio estático, con prioridad sobre la regla SPA: `rewrite /sitemap.xml -> https://projobs-api-0clw.onrender.com/api/sitemap.xml`. En QA apunta a `projobs-api-qa`. El `robots.txt` de ProJobs y el índice de Core (`EXTRA_SITEMAPS` por defecto) lo referencian. Si se recrea el sitio estático en Render, hay que volver a crear la regla.
 4. Con «Inspección de URLs», solicita la indexación de `/academy`, `/tools` y dos artículos.
 5. **AdSense.**
    - En Sitios, agrega `prosolutions.page`.

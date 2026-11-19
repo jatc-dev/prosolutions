@@ -13,8 +13,10 @@ services:
     env: docker
     region: oregon
     plan: free
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # Matches the live ProIdentity service (2026-11-19). The image does NOT run
+    # migrations on start: apply them manually (docs/deployment/ETAPA3_DEPLOY.md §3).
+    dockerfilePath: ./apps/identity/Dockerfile
+    dockerContext: ./apps/identity
     healthCheckPath: /health
     autoDeploy: true
     envVars:
