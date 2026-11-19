@@ -10,7 +10,7 @@ import type {
 import type { Queryable } from '../db/database.js';
 import { computeMatch } from '../domain/skills.js';
 import { fold, toPrefixTsQuery } from '../domain/text.js';
-import { JOB_DETAIL_COLUMNS, JOB_SUMMARY_COLUMNS, toJobDetail, toJobSummary } from './mappers.js';
+import { JOB_DETAIL_COLUMNS, JOB_SUMMARY_COLUMNS, PUBLICLY_VISIBLE, toJobDetail, toJobSummary } from './mappers.js';
 
 export interface JobSearchParams {
   q?: string;
@@ -40,7 +40,7 @@ class Params {
 }
 
 function buildFilters(params: JobSearchParams, p: Params) {
-  const where = [`j.status = 'published'`, `(j.closes_at IS NULL OR j.closes_at > now())`];
+  const where = [`j.status = 'published'`, `(j.closes_at IS NULL OR j.closes_at > now())`, PUBLICLY_VISIBLE];
   let tsQuery: string | null = null;
 
   if (params.q) {
@@ -148,7 +148,7 @@ export async function findPublicJob(tx: Queryable, idOrSlug: string): Promise<Jo
   const { rows } = await tx.query(
     `SELECT ${JOB_DETAIL_COLUMNS}
      FROM public.jobs j JOIN public.companies c ON c.id = j.company_id
-     WHERE ${column} = $1 AND j.status IN ('published', 'closed')`,
+     WHERE ${column} = $1 AND j.status IN ('published', 'closed') AND ${PUBLICLY_VISIBLE}`,
     [UUID.test(idOrSlug) ? idOrSlug.toLowerCase() : idOrSlug],
   );
   return rows[0] ? toJobDetail(rows[0]) : null;
@@ -174,7 +174,7 @@ export async function findSimilarJobs(tx: Queryable, jobId: string, skills: stri
   const { rows } = await tx.query(
     `SELECT ${JOB_SUMMARY_COLUMNS}
      FROM public.jobs j JOIN public.companies c ON c.id = j.company_id
-     WHERE j.status = 'published' AND j.id <> $1 AND j.skills && $2::text[]
+     WHERE j.status = 'published' AND j.id <> $1 AND j.skills && $2::text[] AND ${PUBLICLY_VISIBLE}
        AND (j.closes_at IS NULL OR j.closes_at > now())
      ORDER BY cardinality(ARRAY(SELECT unnest(j.skills) INTERSECT SELECT unnest($2::text[]))) DESC,
               j.published_at DESC

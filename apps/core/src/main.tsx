@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { useTheme } from "@prosolutions/ui";
+import { ConsentBanner, useTheme } from "@prosolutions/ui";
 import { CoreLocaleProvider } from "./i18n";
 import { PreferencesBootstrap } from "./PreferencesBootstrap";
 import "./index.css";
@@ -27,6 +27,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <CoreLocaleProvider>
         <PreferencesBootstrap />
         <App />
+        <ConsentBanner />
       </CoreLocaleProvider>
     </ThemeProvider>
   </React.StrictMode>

@@ -3,11 +3,17 @@ import crypto from 'crypto';
 import { config } from '../config';
 import prisma from '../prismaClient';
 import { logger } from '../utils/logger';
+import { acceptsLegacyHs256, getSigningKeySet } from './signingKeys';
 
-export interface IdentityTokenPayload {  sub: string;
+/** Value of the `token_use` claim carried by every access token. */
+export const ACCESS_TOKEN_USE = 'access';
+
+export interface IdentityTokenPayload {
+  sub: string;
   email?: string;
   role?: string;
   modules?: string[];
+  token_use?: string;
   iss?: string;
   aud?: string;
   iat?: number;
@@ -20,17 +26,7 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-const ACCESS_TOKEN_OPTIONS: jwt.SignOptions = {
-  issuer: config.issuer,
-  audience: config.audience,
-  expiresIn: config.jwtExpiresIn as any,
-};
-
-const REFRESH_TOKEN_OPTIONS: jwt.SignOptions = {
-  issuer: config.issuer,
-  audience: config.audience,
-  expiresIn: config.jwtRefreshExpiresIn as any,
-};
+const REFRESH_TOKEN_PREFIX = 'rt_';
 
 export function signAccessToken(payload: {
   sub: string;
@@ -39,35 +35,80 @@ export function signAccessToken(payload: {
   modules?: string[];
   jti: string;
 }): string {
-  return jwt.sign(
-    {
-      sub: payload.sub,
-      email: payload.email,
-      role: payload.role,
-      modules: payload.modules,
-      jti: payload.jti,
-    },
-    config.jwtSecret,
-    ACCESS_TOKEN_OPTIONS,
-  );
+  const claims = {
+    sub: payload.sub,
+    email: payload.email,
+    role: payload.role,
+    modules: payload.modules,
+    jti: payload.jti,
+    token_use: ACCESS_TOKEN_USE,
+  };
+  const options: jwt.SignOptions = {
+    issuer: config.issuer,
+    audience: config.audience,
+    expiresIn: config.jwtExpiresIn as jwt.SignOptions['expiresIn'],
+  };
+  const keySet = getSigningKeySet();
+  if (keySet.algorithm === 'ES256' && keySet.privateKey) {
+    return jwt.sign(claims, keySet.privateKey, { ...options, algorithm: 'ES256', keyid: keySet.kid ?? undefined });
+  }
+  return jwt.sign(claims, config.jwtSecret, { ...options, algorithm: 'HS256' });
 }
 
-export function signRefreshToken(payload: { sub: string; jti: string }, expiresIn: string = config.jwtRefreshExpiresIn): string {
-  return jwt.sign({ sub: payload.sub, jti: payload.jti }, config.jwtSecret, { ...REFRESH_TOKEN_OPTIONS, expiresIn } as jwt.SignOptions);
-}
-
+/**
+ * Verify an access token. Rejects anything that is not explicitly an access
+ * token (`token_use: "access"`), so refresh tokens or other JWTs signed by
+ * this service can never be replayed as bearer credentials.
+ */
 export function verifyAccessToken(token: string): IdentityTokenPayload {
-  return jwt.verify(token, config.jwtSecret, {
-    issuer: config.issuer,
-    audience: config.audience,
-  }) as IdentityTokenPayload;
+  const decoded = jwt.decode(token, { complete: true });
+  if (!decoded || typeof decoded === 'string' || typeof decoded.payload === 'string') {
+    throw new Error('Malformed token');
+  }
+  const keySet = getSigningKeySet();
+  const verifyOptions = { issuer: config.issuer, audience: config.audience };
+  let payload: IdentityTokenPayload;
+
+  if (decoded.header.alg === 'ES256') {
+    const key = decoded.header.kid ? keySet.publicKeys.get(decoded.header.kid) : undefined;
+    if (!key) throw new Error('Unknown signing key');
+    payload = jwt.verify(token, key, { ...verifyOptions, algorithms: ['ES256'] }) as IdentityTokenPayload;
+  } else if (decoded.header.alg === 'HS256' && acceptsLegacyHs256(keySet)) {
+    payload = jwt.verify(token, config.jwtSecret, { ...verifyOptions, algorithms: ['HS256'] }) as IdentityTokenPayload;
+  } else {
+    throw new Error('Unsupported token algorithm');
+  }
+
+  if (payload.token_use !== ACCESS_TOKEN_USE) {
+    throw new Error('Token is not an access token');
+  }
+  return payload;
 }
 
-export function verifyRefreshToken(token: string): { sub: string; jti: string } {
-  return jwt.verify(token, config.jwtSecret, {
-    issuer: config.issuer,
-    audience: config.audience,
-  }) as { sub: string; jti: string };
+/** Refresh tokens are opaque random strings; only their SHA-256 is stored. */
+export function generateRefreshToken(): string {
+  return REFRESH_TOKEN_PREFIX + crypto.randomBytes(32).toString('base64url');
+}
+
+export function hashRefreshToken(refreshToken: string): string {
+  return crypto.createHash('sha256').update(refreshToken, 'utf8').digest('hex');
+}
+
+/**
+ * Deterministic successor of a refresh token. Concurrent refreshes of the same
+ * predecessor (several tabs/apps) must converge on one successor cookie, and
+ * the server can recompute it without ever storing a token in plaintext.
+ */
+export function deriveSuccessorRefreshToken(predecessorRefreshToken: string, secret = config.jwtSecret): string {
+  const mac = crypto
+    .createHmac('sha256', secret)
+    .update(`prosolutions-refresh-successor-token:${predecessorRefreshToken}`)
+    .digest('base64url');
+  return REFRESH_TOKEN_PREFIX + mac;
+}
+
+export async function findSessionByRefreshToken(refreshToken: string) {
+  return prisma.session.findUnique({ where: { refreshTokenHash: hashRefreshToken(refreshToken) } });
 }
 
 export async function createTokenPair(user: {
@@ -77,7 +118,6 @@ export async function createTokenPair(user: {
   modules?: string[];
 }, options: { rememberMe?: boolean; deviceName?: string | null; userAgent?: string | null; ipAddress?: string | null } = {}): Promise<TokenPair> {
   const rememberMe = options.rememberMe === true;
-  const lifetime = rememberMe ? "30d" : "12h";
   const expiresAt = new Date(Date.now() + (rememberMe ? 30 : 0.5) * 24 * 60 * 60 * 1000);
   const jti = crypto.randomUUID();
   const accessToken = signAccessToken({
@@ -88,13 +128,13 @@ export async function createTokenPair(user: {
     jti,
   });
 
-  const refreshToken = signRefreshToken({ sub: user.id, jti }, lifetime);
+  const refreshToken = generateRefreshToken();
 
   try {
     await prisma.session.create({
       data: {
         userId: user.id,
-        refreshToken,
+        refreshTokenHash: hashRefreshToken(refreshToken),
         jti,
         expiresAt,
         lastAccessedAt: new Date(),
@@ -121,73 +161,34 @@ export async function createTokenPair(user: {
 
 export async function revokeSession(refreshToken: string): Promise<void> {
   await prisma.session.updateMany({
-    where: { refreshToken, revokedAt: null },
+    where: { refreshTokenHash: hashRefreshToken(refreshToken), revokedAt: null },
     data: { revokedAt: new Date() },
-  });
-}
-
-export async function rotateSession(
-  oldRefreshToken: string,
-  userId: string,
-): Promise<{ accessToken: string; refreshToken: string }> {
-  await prisma.session.update({
-    where: { id: oldRefreshToken },
-    data: { revokedAt: new Date() },
-  });
-
-  const jti = crypto.randomUUID();
-  const refreshToken = signRefreshToken({ sub: userId, jti });
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-  await prisma.session.create({
-    data: {
-      userId,
-      refreshToken,
-      jti,
-      expiresAt,
-      lastAccessedAt: new Date(),
-    },
-  });
-
-  const accessToken = signAccessToken({ sub: userId, jti });
-
-  return { accessToken, refreshToken };
-}
-
-export async function validateSession(
-  refreshToken: string,
-): Promise<{ valid: boolean; userId?: string; reason?: string }> {
-  try {
-    const session = await prisma.session.findUnique({ where: { refreshToken } });
-
-    if (!session) {
-      return { valid: false, reason: 'session_not_found' };
-    }
-
-    if (session.revokedAt) {
-      return { valid: false, reason: 'session_revoked' };
-    }
-
-    if (session.expiresAt < new Date()) {
-      return { valid: false, reason: 'session_expired' };
-    }
-
-    return { valid: true, userId: session.userId };
-  } catch (error) {
-    logger.error('Session validation failed', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return { valid: false, reason: 'validation_error' };
-  }
-}
-
-export async function updateLastAccessed(sessionId: string): Promise<void> {
-  await prisma.session.update({
-    where: { id: sessionId },
-    data: { lastAccessedAt: new Date() },
   });
 }
 
 export async function deleteAllSessions(userId: string): Promise<void> {
   await prisma.session.deleteMany({ where: { userId } });
+}
+
+/**
+ * Revoked rows are only needed for the 10 s concurrent-rotation recovery
+ * window; every refresh revokes its predecessor, so keep them briefly.
+ */
+export const REVOKED_SESSION_RETENTION_MS = 60 * 60 * 1000;
+
+/**
+ * Delete sessions that can no longer be used: expired, or revoked more than
+ * REVOKED_SESSION_RETENTION_MS ago. Returns the number of deleted rows.
+ */
+export async function purgeStaleSessions(now: Date = new Date()): Promise<number> {
+  const cutoff = new Date(now.getTime() - REVOKED_SESSION_RETENTION_MS);
+  const result = await prisma.session.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: now } },
+        { revokedAt: { lt: cutoff } },
+      ],
+    },
+  });
+  return result.count;
 }

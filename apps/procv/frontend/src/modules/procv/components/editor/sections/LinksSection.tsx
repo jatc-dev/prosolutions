@@ -150,15 +150,15 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
       isLoading={isLoading}
     >
       {/* Add new link */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h4 className="text-sm font-medium text-gray-900">{t('editor.links.addNew')}</h4>
+      <div className="bg-slate-50 rounded-lg p-6 space-y-4">
+        <h4 className="text-sm font-medium text-slate-900">{t('editor.links.addNew')}</h4>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField label={t('editor.links.fields.type')}>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value as LinkType)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
             >
               {linkTypeOptions.map(type => (
                 <option key={type.value} value={type.value}>
@@ -191,7 +191,7 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
             type="button"
             onClick={addLink}
             disabled={!newLabel.trim() || !newUrl.trim()}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -204,11 +204,11 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
       {/* Links list */}
       {sortedData.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('editor.links.emptyTitle')}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">{t('editor.links.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {t('editor.links.emptyDescription')}
           </p>
         </div>
@@ -220,15 +220,15 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
             return (
               <div
                 key={link.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
                     {/* Icon */}
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                         <svg
-                          className="w-5 h-5 text-gray-600"
+                          className="w-5 h-5 text-slate-600"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -240,17 +240,17 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                     {/* Link details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-medium text-gray-900">{link.label}</h4>
+                        <h4 className="text-sm font-medium text-slate-900">{link.label}</h4>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           link.isVisible
                             ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-slate-100 text-slate-800'
                         }`}>
                           {link.isVisible ? t('editor.links.visible') : t('editor.links.hidden')}
                         </span>
                       </div>
 
-                      <p className="text-sm text-blue-600 hover:text-blue-800 mt-1">
+                      <p className="text-sm text-brand-700 hover:text-brand-900 mt-1">
                         <a
                           href={link.url}
                           target="_blank"
@@ -261,7 +261,7 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                         </a>
                       </p>
 
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         {t('editor.links.typePrefix')}: {linkTypeInfo?.label}
                       </p>
                     </div>
@@ -276,7 +276,7 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                       className={`p-1 rounded ${
                         link.isVisible
                           ? 'text-green-600 hover:text-green-800'
-                          : 'text-gray-400 hover:text-gray-600'
+                          : 'text-slate-400 hover:text-slate-600'
                       }`}
                       title={link.isVisible ? t('editor.actions.hide') : t('editor.actions.show')}
                     >
@@ -298,7 +298,7 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                         type="button"
                         onClick={() => moveLink(link.id, 'up')}
                         disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -308,7 +308,7 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                         type="button"
                         onClick={() => moveLink(link.id, 'down')}
                         disabled={index === sortedData.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed p-0.5"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

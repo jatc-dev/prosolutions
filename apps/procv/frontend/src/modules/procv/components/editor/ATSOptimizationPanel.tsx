@@ -69,7 +69,7 @@ interface ATSOptimizationPanelProps {
 const priorityClasses: Record<"high" | "medium" | "low", string> = {
   high: "bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-100",
   medium: "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-100",
-  low: "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-100",
+  low: "bg-brand-100 text-brand-900 dark:bg-brand-950/60 dark:text-brand-100",
 };
 
 export function ATSOptimizationPanel({
@@ -102,14 +102,14 @@ export function ATSOptimizationPanel({
           onChange={(event) => onJobDescriptionChange(event.target.value)}
           placeholder={t('editor.ats.jobDescriptionPlaceholder', 'Pega aqui la descripcion del puesto para analizar keywords y compatibilidad ATS...')}
           rows={4}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
         <div className="flex flex-col gap-2 lg:justify-end">
           <button
             type="button"
             onClick={onAnalyze}
             disabled={loading}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50"
           >
             {loading ? t('editor.ats.analyzing', 'Analizando...') : t('editor.ats.analyzeButton', 'Analizar ATS')}
           </button>
@@ -127,7 +127,7 @@ export function ATSOptimizationPanel({
             <button
               type="button"
               onClick={onApplyMissingKeywords}
-              className="rounded-lg border border-brand-400 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/40"
+              className="rounded-lg border border-brand-400 px-4 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50 dark:border-brand-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
             >
               {t('editor.ats.applyKeywords', 'Aplicar Keywords')}
             </button>
@@ -136,7 +136,7 @@ export function ATSOptimizationPanel({
             <button
               type="button"
               onClick={onApplyTailoring}
-              className="rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+              className="rounded-lg border border-brand-400 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/40"
             >
               {t('editor.ats.applyTailoring', 'Aplicar Tailoring')}
             </button>
@@ -213,12 +213,12 @@ export function ATSOptimizationPanel({
       ) : null}
 
       {tailoringResult ? (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm dark:border-emerald-800 dark:bg-emerald-950/40">
-          <h4 className="mb-1 font-semibold text-emerald-800 dark:text-emerald-200">{t('editor.ats.tailoringReady', 'Tailoring listo')}</h4>
-          <p className="text-emerald-700 dark:text-emerald-100">
+        <div className="mt-4 rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm dark:border-brand-800 dark:bg-brand-950/40">
+          <h4 className="mb-1 font-semibold text-brand-800 dark:text-brand-200">{t('editor.ats.tailoringReady', 'Tailoring listo')}</h4>
+          <p className="text-brand-700 dark:text-brand-100">
             {t('editor.ats.insertedKeywords', 'Keywords insertadas')}: {tailoringResult.insertedKeywords.slice(0, 8).join(", ") || t('editor.ats.noChanges', 'sin cambios')}
           </p>
-          <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-100">
+          <p className="mt-1 text-xs text-brand-700 dark:text-brand-100">
             {t('editor.ats.tailoringSummary', 'Resumen propuesto y {{count}} bloques de experiencia optimizados.', { count: tailoringResult.experience.length })}
           </p>
         </div>
@@ -236,7 +236,7 @@ export function ATSOptimizationPanel({
                 </div>
                 <div className="text-right">
                   <p className="text-slate-600 dark:text-slate-200">{t("workspace.keywordsShort", "KW")}: {item.analysis.keywordCoverage}%</p>
-                  <p className={`${item.scoreDeltaVsPrevious >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                  <p className={`${item.scoreDeltaVsPrevious >= 0 ? "text-brand-600" : "text-rose-600"}`}>
                     {item.scoreDeltaVsPrevious >= 0 ? "+" : ""}{item.scoreDeltaVsPrevious}
                   </p>
                 </div>

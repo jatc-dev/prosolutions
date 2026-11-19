@@ -71,7 +71,8 @@ Importante: el archivo config.ts usa DIRECT_DATABASE_URL || DATABASE_URL para co
 
 ## Frontends
 
-- Core consume VITE_IDENTITY_API_URL, VITE_PROCV_URL, VITE_PROCV_API_BASE_URL y VITE_ADSENSE_CLIENT según el manifiesto.
+- Core consume VITE_IDENTITY_API_URL, VITE_PROCV_URL, VITE_PROCV_API_BASE_URL y VITE_ADSENSE_CLIENT_ID; en build lee además ADS_TXT_CONTENT (publica /ads.txt solo si existe) y EXTRA_SITEMAPS (ver ETAPA3_DEPLOY.md).
+- ProIdentity: CONTACT_INBOX, PROJOBS_API_URL y PROJOBS_INTERNAL_TOKEN (formulario de contacto y proxy de moderación de ProAdmin).
 - ProCV frontend consume VITE_IDENTITY_API_URL, VITE_PROSOLUTIONS_URL y VITE_PROCV_URL.
 - ProJobs frontend consume VITE_IDENTITY_API_URL, VITE_PROSOLUTIONS_URL y VITE_PROCV_URL.
 - Toda variable VITE_* es pública en el bundle; nunca poner tokens, passwords o connection strings.

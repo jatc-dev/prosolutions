@@ -25,7 +25,7 @@ function ErrorFallback({ onReset, error }: { onReset: () => void; error?: Error 
           <button
             type="button"
             onClick={toggle}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
             aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}
             title={theme === "dark" ? t("theme.light") : t("theme.dark")}
           >
@@ -73,7 +73,7 @@ function ErrorFallback({ onReset, error }: { onReset: () => void; error?: Error 
 
           <button
             onClick={onReset}
-            className="w-full inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors"
+            className="w-full inline-flex items-center justify-center rounded-xl bg-brand-800 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-700 transition-colors"
           >
             {t("common.errorBoundary.retry", "Try Again")}
           </button>

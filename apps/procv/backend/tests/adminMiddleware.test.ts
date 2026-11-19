@@ -9,8 +9,8 @@ function setup(
 ) {
   const subject = 'identity-admin-1';
   const token = jwt.sign(
-    { sub: subject, jti: 'test-session-jti', role: options.tokenRole ?? 'admin' },
-    config.jwtSecret,
+    { sub: subject, jti: 'test-session-jti', role: options.tokenRole ?? 'admin', token_use: 'access' },
+    config.jwtSecret as string,
     { issuer: config.issuer, audience: config.identityAudience, expiresIn: '1m' },
   );
   const req = { headers: { authorization: `Bearer ${token}` } } as unknown as Request;
@@ -102,7 +102,7 @@ describe('requireAdmin using the real ProIdentity auth middleware', () => {
 
   it('rejects tokens signed for the wrong issuer or audience before introspection', async () => {
     const { req, res, status, next, fetchSpy } = setup('admin');
-    const token = jwt.sign({ sub: 'identity-admin-1', jti: 'bad-contract' }, config.jwtSecret, {
+    const token = jwt.sign({ sub: 'identity-admin-1', jti: 'bad-contract', token_use: 'access' }, config.jwtSecret as string, {
       issuer: 'https://wrong.example.test',
       audience: 'wrong-api',
       expiresIn: '1m',

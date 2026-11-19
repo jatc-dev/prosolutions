@@ -9,6 +9,7 @@ import { CompanyPage } from "./pages/CompanyPage";
 import { JobPage } from "./pages/JobPage";
 import { JobsPage } from "./pages/JobsPage";
 import { SavedJobsPage } from "./pages/SavedJobsPage";
+import { AlertsPage } from "./pages/AlertsPage";
 
 // Employer (ATS) screens are only used by recruiters: load them on demand.
 const EmployerPage = lazy(() => import("./pages/employer/EmployerPage").then((m) => ({ default: m.EmployerPage })));
@@ -18,7 +19,7 @@ const PipelinePage = lazy(() => import("./pages/employer/PipelinePage").then((m)
 function NotFound() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <EmptyState icon={<SearchX className="h-10 w-10" />} title="Página no encontrada" action={<Link to="/" className="font-semibold text-brand-600 hover:underline">Ir a empleos</Link>} />
+      <EmptyState icon={<SearchX className="h-10 w-10" />} title="Página no encontrada" action={<Link to="/" className="font-semibold text-brand-800 hover:underline">Ir a empleos</Link>} />
     </div>
   );
 }
@@ -39,7 +40,8 @@ export function App() {
         <Route path="empresas/:slug" element={<CompanyPage />} />
         <Route path="postulaciones" element={candidate(<ApplicationsPage />)} />
         <Route path="guardados" element={candidate(<SavedJobsPage />)} />
-        <Route path="empresa" element={recruiter(<EmployerPage />)} />
+        <Route path="alertas" element={<RequireCapability capability="user"><AlertsPage /></RequireCapability>} />
+        <Route path="empresa" element={<RequireCapability capability="user"><EmployerPage /></RequireCapability>} />
         <Route path="empresa/vacantes/nueva" element={recruiter(<JobEditorPage />)} />
         <Route path="empresa/vacantes/:jobId/editar" element={recruiter(<JobEditorPage />)} />
         <Route path="empresa/vacantes/:jobId/candidatos" element={recruiter(<PipelinePage />)} />

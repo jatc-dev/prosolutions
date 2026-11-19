@@ -19,7 +19,7 @@ export function JobCard({ job, selected, href, onSelect, onToggleSave }: JobCard
     <article
       className={cn(
         "group relative rounded-2xl border bg-ui-surface p-4 shadow-card transition-all hover:border-brand-400 hover:shadow-panel sm:p-5",
-        selected ? "border-brand-500 ring-2 ring-brand-500/30" : "border-ui-border",
+        selected ? "border-brand-700 ring-2 ring-brand-700/30" : "border-ui-border",
       )}
     >
       <div className="flex gap-4">
@@ -49,9 +49,9 @@ export function JobCard({ job, selected, href, onSelect, onToggleSave }: JobCard
                 onClick={() => onToggleSave(job)}
                 aria-pressed={Boolean(saved)}
                 aria-label={saved ? `Quitar ${job.title} de guardados` : `Guardar ${job.title}`}
-                className="relative z-10 rounded-lg p-1.5 text-ui-muted hover:bg-ui-soft hover:text-brand-600"
+                className="relative z-10 rounded-lg p-1.5 text-ui-muted hover:bg-ui-soft hover:text-brand-800"
               >
-                {saved ? <BookmarkCheck className="h-5 w-5 text-brand-600" /> : <Bookmark className="h-5 w-5" />}
+                {saved ? <BookmarkCheck className="h-5 w-5 text-brand-800" /> : <Bookmark className="h-5 w-5" />}
               </button>
             )}
           </div>
@@ -70,14 +70,14 @@ export function JobCard({ job, selected, href, onSelect, onToggleSave }: JobCard
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
+            <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-900 dark:bg-brand-700/15 dark:text-brand-200">
               {WORKPLACE_LABEL[job.workplace]}
             </span>
             <span className="rounded-lg bg-ui-soft px-2 py-0.5 text-xs font-medium text-ui-text">{SENIORITY_LABEL[job.seniority]}</span>
             <span className="rounded-lg bg-ui-soft px-2 py-0.5 text-xs font-medium text-ui-text">{EMPLOYMENT_LABEL[job.employmentType]}</span>
             {job.match && <MatchBadge match={job.match} />}
             {job.viewer?.applied && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 dark:text-brand-300">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-900 dark:text-brand-300">
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Postulado
               </span>
             )}

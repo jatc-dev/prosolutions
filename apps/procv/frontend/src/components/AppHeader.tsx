@@ -24,5 +24,5 @@ export function AppHeader({ leftExtra, rightExtra, showUserInfo = true }: AppHea
       {rightExtra}
     </>
   );
-  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => { const next = language === "es" ? "en" : "es"; void i18n.changeLanguage(next); void saveGlobalPreferences({ locale: next }).catch(() => undefined); }} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref={`${PROSOLUTIONS_URL}/settings`} securityHref={`${PROSOLUTIONS_URL}/security/sessions`} />;
+  return <ProHeader activeApp="procv" locale={language === "es" ? "es" : "en"} onLocaleChange={() => { const next = language === "es" ? "en" : "es"; void i18n.changeLanguage(next); void saveGlobalPreferences({ locale: next }).catch(() => undefined); }} actions={actions} profile={showUserInfo && user ? { name: user.name, email: user.email, modules: user.modules, isAdmin: user.role === "admin" } : null} onSignOut={showUserInfo && user ? logout : undefined} profileHref="/profile" settingsHref={`${PROSOLUTIONS_URL}/settings`} securityHref={`${PROSOLUTIONS_URL}/security/sessions`} />;
 }

@@ -76,7 +76,7 @@ export function CompanyForm({ company, onSaved, onCancel }: CompanyFormProps) {
       </div>
       <div>
         <label htmlFor="company-description" className="mb-1 block text-sm font-medium">Descripción</label>
-        <textarea id="company-description" rows={4} maxLength={5000} value={form.description} onChange={set("description")} className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
+        <textarea id="company-description" rows={4} maxLength={5000} value={form.description} onChange={set("description")} className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30" />
       </div>
       {error && <ErrorNotice message={error} />}
       <div className="flex justify-end gap-2">

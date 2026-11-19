@@ -1,4 +1,4 @@
-import { Button, Input, cn } from "@prosolutions/ui";
+import { LEGAL_URLS, Button, Input, cn } from "@prosolutions/ui";
 import { CheckCircle2, FileText, PencilLine } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -68,8 +68,9 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
     try {
       const body =
         mode === "procv"
-          ? { cvId, coverLetter: coverLetter.trim() || null }
+          ? { cvId, coverLetter: coverLetter.trim() || null, consentToShare: true }
           : {
+              consentToShare: true,
               coverLetter: coverLetter.trim() || null,
               profile: {
                 fullName: manual.fullName.trim(),
@@ -92,13 +93,13 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
     return (
       <Dialog open onClose={onApplied} title="¡Postulación enviada!">
         <div className="space-y-4 text-center">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-brand-600" aria-hidden="true" />
+          <CheckCircle2 className="mx-auto h-14 w-14 text-brand-800" aria-hidden="true" />
           <p className="text-sm text-ui-muted">
             {job.company.name} ya puede ver tu perfil para <strong className="text-ui-text">{job.title}</strong>. Te avisaremos aquí cuando avance tu proceso.
           </p>
           <MatchBadge match={done} className="text-sm" />
           <div className="flex justify-center gap-2 pt-2">
-            <Link to="/postulaciones" className="inline-flex h-10 items-center rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">
+            <Link to="/postulaciones" className="inline-flex h-10 items-center rounded-lg bg-brand-800 px-4 text-sm font-semibold text-white hover:bg-brand-900">
               Ver mis postulaciones
             </Link>
             <Button variant="ghost" onClick={onApplied}>Seguir buscando</Button>
@@ -108,7 +109,8 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
     );
   }
 
-  const canSubmit = mode === "procv" ? Boolean(cvId) : manual.fullName.trim().length >= 2;
+  const [consent, setConsent] = useState(false);
+  const canSubmit = consent && (mode === "procv" ? Boolean(cvId) : manual.fullName.trim().length >= 2);
 
   return (
     <Dialog open onClose={onClose} title={`Postularme a ${job.title}`} description={job.company.name} wide>
@@ -127,10 +129,10 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
               onClick={() => setMode(value)}
               className={cn(
                 "flex items-start gap-3 rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                mode === value ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10" : "border-ui-border hover:bg-ui-soft",
+                mode === value ? "border-brand-700 bg-brand-50 dark:bg-brand-700/10" : "border-ui-border hover:bg-ui-soft",
               )}
             >
-              <Icon className="mt-0.5 h-5 w-5 text-brand-600" aria-hidden="true" />
+              <Icon className="mt-0.5 h-5 w-5 text-brand-800" aria-hidden="true" />
               <span>
                 <span className="block text-sm font-semibold">{label}</span>
                 <span className="block text-xs text-ui-muted">{hint}</span>
@@ -151,11 +153,11 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
                     key={cv.id}
                     className={cn(
                       "flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3",
-                      cvId === cv.id ? "border-brand-500 ring-1 ring-brand-500" : "border-ui-border hover:bg-ui-soft",
+                      cvId === cv.id ? "border-brand-700 ring-1 ring-brand-700" : "border-ui-border hover:bg-ui-soft",
                     )}
                   >
                     <span className="flex items-center gap-3">
-                      <input type="radio" name="cv" value={cv.id} checked={cvId === cv.id} onChange={() => setCvId(cv.id)} className="accent-brand-600" />
+                      <input type="radio" name="cv" value={cv.id} checked={cvId === cv.id} onChange={() => setCvId(cv.id)} className="accent-brand-800" />
                       <span>
                         <span className="block text-sm font-semibold">{cv.title}</span>
                         <span className="block text-xs text-ui-muted">
@@ -189,7 +191,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
                 {preview.match.missingSkills.length > 0 && (
                   <p className="mt-2 text-xs text-ui-muted">
                     ¿Dominas alguna habilidad tachada? Agrégala a tu CV en{" "}
-                    <a href={`${PROCV_URL}/dashboard`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 underline">ProCV</a>{" "}
+                    <a href={`${PROCV_URL}/dashboard`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-800 underline">ProCV</a>{" "}
                     para mejorar tu afinidad.
                   </p>
                 )}
@@ -206,7 +208,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
               cvs?.length === 0 && (
                 <p className="text-sm text-ui-muted">
                   Aún no tienes CV en ProCV.{" "}
-                  <a href={`${PROCV_URL}/dashboard`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 underline">Crea uno gratis</a>{" "}
+                  <a href={`${PROCV_URL}/dashboard`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-800 underline">Crea uno gratis</a>{" "}
                   para postularte en un clic, o completa este perfil rápido.
                 </p>
               )
@@ -234,9 +236,23 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
             placeholder="Cuéntales en pocas líneas por qué te interesa este rol."
-            className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm text-ui-text focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="w-full rounded-lg border border-ui-border bg-ui-surface px-3 py-2 text-sm text-ui-text focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30"
           />
         </div>
+
+        <label className="flex items-start gap-3 rounded-lg border border-ui-border bg-ui-soft p-3 text-sm">
+          <input
+            type="checkbox"
+            required
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-ui-border-strong text-brand-700 focus:ring-brand-700"
+          />
+          <span>
+            Autorizo compartir mi hoja de vida y datos de contacto con <strong>{job.company.name}</strong> para este proceso de selección,
+            según la <a href={LEGAL_URLS.privacy} target="_blank" rel="noreferrer" className="font-medium text-brand-800 underline dark:text-brand-300">política de privacidad</a> (Ley 1581 de 2012).
+          </span>
+        </label>
 
         {submitError && <ErrorNotice message={submitError} />}
 
@@ -248,7 +264,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
         </div>
         <p className="text-xs text-ui-muted">
           Al postularte compartes estos datos solo con {job.company.name}.{" "}
-          <a href="/privacidad.html" className="underline">Política de privacidad</a>.
+          <a href={LEGAL_URLS.privacy} className="underline">Política de privacidad</a>.
         </p>
       </form>
     </Dialog>

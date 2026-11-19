@@ -42,6 +42,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Design system tokens and palette guard
+        run: |
+          node packages/ui/scripts/build-tokens.mjs --check
+          node packages/ui/scripts/check-palette.mjs
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,30 +53,45 @@ jobs:
           cache: npm
       - name: Install Core workspace dependencies
         run: npm ci --include=dev --workspace=apps/core --include-workspace-root
-      - name: Build Core and shared UI
+      - name: Test Core (calculators, consent, ad exclusions, SEO)
+        run: npm test --workspace=apps/core
+      - name: Build Core with prerendered public pages
         run: npm run build --workspace=apps/core
-        env:
-          VITE_ADSENSE_CLIENT: ca-pub-3956322934366702
-      - name: Verify published AdSense assets
+      - name: Verify prerendered pages, sitemap, robots and ads policy
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
+          import { existsSync, readFileSync } from "node:fs";
 
-          const expectedAdsTxt = "google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0";
-          const sourceAdsTxt = readFileSync("apps/core/public/ads.txt", "utf8").trim();
-          const builtAdsTxt = readFileSync("apps/core/dist/ads.txt", "utf8").trim();
-          const html = readFileSync("apps/core/dist/index.html", "utf8");
+          const dist = "apps/core/dist";
+          const shell = readFileSync(`${dist}/index.html`, "utf8");
+          if (shell.includes("adsbygoogle.js")) throw new Error("AdSense must load only after consent, never from index.html");
+          if (existsSync(`${dist}/ads.txt`)) throw new Error("ads.txt must only be published when ADS_TXT_CONTENT is set");
 
-          if (sourceAdsTxt !== expectedAdsTxt) throw new Error("apps/core/public/ads.txt has an unexpected publisher line");
-          if (builtAdsTxt !== expectedAdsTxt) throw new Error("Vite did not publish the expected /ads.txt file");
-          if (!html.includes("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3956322934366702")) {
-            throw new Error("Built ProSolutions HTML is missing the configured AdSense loader");
+          const article = readFileSync(`${dist}/academy/hoja-de-vida-ats-2026/index.html`, "utf8");
+          for (const needle of ['"@type":"Article"', '"@type":"BreadcrumbList"', 'rel="canonical"', "<h1"]) {
+            if (!article.includes(needle)) throw new Error(`Prerendered article is missing ${needle}`);
           }
-          if (!html.includes('crossorigin="anonymous"')) throw new Error("AdSense loader must use crossorigin=anonymous");
-          if (html.includes("%VITE_ADSENSE_CLIENT%")) throw new Error("AdSense client placeholder was not substituted during build");
+          for (const page of ["tools/salario-neto", "tools/liquidacion", "tools/contrato-vs-prestacion", "tools/evaluador-cv", "legal/privacidad", "legal/terminos", "legal/cookies", "legal/uso-ia", "nosotros", "contacto"]) {
+            const html = readFileSync(`${dist}/${page}/index.html`, "utf8");
+            if (!html.includes("<h1") || !html.includes('rel="canonical"')) throw new Error(`${page} was not prerendered`);
+          }
 
-          console.log("ProSolutions ads.txt and global AdSense loader verified in dist/");
+          const robots = readFileSync(`${dist}/robots.txt`, "utf8");
+          for (const rule of ["Disallow: /admin", "Disallow: /settings", "Disallow: /auth", "Disallow: /dashboard", "Sitemap: https://prosolutions.page/sitemap.xml"]) {
+            if (!robots.includes(rule)) throw new Error(`robots.txt is missing "${rule}"`);
+          }
+          const pages = readFileSync(`${dist}/sitemap-pages.xml`, "utf8");
+          if (!pages.includes("/academy/hoja-de-vida-ats-2026") || pages.includes("/admin")) throw new Error("sitemap-pages.xml is wrong");
+          if (!readFileSync(`${dist}/sitemap.xml`, "utf8").includes("<sitemapindex")) throw new Error("sitemap.xml must be a sitemap index");
+          console.log("Core prerender, sitemap, robots and ads policy verified");
           NODE
+      - name: Verify ads.txt is published from ADS_TXT_CONTENT
+        working-directory: apps/core
+        env:
+          ADS_TXT_CONTENT: google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+        run: |
+          node scripts/prerender.mjs
+          grep -qx "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0" dist/ads.txt
 
   projobs-api:
     name: ProJobs API (typecheck, PostgreSQL/RLS tests, build)
@@ -119,15 +138,17 @@ jobs:
       - name: Verify published static assets
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
-          const ads = readFileSync("apps/projobs/dist/ads.txt", "utf8").trim();
-          if (ads !== "google.com, pub-3956322934366702, DIRECT, f08c47fec0942fa0") throw new Error("ProJobs ads.txt mismatch");
+          import { existsSync, readFileSync } from "node:fs";
           const html = readFileSync("apps/projobs/dist/index.html", "utf8");
-          if (html.includes("%VITE_ADSENSE_CLIENT%")) throw new Error("AdSense placeholder was not substituted");
-          if (!readFileSync("apps/projobs/dist/privacidad.html", "utf8").includes("Política de Privacidad")) {
-            throw new Error("privacidad.html (linked from the shared footer) is missing");
+          // AdSense is consent-gated at runtime: the loader must never be in the static HTML.
+          if (html.includes("adsbygoogle.js")) throw new Error("AdSense loader must not be hard-coded in index.html");
+          // ads.txt lives only on the root domain (prosolutions.page), generated from ADS_TXT_CONTENT.
+          if (existsSync("apps/projobs/dist/ads.txt")) throw new Error("ProJobs must not ship a static ads.txt");
+          if (!readFileSync("apps/projobs/dist/privacidad.html", "utf8").includes("prosolutions.page/legal/privacidad")) {
+            throw new Error("privacidad.html must redirect to the central privacy policy");
           }
-          console.log("ProJobs dist: ads.txt, AdSense loader and privacy page verified");
+          if (!readFileSync("apps/projobs/dist/robots.txt", "utf8").includes("Sitemap:")) throw new Error("robots.txt must reference the sitemap");
+          console.log("ProJobs dist: consent-gated ads, central privacy redirect and robots verified");
           NODE
 
   procv-frontend-build:

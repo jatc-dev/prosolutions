@@ -29,6 +29,7 @@ model User {
   emailVerified             Boolean             @default(false)
   isActive                  Boolean             @default(true)
   preferences               Json                @default("{}")
+  googleSub                 String?             @unique
 
   sessions                  Session[]
   passwordResetTokens       PasswordResetToken[]
@@ -36,6 +37,7 @@ model User {
   professionalProfile       ProfessionalProfile?
   moduleAccess              ModuleAccess[]
   adminRoleAssignments      UserAdminRole[]
+  consents                  UserConsent[]
 
   @@index([email])
   @@index([createdAt])
@@ -44,7 +46,7 @@ model User {
 model Session {
   id               String   @id @default(cuid())
   userId           String
-  refreshToken     String   @unique
+  refreshTokenHash String   @unique
   jti              String   @unique
   expiresAt        DateTime
   createdAt        DateTime  @default(now())
@@ -189,4 +191,44 @@ model UserAdminRole {
 
   @@index([userId, expiresAt])
   @@index([roleId, module])
+}
+
+/// Append-only consent log (Ley 1581 / GDPR). The latest row per purpose is the
+/// user's current decision.
+model UserConsent {
+  id        String   @id @default(cuid())
+  userId    String
+  purpose   String
+  version   String
+  granted   Boolean
+  source    String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, createdAt])
+}
+
+/// Platform-wide settings edited in ProAdmin (JSON value per key).
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+}
+
+/// Contact form and personal-data (Habeas Data) requests.
+model ContactRequest {
+  id        String   @id @default(cuid())
+  topic     String
+  name      String
+  email     String
+  message   String
+  status    String   @default("new")
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([topic, status])
 }

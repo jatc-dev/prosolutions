@@ -1,5 +1,8 @@
 import { createApp } from './app.js';
 import { createIdentityVerifier } from './auth/identity.js';
+import { createJwksKeyStore } from './auth/jwks.js';
+import { createMailer, readSmtpConfig } from './notifications/mailer.js';
+import { startNotificationWorker } from './notifications/worker.js';
 import { loadConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { createPgDatabase } from './db/pg.js';
@@ -37,18 +40,29 @@ async function openDatabase(): Promise<Database> {
 }
 
 const db = await openDatabase();
+const keyStore = config.jwt.jwksUrl ? createJwksKeyStore({ url: config.jwt.jwksUrl, log }) : null;
+if (keyStore) {
+  await keyStore.refresh();
+  log('identity jwks loaded', { keys: keyStore.size });
+  setInterval(() => void keyStore.refresh(), 10 * 60 * 1000).unref();
+}
 const app = createApp({
   config,
   db,
   log,
-  verify: createIdentityVerifier(config.jwt),
+  verify: createIdentityVerifier({ ...config.jwt, keyStore }),
   procv: createProCvClient({ baseUrl: config.procvApiUrl, timeoutMs: config.procvTimeoutMs }),
 });
+
+const mailer = createMailer(readSmtpConfig(), log);
+if (!mailer.enabled) log('SMTP not configured: transactional emails and job alerts are logged, not sent');
+const stopWorker = startNotificationWorker({ db, mailer, log, webUrl: config.webUrl, apiUrl: config.apiUrl });
 
 const server = app.listen(config.port, () => log('listening', { port: config.port, env: config.env }));
 
 const shutdown = (signal: string) => {
   log('shutting down', { signal });
+  stopWorker();
   server.close(() => {
     db.close().finally(() => process.exit(0));
   });

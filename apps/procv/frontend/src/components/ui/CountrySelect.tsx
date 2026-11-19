@@ -138,14 +138,14 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
         onFocus={(event) => { setQuery(""); event.currentTarget.select(); setOpen(true); setActiveIndex(0); }}
         onChange={(event) => { setQuery(event.target.value); setOpen(true); setActiveIndex(0); }}
         onKeyDown={handleKeyDown}
-        className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-9 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
+        className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 pr-9 text-sm shadow-sm focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/30 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
       />
-      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">⌄</span>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">⌄</span>
       {open && !disabled && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
           {filtered.length ? filtered.map((option, index) => (
             <li
@@ -158,13 +158,13 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
                 event.preventDefault();
                 choose(option);
               }}
-              className={`cursor-pointer px-3 py-2 ${index === activeIndex ? "bg-brand-50 text-brand-800 dark:bg-slate-800 dark:text-white" : "text-gray-800 dark:text-slate-200"}`}
+              className={`cursor-pointer px-3 py-2 ${index === activeIndex ? "bg-brand-50 text-brand-950 dark:bg-slate-800 dark:text-white" : "text-slate-800 dark:text-slate-200"}`}
             >
               <span>{option.label}</span>
-              <span className="ml-2 text-xs text-gray-500 dark:text-slate-400">{option.code}</span>
+              <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">{option.code}</span>
             </li>
           )) : (
-            <li role="option" aria-disabled="true" className="px-3 py-2 text-gray-500 dark:text-slate-400">
+            <li role="option" aria-disabled="true" className="px-3 py-2 text-slate-500 dark:text-slate-400">
               {locale.startsWith("es") ? "No se encontraron países" : "No countries found"}
             </li>
           )}

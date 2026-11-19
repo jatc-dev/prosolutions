@@ -32,11 +32,11 @@ const MODULES: ModuleDefinition[] = [
     name: "ProCV",
     ctaHref: APP_URLS.procvLogin,
     icon: FileText,
-    iconWrapClass: "bg-brand-100 text-brand-600 ring-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:ring-brand-800",
+    iconWrapClass: "bg-brand-100 text-brand-800 ring-brand-200 dark:bg-brand-950/40 dark:text-brand-300 dark:ring-brand-950",
     haloClass: "bg-brand-400/20 group-hover:bg-brand-400/30",
-    accentTextClass: "text-brand-600 dark:text-brand-300",
-    checkClass: "text-brand-500",
-    ctaClass: "bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:text-white dark:hover:bg-brand-400",
+    accentTextClass: "text-brand-800 dark:text-brand-300",
+    checkClass: "text-brand-700",
+    ctaClass: "bg-brand-800 hover:bg-brand-900 dark:bg-brand-700 dark:text-white dark:hover:bg-brand-400",
     status: "Beta",
   },
   {
@@ -44,11 +44,11 @@ const MODULES: ModuleDefinition[] = [
     name: "ProJobs",
     ctaHref: APP_URLS.projobs,
     icon: Briefcase,
-    iconWrapClass: "bg-emerald-100 text-emerald-600 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:ring-emerald-800",
-    haloClass: "bg-emerald-400/20 group-hover:bg-emerald-400/30",
-    accentTextClass: "text-emerald-600 dark:text-emerald-300",
-    checkClass: "text-emerald-500",
-    ctaClass: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30 dark:bg-emerald-500 dark:hover:bg-emerald-400",
+    iconWrapClass: "bg-brand-100 text-brand-600 ring-brand-200 dark:bg-brand-900/40 dark:text-brand-300 dark:ring-brand-800",
+    haloClass: "bg-brand-400/20 group-hover:bg-brand-400/30",
+    accentTextClass: "text-brand-600 dark:text-brand-300",
+    checkClass: "text-brand-500",
+    ctaClass: "bg-brand-600 hover:bg-brand-700 shadow-brand-600/30 dark:bg-brand-500 dark:hover:bg-brand-400",
     status: "Beta",
   },
 ];
@@ -68,7 +68,7 @@ function ModuleCardView({ module }: { module: ModuleCard }) {
           <Icon className="h-6 w-6" />
         </div>
         {module.status ? (
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+          <span className="rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
             {module.status}
           </span>
         ) : null}
@@ -211,7 +211,7 @@ export function Modules() {
     <section id="modulos" className="py-20 md:py-24">
       <div className="ui-container">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">{copy.modules.eyebrow}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-700">{copy.modules.eyebrow}</span>
           <h2 className="mt-3">{copy.modules.title}</h2>
           <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300">
             {copy.modules.description}

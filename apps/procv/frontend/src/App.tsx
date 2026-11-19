@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./stores/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
 import React, { Suspense, lazy, useEffect } from "react";
@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { fetchCSRFToken } from "./services/api";
 import { GlobalPreferencesBootstrap } from "./components/GlobalPreferencesBootstrap";
+import { ConsentBanner, ProFooter } from "@prosolutions/ui";
 
 const PROSOLUTIONS_URL =
   import.meta.env.VITE_PROSOLUTIONS_URL ||
@@ -40,7 +41,7 @@ function RedirectToCentralLogin() {
 function RouteFallback() {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 dark:bg-slate-950 dark:text-slate-300">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-300">
       {t("common.loading")}
     </div>
   );
@@ -55,6 +56,18 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
     return null;
   }
   return children;
+}
+
+/** Shared ecosystem footer on every page except the full-screen editor. */
+function SiteFooter() {
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/editor")) return <ConsentBanner />;
+  return (
+    <>
+      <ProFooter />
+      <ConsentBanner />
+    </>
+  );
 }
 
 export default function App() {
@@ -91,6 +104,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
+          <SiteFooter />
         </ErrorBoundary>
       </AuthProvider>
       <Toaster

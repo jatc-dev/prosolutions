@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import { CVService } from '../services/cvService';
 import { buildPdfHtml } from '../utils/templates';
 import { renderToPdf } from '../utils/pdfGenerator';
+import { withSafeProfileImage } from '../utils/safeImage';
 import { parseCVFileToDraft } from '../services/cvImportService';
 import { ATSService } from '../services/atsService';
 import { CVAtsService } from '../services/cvAtsService';
@@ -254,7 +255,12 @@ export async function exportPDF(req: AuthRequest, res: Response) {
   try {
     const { id } = req.params;
 
-    const normalizedCv = await CVService.exportCVToPDF(id, userId);
+    const exportedCv = await CVService.exportCVToPDF(id, userId);
+    // SSRF defence: remote photos are fetched under strict rules and inlined;
+    // anything that does not qualify is dropped from the PDF.
+    const normalizedCv = await withSafeProfileImage(exportedCv, {
+      onRejected: (reason) => logger.warn('Profile image omitted from PDF export', { reason }),
+    });
     const html = buildPdfHtml(normalizedCv as any);
     const pdf = await renderToPdf(html);
 

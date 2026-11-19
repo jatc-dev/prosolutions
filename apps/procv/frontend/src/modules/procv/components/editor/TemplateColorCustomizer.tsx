@@ -159,7 +159,7 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
               onClick={() => onChange(applyTemplateColorSelection(template, option, settings))}
               className={`rounded-md border p-1.5 text-left transition-colors ${
                 isActive
-                  ? "border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
+                  ? "border-brand-700 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
                   : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
               }`}
             >
@@ -188,7 +188,7 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
                   onClick={() => onChange({ ...(settings || {}), creativeIntensity: item.value })}
                   className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isActive
-                      ? "bg-brand-600 text-white"
+                      ? "bg-brand-800 text-white"
                       : "border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -217,7 +217,7 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
                   onClick={() => onChange({ ...(settings || {}), extensaDensity: item.value })}
                   className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isActive
-                      ? "bg-brand-600 text-white"
+                      ? "bg-brand-800 text-white"
                       : "border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -282,7 +282,7 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
           <span
             className={`rounded-full px-2 py-0.5 font-semibold ${
               wcagInfo.aa
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-100"
+                ? "bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-100"
                 : "bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-100"
             }`}
           >
@@ -291,7 +291,7 @@ export function TemplateColorCustomizer({ template, settings, onChange }: Templa
           <span
             className={`rounded-full px-2 py-0.5 font-semibold ${
               wcagInfo.aaa
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-100"
+                ? "bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-100"
                 : "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-100"
             }`}
           >

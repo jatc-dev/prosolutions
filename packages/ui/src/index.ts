@@ -1,10 +1,14 @@
 export { ProHeader, type ActiveApp } from "./ProHeader.js";
 export { ProFooter } from "./ProFooter.js";
 export { ProSolutionsLogo } from "./ProSolutionsLogo.js";
-export { AdSlot, type AdFormat } from "./AdSlot.js";
+export { AdSlot, NoAds, type AdFormat, type AdPlacement } from "./AdSlot.js";
+export { ConsentBanner } from "./ConsentBanner.js";
+export { CONSENT_COOKIE, consentCookieString, hasAdvertisingConsent, openConsentPreferences, parseConsent, readConsent, serializeConsent, useConsent, writeConsent, type ConsentState } from "./consent.js";
+export { AD_MIN_HEIGHT, AD_PLACEMENTS, ADS_DISABLED, adEligibility, isAdAllowedOnPath, normalizePublisherId, type AdsConfig } from "./adsPolicy.js";
+export { loadAdsConfig, resetAdsConfigCache, sanitizeAdsConfig, useAdsConfig } from "./adsConfig.js";
 export { useTheme } from "./useTheme.js";
 export { useAdSensePush, useAdSenseScript } from "./useAdSense.js";
-export { ADSENSE_CLIENT, APP_URLS, JATC_URL, PRIVACY_URL, TERMS_URL, isExternalUrl, normalizeAdSenseClient } from "./links.js";
+export { ADSENSE_CLIENT, APP_URLS, IDENTITY_ORIGIN, JATC_URL, LEGAL_URLS, PRIVACY_URL, RESOURCE_URLS, TERMS_URL, isExternalUrl, normalizeAdSenseClient } from "./links.js";
 
 // Primitivos de UI
 export { Button } from "./components/Button.js";
@@ -23,4 +27,4 @@ export { cn } from "./utils.js";
 
 // Tokens de diseño
 export { tokens } from "./tokens.js";
-export type { TokenColor, TokenFontSize, TokenFontWeight, TokenRadius, TokenSpace, TokenShadow, TokenTransition } from "./tokens.js";
+export type { BrandStep, NeutralStep, SemanticToken, TokenRadius } from "./tokens.js";

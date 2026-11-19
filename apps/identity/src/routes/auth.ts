@@ -21,9 +21,13 @@ import {
 } from '../middleware/rateLimiter';
 import { identityMiddleware } from '../middleware/auth';
 import { listSessions, revokeSessionById, revokeOtherSessions } from '../controllers/sessionController';
+import { googleCallback, listProviders, startGoogleLogin } from '../controllers/googleAuthController';
 
 const router = Router();
 
+router.get('/providers', listProviders);
+router.get('/google/start', authLimiter, startGoogleLogin);
+router.get('/google/callback', authLimiter, googleCallback);
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.post('/refresh', refreshLimiter, refreshToken);

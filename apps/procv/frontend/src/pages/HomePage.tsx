@@ -32,7 +32,7 @@ export function HomePage() {
   // an authenticated user to the dashboard; never render an intermediate welcome page.
   if (loading || isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 dark:bg-slate-950 dark:text-slate-300">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-300">
         <div className="text-center" role="status" aria-live="polite">
           <BrandLogo variant="large" className="mx-auto mb-4" />
           <p>{t("common.loading")}</p>
@@ -65,10 +65,10 @@ export function HomePage() {
               </div>
 
               {/* Module 1: ProCV */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-brand-500/50 transition-colors">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-brand-700/50 transition-colors">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-950/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-brand-800 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2-11-6z" />
                     </svg>
                   </div>
@@ -86,7 +86,7 @@ export function HomePage() {
                 </p>
                 <Link
                   to="/editor-free"
-                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-600 dark:border-brand-400 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-brand-800 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-800 dark:border-brand-400 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                 >
                   {t("home.moduleProcv.action")}
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,10 +96,10 @@ export function HomePage() {
               </div>
 
               {/* Module 2: ProJobs */}
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-blue-500/50 transition-colors">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-6 dark:bg-slate-900 shadow-sm dark:shadow-black/20 hover:border-brand-600/50 transition-colors">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-950/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-brand-700 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -119,7 +119,7 @@ export function HomePage() {
                   href="https://projobs.prosolutions.page"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-brand-700 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-700 dark:border-brand-400 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                 >
                   {t("home.moduleProjobs.action")}
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@ export function HomePage() {
                   type="button"
                   onClick={handleIdentityLogin}
                   size="lg"
-                  className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition-colors"
+                  className="w-full py-3 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-lg transition-colors"
                 >
                   {t("auth.signInWithProIdentity")}
                 </Button>
@@ -157,7 +157,7 @@ export function HomePage() {
                   </p>
                   <Link
                     to="/register"
-                    className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+                    className="text-sm font-medium text-brand-800 hover:text-brand-900 dark:text-brand-400 dark:hover:text-brand-300"
                   >
                     {t("auth.createAccount")}
                   </Link>

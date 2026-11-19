@@ -24,7 +24,7 @@ export function SavedJobsPage() {
       ) : error ? (
         <ErrorNotice message={errorMessage(error)} onRetry={reload} />
       ) : jobs.length === 0 ? (
-        <EmptyState icon={<Bookmark className="h-10 w-10" />} title="No tienes vacantes guardadas" action={<Link to="/" className="font-semibold text-brand-600 hover:underline">Explorar vacantes</Link>}>
+        <EmptyState icon={<Bookmark className="h-10 w-10" />} title="No tienes vacantes guardadas" action={<Link to="/" className="font-semibold text-brand-800 hover:underline">Explorar vacantes</Link>}>
           Guarda vacantes para compararlas y postularte después.
         </EmptyState>
       ) : (

@@ -32,12 +32,16 @@ export interface Salary {
   period: SalaryPeriod;
 }
 
+export type CompanyVerificationStatus = 'pending' | 'verified' | 'rejected' | 'suspended';
+
 export interface CompanySummary {
   id: string;
   slug: string;
   name: string;
   logoUrl: string | null;
   industry: string | null;
+  /** True once the company passed verification (email domain or manual review). */
+  verified: boolean;
 }
 
 export interface Company extends CompanySummary {
@@ -46,6 +50,7 @@ export interface Company extends CompanySummary {
   website: string | null;
   sizeRange: CompanySize | null;
   headquarters: string | null;
+  verificationStatus: CompanyVerificationStatus;
 }
 
 export interface JobSummary {
@@ -177,8 +182,23 @@ export interface SessionInfo {
   userId: string;
   email: string | null;
   isCandidate: boolean;
+  /** PRORECRUIT grant or membership in at least one company (self-service). */
   isRecruiter: boolean;
   companies: EmployerCompany[];
+}
+
+export type AlertFrequency = 'daily' | 'weekly';
+
+/** Saved search delivered by email. `query` uses the public search filters. */
+export interface JobAlert {
+  id: string;
+  label: string | null;
+  email: string;
+  query: Record<string, string>;
+  frequency: AlertFrequency;
+  active: boolean;
+  lastSentAt: string | null;
+  createdAt: string;
 }
 
 /** Integration event envelope published through the transactional outbox. */

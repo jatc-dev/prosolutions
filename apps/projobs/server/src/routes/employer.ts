@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { principalOf, requireRecruiter } from '../auth/identity.js';
-import { asyncHandler, notFound, parse } from '../http/errors.js';
+import { principalOf, requireUser } from '../auth/identity.js';
+import { asyncHandler, forbidden, notFound, parse } from '../http/errors.js';
 import { companyInput, companyPatch, jobInput, jobUpdate, stageChange } from '../http/schemas.js';
 import { listPipeline, moveApplication } from '../repositories/applications.js';
 import {
@@ -17,13 +17,17 @@ import { findJobForMember } from '../repositories/jobs.js';
 import type { AppDeps } from './context.js';
 
 /**
- * Employer / lightweight ATS API. Requires the PRORECRUIT module issued by
- * ProIdentity; company-level authorization is enforced in SQL (membership)
- * and by row level security on applications.
+ * Employer / lightweight ATS API (ProRecruit).
+ *
+ * Any signed-in user can onboard a company (self-service, POST /companies);
+ * the company starts verified when the recruiter's corporate email matches the
+ * company website, otherwise pending. Every other route requires either the
+ * PRORECRUIT grant or membership in a company. Company-level authorization is
+ * enforced in SQL (membership) and by row level security on applications.
  */
 export function employerRouter({ db, verify }: AppDeps): Router {
   const router = Router();
-  router.use(requireRecruiter(verify));
+  router.use(requireUser(verify));
   router.use((_req, res, next) => {
     res.set('Cache-Control', 'private, no-store');
     next();
@@ -31,20 +35,36 @@ export function employerRouter({ db, verify }: AppDeps): Router {
 
   const run = <T>(userId: string, work: Parameters<typeof db.withContext<T>>[1]) => db.withContext({ userId }, work);
 
+  router.post(
+    '/companies',
+    asyncHandler(async (req, res) => {
+      const input = parse(companyInput, req.body);
+      const principal = principalOf(req);
+      const company = await run(principal.userId, (tx) =>
+        createCompany(tx, principal.userId, input, { email: principal.email, grantedRecruiter: principal.isRecruiter }),
+      );
+      res.status(201).json({ company });
+    }),
+  );
+
+  // Everything below needs an employer: PRORECRUIT grant or company membership.
+  router.use(
+    asyncHandler(async (req, _res, next) => {
+      const principal = principalOf(req);
+      if (principal.isRecruiter) return next();
+      const { rows } = await run(principal.userId, (tx) =>
+        tx.query('SELECT 1 FROM public.company_members WHERE user_id = $1 LIMIT 1', [principal.userId]),
+      );
+      if (!rows.length) throw forbidden('Create your company first', 'recruiter_required');
+      next();
+    }),
+  );
+
   router.get(
     '/companies',
     asyncHandler(async (req, res) => {
       const { userId } = principalOf(req);
       res.json({ companies: await run(userId, (tx) => listMemberCompanies(tx, userId)) });
-    }),
-  );
-
-  router.post(
-    '/companies',
-    asyncHandler(async (req, res) => {
-      const input = parse(companyInput, req.body);
-      const { userId } = principalOf(req);
-      res.status(201).json({ company: await run(userId, (tx) => createCompany(tx, userId, input)) });
     }),
   );
 

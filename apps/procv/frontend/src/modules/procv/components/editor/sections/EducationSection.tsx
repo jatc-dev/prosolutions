@@ -322,7 +322,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
             type="button"
             onClick={expandAllItems}
             disabled={allExpanded}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.expandAll', { defaultValue: 'Expandir todo' })}
           </button>
@@ -330,7 +330,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
             type="button"
             onClick={collapseAllItems}
             disabled={allCollapsed}
-            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('editor.common.collapseAll', { defaultValue: 'Colapsar todo' })}
           </button>
@@ -339,18 +339,18 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 
       {sortedData.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('editor.education.emptyTitle')}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">{t('editor.education.emptyTitle')}</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {t('editor.education.emptyDescription')}
           </p>
           <div className="mt-6">
             <button
               type="button"
               onClick={addEducation}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-700 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600"
             >
               <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -364,11 +364,11 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
           {sortedData.map((education, index) => (
             <div
               key={education.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+              className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden"
             >
               {/* Header */}
               <div
-                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="px-6 py-4 bg-slate-50 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors"
                 onClick={() => toggleExpandedItem(education.id)}
               >
                 <div className="flex items-center justify-between">
@@ -377,7 +377,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                       {/* Drag handle */}
                       <button
                         type="button"
-                        className="text-gray-400 hover:text-gray-600 p-1"
+                        className="text-slate-400 hover:text-slate-600 p-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           // TODO: Implement drag and drop
@@ -389,14 +389,14 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                       </button>
 
                       {/* Position indicator */}
-                      <span className="text-sm font-medium text-gray-500">#{education.order + 1}</span>
+                      <span className="text-sm font-medium text-slate-500">#{education.order + 1}</span>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">
+                      <h4 className="text-sm font-medium text-slate-900">
                         {getDegreeLabel(education.degree) || t('editor.education.noDegree')}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {education.institution || t('editor.education.noInstitution')}
                         {education.fieldOfStudy && ` • ${education.fieldOfStudy}`}
                       </p>
@@ -419,7 +419,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                           moveEducation(education.id, 'up');
                         }}
                         disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -432,7 +432,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                           moveEducation(education.id, 'down');
                         }}
                         disabled={index === sortedData.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -443,7 +443,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                     {/* Expand/collapse button */}
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-slate-400 hover:text-slate-600"
                     >
                       <svg
                         className={`w-5 h-5 transition-transform ${expandedItems.includes(education.id) ? 'rotate-180' : ''}`}
@@ -490,7 +490,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                         value={education.degree}
                         onChange={(e) => updateEducation(education.id, { degree: e.target.value })}
                         required
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
                       >
                         <option value="">{t('editor.education.selectDegreeType')}</option>
                         {degreeTypes.map(type => (
@@ -581,7 +581,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                         disabled={toCheckedBoolean(education.isCurrentlyStudying as unknown)}
                        allowPartial/>
                       {toCheckedBoolean(education.isCurrentlyStudying as unknown) && (
-                        <p className="text-xs text-gray-500 mt-1">{t('editor.education.untilCurrentDate')}</p>
+                        <p className="text-xs text-slate-500 mt-1">{t('editor.education.untilCurrentDate')}</p>
                       )}
                     </FormField>
 
@@ -594,9 +594,9 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                             isCurrentlyStudying: e.target.checked,
                             endDate: e.target.checked ? '' : education.endDate
                           })}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-slate-300 text-brand-700 focus:ring-brand-600"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{t('editor.education.currentlyStudyingCheckbox')}</span>
+                        <span className="ml-2 text-sm text-slate-700">{t('editor.education.currentlyStudyingCheckbox')}</span>
                       </div>
                     </FormField>
                   </div>
@@ -630,11 +630,11 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                   {/* Extracurricular Activities */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-sm font-medium text-gray-700">{t('editor.education.activitiesTitle')}</h5>
+                      <h5 className="text-sm font-medium text-slate-700">{t('editor.education.activitiesTitle')}</h5>
                       <button
                         type="button"
                         onClick={() => addActivity(education.id)}
-                        className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-2 py-1 border border-slate-300 rounded-md text-xs font-medium text-slate-700 bg-white hover:bg-slate-50"
                       >
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -645,8 +645,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 
                     {education.activities.map((activity, activityIndex) => (
                       <div key={activityIndex} className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1">
-                          <span className="text-xs font-medium text-blue-600">{activityIndex + 1}</span>
+                        <div className="flex-shrink-0 w-6 h-6 bg-brand-100 rounded-full flex items-center justify-center mt-1">
+                          <span className="text-xs font-medium text-brand-700">{activityIndex + 1}</span>
                         </div>
                         <div className="flex-1">
                           <TextareaField
@@ -669,7 +669,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                     ))}
 
                     {education.activities.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">
+                      <p className="text-sm text-slate-500 italic">
                         {t('editor.education.emptyActivities')}
                       </p>
                     )}
@@ -678,11 +678,11 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                   {/* Academic Achievements */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-sm font-medium text-gray-700">{t('editor.education.achievementsTitle')}</h5>
+                      <h5 className="text-sm font-medium text-slate-700">{t('editor.education.achievementsTitle')}</h5>
                       <button
                         type="button"
                         onClick={() => addAchievement(education.id)}
-                        className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="inline-flex items-center px-2 py-1 border border-slate-300 rounded-md text-xs font-medium text-slate-700 bg-white hover:bg-slate-50"
                       >
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -717,7 +717,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                     ))}
 
                     {education.achievements.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">
+                      <p className="text-sm text-slate-500 italic">
                         {t('editor.education.emptyAchievements')}
                       </p>
                     )}
@@ -732,7 +732,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
             <button
               type="button"
               onClick={addEducation}
-              className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

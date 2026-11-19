@@ -21,7 +21,7 @@ interface PersonalSectionProps {
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const VisibilityToggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label?: string }> = ({ checked, onChange, label = 'Incluir en la hoja de vida' }) => (
   <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-slate-600">
-    <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+    <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />
     {label}
   </label>
 );
@@ -361,7 +361,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label="Tipo de documento de identidad">
-          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
             <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
           </select>
         </FormField>
@@ -369,7 +369,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
         <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label="Mostrar número de documento" />
       </div>
-      <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar documento de identidad en la hoja de vida</label>
+      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar documento de identidad en la hoja de vida</label>
 
       {/* Profile Image */}
       <FormField
@@ -385,7 +385,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                 <img
                   src={imagePreview}
                   alt={t('editor.personal.profileImageAlt')}
-                  className={`${imagePreviewClass} object-cover border-2 border-gray-200`}
+                  className={`${imagePreviewClass} object-cover border-2 border-slate-200`}
                 />
                 <button
                   type="button"
@@ -398,8 +398,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                 </button>
               </div>
             ) : (
-              <div className={`${imagePreviewClass} bg-gray-200 flex items-center justify-center border-2 border-gray-300`}>
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`${imagePreviewClass} bg-slate-200 flex items-center justify-center border-2 border-slate-300`}>
+                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
@@ -416,7 +416,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             />
             <label
               htmlFor="profile-image"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -426,12 +426,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
 
-        <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
             checked={data.showProfileImage !== false}
             onChange={(e) => updateField('showProfileImage', e.target.checked)}
-            className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+            className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
           />
           {t('editor.personal.showProfileImage')}
         </label>
@@ -440,7 +440,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           <select
             value={imageStyle}
             onChange={(e) => updateField('profileImageStyle', e.target.value as ProfileImageStyle)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm"
           >
             <option value="round">{t('editor.personal.profileImageStyles.round')}</option>
             <option value="square">{t('editor.personal.profileImageStyles.square')}</option>
@@ -459,7 +459,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">{t('editor.personal.fields.date')}</label>
+              <label className="block text-xs text-slate-600 mb-1">{t('editor.personal.fields.date')}</label>
               <input
                 type="date"
                 value={birthDateValue}
@@ -468,39 +468,39 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   setBirthDateValue(selectedDate);
                   updateField('birthDate', selectedDate);
                 }}
-                className="block w-full px-3 py-2 border border-brand-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
+                className="block w-full px-3 py-2 border border-brand-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">{t('editor.personal.fields.calculatedAge')}</label>
+              <label className="block text-xs text-slate-600 mb-1">{t('editor.personal.fields.calculatedAge')}</label>
               <input
                 type="text"
                 value={ageValue ? t('editor.personal.ageValue', { age: ageValue }) : ''}
                 readOnly
                 placeholder={t('editor.personal.agePlaceholder')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700 sm:text-sm"
+                className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm bg-slate-50 text-slate-700 sm:text-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
                 checked={Boolean(data.showBirthDate)}
                 onChange={(e) => updateField('showBirthDate', e.target.checked)}
-                className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+                className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
               />
               {t('editor.personal.showBirthDate')}
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
                 checked={Boolean(data.showAge)}
                 onChange={(e) => updateField('showAge', e.target.checked)}
-                className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+                className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
               />
               {t('editor.personal.showAge')}
             </label>
@@ -510,18 +510,18 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
 
       {/* Contact Information */}
       <div className="space-y-6">
-        <h4 className="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">
+        <h4 className="text-md font-medium text-slate-900 border-b border-slate-200 pb-2">
           {t('editor.personal.contactInfo')}
         </h4>
 
         {/* Emails */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h5 className="text-sm font-medium text-gray-700">{t('editor.personal.emailsTitle')}</h5>
+            <h5 className="text-sm font-medium text-slate-700">{t('editor.personal.emailsTitle')}</h5>
             <button
               type="button"
               onClick={addEmail}
-              className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -531,7 +531,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
 
           {data.emails.map((email) => (
-            <div key={email.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+            <div key={email.id} className="flex items-start space-x-4 p-4 bg-slate-50 rounded-lg">
               <div className="flex-1 space-y-3">
                 {(() => {
                   const isCustomEmailType = email.type === 'other';
@@ -543,9 +543,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     type="checkbox"
                     checked={email.isPrimary || false}
                     onChange={(e) => updateEmail(email.id, { isPrimary: e.target.checked })}
-                    className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+                    className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
                   />
-                  <span className="text-sm text-gray-700">{t('editor.personal.primaryEmail')}</span>
+                  <span className="text-sm text-slate-700">{t('editor.personal.primaryEmail')}</span>
                   <VisibilityToggle checked={email.isVisible !== false} onChange={(value) => updateEmail(email.id, { isVisible: value })} label="Mostrar este correo" />
                 </div>
 
@@ -553,7 +553,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   <select
                     value={email.type}
                     onChange={(e) => updateEmailType(email.id, e.target.value as ContactItem['type'])}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
                   >
                     <option value="personal">{t('editor.contacts.emailTypes.personal')}</option>
                     <option value="work">{t('editor.contacts.emailTypes.work')}</option>
@@ -603,11 +603,11 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         {/* Phones */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h5 className="text-sm font-medium text-gray-700">{t('editor.personal.phonesTitle')}</h5>
+            <h5 className="text-sm font-medium text-slate-700">{t('editor.personal.phonesTitle')}</h5>
             <button
               type="button"
               onClick={addPhone}
-              className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-3 py-1 border border-slate-300 rounded-md text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -617,7 +617,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
 
           {data.phones.map((phone) => (
-            <div key={phone.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+            <div key={phone.id} className="flex items-start space-x-4 p-4 bg-slate-50 rounded-lg">
               <div className="flex-1 space-y-3">
                 {(() => {
                   const isCustomPhoneType = phone.type === 'other';
@@ -629,9 +629,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                     type="checkbox"
                     checked={phone.isPrimary || false}
                     onChange={(e) => updatePhone(phone.id, { isPrimary: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-slate-300 text-brand-700 focus:ring-brand-600"
                   />
-                  <span className="text-sm text-gray-700">{t('editor.personal.primaryPhone')}</span>
+                  <span className="text-sm text-slate-700">{t('editor.personal.primaryPhone')}</span>
                   <VisibilityToggle checked={phone.isVisible !== false} onChange={(value) => updatePhone(phone.id, { isVisible: value })} label="Mostrar este teléfono" />
                 </div>
 
@@ -639,7 +639,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   <select
                     value={phone.type}
                     onChange={(e) => updatePhoneType(phone.id, e.target.value as PhoneItem['type'])}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-600 focus:border-brand-600 sm:text-sm"
                   >
                     <option value="personal">{t('editor.contacts.phoneTypes.personal')}</option>
                     <option value="office">{t('editor.contacts.phoneTypes.office')}</option>
@@ -727,32 +727,32 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={data.showAddress !== false}
               onChange={(e) => updateField('showAddress', e.target.checked)}
-              className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
             />
             {t('editor.personal.showAddress')}
           </label>
 
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={data.showCity !== false}
               onChange={(e) => updateField('showCity', e.target.checked)}
-              className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
             />
             {t('editor.personal.showCity')}
           </label>
 
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={data.showCountry !== false}
               onChange={(e) => updateField('showCountry', e.target.checked)}
-              className="rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
             />
             {t('editor.personal.showCountry')}
           </label>
@@ -777,13 +777,13 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             rows={4}
           />
 
-          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-3">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={data.showValuePropositionTitle !== false} onChange={(e) => updateField('showValuePropositionTitle', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+          <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={data.showValuePropositionTitle !== false} onChange={(e) => updateField('showValuePropositionTitle', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />
               Mostrar etiqueta «Propuesta de valor»
             </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={data.showValuePropositionContent !== false} onChange={(e) => updateField('showValuePropositionContent', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={data.showValuePropositionContent !== false} onChange={(e) => updateField('showValuePropositionContent', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />
               Mostrar contenido
             </label>
           </div>
@@ -802,28 +802,28 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.summary')}
             rows={6}
           />
-          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-3">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={data.showSummaryTitle !== false} onChange={(e) => updateField('showSummaryTitle', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+          <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={data.showSummaryTitle !== false} onChange={(e) => updateField('showSummaryTitle', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />
               Mostrar etiqueta «Perfil profesional»
             </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={data.showSummaryContent !== false} onChange={(e) => updateField('showSummaryContent', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={data.showSummaryContent !== false} onChange={(e) => updateField('showSummaryContent', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />
               Mostrar contenido
             </label>
           </div>
         </div>
       </FormField>
-      <section className="space-y-4 border-t border-gray-200 pt-5">
-        <div><h4 className="text-sm font-semibold text-gray-900">Referencias</h4><p className="text-xs text-gray-500">Se mostrarán al final del contenido principal de la hoja de vida.</p></div>
+      <section className="space-y-4 border-t border-slate-200 pt-5">
+        <div><h4 className="text-sm font-semibold text-slate-900">Referencias</h4><p className="text-xs text-slate-500">Se mostrarán al final del contenido principal de la hoja de vida.</p></div>
         <div className="space-y-2">
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Incluir referencias directas</label>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Incluir referencias directas</label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
         </div>
         {data.showReferences !== false ? <>
-          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Agregar referencia</button></div>
-          {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
+          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Agregar referencia</button></div>
+          {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
             <FormField label="Nombre y apellido"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('name')} onChange={(value) => toggleReferenceField(index, 'name', value)} label="Mostrar nombre" />
             {reference.type === 'laboral' ? <><FormField label="Cargo actual"><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('position')} onChange={(value) => toggleReferenceField(index, 'position', value)} label="Mostrar cargo" /><FormField label="Empresa"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('company')} onChange={(value) => toggleReferenceField(index, 'company', value)} label="Mostrar empresa" /></> : <><FormField label="Parentesco"><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('relationship')} onChange={(value) => toggleReferenceField(index, 'relationship', value)} label="Mostrar parentesco" /></>}
             <FormField label="Teléfono de contacto"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('phone')} onChange={(value) => toggleReferenceField(index, 'phone', value)} label="Mostrar teléfono" />

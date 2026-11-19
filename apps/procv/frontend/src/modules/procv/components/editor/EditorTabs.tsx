@@ -73,7 +73,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
   completionStatus,
 }) => {
   return (
-    <div className="border-b border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <div className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
           {sections.map((section) => {
@@ -86,8 +86,8 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                 onClick={() => onSectionChange(section.id)}
                 className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   isActive
-                    ? 'border-brand-500 text-brand-600 dark:text-brand-300'
-                    : 'border-transparent text-gray-500 hover:text-brand-600 hover:border-brand-300 dark:text-slate-400 dark:hover:text-brand-300 dark:hover:border-brand-600/50'
+                    ? 'border-brand-700 text-brand-800 dark:text-brand-300'
+                    : 'border-transparent text-slate-500 hover:text-brand-800 hover:border-brand-300 dark:text-slate-400 dark:hover:text-brand-300 dark:hover:border-brand-800/50'
                 }`}
               >
                 <div className="flex items-center space-x-2">
@@ -95,7 +95,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                   <div className="relative">
                     <svg
                       className={`w-5 h-5 ${
-                        isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-slate-500'
+                        isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500'
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -137,13 +137,13 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                     {isCompleted ? (
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     ) : (
-                      <div className="w-2 h-2 bg-gray-300 dark:bg-slate-600 rounded-full"></div>
+                      <div className="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                     )}
                   </div>
                 </div>
 
                 {/* Description tooltip on hover */}
-                <div className="hidden group-hover:block absolute z-10 bg-gray-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap">
+                <div className="hidden group-hover:block absolute z-10 bg-slate-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap">
                   {section.description}
                 </div>
               </button>
@@ -155,13 +155,13 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
         <div className="mt-4 mb-6">
           <div className="bg-brand-200 rounded-full h-2">
             <div
-              className="bg-brand-600 h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-brand-800 h-2 rounded-full transition-all duration-300 ease-out"
               style={{
                 width: `${(Object.values(completionStatus).filter(Boolean).length / sections.length) * 100}%`,
               }}
             ></div>
           </div>
-          <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400 mt-1">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
             <span>Progreso del CV</span>
             <span>
               {Object.values(completionStatus).filter(Boolean).length} de {sections.length} secciones completadas
@@ -180,7 +180,7 @@ const EditorTabsMobile: React.FC<EditorTabsProps> = ({
   completionStatus,
 }) => {
   return (
-    <div className="md:hidden bg-white border-b border-gray-200 dark:bg-slate-900 dark:border-slate-700">
+    <div className="md:hidden bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-700">
       <div className="px-4 py-3">
         <div className="flex space-x-2 overflow-x-auto">
           {sections.map((section) => {
@@ -193,14 +193,14 @@ const EditorTabsMobile: React.FC<EditorTabsProps> = ({
                 onClick={() => onSectionChange(section.id)}
                 className={`flex-shrink-0 flex flex-col items-center p-2 rounded-lg transition-colors duration-200 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
+                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
                 <div className="relative mb-1">
                   <svg
                     className={`w-6 h-6 ${
-                      isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-slate-500'
+                      isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500'
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -241,15 +241,15 @@ const EditorTabsMobile: React.FC<EditorTabsProps> = ({
 
         {/* Progress bar */}
         <div className="mt-3">
-          <div className="bg-gray-200 dark:bg-slate-700 rounded-full h-1.5">
+          <div className="bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
             <div
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-out"
+              className="bg-brand-700 h-1.5 rounded-full transition-all duration-300 ease-out"
               style={{
                 width: `${(Object.values(completionStatus).filter(Boolean).length / sections.length) * 100}%`,
               }}
             ></div>
           </div>
-          <div className="text-xs text-gray-500 dark:text-slate-400 mt-1 text-center">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center">
             {Object.values(completionStatus).filter(Boolean).length} de {sections.length} completadas
           </div>
         </div>

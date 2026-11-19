@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import prisma from '../prismaClient';
 import { REFRESH_TOKEN_COOKIE_NAME, clearRefreshTokenCookie } from '../utils/cookies';
@@ -8,6 +7,7 @@ import { isSessionIdleExpired } from '../utils/sessionPolicy';
 import { Module } from '@prisma/client';
 import { userHasPermission } from '../services/adminAuthorization';
 import { canRecoverRefreshRotation, deriveRefreshSuccessorJti } from '../utils/refreshRotation';
+import { hashRefreshToken, verifyAccessToken } from '../services/tokenService';
 
 export interface IdentityRequest extends Request {
   userId?: string;
@@ -55,29 +55,17 @@ async function resolveRequestSession(
     return accessSession;
   }
 
-  let refreshPayload: TokenSessionPayload;
-  try {
-    refreshPayload = jwt.verify(refreshToken, config.jwtSecret, {
-      issuer: config.issuer,
-      audience: config.audience,
-    }) as TokenSessionPayload;
-  } catch {
-    clearRefreshTokenCookie(res);
-    return null;
-  }
-
-  const cookieSession = await prisma.session.findUnique({
-    where: { refreshToken },
-  });
+  // Refresh tokens are opaque; the session row (looked up by hash) is the
+  // only source of truth for the cookie's owner and validity.
+  const cookieSession = typeof refreshToken === 'string'
+    ? await prisma.session.findUnique({ where: { refreshTokenHash: hashRefreshToken(refreshToken) } })
+    : null;
   const requestUserAgent = req.get('user-agent') || null;
   const now = new Date();
 
   const cookieIsCurrent =
     Boolean(cookieSession) &&
-    refreshPayload.sub === accessPayload.sub &&
-    Boolean(refreshPayload.jti) &&
     cookieSession!.userId === accessPayload.sub &&
-    cookieSession!.jti === refreshPayload.jti &&
     cookieSession!.revokedAt === null &&
     cookieSession!.expiresAt > now &&
     Boolean(requestUserAgent) &&
@@ -98,7 +86,7 @@ async function resolveRequestSession(
   const sameSession = accessSession.jti === cookieSession!.jti;
   const validRotationSuccessor =
     !sameSession &&
-    cookieSession!.jti === deriveRefreshSuccessorJti(accessSession.refreshToken, config.jwtSecret) &&
+    cookieSession!.jti === deriveRefreshSuccessorJti(accessSession.refreshTokenHash, config.jwtSecret) &&
     canRecoverRefreshRotation({
       predecessor: accessSession,
       successor: cookieSession!,
@@ -128,16 +116,7 @@ export async function identityMiddleware(
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    const payload = jwt.verify(token, config.jwtSecret, {
-      issuer: config.issuer,
-      audience: config.audience,
-    }) as {
-      sub: string;
-      email?: string;
-      role?: string;
-      modules?: string[];
-      jti?: string;
-    };
+    const payload = verifyAccessToken(token);
 
     if (!payload.jti) {
       return res.status(401).json({ message: 'Session token missing' });

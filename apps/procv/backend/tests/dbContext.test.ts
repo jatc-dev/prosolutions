@@ -1,6 +1,6 @@
 import { createHmac } from 'crypto';
 import prisma from '../src/prismaClient';
-import { createDbContext } from '../src/dbContext';
+import { createDbContext, signingKeyId } from '../src/dbContext';
 
 jest.mock('../src/prismaClient', () => ({
   __esModule: true,
@@ -79,6 +79,19 @@ describe('ProCV signed transaction database context', () => {
     expect(operation).toHaveBeenCalledTimes(1);
   });
 
+  it('signs with the configured key id to allow zero-downtime key rotation', () => {
+    const previous = process.env.PROCV_RLS_CONTEXT_KID;
+    try {
+      process.env.PROCV_RLS_CONTEXT_KID = 'v2';
+      expect(signingKeyId()).toBe('v2');
+      process.env.PROCV_RLS_CONTEXT_KID = "v2'; DROP TABLE x;--";
+      expect(() => signingKeyId()).toThrow();
+    } finally {
+      if (previous === undefined) delete process.env.PROCV_RLS_CONTEXT_KID;
+      else process.env.PROCV_RLS_CONTEXT_KID = previous;
+    }
+  });
+
   it('signs an explicit administrator context without a caller-controlled GUC flag', async () => {
     const { queryRaw } = configureTransactionRole(mockedAdminPrisma, 'procv_admin_app', {
       role: 'user',
@@ -140,7 +153,7 @@ describe('ProCV signed transaction database context', () => {
     const operation = jest.fn();
 
     await expect(withUserContext('identity-user-a', operation)).rejects.toThrow(
-      'PROCV_RLS_CONTEXT_KEY matches the v1 database verifier key',
+      "PROCV_RLS_CONTEXT_KEY matches the database verifier key 'v1'",
     );
     expect(operation).not.toHaveBeenCalled();
     expect(queryRaw).toHaveBeenCalledTimes(4);

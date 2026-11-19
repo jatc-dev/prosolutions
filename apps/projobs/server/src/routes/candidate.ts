@@ -3,10 +3,11 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import type { CandidateProfile, SessionInfo } from '../contracts.js';
 import { principalOf, requireCandidate, requireUser } from '../auth/identity.js';
 import { computeMatch, normalizeSkills } from '../domain/skills.js';
-import { asyncHandler, notFound, parse } from '../http/errors.js';
-import { applicationInput, matchQuery } from '../http/schemas.js';
+import { asyncHandler, badRequest, notFound, parse } from '../http/errors.js';
+import { alertInput, applicationInput, matchQuery } from '../http/schemas.js';
 import { listCandidateApplications, submitApplication, withdrawApplication } from '../repositories/applications.js';
 import { listMemberCompanies } from '../repositories/employer.js';
+import { alertSearchParams, createAlert, deleteAlert, listAlerts, sanitizeAlertQuery } from '../repositories/alerts.js';
 import { findPublicJob } from '../repositories/jobs.js';
 import { listSavedJobs, saveJob, unsaveJob } from '../repositories/saved-jobs.js';
 import type { AppDeps } from './context.js';
@@ -30,14 +31,13 @@ export function candidateRouter({ db, verify, procv }: AppDeps): Router {
     requireUser(verify),
     asyncHandler(async (req, res) => {
       const principal = principalOf(req);
-      const companies = principal.isRecruiter
-        ? await db.withContext({ userId: principal.userId }, (tx) => listMemberCompanies(tx, principal.userId))
-        : [];
+      // Self-service recruiters have no PRORECRUIT grant: membership counts too.
+      const companies = await db.withContext({ userId: principal.userId }, (tx) => listMemberCompanies(tx, principal.userId));
       const session: SessionInfo = {
         userId: principal.userId,
         email: principal.email,
         isCandidate: principal.isCandidate,
-        isRecruiter: principal.isRecruiter,
+        isRecruiter: principal.isRecruiter || companies.length > 0,
         companies,
       };
       res.set('Cache-Control', 'private, no-store');
@@ -124,6 +124,9 @@ export function candidateRouter({ db, verify, procv }: AppDeps): Router {
           profile,
           coverLetter: input.coverLetter,
           match,
+          candidateEmail: principal.email ?? profile.email ?? null,
+          jobTitle: job.title,
+          companyName: job.company.name,
         });
         return { ...created, match };
       });
@@ -180,6 +183,102 @@ export function candidateRouter({ db, verify, procv }: AppDeps): Router {
       const { userId } = principalOf(req);
       await db.withContext({ userId }, (tx) => unsaveJob(tx, userId, String(req.params.jobId)));
       res.status(204).end();
+    }),
+  );
+
+  // -------------------------------------------------------------------------
+  // Job alerts (saved searches delivered by email)
+  // -------------------------------------------------------------------------
+  router.get(
+    '/me/alerts',
+    requireUser(verify),
+    asyncHandler(async (req, res) => {
+      const { userId } = principalOf(req);
+      res.set('Cache-Control', 'private, no-store');
+      res.json({ alerts: await db.withContext({ userId }, (tx) => listAlerts(tx, userId)) });
+    }),
+  );
+
+  router.post(
+    '/me/alerts',
+    requireUser(verify),
+    asyncHandler(async (req, res) => {
+      const input = parse(alertInput, req.body);
+      const principal = principalOf(req);
+      if (!principal.email) throw badRequest('Your account has no email address for alerts');
+      const query = sanitizeAlertQuery(input.query);
+      if (!alertSearchParams(query, input.frequency)) throw badRequest('Invalid search filters');
+      const alert = await db.withContext({ userId: principal.userId }, (tx) =>
+        createAlert(tx, principal.userId, { email: principal.email!, label: input.label, query, frequency: input.frequency }),
+      );
+      res.status(201).json({ alert });
+    }),
+  );
+
+  router.delete(
+    '/me/alerts/:alertId',
+    requireUser(verify),
+    asyncHandler(async (req, res) => {
+      const { userId } = principalOf(req);
+      await db.withContext({ userId }, (tx) => deleteAlert(tx, userId, String(req.params.alertId)));
+      res.status(204).end();
+    }),
+  );
+
+  // -------------------------------------------------------------------------
+  // Personal-data rights (Ley 1581 / GDPR): export and erasure
+  // -------------------------------------------------------------------------
+  router.get(
+    '/me/export',
+    requireUser(verify),
+    asyncHandler(async (req, res) => {
+      const { userId } = principalOf(req);
+      const data = await db.withContext({ userId }, async (tx) => ({
+        applications: (
+          await tx.query(
+            `SELECT a.id, a.job_id, j.title AS job_title, a.stage, a.source, a.candidate_snapshot, a.cover_letter,
+                    a.match_score, a.consent_at, a.created_at, a.updated_at
+             FROM public.applications a JOIN public.jobs j ON j.id = a.job_id
+             WHERE a.candidate_id = $1 ORDER BY a.created_at`,
+            [userId],
+          )
+        ).rows,
+        applicationEvents: (
+          await tx.query(
+            `SELECT e.application_id, e.from_stage, e.to_stage, e.actor_type, e.created_at
+             FROM public.application_events e JOIN public.applications a ON a.id = e.application_id
+             WHERE a.candidate_id = $1 ORDER BY e.created_at`,
+            [userId],
+          )
+        ).rows,
+        savedJobs: (await tx.query('SELECT job_id, created_at FROM public.saved_jobs WHERE user_id = $1', [userId])).rows,
+        alerts: await listAlerts(tx, userId),
+        companyMemberships: (
+          await tx.query(
+            `SELECT c.name AS company, m.role, m.created_at
+             FROM public.company_members m JOIN public.companies c ON c.id = m.company_id WHERE m.user_id = $1`,
+            [userId],
+          )
+        ).rows,
+      }));
+      res.set('Cache-Control', 'private, no-store');
+      res.setHeader('Content-Disposition', 'attachment; filename="prosolutions-projobs-export.json"');
+      res.json({ service: 'ProJobs', exportedAt: new Date().toISOString(), ...data });
+    }),
+  );
+
+  router.delete(
+    '/me',
+    requireUser(verify),
+    asyncHandler(async (req, res) => {
+      const { userId } = principalOf(req);
+      const deleted = await db.withContext({ userId }, async (tx) => ({
+        applications: (await tx.query('DELETE FROM public.applications WHERE candidate_id = $1 RETURNING id', [userId])).rows.length,
+        savedJobs: (await tx.query('DELETE FROM public.saved_jobs WHERE user_id = $1 RETURNING job_id', [userId])).rows.length,
+        alerts: (await tx.query('DELETE FROM public.job_alerts WHERE user_id = $1 RETURNING id', [userId])).rows.length,
+        companyMemberships: (await tx.query('DELETE FROM public.company_members WHERE user_id = $1 RETURNING company_id', [userId])).rows.length,
+      }));
+      res.json({ message: 'ProJobs data deleted', deleted });
     }),
   );
 

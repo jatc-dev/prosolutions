@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto';
 import 'dotenv/config';
 
 function getEnvironment() {
@@ -49,16 +50,18 @@ function getDatabaseUrl(isProduction: boolean): string {
   return dbUrl;
 }
 
-function getJwtSecret(): string {
+/**
+ * Legacy shared HS256 secret. Once ProIdentity signs access tokens with ES256,
+ * ProCV verifies them with the public JWKS and this secret should be removed
+ * from ProCV's environment (it is then accepted for HS256 tokens no longer).
+ */
+function getJwtSecret(): string | null {
   const secret = process.env.IDENTITY_JWT_SECRET || process.env.JWT_SECRET;
   const isProduction = getEnvironment() === 'production';
 
   if (isProduction) {
     if (!secret) {
-      throw new Error(
-        'IDENTITY_JWT_SECRET (or legacy JWT_SECRET) must be set in production environment. ' +
-          'Generate a strong secret using: openssl rand -base64 32',
-      );
+      return null;
     }
 
     if (secret.length < 32) {
@@ -83,12 +86,32 @@ function getJwtSecret(): string {
   return secret || 'change-me-for-development-only';
 }
 
+/**
+ * CSRF tokens are signed with a ProCV-only key: PROCV_CSRF_SECRET when set,
+ * otherwise an HMAC derivation of the RLS context key, so ProCV no longer needs
+ * the identity signing secret for CSRF.
+ */
+function getCsrfSecret(jwtSecret: string | null): string {
+  if (process.env.PROCV_CSRF_SECRET) return process.env.PROCV_CSRF_SECRET;
+  const rlsKey = process.env.PROCV_RLS_CONTEXT_KEY;
+  if (rlsKey) return createHmac('sha256', rlsKey).update('procv-csrf-signing-key').digest('hex');
+  if (getEnvironment() === 'production') {
+    throw new Error('PROCV_CSRF_SECRET or PROCV_RLS_CONTEXT_KEY must be set in production');
+  }
+  return jwtSecret || 'change-me-for-development-only';
+}
+
+const jwtSecret = getJwtSecret();
+const identityUrl = (process.env.IDENTITY_URL || 'http://localhost:4001').replace(/\/+$/, '');
+
 export const config = {
   port: getPort(),
-  jwtSecret: getJwtSecret(),
+  jwtSecret,
+  csrfSecret: getCsrfSecret(jwtSecret),
+  identityJwksUrl: process.env.IDENTITY_JWKS_URL || `${identityUrl}/.well-known/jwks.json`,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  identityUrl: process.env.IDENTITY_URL || 'http://localhost:4001',
+  identityUrl,
   issuer: process.env.IDENTITY_ISSUER || 'https://identity.prosolutions.page',
   identityAudience: process.env.IDENTITY_AUDIENCE || 'prosolutions-api',
   frontendUrl: getFrontendUrl(getEnvironment() === 'production'),

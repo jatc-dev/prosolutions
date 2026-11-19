@@ -9,7 +9,7 @@ type MockSession = {
   id: string;
   userId: string;
   jti: string;
-  refreshToken: string;
+  refreshTokenHash: string;
   expiresAt: Date;
   revokedAt: Date | null;
   lastAccessedAt: Date;
@@ -54,9 +54,9 @@ function responseRecorder() {
   return { res, result };
 }
 
-function accessToken(jti?: string) {
+function accessToken(jti?: string, tokenUse: string | null = 'access') {
   return jwt.sign(
-    { sub: 'user-123', ...(jti ? { jti } : {}) },
+    { sub: 'user-123', ...(jti ? { jti } : {}), ...(tokenUse ? { token_use: tokenUse } : {}) },
     config.jwtSecret,
     {
       issuer: config.issuer,
@@ -71,7 +71,7 @@ function resetSession(revokedAt: Date | null = null) {
     id: 'session-123',
     userId: 'user-123',
     jti: 'session-jti-123',
-    refreshToken: 'refresh-token-123',
+    refreshTokenHash: 'hash-123',
     expiresAt: new Date(Date.now() + 60_000),
     revokedAt,
     lastAccessedAt: new Date(),
@@ -136,6 +136,23 @@ test('accepts an active session-bound access JWT without requiring the refresh c
 
   assert.equal(result.statusCode, 200);
   assert.equal(nextCalled, true);
+});
+
+test('rejects a JWT that is not an access token (token_use enforcement)', async () => {
+  resetSession();
+  for (const tokenUse of ['refresh', null]) {
+    const { res, result } = responseRecorder();
+    let nextCalled = false;
+    await identityMiddleware(
+      { headers: { authorization: `Bearer ${accessToken('session-jti-123', tokenUse)}` }, cookies: {} } as any,
+      res,
+      (() => {
+        nextCalled = true;
+      }) as any,
+    );
+    assert.equal(result.statusCode, 401);
+    assert.equal(nextCalled, false);
+  }
 });
 
 after(() => {

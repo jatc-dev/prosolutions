@@ -27,8 +27,8 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({
 
   if (isSaving) {
     return (
-      <div className="flex items-center space-x-2 text-blue-600">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+      <div className="flex items-center space-x-2 text-brand-700">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-700"></div>
         <span className="text-sm">Guardando...</span>
       </div>
     );

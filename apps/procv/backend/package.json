@@ -25,6 +25,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
     "@prisma/client": "^5.22.0",
     "@types/multer": "^2.1.0",
     "@types/nodemailer": "^8.0.2",
@@ -44,7 +45,8 @@
     "nodemailer": "^10.1.0",
     "pdf-parse": "^2.4.5",
     "prisma": "^5.22.0",
-    "puppeteer": "^24.39.0"
+    "puppeteer": "^24.39.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

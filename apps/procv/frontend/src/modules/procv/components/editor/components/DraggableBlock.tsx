@@ -31,7 +31,7 @@ export function DraggableBlock({ type, onAdd }: DraggableBlockProps) {
       onMouseLeave={() => setIsHovered(false)}
       className={`flex items-start w-full text-left p-3 rounded-lg border-2 transition-all duration-200 ${
         isHovered
-          ? "border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40 shadow-md"
+          ? "border-brand-700 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40 shadow-md"
           : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
       }`}
     >
@@ -45,7 +45,7 @@ export function DraggableBlock({ type, onAdd }: DraggableBlockProps) {
         </div>
       </div>
       <svg
-        className={`w-4 h-4 text-brand-500 transition-transform flex-shrink-0 ml-2 ${
+        className={`w-4 h-4 text-brand-700 transition-transform flex-shrink-0 ml-2 ${
           isHovered ? "translate-x-1" : ""
         }`}
         fill="none"
