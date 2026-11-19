@@ -1,8 +1,8 @@
 import { ConsentBanner, ProFooter, ProHeader, cn } from "@prosolutions/ui";
 import { Bookmark, Briefcase, Building2, FileCheck2 } from "lucide-react";
-import type { ReactNode } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { CORE_URL, loginUrl } from "../lib/env";
+import { useEffect, type ReactNode } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { CORE_URL, WEB_URL, loginUrl } from "../lib/env";
 import { useSession } from "../lib/session";
 
 function ModuleNav() {
@@ -39,8 +39,28 @@ function ModuleNav() {
   );
 }
 
+/**
+ * Self-referencing canonical (origin + path, without filters or tracking
+ * parameters) for every ProJobs screen. The shell has no static canonical so
+ * job and company pages are never folded into the home page; JobPage then
+ * applies the same URL together with its JobPosting data.
+ */
+export function useCanonical() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "canonical";
+      document.head.appendChild(link);
+    }
+    link.href = `${WEB_URL}${pathname === "/" ? "/" : pathname.replace(/\/+$/, "")}`;
+  }, [pathname]);
+}
+
 export function Layout() {
   const { status, session, profile, signOut } = useSession();
+  useCanonical();
   return (
     <div className="flex min-h-screen flex-col bg-ui-bg text-ui-text">
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-ui-surface focus:px-4 focus:py-2">

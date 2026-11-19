@@ -70,8 +70,27 @@ function SiteFooter() {
   );
 }
 
+/**
+ * Self-referencing canonical for each public screen (/, /templates…). The
+ * shell has no static canonical, so the template gallery is not folded into
+ * the home page.
+ */
+function useCanonical() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "canonical";
+      document.head.appendChild(link);
+    }
+    link.href = `${window.location.origin}${pathname === "/" ? "/" : pathname.replace(/\/+$/, "")}`;
+  }, [pathname]);
+}
+
 export default function App() {
   useSessionTimeout();
+  useCanonical();
   useEffect(() => { fetchCSRFToken(); }, []);
 
   return (
