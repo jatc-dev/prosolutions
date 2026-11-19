@@ -6,13 +6,13 @@ Rama: `feat/prosolutions-core-v2`. Sigue los pasos en orden. Cada paso que toca 
 
 - Se borraron 4 funciones SQL residuales de la base `procv` en la rama `production` de Neon: `procv_private.current_user_id()`, `procv_private.current_is_admin()`, `procv_private.current_claims()` y `public.verified_context()`. Antes de borrarlas se comprobó que ninguna política, vista, trigger ni función dependía de ellas. ProCV en producción siguió respondiendo 200 después del cambio.
 - No hay que hacer nada más en Neon para ProCV.
-- **QA, desplegado el 2026-11-19:**
-  - ProJobs: `002` y `003` aplicadas en la base `projobs` de QA.
-  - ProIdentity: 4 migraciones aplicadas en QA (sección 3).
-  - Variables de QA configuradas en Render.
-  - PR #121 (Etapas 2 y 3) mergeado a `qa`.
-  - PR #122: corrección de la barra final.
-- **Producción: pendiente.** Repite las secciones 2, 3, 5 y 8.
+- **QA y producción, desplegados el 2026-11-19:**
+  - QA: PR #121 y #122 en `qa`.
+  - Producción: PR #123 de `qa` a `main`.
+  - ProJobs `002`/`003` y las 4 migraciones de ProIdentity aplicadas en ambos entornos (la de sesiones en producción, en dos fases; ver sección 3).
+  - Variables de Render configuradas.
+  - Verificación de producción correcta: 13 páginas prerenderizadas con canonical con barra final, `ads.txt` 200, sitemap 21/21, login/refresh/JWKS y API de ProJobs con moderación.
+  - Al aplicar la migración de sesiones, todas las sesiones existentes se invalidaron: los usuarios deben volver a iniciar sesión.
 
 ## 1. Verificación local (antes de hacer push)
 
@@ -68,12 +68,21 @@ Hay que aplicar 4 migraciones de ProIdentity. Las 3 primeras vienen de la Etapa 
 | `platform_settings_contact_20261118` | Tablas `PlatformSetting` y `ContactRequest` | Sin ellas, `/api/public/platform/ads` responde `degraded` y el formulario de contacto falla |
 | `20261110000000_user_preferences` | `User.preferences` (idempotente) | En QA la columna ya existía, pero la migración no estaba registrada |
 
-- **Producción** (servicio `ProIdentity`, Dockerfile raíz): el `CMD` ejecuta `node scripts/migrate-production.mjs` (`prisma migrate deploy`) antes de arrancar. No hay paso manual, pero revisa en los logs de arranque la línea `Applying Prisma production migrations...` y que no haya errores. Antes del deploy, verifica qué está aplicado:
+- **Producción** (servicio `ProIdentity`): **tampoco migra al arrancar**. Usa `apps/identity/Dockerfile` (`CMD ["node", "dist/index.js"]`) con el comando Docker vacío. El `Dockerfile` de la raíz, que sí ejecuta `migrate-production.mjs`, **no** lo usa ningún servicio. Las migraciones de producción se aplican a mano.
+- **Migraciones que rompen el código anterior** (como la de sesiones, que elimina `refreshToken`) se aplican en dos fases para no cortar el servicio. Así se hizo en producción el 2026-11-19:
+  1. **Fase A, antes del merge a `main`.** Las migraciones aditivas completas, más la parte compatible con ambos códigos:
+     - `ADD COLUMN "refreshTokenHash"` con backfill;
+     - índice único `Session_refreshTokenHash_key`;
+     - `ALTER COLUMN "refreshToken" DROP NOT NULL`.
+  2. **Deploy del código nuevo** y comprobación de que el deploy anterior quedó `deactivated`.
+  3. **Fase B:**
+     - backfill de las sesiones creadas en la ventana (`WHERE "refreshTokenHash" IS NULL`);
+     - el `DELETE` de la migración;
+     - `SET NOT NULL`;
+     - `DROP INDEX "Session_refreshToken_key"` y `DROP COLUMN "refreshToken"`;
+     - el registro en `_prisma_migrations` con el checksum SHA-256 del `migration.sql`.
 
-  ```sql
-  -- base proidentity, rama production
-  select migration_name, finished_at from "_prisma_migrations" order by started_at;
-  ```
+  Antes de migrar, crea una rama de respaldo en Neon (en esta ocasión: `backup-before-etapa3-20261119`).
 
 - **QA** (servicio `ProIdentity-QA`): **no migra al arrancar**. Su comando Docker es `npm run start:migrate`, que pese al nombre solo siembra el admin de QA y arranca `node dist/index.js`. Las migraciones se aplican a mano **antes** del merge a `qa`, con el owner de la base `proidentity` de QA:
 
