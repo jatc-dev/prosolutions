@@ -73,6 +73,14 @@ export const TOOLS_HEAD: PageHead = {
   path: "/tools",
 };
 
+/** Landing page head (Spanish; the client localizes it when the locale is English). */
+export const HOME_HEAD: PageHead = {
+  title: "ProSolutions — Herramientas para tu carrera profesional",
+  description:
+    "ProSolutions reúne herramientas para tu carrera profesional: crea tu CV optimizado para ATS con ProCV y encuentra empleo en cualquier sector con ProJobs.",
+  path: "/",
+};
+
 export const CONTACT_HEAD: PageHead = {
   title: "Contacto | ProSolutions",
   description: "Escríbenos para soporte, alianzas con empresas, prensa o solicitudes sobre tus datos personales (Habeas Data).",
@@ -82,6 +90,24 @@ export const CONTACT_HEAD: PageHead = {
 /** Head metadata for a path, or null when the path is not a public page. */
 export function headForPath(rawPath: string): PageHead | null {
   const path = rawPath.replace(/\/+$/, "") || "/";
+
+  if (path === "/") {
+    return {
+      ...HOME_HEAD,
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE.name,
+          url: `${SITE.url}/`,
+          description: SITE.description,
+          inLanguage: SITE.language,
+          publisher: ORGANIZATION,
+        },
+        { "@context": "https://schema.org", ...ORGANIZATION, email: SITE.contactEmail },
+      ],
+    };
+  }
 
   if (path === "/academy") {
     return {
@@ -229,7 +255,12 @@ export function renderHeadTags(head: PageHead): string {
     `<meta property="og:title" content="${escapeHtml(head.title)}" />`,
     `<meta property="og:description" content="${escapeHtml(head.description)}" />`,
     `<meta property="og:url" content="${url}" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta property="og:image" content="${SITE.ogImage}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta property="og:image:alt" content="${SITE.name}: herramientas gratuitas para tu carrera profesional" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:image" content="${SITE.ogImage}" />`,
     `<meta name="twitter:title" content="${escapeHtml(head.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(head.description)}" />`,
   ];

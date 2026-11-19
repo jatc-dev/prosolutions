@@ -63,8 +63,11 @@ jobs:
           import { existsSync, readFileSync } from "node:fs";
 
           const dist = "apps/core/dist";
-          const shell = readFileSync(`${dist}/index.html`, "utf8");
-          if (shell.includes("adsbygoogle.js")) throw new Error("AdSense must load only after consent, never from index.html");
+          const shell = readFileSync(`${dist}/app.html`, "utf8");
+          if (!shell.includes('content="noindex, follow"') || shell.includes('rel="canonical"')) throw new Error("app.html (SPA fallback) must be noindex without a canonical");
+          const home = readFileSync(`${dist}/index.html`, "utf8");
+          if (!home.includes("<h1") || !home.includes('<link rel="canonical" href="https://prosolutions.page/" />')) throw new Error("index.html must be the prerendered landing page");
+          for (const html of [shell, home]) if (html.includes("adsbygoogle.js")) throw new Error("AdSense must load only after consent, never from the HTML");
           if (existsSync(`${dist}/ads.txt`)) throw new Error("ads.txt must only be published when ADS_TXT_CONTENT is set");
 
           const article = readFileSync(`${dist}/academy/hoja-de-vida-ats-2026/index.html`, "utf8");

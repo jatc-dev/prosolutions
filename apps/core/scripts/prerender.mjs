@@ -5,6 +5,8 @@
  *   vite build --ssr src/entry-server.tsx --outDir dist-ssr -> server renderer
  *
  * Writes:
+ *   dist/index.html          landing page (full HTML, replaces the SPA shell)
+ *   dist/app.html            noindex SPA shell for the catch-all rewrite (/* -> /app.html)
  *   dist/<route>/index.html  full HTML (content + title, meta, OG, JSON-LD)
  *   dist/sitemap.xml         sitemap index (Core pages + other public apps)
  *   dist/sitemap-pages.xml   Core public pages
@@ -25,7 +27,11 @@ if (!existsSync(join(dist, "index.html")) || !existsSync(ssrEntry)) {
 }
 
 const { render, publicRoutes, SITE } = await import(pathToFileURL(ssrEntry).href);
-const template = readFileSync(join(dist, "index.html"), "utf8");
+// A previous run already replaced dist/index.html with the landing page; the
+// untouched shell then lives in app.html (same markup, empty #root), which
+// keeps this script idempotent.
+const shellPath = existsSync(join(dist, "app.html")) ? join(dist, "app.html") : join(dist, "index.html");
+const template = readFileSync(shellPath, "utf8");
 
 const SEO_BLOCK = /<!--seo:start-->[\s\S]*?<!--seo:end-->/;
 const ROOT_DIV = '<div id="root"></div>';
@@ -34,17 +40,32 @@ if (!SEO_BLOCK.test(template) || !template.includes(ROOT_DIV)) {
   process.exit(1);
 }
 
-const routes = publicRoutes();
-for (const route of routes) {
-  const { html, head } = render(route.path);
-  if (!html.includes("<h1")) throw new Error(`prerender: ${route.path} rendered without an <h1>`);
+// SPA shell for every URL that is not a prerendered page (app screens such as
+// /login or /dashboard, unknown paths, public paths without the trailing
+// slash). It must never be indexed: the static host's catch-all rewrite
+// points here (/* -> /app.html), so without noindex every unknown URL would be
+// a soft-404 copy of the landing page.
+const APP_SHELL_HEAD = [
+  "<title>ProSolutions</title>",
+  '<meta name="robots" content="noindex, follow" />',
+].join("\n    ");
+writeFileSync(join(dist, "app.html"), template.replace(SEO_BLOCK, `<!--seo:start-->\n    ${APP_SHELL_HEAD}\n    <!--seo:end-->`));
+
+const writePage = (path, { html, head }) => {
+  if (!html.includes("<h1")) throw new Error(`prerender: ${path} rendered without an <h1>`);
   const page = template
     .replace(SEO_BLOCK, `<!--seo:start-->\n    ${head}\n    <!--seo:end-->`)
     .replace(ROOT_DIV, `<div id="root">${html}</div>`);
-  const outDir = join(dist, route.path.replace(/^\//, ""));
+  const outDir = join(dist, path.replace(/^\//, ""));
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "index.html"), page);
-}
+};
+
+// The landing page replaces dist/index.html (served for "/").
+writePage("/", render("/"));
+
+const routes = publicRoutes();
+for (const route of routes) writePage(route.path, render(route.path));
 
 const xmlEscape = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 // Deterministic dates: the newest content date, not the build time.

@@ -1,3 +1,4 @@
-# SPA fallback: sirve index.html para cualquier ruta no encontrada
-# para que React Router maneje la navegación del lado del cliente.
-/*    /index.html   200
+# SPA fallback (documentation only: Render reads its rewrite rules from the
+# dashboard, where the same rule must exist). Unknown routes get the noindex
+# app shell; "/" and the public pages are prerendered files.
+/*    /app.html   200
