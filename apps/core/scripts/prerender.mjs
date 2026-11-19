@@ -27,7 +27,11 @@ if (!existsSync(join(dist, "index.html")) || !existsSync(ssrEntry)) {
 }
 
 const { render, publicRoutes, SITE } = await import(pathToFileURL(ssrEntry).href);
-const template = readFileSync(join(dist, "index.html"), "utf8");
+// A previous run already replaced dist/index.html with the landing page; the
+// untouched shell then lives in app.html (same markup, empty #root), which
+// keeps this script idempotent.
+const shellPath = existsSync(join(dist, "app.html")) ? join(dist, "app.html") : join(dist, "index.html");
+const template = readFileSync(shellPath, "utf8");
 
 const SEO_BLOCK = /<!--seo:start-->[\s\S]*?<!--seo:end-->/;
 const ROOT_DIV = '<div id="root"></div>';
