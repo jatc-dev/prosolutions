@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ProCV public screens (the editor and the workspace are app areas, not landing pages). -->
+<!-- ProCV public screens. "/" is not listed: it sends guests to
+     https://prosolutions.page/crear-hoja-de-vida/ and users to their workspace. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://procv.prosolutions.page/</loc>
-    <lastmod>2026-11-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
   <url>
     <loc>https://procv.prosolutions.page/templates</loc>
     <lastmod>2026-11-19</lastmod>

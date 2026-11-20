@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
 import { describe, expect, it } from "vitest";
+import { APP_URLS, RESOURCE_URLS } from "@prosolutions/ui";
 import { AppRoutes } from "../src/App";
 import { ARTICLES, getArticle } from "../src/content/academy";
 import { LEGAL_DOCUMENTS } from "../src/content/legal";
@@ -61,7 +62,7 @@ describe("markdown renderer", () => {
 describe("SEO and prerender", () => {
   it("lists every public page with head metadata and no private areas", () => {
     const routes = publicRoutes();
-    expect(routes.length).toBe(1 + 8 + 1 + 4 + 4 + 2);
+    expect(routes.length).toBe(1 + 1 + 8 + 1 + 4 + 4 + 2);
     for (const route of routes) {
       const head = headForPath(route.path);
       expect(head, route.path).not.toBeNull();
@@ -95,6 +96,25 @@ describe("SEO and prerender", () => {
     expect(tags).toContain('<meta property="og:image" content="https://prosolutions.page/og-image.png" />');
     expect(tags).toContain('<meta name="twitter:card" content="summary_large_image" />');
     expect(renderRoute("/")).toContain("<h1");
+  });
+
+  it("landing sends guests to the guest editor and searches ProJobs", () => {
+    const html = renderRoute("/");
+    expect(html).toContain(`href="${APP_URLS.procvEditor}"`);
+    expect(html).toContain(`action="${APP_URLS.projobs}" method="get"`);
+    expect(html).toContain('name="q"');
+    expect(html).toContain('name="location"');
+    expect(html).toContain(`href="${RESOURCE_URLS.createCv}"`);
+  });
+
+  it("create-CV page is prerendered with SoftwareApplication data and links to the editor", () => {
+    const tags = renderHeadTags(headForPath("/crear-hoja-de-vida")!);
+    expect(tags).toContain('<link rel="canonical" href="https://prosolutions.page/crear-hoja-de-vida/" />');
+    expect(tags).toContain('"@type":"SoftwareApplication"');
+    const html = renderRoute("/crear-hoja-de-vida");
+    expect(html).toContain("Crea tu hoja de vida gratis");
+    expect(html).toContain(`href="${APP_URLS.procvEditor}"`);
+    expect(html).toContain(`href="${APP_URLS.procv.replace(/\/+$/, "")}/templates"`);
   });
 
   it("escapes JSON-LD against script breakouts", () => {

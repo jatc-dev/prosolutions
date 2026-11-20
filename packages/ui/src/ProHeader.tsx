@@ -78,11 +78,12 @@ function ThemeToggle({ locale }: { locale: "es" | "en" }) {
 const trimUrl = (url: string) => url.replace(/\/+$/, "");
 
 /** Task-based navigation shared by every app (BRAND_AND_DESIGN_SYSTEM.md §5.1). */
-function navItems(locale: "es" | "en"): NavItem[] {
+function navItems(locale: "es" | "en", signedIn: boolean): NavItem[] {
   const en = locale === "en";
   return [
     { label: en ? "Jobs" : "Empleos", href: APP_URLS.projobs, app: "projobs", icon: Briefcase },
-    { label: en ? "Create CV" : "Crear CV", href: APP_URLS.procvLogin, app: "procv", icon: FileText },
+    // Guests land on the public "create a CV" page; signed-in users go straight to their CVs.
+    { label: en ? "Create CV" : "Crear CV", href: signedIn ? APP_URLS.procvLogin : RESOURCE_URLS.createCv, app: "procv", icon: FileText },
     { label: en ? "Tools" : "Herramientas", href: RESOURCE_URLS.tools, app: "core", matchPath: "/tools", icon: Calculator },
     { label: en ? "Academy" : "Academia", href: RESOURCE_URLS.academy, app: "core", matchPath: "/academy", icon: BookOpen },
     { label: en ? "For employers" : "Para empresas", href: `${trimUrl(APP_URLS.projobs)}/empresa`, icon: Building2 },
@@ -112,7 +113,7 @@ function accountLinks(locale: "es" | "en", profile: HeaderProfile): MenuLink[] {
  */
 export function ProHeader({ activeApp, actions, className, locale = "es", onLocaleChange, profile, onSignOut, profileHref, settingsHref, securityHref, loginHref, authLoading = false }: ProHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = navItems(locale);
+  const items = navItems(locale, Boolean(profile));
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

@@ -13,7 +13,7 @@ function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ l
       title: en ? "Products" : "Productos",
       links: [
         link(en ? "Jobs" : "Empleos", APP_URLS.projobs),
-        link(en ? "Create CV" : "Crear CV", APP_URLS.procvLogin),
+        link(en ? "Create CV" : "Crear CV", RESOURCE_URLS.createCv),
         link(en ? "For employers" : "Para empresas", `${APP_URLS.projobs.replace(/\/+$/, "")}/empresa`),
       ],
     },

@@ -81,6 +81,14 @@ export const HOME_HEAD: PageHead = {
   path: "/",
 };
 
+export const CREATE_CV_HEAD: PageHead = {
+  title: "Crear hoja de vida gratis, sin registro y compatible con ATS | ProSolutions",
+  description:
+    "Crea tu hoja de vida gratis y sin registro: plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF. Lista en pocos minutos.",
+  path: "/crear-hoja-de-vida",
+};
+const CREATE_CV_UPDATED = "2026-11-19";
+
 export const CONTACT_HEAD: PageHead = {
   title: "Contacto | ProSolutions",
   description: "Escríbenos para soporte, alianzas con empresas, prensa o solicitudes sobre tus datos personales (Habeas Data).",
@@ -157,6 +165,28 @@ export function headForPath(rawPath: string): PageHead | null {
     };
   }
 
+  if (path === CREATE_CV_HEAD.path) {
+    return {
+      ...CREATE_CV_HEAD,
+      modifiedAt: CREATE_CV_UPDATED,
+      jsonLd: [
+        webPage("WebPage", CREATE_CV_HEAD.title, CREATE_CV_HEAD.description, path, { dateModified: CREATE_CV_UPDATED }),
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "ProCV",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: absoluteUrl(path),
+          description: "Editor de hojas de vida con plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "COP" },
+          publisher: ORGANIZATION,
+        },
+        breadcrumb([{ name: "Crear hoja de vida", path }]),
+      ],
+    };
+  }
+
   if (path === "/tools") {
     return {
       ...TOOLS_HEAD,
@@ -225,6 +255,7 @@ export function headForPath(rawPath: string): PageHead | null {
 export function publicRoutes(): PublicRoute[] {
   const today = latest([...ARTICLES.map((a) => a.updatedAt), ...TOOLS.map((t) => t.updatedAt)]);
   return [
+    { path: CREATE_CV_HEAD.path, lastmod: CREATE_CV_UPDATED, priority: 0.9, changefreq: "monthly" },
     { path: "/academy", lastmod: latest(ARTICLES.map((a) => a.updatedAt)), priority: 0.9, changefreq: "weekly" },
     ...ARTICLES.map((article) => ({ path: `/academy/${article.slug}`, lastmod: article.updatedAt, priority: 0.8, changefreq: "monthly" as const })),
     { path: "/tools", lastmod: latest(TOOLS.map((t) => t.updatedAt)), priority: 0.9, changefreq: "monthly" },
