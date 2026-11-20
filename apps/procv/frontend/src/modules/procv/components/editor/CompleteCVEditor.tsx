@@ -36,7 +36,7 @@ import { SkillsSection } from "./sections/SkillsSection";
 import { LanguagesSection } from "./sections/LanguagesSection";
 import { CertificatesSection } from "./sections/CertificatesSection";
 import { LinksSection } from "./sections/LinksSection";
-import { EmploymentApplicationSection } from "./sections/EmploymentApplicationSection";
+import { Format1003Fields } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
@@ -276,6 +276,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       showSummaryContent: cvData.personal?.showSummaryContent !== false,
       profileImage: cvData.personal?.profileImage || '',
       profileImageStyle: cvData.personal?.profileImageStyle || 'round',
+      profileImageSize: cvData.personal?.profileImageSize || 'md',
       showProfileImage: cvData.personal?.showProfileImage !== false,
       birthDate: cvData.personal?.birthDate || '',
       showBirthDate: Boolean(cvData.personal?.showBirthDate),
@@ -434,6 +435,11 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
     return () => clearTimeout(autoSaveTimer);
   }, [hasUnsavedChanges, isSaving, saveCV]);
+
+  // The 1003 data used to have its own tab; it now lives inside "personal".
+  useEffect(() => {
+    if (activeSection === 'application') setActiveSection('personal');
+  }, [activeSection, setActiveSection]);
 
   // Handle section change with validation
   const handleSectionChange = useCallback((section: SectionType) => {
@@ -731,12 +737,17 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       switch (activeSection) {
         case 'personal':
           return (
-            <PersonalSection
-              data={cvData.personal}
-              onChange={updatePersonal}
-              onValidateField={validateField}
-              {...commonProps}
-            />
+            <>
+              <PersonalSection
+                data={cvData.personal}
+                onChange={updatePersonal}
+                onValidateField={validateField}
+                {...commonProps}
+              />
+              {cvData.template === 'employment' ? (
+                <Format1003Fields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} />
+              ) : null}
+            </>
           );
       case 'experience':
         return (
@@ -786,8 +797,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             {...commonProps}
           />
         );
-      case 'application':
-        return <EmploymentApplicationSection data={cvData.application || {}} onChange={(application) => updateCvData({ application })} {...commonProps} />;
       default:
         return null;
     }

@@ -39,5 +39,5 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "extensa", label: "Extensa", category: "traditional", group: "design", supportsPhoto: true, atsFriendly: true },
   { key: "timeline", label: "Timeline", category: "modern", group: "professional", supportsPhoto: false, atsFriendly: true },
   { key: "compact", label: "Compacta", category: "ats", group: "ats", supportsPhoto: false, atsFriendly: true },
-  { key: "employment", label: "Minerva 1003", category: "traditional", group: "professional", supportsPhoto: true, atsFriendly: true },
+  { key: "employment", label: "Formato 1003", category: "traditional", group: "professional", supportsPhoto: true, atsFriendly: true },
 ];

@@ -1,5 +1,5 @@
 {
-  "name": "ProCV Platform",
+  "name": "ProCV · ProSolutions",
   "short_name": "ProCV",
   "description": "Crea, edita y exporta tu curriculum profesional online.",
   "start_url": "/",
@@ -13,6 +13,16 @@
       "src": "/favicon.svg",
       "type": "image/svg+xml",
       "sizes": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     },
     {
       "src": "/favicon-32.png",

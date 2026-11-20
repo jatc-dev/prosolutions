@@ -50,7 +50,6 @@ const sections: { id: SectionType; label: string; icon: string; description: str
     icon: 'external-link',
     description: 'Portafolio y redes sociales'
   },
-  { id: 'application', label: 'Solicitud de empleo', icon: 'user', description: 'Información complementaria para selección' },
 ];
 
 const getIconPath = (iconName: string) => {

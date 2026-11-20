@@ -11,7 +11,8 @@ import type { SectionType } from "../src/types";
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "es" } }) }));
 vi.mock("../src/services/api", () => ({ api: {} }));
 
-const sections: SectionType[] = ["personal", "experience", "education", "skills", "languages", "certificates", "links", "application"];
+// "application" (1003 data) is edited inside "personal" when the 1003 template is active; it has no tab.
+const sections: SectionType[] = ["personal", "experience", "education", "skills", "languages", "certificates", "links"];
 const completionStatus = Object.fromEntries(sections.map((section) => [section, false])) as Record<SectionType, boolean>;
 
 function resetStore() {
@@ -60,7 +61,7 @@ describe("editor navigation validation", () => {
     expect(useCVEditorStore.getState().validationErrors).toEqual({});
   });
 
-  it("navigates through all eight sections and does not strand users on a validation exception", () => {
+  it("navigates through all seven sections and does not strand users on a validation exception", () => {
     resetStore();
     const initial = createInitialCVData();
     useCVEditorStore.getState().updatePersonal({
@@ -69,7 +70,7 @@ describe("editor navigation validation", () => {
       professionalTitle: "Ingeniera",
       summary: "Experta en análisis, diseño y desarrollo de soluciones tecnológicas con impacto medible.",
     });
-    const labels: Record<SectionType, string> = {
+    const labels = {
       personal: "Personal",
       experience: "Experiencia",
       education: "Educación",
@@ -77,8 +78,7 @@ describe("editor navigation validation", () => {
       languages: "Idiomas",
       certificates: "Certificados",
       links: "Enlaces",
-      application: "Solicitud de empleo",
-    };
+    } as Record<SectionType, string>;
     const onSectionChange = (next: SectionType) => {
       const currentStore = useCVEditorStore.getState();
       changeEditorSection(currentStore.activeSection, next, currentStore.validateSection, currentStore.setActiveSection);
@@ -90,10 +90,10 @@ describe("editor navigation validation", () => {
       expect(useCVEditorStore.getState().activeSection).toBe(next);
       rerender(<EditorTabs activeSection={next} onSectionChange={onSectionChange} completionStatus={completionStatus} />);
     });
-    expect(useCVEditorStore.getState().activeSection).toBe("application");
+    expect(useCVEditorStore.getState().activeSection).toBe("links");
 
     const setSection = vi.fn((section: SectionType) => useCVEditorStore.getState().setActiveSection(section));
-    expect(changeEditorSection("application", "personal", () => { throw new Error("validator failed"); }, setSection)).toBe(true);
+    expect(changeEditorSection("links", "personal", () => { throw new Error("validator failed"); }, setSection)).toBe(true);
     expect(setSection).toHaveBeenCalledWith("personal");
     expect(useCVEditorStore.getState().activeSection).toBe("personal");
   });

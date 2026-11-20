@@ -29,7 +29,7 @@ npm --prefix apps/procv/frontend test
 (cd apps/identity && npx prisma generate && npm run test:regression)   # 3 tests necesitan una Postgres accesible
 ```
 
-`apps/core/dist` debe contener `academy/**/index.html`, `tools/**/index.html`, `legal/**/index.html`, `nosotros/`, `contacto/`, `sitemap.xml`, `sitemap-pages.xml` y `robots.txt`. **No** debe contener `ads.txt` si `ADS_TXT_CONTENT` está vacío.
+`apps/core/dist` debe contener `index.html` (portada pre-renderizada), `app.html` (shell SPA noindex), `og-image.png`, `academy/**/index.html`, `tools/**/index.html`, `legal/**/index.html`, `nosotros/`, `contacto/`, `sitemap.xml`, `sitemap-pages.xml` y `robots.txt`. **No** debe contener `ads.txt` si `ADS_TXT_CONTENT` está vacío.
 
 ## 2. Migraciones de ProJobs: 002 y 003 (primero QA, luego producción)
 
@@ -121,13 +121,17 @@ Espera a que el CI (`core-build.yml`) quede en verde. El job de Core ahora corre
   - el cliente redirige `/ruta` a `/ruta/` en las páginas públicas;
   - el shell SPA ya no lleva un canonical fijo.
 
-  Mantén la regla `/* -> /index.html` y verifica después de cada deploy:
+- **Regla de rewrite: `/* -> /app.html`** (cambiada el 2026-11-19 en QA y producción, PR #128/#129). Desde ese PR, `dist/index.html` es la portada pre-renderizada y `dist/app.html` es el shell SPA con `noindex, follow` y sin canonical. Así las pantallas de la app (`/login`, `/dashboard`…), las URLs inexistentes y las rutas públicas sin barra final no se indexan como copias de la portada. Si la regla vuelve a apuntar a `/index.html`, la app sigue funcionando, pero esas URLs vuelven a servir la portada (soft 404). La regla se gestiona en el dashboard de Render o con `PUT /v1/services/{id}/routes` (el `PATCH` solo cambia prioridades). Ponla solo después de que el deploy que genera `app.html` esté activo.
+
+  Verifica después de cada deploy:
 
   ```bash
   B=https://qa.prosolutions.page   # en producción: https://prosolutions.page
   curl -s $B/academy/hoja-de-vida-ats-2026/ | grep -c '"@type":"Article"'         # 1
   curl -s $B/academy/hoja-de-vida-ats-2026/ | grep -o 'rel="canonical" href="[^"]*"'   # .../hoja-de-vida-ats-2026/
   curl -s $B/legal/privacidad/ | grep -c '<h1'                                     # >= 1
+  curl -s $B/ | grep -o 'rel="canonical" href="[^"]*"'                             # https://prosolutions.page/
+  curl -s $B/login | grep -o 'name="robots" content="[^"]*"'                       # noindex, follow
   curl -s $B/sitemap-pages.xml | grep -c '/</loc>'                                 # 21 (todas con barra final)
   curl -s -o /dev/null -w '%{http_code}
 ' $B/ads.txt                              # 200 solo si ADS_TXT_CONTENT está definida
