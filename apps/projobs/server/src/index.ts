@@ -7,6 +7,7 @@ import { loadConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { createPgDatabase } from './db/pg.js';
 import { createProCvClient } from './integrations/procv.js';
+import { createCareerjetProvider } from './integrations/externalJobs.js';
 import type { Logger } from './routes/context.js';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -52,7 +53,16 @@ const app = createApp({
   log,
   verify: createIdentityVerifier({ ...config.jwt, keyStore }),
   procv: createProCvClient({ baseUrl: config.procvApiUrl, timeoutMs: config.procvTimeoutMs }),
+  externalJobs: config.externalJobs.enabled && config.externalJobs.careerjetApiKey
+    ? createCareerjetProvider({
+        apiKey: config.externalJobs.careerjetApiKey,
+        locale: config.externalJobs.careerjetLocale,
+        timeoutMs: config.externalJobs.timeoutMs,
+        cacheSeconds: config.externalJobs.cacheSeconds,
+      })
+    : null,
 });
+log(config.externalJobs.enabled ? 'external jobs: careerjet enabled' : 'external jobs: disabled');
 
 const mailer = createMailer(readSmtpConfig(), log);
 if (!mailer.enabled) log('SMTP not configured: transactional emails and job alerts are logged, not sent');

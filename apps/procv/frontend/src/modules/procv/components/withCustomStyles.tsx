@@ -34,8 +34,12 @@ export function isCustomColor(key: ColorKey, value?: string): boolean {
   return Boolean(setting && normalized && normalized !== setting.legacyDefault);
 }
 
-export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
-  const s: Record<string, string | number | undefined> = (data.settings as Record<string, string | number | undefined>) || {};
+/**
+ * Applies the user's fonts, colours and spacing (only those they changed) to
+ * any CV document: the CV templates and the cover letter.
+ */
+export function CustomStylesWrapper({ settings, children }: { settings: unknown; children: React.ReactNode }) {
+  const s: Record<string, string | number | undefined> = (settings as Record<string, string | number | undefined>) || {};
 
   const bodyFont = cvFontFamily(s.fontBody as string | undefined);
   const headingFont = cvFontFamily(s.fontHeading as string | undefined);
@@ -67,7 +71,15 @@ export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
 
   return (
     <div className={classes.join(" ")} style={cssVars as React.CSSProperties}>
-      <TemplateRenderer template={template} data={data} />
+      {children}
     </div>
+  );
+}
+
+export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
+  return (
+    <CustomStylesWrapper settings={data.settings}>
+      <TemplateRenderer template={template} data={data} />
+    </CustomStylesWrapper>
   );
 }

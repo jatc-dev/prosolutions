@@ -2,7 +2,8 @@ import { Router } from 'express';
 import type { JobSummary } from '../contracts.js';
 import { optionalAuth } from '../auth/identity.js';
 import { asyncHandler, notFound, parse } from '../http/errors.js';
-import { jobReportInput, jobSearchQuery } from '../http/schemas.js';
+import { externalJobsQuery, jobReportInput, jobSearchQuery } from '../http/schemas.js';
+import type { ExternalJobsResponse } from '../contracts.js';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { appliedJobIds } from '../repositories/applications.js';
 import { findPublicJob, findSimilarJobs, searchJobs, UUID } from '../repositories/jobs.js';
@@ -20,7 +21,7 @@ async function withViewer<T extends JobSummary>(tx: Queryable, userId: string | 
   return jobs.map((job) => ({ ...job, viewer: { saved: saved.has(job.id), applied: applied.has(job.id) } }));
 }
 
-export function publicRouter({ db, verify, config }: AppDeps): Router {
+export function publicRouter({ db, verify, config, externalJobs, log }: AppDeps): Router {
   const router = Router();
   router.use(optionalAuth(verify));
 
@@ -176,6 +177,46 @@ export function publicRouter({ db, verify, config }: AppDeps): Router {
       });
       if (!created) throw notFound('Job not found');
       res.status(201).json({ received: true });
+    }),
+  );
+
+  // Partner offers (Careerjet), searched live for each visitor. Off unless configured.
+  const externalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: config.env === 'test' ? 1000 : 30,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? '0.0.0.0'),
+    message: { error: { code: 'rate_limited', message: 'Too many searches, try again later' } },
+  });
+  router.get(
+    '/external-jobs',
+    externalLimiter,
+    asyncHandler(async (req, res) => {
+      const query = parse(externalJobsQuery, req.query);
+      res.set('Cache-Control', 'no-store');
+      res.set('X-Robots-Tag', 'noindex');
+      if (!externalJobs) {
+        const off: ExternalJobsResponse = { enabled: false, source: null, items: [], total: 0 };
+        res.json(off);
+        return;
+      }
+      try {
+        const result = await externalJobs.search({
+          q: query.q,
+          location: query.location,
+          page: query.page,
+          userIp: (req.ip ?? '').replace(/^::ffff:/, ''),
+          userAgent: String(req.get('user-agent') ?? '').slice(0, 300),
+        });
+        const body: ExternalJobsResponse = { enabled: true, source: externalJobs.source, ...result };
+        res.json(body);
+      } catch (error) {
+        // A partner outage must never break ProJobs: the section just stays empty.
+        log('external jobs search failed', { error: error instanceof Error ? error.message : String(error) });
+        const empty: ExternalJobsResponse = { enabled: true, source: externalJobs.source, items: [], total: 0 };
+        res.json(empty);
+      }
     }),
   );
 

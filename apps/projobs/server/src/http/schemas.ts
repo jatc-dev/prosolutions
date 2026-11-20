@@ -24,6 +24,13 @@ const csvSkills = z
   .optional()
   .transform((raw) => (raw ? normalizeSkills(raw.split(','), 30) : []));
 
+/** Partner feed search (Careerjet): only keywords, location and page are forwarded. */
+export const externalJobsQuery = z.object({
+  q: z.string().trim().max(120).default(''),
+  location: z.string().trim().max(80).default(''),
+  page: z.coerce.number().int().min(1).max(10).default(1),
+});
+
 export const jobSearchQuery = z.object({
   q: z.string().trim().max(120).optional(),
   workplace: csvEnum(WORKPLACES),
