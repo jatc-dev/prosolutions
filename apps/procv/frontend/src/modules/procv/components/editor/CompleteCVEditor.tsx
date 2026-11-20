@@ -10,6 +10,9 @@ import { EditorTabs } from "./EditorTabs";
 import { changeEditorSection } from "./navigationValidation";
 import { TemplateRenderer, CVData as RendererCVData } from "../TemplateRenderer";
 import { WithCustomStyles } from "../withCustomStyles";
+import { CoverLetterPreview } from "../CoverLetterPreview";
+import { CoverLetterSection } from "./sections/CoverLetterSection";
+import { placeholdersIn } from "../../coverLetter";
 import { CURATED_CV_TEMPLATES } from "../../../../shared/utils/templateCatalog";
 import { importCvFromFile, ParsedCvDraft } from "../../../../shared/services/cvImport";
 import { api } from "../../../../shared/services/api";
@@ -374,6 +377,22 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     setIsGuest,
   } = useCVEditorStore();
 
+  // Which document is being edited: the CV or its cover letter (remembered per browser).
+  const [docMode, setDocMode] = useState<'cv' | 'letter'>(() => {
+    try {
+      return localStorage.getItem('procv.editor.mode') === 'letter' ? 'letter' : 'cv';
+    } catch {
+      return 'cv';
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('procv.editor.mode', docMode);
+    } catch {
+      // Storage may be blocked; the mode simply resets on reload.
+    }
+  }, [docMode]);
+
   const [showPreview, setShowPreview] = useState(() =>
     typeof window === "undefined" || !window.matchMedia
       ? true
@@ -644,6 +663,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       setIsExportingPdf(true);
       toast.loading(t("workspace.export.generatingPdf"), { id: "pdf-export" });
 
+      if (docMode === 'letter' && placeholdersIn(cvData.coverLetter?.body).length > 0
+        && !window.confirm('Tu carta todavía tiene textos entre corchetes por completar. ¿Descargarla de todos modos?')) {
+        toast.dismiss("pdf-export");
+        setIsExportingPdf(false);
+        return;
+      }
       const element = previewRef.current;
       if (!element) {
         toast.error(t("workspace.errors.exportContentNotFound"), { id: "pdf-export" });
@@ -653,7 +678,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
       const options = {
         margin: 0.12, // ~3 mm on each side
-        filename: `${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
+        filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
@@ -680,7 +705,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, t]);
+  }, [cvData.title, cvData.coverLetter?.body, docMode, t]);
 
   // Get completion status for all sections
   const completionStatus = {
@@ -1002,7 +1027,26 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             </div>
         </div>
 
+        {/* Document switch: CV or cover letter */}
+        <div className="flex justify-center border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-900">
+          <div role="tablist" aria-label="Documento" className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+            {([['cv', 'Hoja de vida'], ['letter', 'Carta de presentación']] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                role="tab"
+                aria-selected={docMode === mode}
+                onClick={() => setDocMode(mode)}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${docMode === mode ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Navigation Tabs */}
+        {docMode === 'cv' ? (
         <div className="cv-editor-tabs">
           <EditorTabs
             activeSection={activeSection}
@@ -1010,6 +1054,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             completionStatus={completionStatus}
           />
         </div>
+        ) : null}
 
         {/* Main Content */}
         <div className="cv-editor-workspace flex" style={{ height: 'calc(100vh - 140px)' }}>
@@ -1031,6 +1076,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 />
               </EditorDisclosure>
               <div className="h-4" />
+              {docMode === 'cv' ? (
               <EditorDisclosure storageKey="procv.editor.ats" title={t("editor.ats.title", "ATS Optimizer")} description={t("editor.ats.analyzeAgainstVacancy", "Analiza el ajuste contra una vacante")}>
               <ATSOptimizationPanel
                 jobDescription={jobDescription}
@@ -1047,6 +1093,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 comparison={atsComparison}
               />
               </EditorDisclosure>
+              ) : null}
               <EditorDisclosure storageKey="procv.editor.customizer" title={t("customizer.title", "Personalizar plantilla")} description={t("editor.customizer.hint", "Ajusta tipografía, color y distribución")}>
                 <CustomizerPanel
                   settings={cvData.settings || {}}
@@ -1056,6 +1103,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
 
 
+              {docMode === 'cv' ? (
               <EditorDisclosure
                 storageKey="procv.editor.blocks"
                 title={t('editor.block.paletteToggle', 'Añadir bloque')}
@@ -1063,6 +1111,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               >
                 <BlockPalette onAdd={handleAddBlock} />
               </EditorDisclosure>
+              ) : null}
 
               <div className="mt-4">
                 <button
@@ -1106,6 +1155,11 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 </div>
               )}
 
+              {docMode === 'letter' ? (
+                <div className="mt-4 rounded-lg border border-slate-200 p-4 sm:p-6 dark:border-slate-700">
+                  <CoverLetterSection cv={cvData} onChange={(coverLetter) => updateCvData({ coverLetter })} />
+                </div>
+              ) : (
               <EditorDisclosure
                 storageKey="procv.editor.form"
                 title={t("editor.form.title", "Contenido del currículum")}
@@ -1120,6 +1174,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 {renderActiveSection()}
               </div>
               </EditorDisclosure>
+              )}
             </div>
           </div>
 
@@ -1146,24 +1201,19 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               <div className="p-4 sm:p-6">
                 <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
                   <h3 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
-                    {t('editor.cvPreview')}
+                    {docMode === 'letter' ? 'Vista previa de la carta' : t('editor.cvPreview')}
                   </h3>
 
                   <div className="origin-top" ref={previewRef}>
-                    <WithCustomStyles
-                      template={cvData.template}
-                      data={transformCVDataForRenderer(cvData)}
-                    />
+                    {docMode === 'letter' ? (
+                      <CoverLetterPreview cv={cvData} />
+                    ) : (
+                      <WithCustomStyles
+                        template={cvData.template}
+                        data={transformCVDataForRenderer(cvData)}
+                      />
+                    )}
                   </div>
-
-                  {/* Guest ad slot - flexible container for affiliate banners or display ads */}
-          {isGuest && (
-            <div id="guest-ad-slot" className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4">
-              <div className="h-24 bg-slate-100 dark:bg-slate-800 rounded-md flex items-center justify-center text-xs text-slate-400 dark:text-slate-500">
-                {t('editor.guest.adSlot', 'Espacio de anuncios (Afiliados / Display)')}
-              </div>
-            </div>
-          )}
                 </div>
               </div>
             </div>

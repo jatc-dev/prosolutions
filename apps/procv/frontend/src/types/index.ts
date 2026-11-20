@@ -220,6 +220,22 @@ export interface LinkItem {
 // CV DATA INTERFACE
 // ==============================================
 
+export interface CoverLetterData {
+  recipientName?: string;
+  recipientTitle?: string;
+  company?: string;
+  companyAddress?: string;
+  /** Position applied for (defaults to the CV's professional title in the draft). */
+  position?: string;
+  city?: string;
+  /** ISO date (YYYY-MM-DD) printed as "Ciudad, 19 de noviembre de 2026". */
+  date?: string;
+  greeting?: string;
+  /** Paragraphs separated by a blank line. */
+  body?: string;
+  closing?: string;
+}
+
 export interface CVData {
   id?: string;
   title: string;
@@ -257,6 +273,8 @@ export interface CVData {
   certificates: CertificateItem[];
   links: LinkItem[];
   application?: Record<string, string>;
+  /** Cover letter stored with the CV: reuses its personal data, template, fonts and colours. */
+  coverLetter?: CoverLetterData;
   createdAt?: string;
   updatedAt?: string;
 }
