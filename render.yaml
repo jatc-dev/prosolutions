@@ -206,6 +206,7 @@ services:
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
       - { key: DISABLE_RATE_LIMIT, sync: false }   # must stay "false"
       - { key: CONTACT_INBOX, sync: false }
+      - { key: PROCV_BACKEND_URL, sync: false }   # https://procvbkn.onrender.com (admin console proxy; 503 without it)
       - { key: PROJOBS_API_URL, sync: false }
       - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
       - { key: SMTP_HOST, sync: false }
