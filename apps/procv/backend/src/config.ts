@@ -33,12 +33,17 @@ function getFrontendUrl(isProduction: boolean): string {
   return frontendUrl;
 }
 
+/**
+ * Runtime connection: always DATABASE_URL (pooled, restricted procv_login role),
+ * the same URL Prisma reads from schema.prisma. DIRECT_DATABASE_URL is an
+ * owner connection for manual migrations only and must never be used here.
+ */
 function getDatabaseUrl(isProduction: boolean): string {
-  const dbUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+  const dbUrl = process.env.DATABASE_URL;
 
   if (!dbUrl) {
     if (isProduction) {
-      throw new Error('DIRECT_DATABASE_URL or DATABASE_URL must be set in production environment');
+      throw new Error('DATABASE_URL must be set in production environment');
     }
     return 'postgresql://postgres:postgres@localhost:5432/procvplatform?schema=public';
   }

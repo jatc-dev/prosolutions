@@ -118,8 +118,9 @@ services:
     region: oregon
     rootDir: apps/procv/backend
     buildCommand: npm install --include=dev && npm run prisma:generate && npm run build
-    # NOTE: `npm start` keeps DIRECT_DATABASE_URL, which config.ts prefers at
-    # runtime (see CLAUDE.md risk #3). Pending owner decision.
+    # Runtime uses DATABASE_URL only (procv_login via pooler). DIRECT_DATABASE_URL
+    # (owner credential) is unused and pending removal; PROCV_ADMIN_DATABASE_URL
+    # is missing in production (admin stats/audit/settings fail without it).
     startCommand: npm start
     autoDeploy: true
     envVars:
