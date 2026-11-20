@@ -70,6 +70,10 @@ COPY apps/procv/backend/scripts ./scripts
 COPY --from=build /app/apps/procv/backend/dist ./dist
 RUN mkdir -p uploads/logos
 
+# Fail the build (instead of the first user export) if Chromium or one of its
+# system libraries is missing: launch Puppeteer and render a real PDF.
+RUN node -e "require('puppeteer').launch({args:['--no-sandbox','--disable-setuid-sandbox']}).then(async(b)=>{const p=await b.newPage();await p.setContent('<h1>ProCV</h1>');const pdf=await p.pdf();await b.close();console.log('Puppeteer PDF smoke test OK:',pdf.length,'bytes');}).catch((e)=>{console.error('Puppeteer PDF smoke test FAILED',e);process.exit(1);})"
+
 # Render injects PORT at runtime.
 EXPOSE 10000
 CMD ["npm", "start"]
