@@ -4,8 +4,10 @@ import {
   CAREERJET_ENDPOINT,
   REMOTIVE_ENDPOINT,
   createCareerjetProvider,
+  createJoobleProvider,
   createRemotiveProvider,
   searchExternalJobs,
+  toJoobleJob,
   toRemotiveJob,
   plainText,
   toExternalJob,
@@ -177,6 +179,61 @@ describe('remotive feed', () => {
     const result = await searchExternalJobs([broken, ok], QUERY, (message) => logs.push(message));
     expect(result).toMatchObject({ enabled: true, total: 1, sources: [{ id: 'remotive' }] });
     expect(logs).toEqual(['external jobs search failed']);
+  });
+});
+
+const JOOBLE_JOB = {
+  title: 'Auxiliar <b>administrativo</b>',
+  location: 'Bogotá, Cundinamarca',
+  snippet: '&nbsp;...Apoyo en <b>facturación</b> y archivo...&nbsp;',
+  salary: '$1.900.000',
+  source: 'elempleo.com',
+  type: 'Tiempo completo',
+  link: 'https://co.jooble.org/desc/123456789',
+  company: 'Servicios Integrales',
+  updated: '2026-11-18T08:30:00.0000000',
+  id: 123456789,
+};
+
+describe('jooble feed', () => {
+  it('maps offers and keeps only http(s) links', () => {
+    expect(toJoobleJob(JOOBLE_JOB)).toMatchObject({
+      title: 'Auxiliar administrativo',
+      company: 'Servicios Integrales',
+      location: 'Bogotá, Cundinamarca · Tiempo completo',
+      snippet: '...Apoyo en facturación y archivo...',
+      salary: '$1.900.000',
+      url: 'https://co.jooble.org/desc/123456789',
+      source: 'jooble',
+    });
+    expect(toJoobleJob({ ...JOOBLE_JOB, link: 'javascript:alert(1)' })).toBeNull();
+  });
+
+  it('posts only the search terms, defaults the location to Colombia and never leaks the key', async () => {
+    const { impl, calls } = fakeFetch({ totalCount: 321, jobs: [JOOBLE_JOB] });
+    const bodies: unknown[] = [];
+    const recording = (async (input: string | URL | Request, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      expect(init?.method).toBe('POST');
+      return impl(input, init);
+    }) as typeof fetch;
+    const provider = createJoobleProvider({ apiKey: 'secret-key-1234', timeoutMs: 1000, defaultLocation: 'Colombia', fetchImpl: recording });
+    const result = await provider.search({ ...QUERY, location: '' });
+    expect(result.total).toBe(321);
+    expect(calls[0]!.url).toBe('https://jooble.org/api/secret-key-1234');
+    expect(bodies[0]).toEqual({ keywords: 'contador', location: 'Colombia', page: '1', ResultOnPage: '10' });
+    // Visitor data is not part of the request.
+    expect(JSON.stringify(bodies[0])).not.toContain('203.0.113.7');
+
+    const failing = createJoobleProvider({ apiKey: 'secret-key-1234', timeoutMs: 1000, fetchImpl: fakeFetch({}, 403).impl });
+    await expect(failing.search(QUERY)).rejects.toThrow(/^jooble responded 403$/);
+  });
+
+  it('is off unless enabled with a key', () => {
+    const base = { NODE_ENV: 'test' as const };
+    expect(loadConfig({ ...base, JOOBLE_API_KEY: 'secret-key-1234' }).externalJobs.jooble.enabled).toBe(false);
+    expect(loadConfig({ ...base, JOOBLE_ENABLED: 'true' }).externalJobs.jooble.enabled).toBe(false);
+    expect(loadConfig({ ...base, JOOBLE_ENABLED: 'true', JOOBLE_API_KEY: 'secret-key-1234' }).externalJobs.jooble).toMatchObject({ enabled: true, apiUrl: 'https://jooble.org/api/', defaultLocation: 'Colombia' });
   });
 });
 

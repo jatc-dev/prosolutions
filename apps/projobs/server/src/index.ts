@@ -7,7 +7,7 @@ import { loadConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { createPgDatabase } from './db/pg.js';
 import { createProCvClient } from './integrations/procv.js';
-import { createCareerjetProvider, createRemotiveProvider, type ExternalJobsProvider } from './integrations/externalJobs.js';
+import { createCareerjetProvider, createJoobleProvider, createRemotiveProvider, type ExternalJobsProvider } from './integrations/externalJobs.js';
 import type { Logger } from './routes/context.js';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -48,6 +48,18 @@ if (keyStore) {
   setInterval(() => void keyStore.refresh(), 10 * 60 * 1000).unref();
 }
 const externalProviders: ExternalJobsProvider[] = [];
+// Order = order on screen: Colombian, all-sector feeds first, remote-only last.
+if (config.externalJobs.jooble.enabled && config.externalJobs.jooble.apiKey) {
+  externalProviders.push(
+    createJoobleProvider({
+      apiKey: config.externalJobs.jooble.apiKey,
+      apiUrl: config.externalJobs.jooble.apiUrl,
+      defaultLocation: config.externalJobs.jooble.defaultLocation,
+      timeoutMs: config.externalJobs.timeoutMs,
+      cacheSeconds: config.externalJobs.cacheSeconds,
+    }),
+  );
+}
 if (config.externalJobs.careerjet.enabled && config.externalJobs.careerjet.apiKey) {
   externalProviders.push(
     createCareerjetProvider({

@@ -216,7 +216,7 @@ export interface IntegrationEvent<TPayload = Record<string, unknown>> {
   payload: TPayload;
 }
 
-export type ExternalSourceId = 'careerjet' | 'remotive';
+export type ExternalSourceId = 'jooble' | 'careerjet' | 'remotive';
 
 /** Partner feed credited next to its offers ("Empleos por Careerjet"). */
 export interface ExternalSource {
@@ -226,7 +226,7 @@ export interface ExternalSource {
 }
 
 /**
- * Job from an external partner feed (Careerjet, Remotive). Shown with its
+ * Job from an external partner feed (Jooble, Careerjet, Remotive). Shown with its
  * source and a link to the original offer; never indexed, never marked up as
  * JobPosting.
  */

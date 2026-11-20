@@ -1,7 +1,8 @@
-# Vacantes externas en ProJobs (Careerjet y Remotive)
+# Vacantes externas en ProJobs (Jooble, Careerjet y Remotive)
 
 Estado:
 
+- **Jooble**: código listo; se activa con `JOOBLE_ENABLED=true` (clave `JOOBLE_API_KEY` ya creada en ambos servicios, 2026-11-19). Solo envía las palabras clave y la ubicación (no IP ni navegador del visitante). Si el visitante no escribe ubicación se usa `JOOBLE_DEFAULT_LOCATION` (`Colombia`).
 - **Careerjet**: código listo y **apagado** (`CAREERJET_ENABLED`). Se activa cuando Careerjet acepte las IP de salida de Render y el owner confirme sus condiciones.
 - **Remotive**: código listo; se activa con `REMOTIVE_ENABLED=true`. No envía datos de los visitantes. La API pública devuelve pocas vacantes (15 el 2026-11-19, 9 abiertas a Colombia); la API privada es de pago.
 
@@ -22,6 +23,10 @@ Estado:
 | `CAREERJET_API_KEY` | clave del publisher | Ya creada en ambos servicios (2026-11-19). Nunca en el repo. |
 | `CAREERJET_ENABLED` | `true` | Sin ella (o con `false`) Careerjet está apagado aunque haya clave. Envía IP y user agent del visitante a Careerjet: publicar antes el párrafo de privacidad. |
 | `REMOTIVE_ENABLED` | `true` | Activa Remotive. No envía datos del visitante. |
+| `JOOBLE_ENABLED` | `true` | Activa Jooble (requiere `JOOBLE_API_KEY`). Envía solo la búsqueda. |
+| `JOOBLE_API_KEY` | clave de Jooble | Va dentro de la URL de la API; el código nunca la registra en logs. |
+| `JOOBLE_API_URL` | `https://jooble.org/api/` | Por defecto. |
+| `JOOBLE_DEFAULT_LOCATION` | `Colombia` | Ubicación cuando el visitante no escribe una. |
 | `CAREERJET_LOCALE` | `es_CO` | Por defecto. Si Careerjet no lo soporta responde 400: revisar logs. |
 | `EXTERNAL_JOBS_CACHE_SECONDS` | `0` | Subir (máx. 3600) solo si los términos permiten caché. |
 | `EXTERNAL_JOBS_TIMEOUT_MS` | `4000` | Por defecto. |

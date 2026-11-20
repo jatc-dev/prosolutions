@@ -2,9 +2,8 @@ import { createHash } from 'node:crypto';
 import type { ExternalJob, ExternalJobsResponse, ExternalSource } from '../contracts.js';
 
 /**
- * Partner job feeds shown next to ProJobs' own offers. Searches run live on
- * the server (the partner requires the visitor's IP and user agent and does
- * not allow bulk copies), results link to the original offer and are never
+ * Partner job feeds shown next to ProJobs' own offers. Searches run on the
+ * server, results link to the original offer and are never
  * stored in the database, indexed or marked up as JobPosting.
  */
 export interface ExternalJobsQuery {
@@ -134,6 +133,84 @@ export function createCareerjetProvider(options: CareerjetOptions): ExternalJobs
 
       const items = body.jobs.map(toExternalJob).filter((job): job is ExternalJob => job !== null);
       const total = typeof body.hits === 'number' && body.hits >= 0 ? body.hits : items.length;
+      const value = { items, total };
+      if (ttlMs > 0) {
+        if (cache.size > 500) cache.clear();
+        cache.set(key, { expires: now() + ttlMs, value });
+      }
+      return value;
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Jooble partner API: POST {apiUrl}{key} with { keywords, location, page }.
+// Only the search terms are sent (no visitor IP or user agent). The key is
+// part of the URL, so the URL is never logged.
+// ---------------------------------------------------------------------------
+
+export interface JoobleOptions {
+  apiKey: string;
+  apiUrl?: string;
+  /** Used when the visitor leaves the location empty, so results stay in Colombia. */
+  defaultLocation?: string;
+  timeoutMs: number;
+  cacheSeconds?: number;
+  fetchImpl?: typeof fetch;
+  now?: () => number;
+}
+
+export function toJoobleJob(raw: unknown): ExternalJob | null {
+  if (!isRecord(raw)) return null;
+  const title = text(raw.title);
+  const url = safeUrl(raw.link);
+  if (!title || !url) return null;
+  const updated = text(raw.updated);
+  const parsedDate = updated ? new Date(updated) : null;
+  const company = text(raw.company);
+  const location = text(raw.location);
+  const type = text(raw.type);
+  return {
+    id: createHash('sha256').update(url).digest('hex').slice(0, 16),
+    title: plainText(title, 160),
+    company: company ? plainText(company, 120) : null,
+    location: location ? plainText([location, type].filter(Boolean).join(' · '), 120) : type ? plainText(type, 60) : null,
+    snippet: plainText(String(raw.snippet ?? '')),
+    salary: text(raw.salary) ? plainText(String(raw.salary), 80) : null,
+    postedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
+    url,
+    source: 'jooble',
+  };
+}
+
+export function createJoobleProvider(options: JoobleOptions): ExternalJobsProvider {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const now = options.now ?? Date.now;
+  const endpoint = `${options.apiUrl ?? 'https://jooble.org/api/'}${encodeURIComponent(options.apiKey)}`;
+  const cache = new Map<string, { expires: number; value: ExternalJobsResult }>();
+  const ttlMs = (options.cacheSeconds ?? 0) * 1000;
+
+  return {
+    source: { id: 'jooble', name: 'Jooble', url: 'https://co.jooble.org' },
+    async search(query) {
+      const location = query.location.trim() || options.defaultLocation || '';
+      const page = Math.min(Math.max(query.page, 1), 10);
+      const key = JSON.stringify([query.q.toLowerCase(), location.toLowerCase(), page]);
+      const cached = ttlMs > 0 ? cache.get(key) : undefined;
+      if (cached && cached.expires > now()) return cached.value;
+
+      const response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ keywords: query.q, location, page: String(page), ResultOnPage: String(EXTERNAL_PAGE_SIZE) }),
+        signal: AbortSignal.timeout(options.timeoutMs),
+      });
+      // Never include the endpoint in errors: it contains the key.
+      if (!response.ok) throw new Error(`jooble responded ${response.status}`);
+      const body: unknown = await response.json();
+      if (!isRecord(body) || !Array.isArray(body.jobs)) return { items: [], total: 0 };
+      const items = body.jobs.map(toJoobleJob).filter((job): job is ExternalJob => job !== null).slice(0, EXTERNAL_PAGE_SIZE);
+      const total = typeof body.totalCount === 'number' && body.totalCount >= 0 ? body.totalCount : items.length;
       const value = { items, total };
       if (ttlMs > 0) {
         if (cache.size > 500) cache.clear();
