@@ -2,7 +2,8 @@
 
 Estado:
 
-- **Jooble**: código listo; se activa con `JOOBLE_ENABLED=true` (clave `JOOBLE_API_KEY` ya creada en ambos servicios, 2026-11-19). Solo envía las palabras clave y la ubicación (no IP ni navegador del visitante). Si el visitante no escribe ubicación se usa `JOOBLE_DEFAULT_LOCATION` (`Colombia`).
+- **Jooble**: **activo en QA** (2026-11-20) con clave de Colombia y `JOOBLE_API_URL=https://co.jooble.org/api/`. Las claves de Jooble son **por país**: la primera, pedida en jooble.org, solo traía vacantes de EE. UU. y con `co.jooble.org` respondía 403; la de Colombia se pide en https://co.jooble.org/api/about. Verificado: "contador" en Medellín → 3.694 vacantes; "auxiliar administrativo" en todo el país → 20.455.
+- **Jooble (detalle)**: código listo; se activa con `JOOBLE_ENABLED=true` (clave `JOOBLE_API_KEY` ya creada en ambos servicios, 2026-11-19). Solo envía las palabras clave y la ubicación (no IP ni navegador del visitante). Si el visitante no escribe ubicación se usa `JOOBLE_DEFAULT_LOCATION` (`Colombia`).
 - **Careerjet**: código listo y **apagado** (`CAREERJET_ENABLED`). Se activa cuando Careerjet acepte las IP de salida de Render y el owner confirme sus condiciones.
 - **Remotive**: código listo; se activa con `REMOTIVE_ENABLED=true`. No envía datos de los visitantes. La API pública devuelve pocas vacantes (15 el 2026-11-19, 9 abiertas a Colombia); la API privada es de pago.
 

@@ -156,6 +156,8 @@ export interface JoobleOptions {
   defaultLocation?: string;
   timeoutMs: number;
   cacheSeconds?: number;
+  /** Offers older than this are dropped (Jooble mixes in long-running sponsored ads). Default 60. */
+  maxAgeDays?: number;
   fetchImpl?: typeof fetch;
   now?: () => number;
 }
@@ -209,7 +211,13 @@ export function createJoobleProvider(options: JoobleOptions): ExternalJobsProvid
       if (!response.ok) throw new Error(`jooble responded ${response.status}`);
       const body: unknown = await response.json();
       if (!isRecord(body) || !Array.isArray(body.jobs)) return { items: [], total: 0 };
-      const items = body.jobs.map(toJoobleJob).filter((job): job is ExternalJob => job !== null).slice(0, EXTERNAL_PAGE_SIZE);
+      const oldest = now() - (options.maxAgeDays ?? 60) * 24 * 60 * 60 * 1000;
+      const items = body.jobs
+        .map(toJoobleJob)
+        .filter((job): job is ExternalJob => job !== null)
+        // Undated offers stay; dated ones older than maxAgeDays are stale or sponsored filler.
+        .filter((job) => !job.postedAt || Date.parse(job.postedAt) >= oldest)
+        .slice(0, EXTERNAL_PAGE_SIZE);
       const total = typeof body.totalCount === 'number' && body.totalCount >= 0 ? body.totalCount : items.length;
       const value = { items, total };
       if (ttlMs > 0) {

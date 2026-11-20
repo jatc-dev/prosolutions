@@ -229,6 +229,18 @@ describe('jooble feed', () => {
     await expect(failing.search(QUERY)).rejects.toThrow(/^jooble responded 403$/);
   });
 
+  it('drops offers older than 60 days but keeps undated ones', async () => {
+    const now = Date.parse('2026-11-20T00:00:00Z');
+    const jobs = [
+      { ...JOOBLE_JOB, link: 'https://co.jooble.org/jdp/1', updated: '2026-11-18T08:30:00' },
+      { ...JOOBLE_JOB, link: 'https://co.jooble.org/jdp/2', updated: '2025-04-16T08:30:00' },
+      { ...JOOBLE_JOB, link: 'https://co.jooble.org/jdp/3', updated: '' },
+    ];
+    const provider = createJoobleProvider({ apiKey: 'secret-key-1234', timeoutMs: 1000, fetchImpl: fakeFetch({ totalCount: 3, jobs }).impl, now: () => now });
+    const result = await provider.search(QUERY);
+    expect(result.items.map((job) => job.url)).toEqual(['https://co.jooble.org/jdp/1', 'https://co.jooble.org/jdp/3']);
+  });
+
   it('is off unless enabled with a key', () => {
     const base = { NODE_ENV: 'test' as const };
     expect(loadConfig({ ...base, JOOBLE_API_KEY: 'secret-key-1234' }).externalJobs.jooble.enabled).toBe(false);
