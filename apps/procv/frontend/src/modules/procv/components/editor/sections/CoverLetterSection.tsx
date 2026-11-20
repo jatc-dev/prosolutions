@@ -72,7 +72,7 @@ export function CoverLetterSection({ cv, onChange }: Props) {
             <button
               type="button"
               onClick={generate}
-              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-800"
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-900"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               Generar borrador con mis datos
