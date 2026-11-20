@@ -1,9 +1,29 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
+/**
+ * AdSense site-ownership tag (<meta name="google-adsense-account">). It sets
+ * no cookies, so it can live in every page while the ad script itself waits
+ * for consent. Added only when VITE_ADSENSE_CLIENT_ID is configured.
+ */
+function adsenseAccountMeta(): Plugin {
+  let id = "";
+  return {
+    name: "adsense-account-meta",
+    configResolved(config) {
+      const raw = String(config.env.VITE_ADSENSE_CLIENT_ID || "").trim();
+      id = raw.startsWith("ca-pub-") ? raw : raw.startsWith("pub-") ? `ca-${raw}` : "";
+    },
+    transformIndexHtml(html) {
+      if (!/^ca-pub-\d{10,20}$/.test(id)) return html;
+      return html.replace("</head>", `    <meta name="google-adsense-account" content="${id}" />\n  </head>`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), adsenseAccountMeta()],
   resolve: {
     alias: {
       // Referencia directa al código fuente del paquete del monorepo:

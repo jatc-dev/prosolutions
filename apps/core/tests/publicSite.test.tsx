@@ -22,8 +22,8 @@ const renderRoute = (url: string) =>
   );
 
 describe("ProAcademy content", () => {
-  it("ships 8 original articles of at least 900 words with complete metadata", () => {
-    expect(ARTICLES).toHaveLength(8);
+  it("ships 12 original articles of at least 900 words with complete metadata", () => {
+    expect(ARTICLES).toHaveLength(12);
     for (const article of ARTICLES) {
       expect(wordCount(article.body), article.slug).toBeGreaterThanOrEqual(900);
       expect(article.description.length, article.slug).toBeGreaterThanOrEqual(80);
@@ -62,7 +62,7 @@ describe("markdown renderer", () => {
 describe("SEO and prerender", () => {
   it("lists every public page with head metadata and no private areas", () => {
     const routes = publicRoutes();
-    expect(routes.length).toBe(1 + 1 + 8 + 1 + 4 + 4 + 2);
+    expect(routes.length).toBe(1 + 1 + 12 + 1 + 4 + 4 + 2);
     for (const route of routes) {
       const head = headForPath(route.path);
       expect(head, route.path).not.toBeNull();

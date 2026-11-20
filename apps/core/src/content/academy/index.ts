@@ -6,6 +6,10 @@ import remote from "./articulos/trabajo-remoto-internacional-latam.md?raw";
 import transition from "./articulos/transicion-carrera-roles-digitales.md?raw";
 import cvMistakes from "./articulos/errores-que-descartan-un-cv.md?raw";
 import employers from "./articulos/guia-empresas-ofertas-transparentes.md?raw";
+import firstJob from "./articulos/primer-empleo-sin-experiencia.md?raw";
+import coverLetter from "./articulos/como-escribir-carta-de-presentacion.md?raw";
+import virtualInterview from "./articulos/entrevista-de-trabajo-virtual.md?raw";
+import resign from "./articulos/como-renunciar-a-un-trabajo.md?raw";
 import { readingMinutes } from "../markdown";
 
 export type AcademyCategory = "hoja-de-vida" | "entrevistas" | "salarios-y-contratos" | "carrera" | "empresas";
@@ -150,6 +154,54 @@ const seeds: ArticleSeed[] = [
     updatedAt: "2026-11-18",
     related: ["salarios-prestaciones-contratos-colombia", "como-negociar-salario", "errores-que-descartan-un-cv"],
     body: employers,
+  },
+  {
+    slug: "primer-empleo-sin-experiencia",
+    title: "Cómo conseguir tu primer empleo sin experiencia: hoja de vida, búsqueda y entrevista",
+    description:
+      "Convierte proyectos, voluntariados y trabajos informales en experiencia que convence, encuentra vacantes junior y prepárate para la entrevista de tu primer empleo.",
+    category: "carrera",
+    author: "editorial",
+    publishedAt: "2026-11-19",
+    updatedAt: "2026-11-19",
+    related: ["hoja-de-vida-ats-2026", "como-escribir-carta-de-presentacion", "preguntas-entrevista-metodo-star"],
+    body: firstJob,
+  },
+  {
+    slug: "como-escribir-carta-de-presentacion",
+    title: "Cómo escribir una carta de presentación: estructura, ejemplo y errores a evitar",
+    description:
+      "Qué debe decir una carta de presentación, cómo organizar sus cuatro párrafos, un ejemplo completo para adaptar y los errores que hacen que nadie la lea.",
+    category: "hoja-de-vida",
+    author: "editorial",
+    publishedAt: "2026-11-19",
+    updatedAt: "2026-11-19",
+    related: ["hoja-de-vida-ats-2026", "primer-empleo-sin-experiencia", "errores-que-descartan-un-cv"],
+    body: coverLetter,
+  },
+  {
+    slug: "entrevista-de-trabajo-virtual",
+    title: "Entrevista de trabajo virtual: preparación técnica, presentación y respuestas",
+    description:
+      "Cómo preparar cámara, conexión, luz y fondo para una entrevista por videollamada o grabada, qué hacer si falla la conexión y cómo responder con seguridad.",
+    category: "entrevistas",
+    author: "editorial",
+    publishedAt: "2026-11-19",
+    updatedAt: "2026-11-19",
+    related: ["preguntas-entrevista-metodo-star", "como-negociar-salario", "trabajo-remoto-internacional-latam"],
+    body: virtualInterview,
+  },
+  {
+    slug: "como-renunciar-a-un-trabajo",
+    title: "Cómo renunciar a un trabajo en Colombia: carta, liquidación y documentos",
+    description:
+      "Cómo comunicar tu renuncia, un modelo de carta, qué incluye la liquidación al salir, qué documentos pedir y cómo hacer un empalme que deje buenas referencias.",
+    category: "salarios-y-contratos",
+    author: "editorial",
+    publishedAt: "2026-11-19",
+    updatedAt: "2026-11-19",
+    related: ["salarios-prestaciones-contratos-colombia", "como-negociar-salario", "primer-empleo-sin-experiencia"],
+    body: resign,
   },
 ];
 

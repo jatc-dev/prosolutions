@@ -18,9 +18,11 @@ export const SITE = {
     /** Brand that operates the platform. */
     name: "JATC.DEV",
     url: "https://jatc.dev",
-    /** Legal identification (NIT/registration) — fill in once confirmed. */
+    /**
+     * Legal identification and address stay empty on purpose: the owner does
+     * not publish personal data; requests go through the contact email.
+     */
     taxId: "",
-    /** Registered address — fill in once confirmed. */
     address: "",
     city: "Colombia",
   },
