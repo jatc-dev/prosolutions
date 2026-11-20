@@ -216,6 +216,33 @@ export interface IntegrationEvent<TPayload = Record<string, unknown>> {
   payload: TPayload;
 }
 
+/**
+ * Job from an external partner feed (Careerjet). Shown with its source and a
+ * link to the original offer; never indexed, never marked up as JobPosting.
+ */
+export interface ExternalJob {
+  /** Stable id derived from the offer URL. */
+  id: string;
+  title: string;
+  company: string | null;
+  location: string | null;
+  /** Plain-text excerpt (HTML removed). */
+  snippet: string;
+  salary: string | null;
+  postedAt: string | null;
+  url: string;
+  source: 'careerjet';
+}
+
+export interface ExternalJobsResponse {
+  /** False while the integration is switched off: the web hides the section. */
+  enabled: boolean;
+  /** Attribution shown next to the results ("Empleos por Careerjet"). */
+  source: { name: string; url: string } | null;
+  items: ExternalJob[];
+  total: number;
+}
+
 export interface ApiError {
   error: { code: string; message: string; details?: unknown };
 }

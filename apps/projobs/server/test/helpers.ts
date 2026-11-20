@@ -11,6 +11,7 @@ import { createPgliteDatabase } from '../src/db/pglite.js';
 import { seedDemoData } from '../src/db/seed.js';
 import { notFound } from '../src/http/errors.js';
 import type { ProCvClient } from '../src/integrations/procv.js';
+import type { ExternalJobsProvider } from '../src/integrations/externalJobs.js';
 
 export const JWT = { secret: 'test-secret-with-at-least-32-characters!!', issuer: 'https://identity.test', audience: 'prosolutions-api' };
 export const INTERNAL_TOKEN = 'internal-token-for-tests-0123456789abcdef';
@@ -66,7 +67,7 @@ export interface TestApi {
   close: () => Promise<void>;
 }
 
-export async function startTestApi(options: { internalToken?: boolean; seed?: boolean } = {}): Promise<TestApi> {
+export async function startTestApi(options: { internalToken?: boolean; seed?: boolean; externalJobs?: ExternalJobsProvider | null } = {}): Promise<TestApi> {
   // Runtime role projobs_api: queries run with the same privileges and RLS as production.
   const db = await createPgliteDatabase('projobs_api');
   await runMigrations(db);
@@ -85,6 +86,7 @@ export async function startTestApi(options: { internalToken?: boolean; seed?: bo
     log: () => undefined,
     verify: createIdentityVerifier(config.jwt),
     procv: fakeProCv(),
+    externalJobs: options.externalJobs ?? null,
   });
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, () => resolve(s));

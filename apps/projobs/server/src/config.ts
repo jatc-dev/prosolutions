@@ -24,6 +24,15 @@ export interface AppConfig {
   webUrl: string;
   /** Public origin of this API (unsubscribe links). */
   apiUrl: string;
+  /** Partner job feeds. Off unless EXTERNAL_JOBS_ENABLED=true and a provider key is set. */
+  externalJobs: {
+    enabled: boolean;
+    careerjetApiKey: string | null;
+    careerjetLocale: string;
+    /** Server-side cache of identical searches (0 = no cache, until the partner terms allow it). */
+    cacheSeconds: number;
+    timeoutMs: number;
+  };
 }
 
 const identifier = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -46,6 +55,11 @@ const schema = z.object({
   TRUST_PROXY: z.enum(['true', 'false']).optional(),
   PUBLIC_WEB_URL: z.string().trim().url().default('https://projobs.prosolutions.page'),
   PUBLIC_API_URL: z.string().trim().url().optional(),
+  EXTERNAL_JOBS_ENABLED: z.enum(['true', 'false']).default('false'),
+  CAREERJET_API_KEY: z.string().trim().min(8).optional(),
+  CAREERJET_LOCALE: z.string().trim().regex(/^[a-z]{2}_[A-Z]{2}$/).default('es_CO'),
+  EXTERNAL_JOBS_CACHE_SECONDS: z.coerce.number().int().min(0).max(3600).default(0),
+  EXTERNAL_JOBS_TIMEOUT_MS: z.coerce.number().int().min(500).max(15_000).default(4000),
 });
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -85,5 +99,12 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     trustProxy: env.TRUST_PROXY ? env.TRUST_PROXY === 'true' : isProduction,
     webUrl: env.PUBLIC_WEB_URL.replace(/\/+$/, ''),
     apiUrl: (env.PUBLIC_API_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
+    externalJobs: {
+      enabled: env.EXTERNAL_JOBS_ENABLED === 'true' && Boolean(env.CAREERJET_API_KEY),
+      careerjetApiKey: env.CAREERJET_API_KEY ?? null,
+      careerjetLocale: env.CAREERJET_LOCALE,
+      cacheSeconds: env.EXTERNAL_JOBS_CACHE_SECONDS,
+      timeoutMs: env.EXTERNAL_JOBS_TIMEOUT_MS,
+    },
   };
 }

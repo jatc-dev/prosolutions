@@ -7,6 +7,7 @@ import { FiltersPanel } from "../components/FiltersPanel";
 import { JobCard, JobCardSkeleton } from "../components/JobCard";
 import { JobDetailView } from "../components/JobDetailView";
 import { EmptyState, ErrorNotice, Spinner } from "../components/primitives";
+import { ExternalJobs } from "../components/ExternalJobs";
 import { errorMessage } from "../lib/api";
 import { PROCV_URL } from "../lib/env";
 import { useMySkills, useSaveToggle } from "../lib/candidate";
@@ -245,6 +246,7 @@ export function JobsPage() {
               )}
             </>
           )}
+          <ExternalJobs q={filters.q} location={filters.location} />
         </section>
 
         {isDesktop && !catalogEmpty && (
