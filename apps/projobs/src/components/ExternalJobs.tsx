@@ -1,12 +1,12 @@
 import { ExternalLink, Globe2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { ExternalJob, ExternalJobsResponse } from "../../server/src/contracts";
+import type { ExternalJob, ExternalJobsResponse, ExternalSource } from "../../server/src/contracts";
 import { apiRequest } from "../lib/api";
 import { useAsync } from "../lib/hooks";
 import { timeAgo } from "../lib/format";
 
 /**
- * Offers from a partner feed (Careerjet), below ProJobs' own results. They
+ * Offers from partner feeds (Careerjet, Remotive), below ProJobs' own results. They
  * open the original offer on the partner site: no detail page, no sign-up
  * required, no JobPosting markup. Hidden while the integration is off.
  */
@@ -26,9 +26,17 @@ export function ExternalJobs({ q, location }: { q: string; location: string }) {
     setItems((current) => (page === 1 ? result.data!.items : [...current, ...result.data!.items.filter((job) => !current.some((item) => item.id === job.id))]));
   }, [result.data]);
 
+  // Remember every source seen while paginating, for attribution.
+  const [sources, setSources] = useState<ExternalSource[]>([]);
+  useEffect(() => {
+    if (!result.data) return;
+    setSources((current) => (page === 1 ? result.data!.sources : [...current, ...result.data!.sources.filter((source) => !current.some((item) => item.id === source.id))]));
+  }, [result.data]);
+
   const data = result.data;
-  if (!data?.enabled || !data.source || (items.length === 0 && !result.loading)) return null;
+  if (!data?.enabled || (items.length === 0 && !result.loading)) return null;
   const canLoadMore = items.length < data.total && page < 10 && data.items.length > 0;
+  const sourceName = (id: ExternalJob["source"]) => sources.find((source) => source.id === id)?.name ?? id;
 
   return (
     <section aria-labelledby="vacantes-externas" className="mt-8">
@@ -40,9 +48,17 @@ export function ExternalJobs({ q, location }: { q: string; location: string }) {
           </h2>
           <p className="text-sm text-ui-muted">Ofertas publicadas en otros portales. Te llevamos a la oferta original para postularte allí.</p>
         </div>
-        <a href={data.source.url} target="_blank" rel="nofollow noopener noreferrer" className="text-xs text-ui-subtle hover:underline">
-          Empleos por {data.source.name}
-        </a>
+        <p className="text-xs text-ui-subtle">
+          Empleos por{" "}
+          {sources.map((source, index) => (
+            <span key={source.id}>
+              {index > 0 ? (index === sources.length - 1 ? " y " : ", ") : null}
+              <a href={source.url} target="_blank" rel="nofollow noopener noreferrer" className="hover:underline">
+                {source.name}
+              </a>
+            </span>
+          ))}
+        </p>
       </div>
       <ul className="mt-3 space-y-3">
         {items.map((job) => (
@@ -54,7 +70,7 @@ export function ExternalJobs({ q, location }: { q: string; location: string }) {
                 {job.salary ? <p className="mt-1 text-sm font-medium text-ui-text">{job.salary}</p> : null}
                 {job.snippet ? <p className="mt-2 line-clamp-2 text-sm text-ui-muted">{job.snippet}</p> : null}
                 <p className="mt-2 text-xs text-ui-subtle">
-                  Publicada en {data.source!.name}
+                  Publicada en {sourceName(job.source)}
                   {job.postedAt ? ` · ${timeAgo(job.postedAt)}` : ""}
                 </p>
               </div>
@@ -66,7 +82,7 @@ export function ExternalJobs({ q, location }: { q: string; location: string }) {
               >
                 Ver oferta
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only">(se abre en {data.source!.name})</span>
+                <span className="sr-only">(se abre en {sourceName(job.source)})</span>
               </a>
             </div>
           </li>

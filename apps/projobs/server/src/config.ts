@@ -24,11 +24,14 @@ export interface AppConfig {
   webUrl: string;
   /** Public origin of this API (unsubscribe links). */
   apiUrl: string;
-  /** Partner job feeds. Off unless EXTERNAL_JOBS_ENABLED=true and a provider key is set. */
+  /** Partner job feeds, each off unless switched on explicitly. */
   externalJobs: {
-    enabled: boolean;
-    careerjetApiKey: string | null;
-    careerjetLocale: string;
+    /** CAREERJET_ENABLED=true and a key. Sends visitor IP/user agent to Careerjet. */
+    careerjet: { enabled: boolean; apiKey: string | null; locale: string };
+    /** REMOTIVE_ENABLED=true. Server-side feed, no visitor data leaves ProJobs. */
+    remotiveEnabled: boolean;
+    /** JOOBLE_ENABLED=true and a key. Only the search terms are sent to Jooble. */
+    jooble: { enabled: boolean; apiKey: string | null; apiUrl: string; defaultLocation: string };
     /** Server-side cache of identical searches (0 = no cache, until the partner terms allow it). */
     cacheSeconds: number;
     timeoutMs: number;
@@ -55,7 +58,12 @@ const schema = z.object({
   TRUST_PROXY: z.enum(['true', 'false']).optional(),
   PUBLIC_WEB_URL: z.string().trim().url().default('https://projobs.prosolutions.page'),
   PUBLIC_API_URL: z.string().trim().url().optional(),
-  EXTERNAL_JOBS_ENABLED: z.enum(['true', 'false']).default('false'),
+  CAREERJET_ENABLED: z.enum(['true', 'false']).default('false'),
+  REMOTIVE_ENABLED: z.enum(['true', 'false']).default('false'),
+  JOOBLE_ENABLED: z.enum(['true', 'false']).default('false'),
+  JOOBLE_API_KEY: z.string().trim().min(8).optional(),
+  JOOBLE_API_URL: z.string().trim().url().default('https://jooble.org/api/'),
+  JOOBLE_DEFAULT_LOCATION: z.string().trim().max(80).default('Colombia'),
   CAREERJET_API_KEY: z.string().trim().min(8).optional(),
   CAREERJET_LOCALE: z.string().trim().regex(/^[a-z]{2}_[A-Z]{2}$/).default('es_CO'),
   EXTERNAL_JOBS_CACHE_SECONDS: z.coerce.number().int().min(0).max(3600).default(0),
@@ -100,9 +108,18 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     webUrl: env.PUBLIC_WEB_URL.replace(/\/+$/, ''),
     apiUrl: (env.PUBLIC_API_URL ?? `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
     externalJobs: {
-      enabled: env.EXTERNAL_JOBS_ENABLED === 'true' && Boolean(env.CAREERJET_API_KEY),
-      careerjetApiKey: env.CAREERJET_API_KEY ?? null,
-      careerjetLocale: env.CAREERJET_LOCALE,
+      careerjet: {
+        enabled: env.CAREERJET_ENABLED === 'true' && Boolean(env.CAREERJET_API_KEY),
+        apiKey: env.CAREERJET_API_KEY ?? null,
+        locale: env.CAREERJET_LOCALE,
+      },
+      remotiveEnabled: env.REMOTIVE_ENABLED === 'true',
+      jooble: {
+        enabled: env.JOOBLE_ENABLED === 'true' && Boolean(env.JOOBLE_API_KEY),
+        apiKey: env.JOOBLE_API_KEY ?? null,
+        apiUrl: env.JOOBLE_API_URL.endsWith('/') ? env.JOOBLE_API_URL : `${env.JOOBLE_API_URL}/`,
+        defaultLocation: env.JOOBLE_DEFAULT_LOCATION,
+      },
       cacheSeconds: env.EXTERNAL_JOBS_CACHE_SECONDS,
       timeoutMs: env.EXTERNAL_JOBS_TIMEOUT_MS,
     },

@@ -216,9 +216,19 @@ export interface IntegrationEvent<TPayload = Record<string, unknown>> {
   payload: TPayload;
 }
 
+export type ExternalSourceId = 'jooble' | 'careerjet' | 'remotive';
+
+/** Partner feed credited next to its offers ("Empleos por Careerjet"). */
+export interface ExternalSource {
+  id: ExternalSourceId;
+  name: string;
+  url: string;
+}
+
 /**
- * Job from an external partner feed (Careerjet). Shown with its source and a
- * link to the original offer; never indexed, never marked up as JobPosting.
+ * Job from an external partner feed (Jooble, Careerjet, Remotive). Shown with its
+ * source and a link to the original offer; never indexed, never marked up as
+ * JobPosting.
  */
 export interface ExternalJob {
   /** Stable id derived from the offer URL. */
@@ -231,14 +241,14 @@ export interface ExternalJob {
   salary: string | null;
   postedAt: string | null;
   url: string;
-  source: 'careerjet';
+  source: ExternalSourceId;
 }
 
 export interface ExternalJobsResponse {
   /** False while the integration is switched off: the web hides the section. */
   enabled: boolean;
-  /** Attribution shown next to the results ("Empleos por Careerjet"). */
-  source: { name: string; url: string } | null;
+  /** Feeds that answered, for attribution. */
+  sources: ExternalSource[];
   items: ExternalJob[];
   total: number;
 }
