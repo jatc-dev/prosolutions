@@ -20,6 +20,8 @@ export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
 export type LanguageLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type LinkType = 'linkedin' | 'github' | 'portfolio' | 'website' | 'twitter' | 'other';
 export type ProfileImageStyle = 'round' | 'square' | 'portrait';
+/** Photo size in templates: small, medium (default), large, extra large. */
+export type ProfileImageSize = 'sm' | 'md' | 'lg' | 'xl';
 
 // ==============================================
 // CONTACT INTERFACES
@@ -66,6 +68,7 @@ export interface PersonalData {
   professionalTitle: string;
   profileImage?: string;
   profileImageStyle?: ProfileImageStyle;
+  profileImageSize?: ProfileImageSize;
   showProfileImage?: boolean;
   documentType?: string;
   documentNumber?: string;

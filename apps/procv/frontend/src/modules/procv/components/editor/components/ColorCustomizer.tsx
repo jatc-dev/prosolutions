@@ -46,6 +46,9 @@ interface ColorCustomizerProps {
 export function ColorCustomizer({ settings, onChange }: ColorCustomizerProps) {
   return (
     <div className="space-y-2">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Mientras no cambies un color, la plantilla usa su propia paleta.
+      </p>
       <ColorField
         label="Color de acento"
         value={settings.accentColor || "#3b82f6"}
@@ -81,6 +84,13 @@ export function ColorCustomizer({ settings, onChange }: ColorCustomizerProps) {
         value={settings.sidebarSectionTitleColor || "#f1f5f9"}
         onChange={(v) => onChange({ sidebarSectionTitleColor: v })}
       />
+      <button
+        type="button"
+        onClick={() => onChange({ accentColor: undefined, headingColor: undefined, textColor: undefined, mutedTextColor: undefined, linkColor: undefined, sidebarTextColor: undefined, sidebarSectionTitleColor: undefined })}
+        className="mt-2 w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+      >
+        Usar los colores de la plantilla
+      </button>
     </div>
   );
 }

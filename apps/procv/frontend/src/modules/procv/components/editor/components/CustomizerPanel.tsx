@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LayoutPanelLeft, Palette, Type, type LucideIcon } from "lucide-react";
 import { FontSelector } from "./FontSelector";
 import { ColorCustomizer } from "./ColorCustomizer";
 import { LayoutCustomizer } from "./LayoutCustomizer";
@@ -21,10 +22,10 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
     onSettingsChange({ ...settings, ...partial });
   };
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "fonts", label: t("customizer.tabs.fonts", "Fuentes"), icon: "Aa" },
-    { key: "colors", label: t("customizer.tabs.colors", "Colores"), icon: "??" },
-    { key: "layout", label: t("customizer.tabs.layout", "Layout"), icon: "??" },
+  const tabs: { key: Tab; label: string; icon: LucideIcon }[] = [
+    { key: "fonts", label: t("customizer.tabs.fonts", "Fuentes"), icon: Type },
+    { key: "colors", label: t("customizer.tabs.colors", "Colores"), icon: Palette },
+    { key: "layout", label: t("customizer.tabs.layout", "Diseño"), icon: LayoutPanelLeft },
   ];
 
   return (
@@ -47,7 +48,7 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
-            <span className="mr-1">{tab.icon}</span>
+            <tab.icon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" aria-hidden="true" />
             {tab.label}
           </button>
         ))}
@@ -58,12 +59,12 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
           <div className="space-y-4">
             <FontSelector
               label={t("customizer.fontBody", "Fuente del cuerpo")}
-              value={settings.fontBody || "inter"}
+              value={settings.fontBody || "template"}
               onChange={(v) => update({ fontBody: v })}
             />
             <FontSelector
-              label={t("customizer.fontHeading", "Fuente de t�tulos")}
-              value={settings.fontHeading || "inter"}
+              label={t("customizer.fontHeading", "Fuente de títulos")}
+              value={settings.fontHeading || "template"}
               onChange={(v) => update({ fontHeading: v })}
             />
           </div>

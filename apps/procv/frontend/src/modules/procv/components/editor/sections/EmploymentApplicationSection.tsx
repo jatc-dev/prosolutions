@@ -1,37 +1,107 @@
 import React from "react";
-import { FormSection } from "../FormSection";
-import { ValidationErrors } from "../../../../../shared/types";
 
 type Values = Record<string, string>;
-interface Props { data: Values; onChange: (data: Values) => void; errors?: ValidationErrors; isLoading?: boolean; }
 
-const groups: Array<{title:string; fields:Array<{key:string;label:string;multiline?:boolean}>}> = [
-{title:"I. Información general",fields:[
-{key:"applicationDate",label:"Fecha de diligenciamiento"},{key:"positionRequested",label:"Cargo solicitado"},{key:"vacancyCode",label:"Código de vacante"},{key:"surnames",label:"Apellidos"},{key:"givenNames",label:"Nombres"},{key:"address",label:"Dirección de residencia"},{key:"city",label:"Ciudad / municipio"},{key:"phone",label:"Teléfono / celular"},{key:"email",label:"Correo electrónico"},{key:"nationality",label:"Nacionalidad"},{key:"occupation",label:"Oficio o profesión"},{key:"civilStatus",label:"Estado civil"},{key:"totalExperience",label:"Tiempo total de experiencia"},{key:"documentTypeNumber",label:"Tipo y número de documento"},{key:"documentAvailability",label:"Documentos disponibles",multiline:true}]},
-{title:"II. Información personal y disponibilidad",fields:[
-{key:"currentEmployment",label:"Situación laboral actual",multiline:true},{key:"previousCompanyRelation",label:"Relación laboral previa con la empresa",multiline:true},{key:"companyReferences",label:"Personas conocidas en la empresa",multiline:true},{key:"vacancySource",label:"¿Cómo se enteró de la vacante?"},{key:"relocationAvailability",label:"Disponibilidad para trasladarse"},{key:"housingType",label:"Tipo de vivienda"},{key:"additionalIncome",label:"Otros ingresos y origen",multiline:true},{key:"financialObligations",label:"Obligaciones económicas (opcional)",multiline:true},{key:"salaryExpectation",label:"Aspiración salarial"},{key:"hobbies",label:"Aficiones e intereses",multiline:true},{key:"awards",label:"Reconocimientos",multiline:true},{key:"careerObjective",label:"Objetivo laboral",multiline:true}]},
-{title:"III. Información familiar",fields:[
-{key:"partnerName",label:"Cónyuge o compañero(a): nombre"},{key:"partnerOccupation",label:"Ocupación"},{key:"partnerCompany",label:"Empresa"},{key:"partnerPhone",label:"Teléfono"},{key:"dependants",label:"Personas a cargo: nombre, parentesco y edad",multiline:true},{key:"fatherDetails",label:"Padre: nombre, ocupación y contacto",multiline:true},{key:"motherDetails",label:"Madre: nombre, ocupación y contacto",multiline:true},{key:"siblings",label:"Hermanos: nombre, ocupación y contacto",multiline:true}]},
-{title:"IV. Educación, formación y aptitudes",fields:[
-{key:"primaryEducation",label:"Educación primaria: institución, ciudad, años cursados y año de finalización",multiline:true},{key:"secondaryEducation",label:"Educación secundaria: institución, ciudad, años cursados y año de finalización",multiline:true},{key:"technicalEducation",label:"Formación técnica / tecnológica: institución, título, ciudad y año",multiline:true},{key:"universityEducation",label:"Formación universitaria: institución, título, ciudad y año",multiline:true},{key:"otherCourses",label:"Cursos y seminarios: tema, institución, intensidad horaria y fecha",multiline:true},{key:"currentStudies",label:"Estudios actuales",multiline:true},{key:"computerSkills",label:"Conocimientos de sistemas y herramientas",multiline:true},{key:"languageSkills",label:"Idiomas: lectura, escritura y conversación",multiline:true}]},
-{title:"V. Sectores y áreas de desempeño",fields:[{key:"economicSectors",label:"Sectores económicos en los que ha trabajado",multiline:true},{key:"workAreas",label:"Áreas y funciones en las que tiene experiencia",multiline:true}]},
-{title:"VI. Experiencia laboral",fields:[
-{key:"job1",label:"Empleo 1: empresa, actividad, dirección, ciudad y teléfono",multiline:true},{key:"job1Supervisor",label:"Jefe inmediato y contacto"},{key:"job1Dates",label:"Fechas de ingreso y retiro; tiempo servido"},{key:"job1PositionSalary",label:"Cargo, salario inicial y final"},{key:"job1Duties",label:"Funciones y logros",multiline:true},{key:"job1ContractExit",label:"Tipo de contrato, jornada y motivo de retiro",multiline:true},
-{key:"job2",label:"Empleo 2: empresa, actividad, dirección, ciudad y teléfono",multiline:true},{key:"job2Supervisor",label:"Jefe inmediato y contacto"},{key:"job2Dates",label:"Fechas de ingreso y retiro; tiempo servido"},{key:"job2PositionSalary",label:"Cargo, salario inicial y final"},{key:"job2Duties",label:"Funciones y logros",multiline:true},{key:"job2ContractExit",label:"Tipo de contrato, jornada y motivo de retiro",multiline:true},
-{key:"job3",label:"Empleo 3: empresa, actividad, dirección, ciudad y teléfono",multiline:true},{key:"job3Supervisor",label:"Jefe inmediato y contacto"},{key:"job3Dates",label:"Fechas de ingreso y retiro; tiempo servido"},{key:"job3PositionSalary",label:"Cargo, salario inicial y final"},{key:"job3Duties",label:"Funciones y logros",multiline:true},{key:"job3ContractExit",label:"Tipo de contrato, jornada y motivo de retiro",multiline:true},
-{key:"healthProvider",label:"EPS / entidad de salud"},{key:"pensionFund",label:"Fondo de pensiones"},{key:"severanceFund",label:"Fondo de cesantías"}]},
-{title:"VII. Referencias",fields:[{key:"reference1",label:"Referencia personal 1: nombre, ocupación, relación y teléfono",multiline:true},{key:"reference2",label:"Referencia personal 2: nombre, ocupación, relación y teléfono",multiline:true},{key:"emergencyContact",label:"Contacto familiar de emergencia: nombre, parentesco y teléfono",multiline:true}]}
+interface Props {
+  data: Values;
+  onChange: (data: Values) => void;
+  isLoading?: boolean;
+}
+
+interface Field {
+  key: string;
+  label: string;
+  multiline?: boolean;
+  placeholder?: string;
+}
+
+/**
+ * Fields that only the 1003 format asks for. Everything else (name, document,
+ * contact, education, experience, skills, languages, references) comes from
+ * the regular CV form, so nothing is typed twice.
+ */
+export const FORMAT_1003_GROUPS: Array<{ title: string; fields: Field[] }> = [
+  {
+    title: "Solicitud",
+    fields: [
+      { key: "positionRequested", label: "Cargo al que aspira" },
+      { key: "vacancyCode", label: "Código de la vacante" },
+      { key: "applicationDate", label: "Fecha de diligenciamiento", placeholder: "AAAA-MM-DD" },
+      { key: "salaryExpectation", label: "Aspiración salarial" },
+      { key: "vacancySource", label: "¿Cómo se enteró de la vacante?" },
+      { key: "relocationAvailability", label: "Disponibilidad para trasladarse" },
+      { key: "currentEmployment", label: "Situación laboral actual", multiline: true },
+      { key: "previousCompanyRelation", label: "¿Ha trabajado antes en la empresa?", multiline: true },
+      { key: "companyReferences", label: "Personas conocidas en la empresa", multiline: true },
+    ],
+  },
+  {
+    title: "Información personal",
+    fields: [
+      { key: "civilStatus", label: "Estado civil" },
+      { key: "housingType", label: "Vivienda (propia, familiar, arrendada)" },
+      { key: "documentAvailability", label: "Otros documentos (libreta militar, licencia de conducción…)", multiline: true },
+      { key: "economicSectors", label: "Sectores económicos en los que ha trabajado", multiline: true },
+      { key: "workAreas", label: "Áreas de desempeño", multiline: true },
+      { key: "hobbies", label: "Aficiones", multiline: true },
+      { key: "awards", label: "Reconocimientos", multiline: true },
+    ],
+  },
+  {
+    title: "Información familiar",
+    fields: [
+      { key: "partnerName", label: "Cónyuge o compañero(a)" },
+      { key: "partnerOccupation", label: "Ocupación del cónyuge" },
+      { key: "partnerCompany", label: "Empresa del cónyuge" },
+      { key: "partnerPhone", label: "Teléfono del cónyuge" },
+      { key: "dependants", label: "Personas a cargo: nombre, parentesco y edad", multiline: true },
+      { key: "fatherDetails", label: "Padre: nombre, ocupación y contacto", multiline: true },
+      { key: "motherDetails", label: "Madre: nombre, ocupación y contacto", multiline: true },
+      { key: "siblings", label: "Hermanos", multiline: true },
+      { key: "emergencyContact", label: "Contacto de emergencia: nombre, parentesco y teléfono", multiline: true },
+    ],
+  },
+  {
+    title: "Seguridad social y finanzas",
+    fields: [
+      { key: "healthProvider", label: "EPS" },
+      { key: "pensionFund", label: "Fondo de pensiones" },
+      { key: "severanceFund", label: "Fondo de cesantías" },
+      { key: "additionalIncome", label: "Otros ingresos", multiline: true },
+      { key: "financialObligations", label: "Obligaciones económicas", multiline: true },
+    ],
+  },
 ];
 
-export const EmploymentApplicationSection: React.FC<Props> = ({data,onChange,errors={},isLoading=false}) => {
-const update=(key:string,value:string)=>onChange({...data,[key]:value});
-return <FormSection title="Solicitud de empleo" description="Información complementaria para procesos de selección. Todos los campos son opcionales; completa únicamente los que correspondan." errors={errors} isLoading={isLoading}>
-<div className="mb-4 rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-950 dark:border-brand-900 dark:bg-brand-950/30 dark:text-brand-100">Los datos familiares y económicos son opcionales. Puedes dejarlos en blanco.</div>
-{groups.map(group=><section key={group.title} className="space-y-4 border-b border-slate-200 pb-6 pt-2 last:border-0 dark:border-slate-700">
-<h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{group.title}</h3>
-<div className="grid grid-cols-1 gap-4 md:grid-cols-2">{group.fields.map(field=><label key={field.key} className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-<span>{field.label}</span>
-{field.multiline?<textarea value={data[field.key]||""} disabled={isLoading} rows={3} onChange={e=>update(field.key,e.target.value)} className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="Opcional"/>:<input value={data[field.key]||""} disabled={isLoading} onChange={e=>update(field.key,e.target.value)} className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="Opcional"/>}
-</label>)}</div></section>)}
-</FormSection>;
+const inputClass =
+  "mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
+
+/** Extra fields of the 1003 template, shown inside "Datos personales" only while that template is active. */
+export const Format1003Fields: React.FC<Props> = ({ data, onChange, isLoading = false }) => {
+  const update = (key: string, value: string) => onChange({ ...data, [key]: value });
+  return (
+    <section aria-labelledby="formato-1003" className="mt-8 rounded-xl border border-brand-200 bg-brand-50/50 p-5 dark:border-brand-900 dark:bg-brand-950/20">
+      <h3 id="formato-1003" className="text-base font-semibold text-slate-900 dark:text-slate-100">Datos del formato 1003</h3>
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+        Tus datos personales, educación, experiencia y referencias ya se toman del resto del formulario. Aquí solo van los datos propios de este formato. Todos son opcionales.
+      </p>
+      {FORMAT_1003_GROUPS.map((group) => (
+        <details key={group.title} open={group.title === "Solicitud"} className="group mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800 dark:text-slate-100">{group.title}</summary>
+          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {group.fields.map((field) => (
+              <label key={field.key} className={`block text-sm font-medium text-slate-700 dark:text-slate-200 ${field.multiline ? "md:col-span-2" : ""}`}>
+                <span>{field.label}</span>
+                {field.multiline ? (
+                  <textarea value={data[field.key] || ""} disabled={isLoading} rows={2} onChange={(e) => update(field.key, e.target.value)} className={inputClass} placeholder="Opcional" />
+                ) : (
+                  <input value={data[field.key] || ""} disabled={isLoading} onChange={(e) => update(field.key, e.target.value)} className={inputClass} placeholder={field.placeholder || "Opcional"} />
+                )}
+              </label>
+            ))}
+          </div>
+        </details>
+      ))}
+    </section>
+  );
 };

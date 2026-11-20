@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountrySelect } from "../../../../../components/ui/CountrySelect";
 import toast from 'react-hot-toast';
-import { PersonalData, ContactItem, PhoneItem, ProfileImageStyle, ValidationErrors } from "../../../../../shared/types";
+import { PersonalData, ContactItem, PhoneItem, ProfileImageSize, ProfileImageStyle, ValidationErrors } from "../../../../../shared/types";
 import {
   FormSection,
   FormField,
@@ -28,6 +28,12 @@ const VisibilityToggle: React.FC<{ checked: boolean; onChange: (checked: boolean
 
 const CUSTOM_LABEL_VALUE = '__custom__';
 const COMBINED_VALUE_SEPARATOR = '__::__';
+const PHOTO_SIZE_OPTIONS: Array<{ value: ProfileImageSize; label: string }> = [
+  { value: 'sm', label: 'Pequeña' },
+  { value: 'md', label: 'Mediana' },
+  { value: 'lg', label: 'Grande' },
+  { value: 'xl', label: 'Muy grande' },
+];
 
 const resolveLabelSelection = (label: string | undefined, options: string[]) => {
   const normalized = (label || '').trim();
@@ -315,62 +321,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       errors={errors}
       isLoading={isLoading}
     >
-      {/* Basic Information */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <FormField
-          label={t('editor.personal.fields.fullName')}
-          required
-          error={errors.fullName?.[0]}
-        >
-          <InputField
-            value={data.fullName}
-            onChange={(value) => updateField('fullName', value)}
-            placeholder={t('editor.personal.placeholders.fullName')}
-            required
-          />
-        </FormField>
-
-        <FormField
-          label={t('editor.personal.fields.professionalTitle')}
-          error={errors.professionalTitle?.[0]}
-          help={t('editor.personal.help.professionalTitle')}
-        >
-          <InputField
-            value={data.professionalTitle}
-            onChange={(value) => updateField('professionalTitle', value)}
-            placeholder={t('editor.personal.placeholders.professionalTitle')}
-          />
-        </FormField>
-        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label="Mostrar nombre" />
-        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label="Mostrar título profesional" />
-      </div>
-
-      <FormField
-        label={t('editor.personal.fields.nationality')}
-        help={t('editor.personal.help.nationality')}
-      >
-        <CountrySelect
-          value={data.nationality || ''}
-          onChange={(countryCode) => updateField('nationality', countryCode)}
-          locale={i18n.language || 'es'}
-          placeholder={t('editor.personal.placeholders.nationality')}
-          aria-label={t('editor.personal.fields.nationality')}
-        />
-      </FormField>
-      <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label="Mostrar nacionalidad" />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Tipo de documento de identidad">
-          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-            <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
-          </select>
-        </FormField>
-        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label="Mostrar tipo de documento" />
-        <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
-        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label="Mostrar número de documento" />
-      </div>
-      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar documento de identidad en la hoja de vida</label>
-
       {/* Profile Image */}
       <FormField
         label={t('editor.personal.fields.profileImage')}
@@ -447,8 +397,82 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             <option value="portrait">{t('editor.personal.profileImageStyles.portrait')}</option>
           </select>
         </FormField>
+
+        <FormField label="Tamaño de la foto" help="Ajusta el tamaño con el que aparece en la plantilla.">
+          <div role="radiogroup" aria-label="Tamaño de la foto" className="grid grid-cols-4 gap-2">
+            {PHOTO_SIZE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={(data.profileImageSize || 'md') === option.value}
+                onClick={() => updateField('profileImageSize', option.value)}
+                className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${(data.profileImageSize || 'md') === option.value ? 'border-brand-700 bg-brand-50 text-brand-900 dark:border-brand-400 dark:bg-brand-950/40 dark:text-brand-200' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </FormField>
         </div>
       </FormField>
+
+
+      {/* Basic Information */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <FormField
+          label={t('editor.personal.fields.fullName')}
+          required
+          error={errors.fullName?.[0]}
+        >
+          <InputField
+            value={data.fullName}
+            onChange={(value) => updateField('fullName', value)}
+            placeholder={t('editor.personal.placeholders.fullName')}
+            required
+          />
+        </FormField>
+
+        <FormField
+          label={t('editor.personal.fields.professionalTitle')}
+          error={errors.professionalTitle?.[0]}
+          help={t('editor.personal.help.professionalTitle')}
+        >
+          <InputField
+            value={data.professionalTitle}
+            onChange={(value) => updateField('professionalTitle', value)}
+            placeholder={t('editor.personal.placeholders.professionalTitle')}
+          />
+        </FormField>
+        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label="Mostrar nombre" />
+        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label="Mostrar título profesional" />
+      </div>
+
+      <FormField
+        label={t('editor.personal.fields.nationality')}
+        help={t('editor.personal.help.nationality')}
+      >
+        <CountrySelect
+          value={data.nationality || ''}
+          onChange={(countryCode) => updateField('nationality', countryCode)}
+          locale={i18n.language || 'es'}
+          placeholder={t('editor.personal.placeholders.nationality')}
+          aria-label={t('editor.personal.fields.nationality')}
+        />
+      </FormField>
+      <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label="Mostrar nacionalidad" />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label="Tipo de documento de identidad">
+          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+            <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
+          </select>
+        </FormField>
+        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label="Mostrar tipo de documento" />
+        <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
+        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label="Mostrar número de documento" />
+      </div>
+      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar documento de identidad en la hoja de vida</label>
 
       {/* Birth Date */}
       <FormField

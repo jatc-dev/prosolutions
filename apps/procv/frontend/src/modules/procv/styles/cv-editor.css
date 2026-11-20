@@ -261,27 +261,35 @@
    ============================================ */
 
   /* Wrapper con CSS variables personalizadas */
-  .cv-custom-wrapper {
-    font-family: var(--font-body, system-ui, sans-serif);
-    color: var(--color-text, #1e293b);
+  /* Colours: every rule below applies only when the user changed that colour
+     (the wrapper gets a cv-c-* class); otherwise the template keeps its palette. */
+  .cv-custom-wrapper.cv-c-text {
+    color: var(--color-text);
   }
 
-  .cv-custom-wrapper h1,
-  .cv-custom-wrapper h2,
-  .cv-custom-wrapper h3,
-  .cv-custom-wrapper h4,
-  .cv-custom-wrapper .ats-name,
-  .cv-custom-wrapper .ats-section-title,
-  .cv-custom-wrapper [class*="font-bold"] {
-    font-family: var(--font-heading, system-ui, sans-serif);
-    color: var(--color-heading, #0f172a);
+  /* The CV is always a printed page: headings take the template's text colour,
+     never the app's global (dark-mode) heading colour. */
+  .cv-custom-wrapper :is(h1, h2, h3, h4) {
+    color: inherit;
   }
 
-  .cv-custom-wrapper a,
-  .cv-custom-wrapper [class*="text-brand-"],
-  .cv-custom-wrapper [class*="text-brand-700"],
-  .cv-custom-wrapper [class*="text-brand-800"] {
-    color: var(--color-link, #2563eb);
+  .cv-custom-wrapper.cv-c-heading :is(h1, h2, h3, h4, .ats-name, .ats-section-title, [class*="font-bold"]) {
+    color: var(--color-heading);
+  }
+
+  /* Fonts: each template keeps its own typography ("Según la plantilla") until
+     the user picks one; then it wins over template classes and inline styles. */
+  .cv-custom-wrapper.cv-font-body-custom,
+  .cv-custom-wrapper.cv-font-body-custom * {
+    font-family: var(--font-body) !important;
+  }
+
+  .cv-custom-wrapper.cv-font-heading-custom :is(h1, h2, h3, h4, .ats-name, .ats-section-title) {
+    font-family: var(--font-heading) !important;
+  }
+
+  .cv-custom-wrapper.cv-c-link :is(a, [class*="text-brand-"]) {
+    color: var(--color-link);
   }
 
   /* Densidad: Compacto */
@@ -333,42 +341,35 @@
   }
 
   /* Espaciado entre secciones */
-  .cv-custom-wrapper [class*="mb-"] {
+  .cv-custom-wrapper.cv-spacing-custom [class*="mb-"] {
     margin-bottom: calc(var(--section-spacing, 2) * 0.25rem) !important;
   }
 
   /* Aplicar color de acento a elementos brand */
-  .cv-custom-wrapper .bg-brand-800,
-  .cv-custom-wrapper .bg-brand-900 {
-    background-color: var(--color-accent, #3b82f6) !important;
+  .cv-custom-wrapper.cv-c-accent :is(.bg-brand-800, .bg-brand-900) {
+    background-color: var(--color-accent) !important;
   }
 
-  .cv-custom-wrapper .text-brand-800,
-  .cv-custom-wrapper .text-brand-900 {
-    color: var(--color-accent, #3b82f6) !important;
+  .cv-custom-wrapper.cv-c-accent :is(.text-brand-800, .text-brand-900) {
+    color: var(--color-accent) !important;
   }
 
-  .cv-custom-wrapper .border-brand-700,
-  .cv-custom-wrapper .border-brand-800 {
-    border-color: var(--color-accent, #3b82f6) !important;
+  .cv-custom-wrapper.cv-c-accent :is(.border-brand-700, .border-brand-800) {
+    border-color: var(--color-accent) !important;
   }
 
   /* Sidebar */
-  .cv-custom-wrapper [class*="sidebar"] {
-    color: var(--color-sidebar-text, #e2e8f0) !important;
+  .cv-custom-wrapper.cv-c-sidebar-text [class*="sidebar"] {
+    color: var(--color-sidebar-text) !important;
   }
 
-  .cv-custom-wrapper [class*="sidebar"] [class*="title"],
-  .cv-custom-wrapper [class*="sidebar"] h2,
-  .cv-custom-wrapper [class*="sidebar"] h3 {
-    color: var(--color-sidebar-section, #f1f5f9) !important;
+  .cv-custom-wrapper.cv-c-sidebar-section [class*="sidebar"] :is([class*="title"], h2, h3) {
+    color: var(--color-sidebar-section) !important;
   }
 
   /* Texto secundario */
-  .cv-custom-wrapper .text-slate-500,
-  .cv-custom-wrapper .text-slate-600,
-  .cv-custom-wrapper .text-slate-700 {
-    color: var(--color-muted, #64748b) !important;
+  .cv-custom-wrapper.cv-c-muted :is(.text-slate-500, .text-slate-600, .text-slate-700) {
+    color: var(--color-muted) !important;
   }
 
 /* ============================================

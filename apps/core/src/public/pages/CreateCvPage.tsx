@@ -12,7 +12,7 @@ const trim = (url: string) => url.replace(/\/+$/, "");
 const STEPS = [
   {
     title: "Elige una plantilla",
-    text: "Hay siete diseños. Si vas a postularte por portales de empleo o a empresas grandes, empieza por una de las marcadas como compatibles con ATS: usan una sola columna y títulos estándar.",
+    text: "Hay doce diseños. Si vas a postularte por portales de empleo o a empresas grandes, empieza por una de las marcadas como compatibles con ATS: usan texto real, orden lógico y títulos estándar.",
   },
   {
     title: "Importa tu CV o empieza desde cero",
@@ -122,7 +122,7 @@ export function CreateCvPage() {
           )}
         </div>
         <ul className="grid gap-3 rounded-2xl border border-ui-border bg-ui-surface p-6 text-sm text-ui-text shadow-sm">
-          {["7 plantillas, 5 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
+          {["12 plantillas, 10 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-700 dark:text-brand-300" aria-hidden="true" />
               {item}

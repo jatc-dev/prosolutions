@@ -42,6 +42,7 @@ export interface CVData {
     showSummaryContent?: boolean;
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait";
+    profileImageSize?: "sm" | "md" | "lg" | "xl";
     showProfileImage?: boolean;
     documentType?: string;
     documentNumber?: string;
@@ -411,16 +412,18 @@ function shouldRenderProfileImage(personal: CVData["personal"]) {
   return Boolean(personal?.profileImage) && personal?.showProfileImage !== false;
 }
 
+// [width, portrait height, square height] per base size and user-selected scale.
+// Literal class names so Tailwind keeps them in the build.
+const PROFILE_IMAGE_SIZES = {
+  small: { sm: ["w-16", "h-[5.5rem]", "h-16"], md: ["w-20", "h-28", "h-20"], lg: ["w-24", "h-32", "h-24"], xl: ["w-28", "h-[9.5rem]", "h-28"] },
+  medium: { sm: ["w-20", "h-28", "h-20"], md: ["w-24", "h-32", "h-24"], lg: ["w-28", "h-[9.5rem]", "h-28"], xl: ["w-32", "h-44", "h-32"] },
+} as const;
+
 function getProfileImageClass(personal: CVData["personal"], size: "small" | "medium" = "medium") {
   const style = personal?.profileImageStyle || "round";
-  const sizeClass =
-    size === "small"
-      ? style === "portrait"
-        ? "w-20 h-28"
-        : "w-20 h-20"
-      : style === "portrait"
-        ? "w-24 h-32"
-        : "w-24 h-24";
+  const scale = personal?.profileImageSize && personal.profileImageSize in PROFILE_IMAGE_SIZES[size] ? personal.profileImageSize : "md";
+  const [width, portraitHeight, squareHeight] = PROFILE_IMAGE_SIZES[size][scale];
+  const sizeClass = `${width} ${style === "portrait" ? portraitHeight : squareHeight} shrink-0`;
   const shapeClass = style === "round" ? "rounded-full" : "rounded-xl";
   return `${sizeClass} ${shapeClass} object-cover`;
 }
@@ -2433,75 +2436,384 @@ function TemplateExtensa({ data }: { data: CVData }) {
   );
 }
 
+/**
+ * Colombian "hoja de vida 1003" layout built from the regular CV form
+ * (personal data, education, experience, skills, languages, references) plus
+ * the few fields only this format asks for (data.application). Values saved by
+ * the old standalone 1003 form are used only when the regular field is empty.
+ */
+function Format1003Row({ label, children, wide = false }: { label: string; children?: React.ReactNode; wide?: boolean }) {
+  if (!children) return null;
+  return (
+    <div className={`border-b border-r border-slate-300 px-2 py-1.5 ${wide ? "col-span-2" : ""}`}>
+      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-0.5 whitespace-pre-wrap break-words text-[11px] leading-4 text-slate-900">{children}</div>
+    </div>
+  );
+}
+
+function Format1003Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-4 break-inside-avoid">
+      <h2 className="border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Format1003Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 border-l border-slate-300">{children}</div>;
+}
+
+const CELL = "border border-slate-300 px-2 py-1";
+
 function TemplateEmploymentApplication({ data }: { data: CVData }) {
   const app = data.application || {};
-  const groups: Array<{ title: string; fields: Array<[string, string]> }> = [
-    { title: "I. Información general", fields: [["applicationDate","Fecha"],["positionRequested","Cargo solicitado"],["vacancyCode","Código"],["surnames","Apellidos"],["givenNames","Nombres"],["address","Dirección"],["city","Ciudad"],["phone","Teléfono"],["email","Correo"],["nationality","Nacionalidad"],["occupation","Oficio o profesión"],["civilStatus","Estado civil"],["totalExperience","Experiencia total"],["documentTypeNumber","Tipo y número de documento"],["documentAvailability","Documentos disponibles"]] },
-    { title: "II. Información personal", fields: [["currentEmployment","Situación laboral actual"],["previousCompanyRelation","Relación laboral previa con la empresa"],["companyReferences","Personas conocidas en la empresa"],["vacancySource","Origen de la vacante"],["relocationAvailability","Disponibilidad de traslado"],["housingType","Vivienda"],["additionalIncome","Otros ingresos"],["financialObligations","Obligaciones económicas"],["salaryExpectation","Aspiración salarial"],["hobbies","Aficiones"],["awards","Reconocimientos"],["careerObjective","Objetivo laboral"]] },
-    { title: "III. Información familiar", fields: [["partnerName","Cónyuge o compañero(a)"],["partnerOccupation","Ocupación"],["partnerCompany","Empresa"],["partnerPhone","Teléfono"],["dependants","Personas a cargo"],["fatherDetails","Datos del padre"],["motherDetails","Datos de la madre"],["siblings","Hermanos"]] },
-    { title: "IV. Educación y aptitudes", fields: [["primaryEducation","Educación primaria"],["secondaryEducation","Educación secundaria"],["technicalEducation","Formación técnica / tecnológica"],["universityEducation","Formación universitaria"],["otherCourses","Cursos y seminarios"],["currentStudies","Estudios actuales"],["computerSkills","Conocimientos de sistemas"],["languageSkills","Idiomas: lectura, escritura y conversación"]] },
-    { title: "V. Sectores y áreas", fields: [["economicSectors","Sectores económicos"],["workAreas","Áreas de desempeño"]] },
-    { title: "VI. Experiencia laboral", fields: [["job1","Empleo 1: empresa, actividad, dirección y contacto"],["job1Supervisor","Jefe inmediato"],["job1Dates","Fechas y tiempo servido"],["job1PositionSalary","Cargo y salarios"],["job1Duties","Funciones y logros"],["job1ContractExit","Contrato, jornada y retiro"],["job2","Empleo 2: empresa, actividad, dirección y contacto"],["job2Supervisor","Jefe inmediato"],["job2Dates","Fechas y tiempo servido"],["job2PositionSalary","Cargo y salarios"],["job2Duties","Funciones y logros"],["job2ContractExit","Contrato, jornada y retiro"],["job3","Empleo 3: empresa, actividad, dirección y contacto"],["job3Supervisor","Jefe inmediato"],["job3Dates","Fechas y tiempo servido"],["job3PositionSalary","Cargo y salarios"],["job3Duties","Funciones y logros"],["job3ContractExit","Contrato, jornada y retiro"],["healthProvider","EPS / entidad de salud"],["pensionFund","Fondo de pensiones"],["severanceFund","Fondo de cesantías"]] },
-    { title: "VII. Referencias", fields: [["reference1","Referencia personal 1"],["reference2","Referencia personal 2"],["emergencyContact","Contacto familiar de emergencia"]] }
-  ];
-  const hasData = Object.values(app).some(value => String(value || "").trim());
-  return <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{fontFamily:"Arial,sans-serif"}}>
-    <header className="border-b-2 border-slate-700 pb-4">{shouldRenderProfileImage(data.personal) ? <img src={data.personal?.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(data.personal, "medium")} border border-slate-200`} /> : null}<p className="text-xs font-bold uppercase tracking-widest text-slate-500">Minerva 1003</p><h1 className="mt-2 text-2xl font-bold">{data.personal?.name}</h1><p className="text-sm text-slate-600">{data.personal?.role}</p></header>
-    {groups.map(group => { const rows=group.fields.filter(([key])=>String(app[key]||"").trim()); return rows.length ? <section key={group.title} className="mt-5 break-inside-avoid"><h2 className="border-b border-slate-300 bg-slate-100 px-2 py-2 text-sm font-bold">{group.title}</h2><div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">{rows.map(([key,label])=><div key={key} className="border-b border-slate-200 px-2 py-2"><div className="text-[10px] font-bold uppercase text-slate-500">{label}</div><div className="mt-1 whitespace-pre-wrap text-xs leading-5">{app[key]}</div></div>)}</div></section> : null; })}
-    {!hasData && <p className="mt-6 text-sm text-slate-500">Completa los datos en la sección Solicitud de empleo para generar este documento.</p>}
-    <footer className="mt-6 border-t pt-3 text-[10px] text-slate-500">ProCV · Formato estructurado de información laboral</footer>
-  </article>;
+  const personal = data.personal || {};
+  const value = (key: string) => String(app[key] || "").trim();
+  const has = (...keys: string[]) => keys.some((key) => value(key));
+  const emails = normalizeContactItems(personal.emails).map((item) => item.value).filter(Boolean);
+  const phones = normalizeContactItems(personal.phones).map((item) => item.value).filter(Boolean);
+  const experience = data.experience || [];
+  const education = data.education || [];
+  const skills = normalizeSkills(data.skills).filter((item) => item.name);
+  const languages = normalizeLanguages(data.languages).filter((item) => item.name);
+  const certificates = normalizeCertificates(data.certificates).filter((item) => item.title);
+  const references = (personal.references || []).filter((item) => item && item.isVisible !== false && item.name);
+  const age = calculateAge(personal.birthDate);
+  const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
+  const Row = Format1003Row;
+  const Grid = Format1003Grid;
+  const Section = Format1003Section;
+
+  const generalRows = [
+    ["Nombres y apellidos", personal.name || [value("givenNames"), value("surnames")].filter(Boolean).join(" ")],
+    ["Documento de identidad", documentText || value("documentTypeNumber")],
+    ["Fecha de nacimiento", personal.birthDate ? `${formatBirthDate(personal.birthDate)}${age ? ` (${age} años)` : ""}` : ""],
+    ["Nacionalidad", formatCountry(personal.nationality)],
+    ["Estado civil", value("civilStatus")],
+    ["Profesión u oficio", personal.role || value("occupation")],
+    ["Dirección", personal.address || value("address")],
+    ["Ciudad", formatLocation(personal.city, personal.country) || value("city")],
+    ["Teléfonos", phones.join(" · ") || value("phone")],
+    ["Correo electrónico", emails.join(" · ") || value("email")],
+    ["Cargo al que aspira", value("positionRequested")],
+    ["Código de la vacante", value("vacancyCode")],
+    ["Aspiración salarial", value("salaryExpectation")],
+    ["Disponibilidad para trasladarse", value("relocationAvailability")],
+    ["Vivienda", value("housingType")],
+    ["¿Cómo se enteró de la vacante?", value("vacancySource")],
+  ].filter(([, text]) => text);
+
+  return (
+    <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <header className="flex items-start gap-5 border-b-2 border-slate-800 pb-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Hoja de vida · Formato 1003</p>
+          <h1 className="mt-1 text-2xl font-bold uppercase leading-tight">{personal.name}</h1>
+          {personal.role ? <p className="text-sm text-slate-600">{personal.role}</p> : null}
+          {value("applicationDate") ? <p className="mt-1 text-[11px] text-slate-500">Fecha de diligenciamiento: {value("applicationDate")}</p> : null}
+        </div>
+        {shouldRenderProfileImage(personal) ? (
+          <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-slate-400`} />
+        ) : null}
+      </header>
+
+      {generalRows.length ? (
+        <Section title="I. Información general">
+          <Grid>{generalRows.map(([label, text]) => <Row key={label} label={label}>{text}</Row>)}</Grid>
+        </Section>
+      ) : null}
+
+      {personal.summary || value("careerObjective") ? (
+        <Section title="Perfil profesional">
+          <p className="border-x border-b border-slate-300 px-2 py-2 text-[11px] leading-5">{personal.summary || value("careerObjective")}</p>
+        </Section>
+      ) : null}
+
+      {education.length || has("primaryEducation", "secondaryEducation", "technicalEducation", "universityEducation", "otherCourses", "currentStudies") ? (
+        <Section title="II. Formación académica">
+          {education.length ? (
+            <table className="w-full border-collapse text-[11px]">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
+                  <th className={CELL}>Título</th><th className={CELL}>Institución</th><th className={CELL}>Ciudad</th><th className={CELL}>Periodo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {education.map((item) => (
+                  <tr key={item.id}>
+                    <td className={`${CELL} font-semibold`}>{getLocalizedDegreeLabel(item.degree)}</td>
+                    <td className={CELL}>{item.institution}</td>
+                    <td className={CELL}>{formatLocation(item.city, item.country)}</td>
+                    <td className={`${CELL} whitespace-nowrap`}>{formatRange(item.from, item.to)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <Grid>
+              <Row label="Primaria">{value("primaryEducation")}</Row>
+              <Row label="Secundaria">{value("secondaryEducation")}</Row>
+              <Row label="Técnica / tecnológica">{value("technicalEducation")}</Row>
+              <Row label="Universitaria">{value("universityEducation")}</Row>
+              <Row label="Cursos" wide>{value("otherCourses")}</Row>
+              <Row label="Estudios actuales" wide>{value("currentStudies")}</Row>
+            </Grid>
+          )}
+        </Section>
+      ) : null}
+
+      {experience.length || has("job1", "job2", "job3", "economicSectors", "workAreas") ? (
+        <Section title="III. Experiencia laboral">
+          {experience.length
+            ? experience.map((item, index) => (
+                <div key={item.id} className="break-inside-avoid border-x border-b border-slate-300">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 bg-slate-50 px-2 py-1 text-[11px]">
+                    <span className="font-bold">{index + 1}. {item.company}</span>
+                    <span className="text-slate-600">
+                      {formatRange(item.from, item.to)}
+                      {item.city ? ` · ${formatLocation(item.city, item.country)}` : ""}
+                    </span>
+                  </div>
+                  <div className="px-2 py-1 text-[11px]">
+                    <span className="text-[9px] font-bold uppercase text-slate-500">Cargo: </span>
+                    {item.role}
+                  </div>
+                  {item.description ? <p className="whitespace-pre-wrap break-words px-2 pb-2 text-[11px] leading-4 text-slate-700">{item.description}</p> : null}
+                </div>
+              ))
+            : (["1", "2", "3"] as const)
+                .filter((n) => value(`job${n}`))
+                .map((n) => (
+                  <Grid key={n}>
+                    <Row label={`Empleo ${n}`} wide>{value(`job${n}`)}</Row>
+                    <Row label="Cargo y salario">{value(`job${n}PositionSalary`)}</Row>
+                    <Row label="Fechas">{value(`job${n}Dates`)}</Row>
+                    <Row label="Jefe inmediato">{value(`job${n}Supervisor`)}</Row>
+                    <Row label="Contrato y retiro">{value(`job${n}ContractExit`)}</Row>
+                    <Row label="Funciones y logros" wide>{value(`job${n}Duties`)}</Row>
+                  </Grid>
+                ))}
+          {has("economicSectors", "workAreas") ? (
+            <Grid>
+              <Row label="Sectores económicos">{value("economicSectors")}</Row>
+              <Row label="Áreas de desempeño">{value("workAreas")}</Row>
+            </Grid>
+          ) : null}
+        </Section>
+      ) : null}
+
+      {skills.length || languages.length || certificates.length || has("computerSkills", "languageSkills") ? (
+        <Section title="IV. Conocimientos y aptitudes">
+          <Grid>
+            <Row label="Habilidades" wide>{skills.map((item) => item.name).join(" · ") || value("computerSkills")}</Row>
+            <Row label="Idiomas" wide>{languages.map((item) => (item.level ? `${item.name} (${item.level})` : item.name)).join(" · ") || value("languageSkills")}</Row>
+            <Row label="Cursos y certificaciones" wide>{certificates.map((item) => [item.title, item.issuingOrganization].filter(Boolean).join(" — ")).join(" · ")}</Row>
+          </Grid>
+        </Section>
+      ) : null}
+
+      {has("partnerName", "partnerOccupation", "partnerCompany", "partnerPhone", "dependants", "fatherDetails", "motherDetails", "siblings") ? (
+        <Section title="V. Información familiar">
+          <Grid>
+            <Row label="Cónyuge o compañero(a)">{value("partnerName")}</Row>
+            <Row label="Ocupación">{[value("partnerOccupation"), value("partnerCompany")].filter(Boolean).join(" · ")}</Row>
+            <Row label="Teléfono del cónyuge">{value("partnerPhone")}</Row>
+            <Row label="Personas a cargo">{value("dependants")}</Row>
+            <Row label="Padre">{value("fatherDetails")}</Row>
+            <Row label="Madre">{value("motherDetails")}</Row>
+            <Row label="Hermanos" wide>{value("siblings")}</Row>
+          </Grid>
+        </Section>
+      ) : null}
+
+      {has("healthProvider", "pensionFund", "severanceFund", "currentEmployment", "previousCompanyRelation", "companyReferences", "additionalIncome", "financialObligations", "documentAvailability", "hobbies", "awards") ? (
+        <Section title="VI. Información complementaria">
+          <Grid>
+            <Row label="EPS">{value("healthProvider")}</Row>
+            <Row label="Fondo de pensiones">{value("pensionFund")}</Row>
+            <Row label="Fondo de cesantías">{value("severanceFund")}</Row>
+            <Row label="Situación laboral actual">{value("currentEmployment")}</Row>
+            <Row label="¿Ha trabajado en la empresa?">{value("previousCompanyRelation")}</Row>
+            <Row label="Conocidos en la empresa">{value("companyReferences")}</Row>
+            <Row label="Otros ingresos">{value("additionalIncome")}</Row>
+            <Row label="Obligaciones económicas">{value("financialObligations")}</Row>
+            <Row label="Otros documentos" wide>{value("documentAvailability")}</Row>
+            <Row label="Aficiones">{value("hobbies")}</Row>
+            <Row label="Reconocimientos">{value("awards")}</Row>
+          </Grid>
+        </Section>
+      ) : null}
+
+      {references.length || personal.referencesAvailableOnRequest || has("reference1", "reference2", "emergencyContact") ? (
+        <Section title="VII. Referencias">
+          {references.length ? (
+            <table className="w-full border-collapse text-[11px]">
+              <thead>
+                <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
+                  <th className={CELL}>Nombre</th><th className={CELL}>Tipo</th><th className={CELL}>Cargo / parentesco</th><th className={CELL}>Contacto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {references.map((item) => {
+                  const hidden = item.hiddenFields || [];
+                  const show = (field: string) => !hidden.includes(field);
+                  const detail = item.type === "laboral"
+                    ? [show("position") ? item.position : "", show("company") ? item.company : ""].filter(Boolean).join(" · ")
+                    : show("relationship") ? item.relationship || item.position : "";
+                  return (
+                    <tr key={item.id}>
+                      <td className={`${CELL} font-semibold`}>{show("name") ? item.name : ""}</td>
+                      <td className={CELL}>{item.type === "laboral" ? "Laboral" : "Personal"}</td>
+                      <td className={CELL}>{detail}</td>
+                      <td className={`${CELL} break-words`}>{[show("phone") ? item.phone : "", show("email") ? item.email : ""].filter(Boolean).join(" · ")}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : has("reference1", "reference2") ? (
+            <Grid>
+              <Row label="Referencia 1">{value("reference1")}</Row>
+              <Row label="Referencia 2">{value("reference2")}</Row>
+            </Grid>
+          ) : null}
+          {personal.referencesAvailableOnRequest ? (
+            <p className="border-x border-b border-slate-300 px-2 py-1.5 text-[11px]">Referencias laborales y personales: disponibles a solicitud.</p>
+          ) : null}
+          {value("emergencyContact") ? (
+            <Grid>
+              <Row label="Contacto de emergencia" wide>{value("emergencyContact")}</Row>
+            </Grid>
+          ) : null}
+        </Section>
+      ) : null}
+
+      <footer className="mt-10 grid grid-cols-2 gap-10 text-[11px]">
+        <div className="border-t border-slate-800 pt-1">Firma</div>
+        <div className="border-t border-slate-800 pt-1">{documentText ? `Documento: ${documentText}` : "Documento de identidad"}</div>
+      </footer>
+    </article>
+  );
 }
-function SupplementalPersonalSections({ data, includeReferences = true, includeRequestText = true, includeDocument = true, documentWidthClass = "max-w-4xl" }: { data: CVData; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean; documentWidthClass?: string }) {
+
+/** Width of each template's page, so the supplemental block lines up with it. */
+const TEMPLATE_PAGE_WIDTH: Record<string, string> = {
+  executive: "max-w-3xl",
+  timeline: "max-w-3xl",
+  extensa: "max-w-4xl",
+  "photo-professional": "max-w-3xl",
+  "modern-sidebar": "max-w-3xl",
+  extensive: "max-w-4xl",
+};
+
+/** Background and text colours of the dark templates, so the block continues the page. */
+function supplementalSurface(template: string, data: CVData): { style?: React.CSSProperties; dark: boolean } {
+  if (template === "developer") {
+    const bg = data.settings?.developerBg ?? "#0f172a";
+    const dark = getContrastMode(bg) !== "dark";
+    return { style: { backgroundColor: bg, color: dark ? "#f1f5f9" : "#0f172a" }, dark };
+  }
+  if (template === "creative") {
+    const gradient = data.settings?.creativeGradient ?? "linear-gradient(135deg, #3730a3 0%, #0f172a 55%, #1e293b 100%)";
+    const start = getGradientStartColor(gradient);
+    const dark = getContrastMode(start) !== "dark";
+    return { style: { backgroundColor: start, color: dark ? "#ffffff" : "#0f172a" }, dark };
+  }
+  return { dark: false };
+}
+
+function SupplementalPersonalSections({ data, template, includeReferences = true, includeRequestText = true, includeDocument = true }: { data: CVData; template: string; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean }) {
   const personal = data.personal ?? {};
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => { if (!item || item.isVisible === false) return false; const hidden = item.hiddenFields || []; return (item.name && !hidden.includes("name")) || (item.phone && !hidden.includes("phone")) || (item.email && !hidden.includes("email")) || (item.company && !hidden.includes("company")) || (item.position && !hidden.includes("position")) || (item.relationship && !hidden.includes("relationship")); });
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   if (!showDocument && references.length === 0 && !showRequestText) return null;
-  return <section className={`mx-auto -mt-px w-full ${documentWidthClass} border-x border-b border-slate-200 bg-white px-8 pb-7 pt-5 text-slate-800 shadow-sm`}>
-    {showDocument ? <div className="mb-4"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></div> : null}
-    {references.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{references.map((reference) => { const hidden = reference.hiddenFields || []; const show = (field: string) => !hidden.includes(field); const meta = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean); return <div key={reference.id} className="text-sm">{show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}{meta.length ? <p className="text-xs text-slate-500">{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {meta.join(" · ")}</p> : null}{show("phone") && reference.phone ? <p className="text-xs text-slate-600">{reference.phone}</p> : null}{show("email") && reference.email ? <p className="text-xs text-slate-600">{reference.email}</p> : null}</div>; })}</div></div> : null}
-    {showRequestText ? <p className="text-sm">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
-  </section>;
+  const width = TEMPLATE_PAGE_WIDTH[template] ?? "max-w-2xl";
+  const surface = supplementalSurface(template, data);
+  const border = surface.dark ? "border-white/10" : "border-slate-200 bg-white text-slate-800";
+  const label = surface.dark ? "opacity-70" : "text-slate-600";
+  const meta = surface.dark ? "opacity-70" : "text-slate-500";
+  return (
+    <section className={`mx-auto -mt-px w-full ${width} break-words border-x border-b ${border} px-8 pb-7 pt-5 shadow-sm`} style={surface.style}>
+      {showDocument ? (
+        <div className="mb-4">
+          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Documento de identidad</h2>
+          <p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p>
+        </div>
+      ) : null}
+      {references.length ? (
+        <div>
+          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Referencias laborales y personales</h2>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {references.map((reference) => {
+              const hidden = reference.hiddenFields || [];
+              const show = (field: string) => !hidden.includes(field);
+              const details = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean);
+              return (
+                <div key={reference.id} className="min-w-0 text-sm">
+                  {show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}
+                  {details.length ? <p className={`text-xs ${meta}`}>{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {details.join(" · ")}</p> : null}
+                  {show("phone") && reference.phone ? <p className={`text-xs ${meta}`}>{reference.phone}</p> : null}
+                  {show("email") && reference.email ? <p className={`text-xs ${meta}`}>{reference.email}</p> : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+      {showRequestText ? <p className={`text-sm ${references.length ? "mt-3" : ""}`}>Referencias laborales y personales: disponibles a solicitud.</p> : null}
+    </section>
+  );
 }
 
-export function TemplateRenderer({ template, data }: Props) {
-  switch (template) {
-    case "sidebar":
-      return <><TemplateSidebar data={data} /><SupplementalPersonalSections data={data} includeReferences={false} includeRequestText={false} includeDocument={false} /></>;
-    case "corporate":
-      return <><TemplateCorporate data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "developer":
-      return <><TemplateDeveloper data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "creative":
-      return <><TemplateCreative data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "classic":
-      return <><TemplateClassic data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "executive":
-      return <><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "extensa":
-      return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "timeline":
-      return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "compact":
-      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} documentWidthClass="max-w-2xl" /></>;
-    case "ats":
-      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "employment":
-      return <><TemplateEmploymentApplication data={data} /><SupplementalPersonalSections data={data} /></>;
+const TEMPLATE_COMPONENTS: Record<string, (props: { data: CVData }) => JSX.Element> = {
+  sidebar: TemplateSidebar,
+  corporate: TemplateCorporate,
+  developer: TemplateDeveloper,
+  creative: TemplateCreative,
+  classic: TemplateClassic,
+  executive: TemplateExecutive,
+  extensa: TemplateExtensa,
+  timeline: TemplateTimeline,
+  compact: TemplateCompact,
+  ats: TemplateMinimal,
+  minimal: TemplateMinimal,
+  employment: TemplateEmploymentApplication,
+  // Legacy aliases kept for backward compatibility with existing CVs
+  "ats-optimized": TemplateMinimal,
+  "photo-professional": TemplateExecutive,
+  "modern-sidebar": TemplateTimeline,
+  elegant: TemplateCompact,
+  extensive: TemplateExtensa,
+};
 
-    // Legacy aliases kept for backward compatibility with existing CVs
-    case "ats-optimized":
-      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "photo-professional":
-      return <><TemplateExecutive data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "modern-sidebar":
-      return <><TemplateTimeline data={data} /><SupplementalPersonalSections data={data} /></>;
-    case "elegant":
-      return <><TemplateCompact data={data} /><SupplementalPersonalSections data={data} documentWidthClass="max-w-2xl" /></>;
-    case "extensive":
-      return <><TemplateExtensa data={data} /><SupplementalPersonalSections data={data} /></>;
-    default:
-      return <><TemplateMinimal data={data} /><SupplementalPersonalSections data={data} /></>;
-  }
+const TEMPLATE_ALIASES: Record<string, string> = {
+  "ats-optimized": "ats",
+  "photo-professional": "executive",
+  "modern-sidebar": "timeline",
+  elegant: "compact",
+  extensive: "extensa",
+};
+
+export function TemplateRenderer({ template, data }: Props) {
+  const key = TEMPLATE_COMPONENTS[template] ? template : "minimal";
+  const Template = TEMPLATE_COMPONENTS[key];
+  const canonical = TEMPLATE_ALIASES[key] ?? key;
+  return (
+    <>
+      <Template data={data} />
+      {canonical === "employment" ? null : (
+        <SupplementalPersonalSections
+          data={data}
+          template={canonical}
+          // The sidebar template already prints references and the document in its own column.
+          includeReferences={canonical !== "sidebar"}
+          includeRequestText={canonical !== "sidebar"}
+          includeDocument={canonical !== "sidebar"}
+        />
+      )}
+    </>
+  );
 }
