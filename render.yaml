@@ -109,24 +109,26 @@ services:
       - { key: VITE_PROSOLUTIONS_URL, sync: false }
 
   # -------------------------------------------------------- ProCV backend ----
+  # Same Docker image as QA (multi-stage, root lockfile, build-time PDF test).
+  # Replaced the native-Node service ProCVBackEnd (procvbkn.onrender.com) on
+  # 2026-11-20. Runtime DB: DATABASE_URL (procv_login, pooler, RLS) +
+  # PROCV_ADMIN_DATABASE_URL (procv_admin_login, pooler) for the admin pool.
+  # No custom domain: the free workspace's two are used by production sites.
   - type: web
-    runtime: node
-    name: ProCVBackEnd            # https://procvbkn.onrender.com
+    runtime: docker
+    name: ProCV-API               # https://procv-api.onrender.com
     repo: https://github.com/jatc-dev/prosolutions
     branch: main
     plan: free
     region: oregon
-    rootDir: apps/procv/backend
-    buildCommand: npm install --include=dev && npm run prisma:generate && npm run build
-    # Runtime uses DATABASE_URL only (procv_login via pooler). DIRECT_DATABASE_URL
-    # (owner credential) is unused and pending removal; PROCV_ADMIN_DATABASE_URL
-    # is missing in production (admin stats/audit/settings fail without it).
-    startCommand: npm start
+    dockerfilePath: ./apps/procv/backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - { key: NODE_ENV, sync: false }
       - { key: DATABASE_URL, sync: false }
-      - { key: DIRECT_DATABASE_URL, sync: false }
+      - { key: PROCV_ADMIN_DATABASE_URL, sync: false }
       - { key: PROCV_RLS_CONTEXT_KEY, sync: false }
       - { key: IDENTITY_JWT_SECRET, sync: false }
       - { key: IDENTITY_ISSUER, sync: false }
@@ -206,7 +208,7 @@ services:
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
       - { key: DISABLE_RATE_LIMIT, sync: false }   # must stay "false"
       - { key: CONTACT_INBOX, sync: false }
-      - { key: PROCV_BACKEND_URL, sync: false }   # https://procvbkn.onrender.com (admin console proxy; 503 without it)
+      - { key: PROCV_BACKEND_URL, sync: false }   # https://procv-api.onrender.com (admin console proxy; 503 without it)
       - { key: PROJOBS_API_URL, sync: false }
       - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
       - { key: SMTP_HOST, sync: false }

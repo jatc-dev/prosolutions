@@ -9,7 +9,7 @@ Services, runtimes, databases and integration contracts. Render's dashboard is t
 | Core | `apps/core` | Static site `ProSolutions` → prosolutions.page | `ProSolutions-QA` → qa.prosolutions.page | 5174 |
 | ProIdentity | `apps/identity` | Docker `ProIdentity` → identity.prosolutions.page | `ProIdentity-QA` → identity-qa.prosolutions.page | 4001 |
 | ProCV frontend | `apps/procv/frontend` | Static site `ProCVFrontEnd` → procv.prosolutions.page | `ProCVFrontEnd-QA` → procv-qa.prosolutions.page | 5173 |
-| ProCV backend | `apps/procv/backend` | Node `ProCVBackEnd` (procvbkn.onrender.com) | Docker `ProCVBackEnd-QA` | 4000 |
+| ProCV backend | `apps/procv/backend` | Docker `ProCV-API` (procv-api.onrender.com) | Docker `ProCVBackEnd-QA` | 4000 |
 | ProJobs web | `apps/projobs` | Static site `ProJobs` → projobs.prosolutions.page | `ProJobs-QA` → projobs-qa.prosolutions.page | 5175 |
 | ProJobs API | `apps/projobs/server` | Node `ProJobs API` (projobs-api-0clw.onrender.com, manual deploys) | `ProJobs-API-QA` | 5176 |
 
