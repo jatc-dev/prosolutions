@@ -1,7 +1,7 @@
 import type { CVData } from "../types";
 import { api } from "./api";
 
-export type AISection = "summary" | "experience" | "skills";
+export type AISection = "summary" | "experience" | "skills" | "coverLetter";
 
 export interface AIGenerationRequest {
   /** What the user wants (e.g. "hazlo más conciso"). */
@@ -29,6 +29,7 @@ export class AIGenerationError extends Error {
 export function sectionText(cv: CVData, section: AISection): string {
   if (section === "summary") return cv.personal?.summary ?? "";
   if (section === "skills") return (cv.skills ?? []).map((skill) => skill.name).filter(Boolean).join(", ");
+  if (section === "coverLetter") return cv.coverLetter?.body ?? "";
   const latest = cv.experience?.[0];
   if (!latest) return "";
   return [
@@ -38,6 +39,16 @@ export function sectionText(cv: CVData, section: AISection): string {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/** Whether the server has the AI assistant configured (it needs a signed-in user to be used). */
+export async function isAiAvailable(): Promise<boolean> {
+  try {
+    const { data } = await api.get("/ai/status");
+    return Boolean(data?.available);
+  } catch {
+    return false;
+  }
 }
 
 /** Ask the ProCV AI assistant (Claude, server-side) to improve a CV section. */

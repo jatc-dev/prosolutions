@@ -536,7 +536,7 @@ export function CvCheckToolPage() {
             </ResultCard>
             <ResultCard title="Siguiente paso">
               <p className="text-sm leading-6 text-ui-muted">
-                Crea una versión limpia y compatible con ATS de tu hoja de vida en ProCV, con plantillas gratuitas y exportación en PDF.
+                Crea una versión limpia y compatible con ATS de tu hoja de vida en ProCV, con plantillas gratuitas y exportación en PDF o Word.
               </p>
               <a href={APP_URLS.procv} className="mt-3 inline-flex rounded-ui-md bg-ui-accent px-4 py-2 text-sm font-semibold text-ui-on-accent hover:bg-ui-accent-hover">
                 Abrir ProCV

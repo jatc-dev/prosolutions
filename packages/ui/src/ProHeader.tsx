@@ -184,9 +184,11 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
             ) : null}
 
             {!authLoading && !profile && loginHref ? (
-              <a href={loginHref} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
-                <UserRound className="h-4 w-4" aria-hidden="true" />
-                {locale === "en" ? "Sign in" : "Iniciar sesión"}
+              <a href={loginHref} className="inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-xl bg-brand-800 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 sm:px-4 dark:focus-visible:ring-offset-slate-900">
+                <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {/* Short label on phones so the button never wraps next to the logo. */}
+                <span className="sm:hidden">{locale === "en" ? "Sign in" : "Entrar"}</span>
+                <span className="hidden sm:inline">{locale === "en" ? "Sign in" : "Iniciar sesión"}</span>
               </a>
             ) : null}
 

@@ -12,7 +12,7 @@ const trim = (url: string) => url.replace(/\/+$/, "");
 const STEPS = [
   {
     title: "Elige una plantilla",
-    text: "Hay doce diseños. Si vas a postularte por portales de empleo o a empresas grandes, empieza por una de las marcadas como compatibles con ATS: usan texto real, orden lógico y títulos estándar.",
+    text: "Hay trece diseños, incluidos el formato 1003 y el de Función Pública (DAFP). Si vas a postularte por portales de empleo o a empresas grandes, empieza por una de las marcadas como compatibles con ATS: usan texto real, orden lógico y títulos estándar.",
   },
   {
     title: "Importa tu CV o empieza desde cero",
@@ -23,15 +23,15 @@ const STEPS = [
     text: "Escribe tu perfil profesional, tus logros con cifras y las habilidades que piden las vacantes que te interesan. La vista previa se actualiza mientras escribes.",
   },
   {
-    title: "Descárgala en PDF",
-    text: "Cuando esté lista, descárgala en PDF para enviarla por correo o subirla a cualquier portal. Puedes volver a editarla cuando quieras.",
+    title: "Descárgala en PDF o Word",
+    text: "Cuando esté lista, descárgala en PDF para enviarla por correo o subirla a cualquier portal, o en Word (.docx) si te la piden editable. Puedes volver a editarla cuando quieras.",
   },
 ];
 
 const FEATURES = [
   { icon: LayoutTemplate, title: "Plantillas compatibles con ATS", text: "Diseños que los sistemas de selección pueden leer: texto real, orden lógico y secciones con nombres que reconocen." },
   { icon: FileUp, title: "Importación de tu CV actual", text: "Sube un PDF, un .docx o un .txt y ahorra el trabajo de copiar y pegar cada cargo." },
-  { icon: Download, title: "Descarga en PDF", text: "Un archivo listo para enviar, con el formato que ves en la vista previa." },
+  { icon: Download, title: "Descarga en PDF y Word", text: "El PDF conserva el diseño de la vista previa; el Word (.docx) es de una columna y fácil de editar por los reclutadores." },
   { icon: Save, title: "Guardado automático", text: "Sin cuenta, tu avance se guarda en este navegador. Con cuenta, en tu perfil, para abrirlo desde cualquier equipo." },
   { icon: Sparkles, title: "Asistente de redacción opcional", text: "Sugerencias para tu perfil y tus logros. Tú decides qué usar; nada se envía a una empresa sin tu acción." },
   { icon: ShieldCheck, title: "Tus datos bajo tu control", text: "No vendemos tu información. Puedes descargarla o eliminar tu cuenta cuando quieras." },
@@ -40,7 +40,7 @@ const FEATURES = [
 const COMPARISON = [
   { feature: "Crear y editar tu hoja de vida", guest: true, account: true },
   { feature: "Importar un CV en PDF, Word o texto", guest: true, account: true },
-  { feature: "Descargar en PDF", guest: true, account: true },
+  { feature: "Descargar en PDF o Word", guest: true, account: true },
   { feature: "Guardar en este navegador", guest: true, account: true },
   { feature: "Guardar varias versiones en tu perfil", guest: false, account: true },
   { feature: "Abrirla desde cualquier dispositivo", guest: false, account: true },
@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "¿Puedo descargarla en Word?",
-    a: "Por ahora la descarga es en PDF, el formato que mejor conserva el diseño y que aceptan casi todos los portales. Puedes importar un archivo de Word para empezar a partir de él.",
+    a: "Sí. Además del PDF, que conserva el diseño de la plantilla, puedes descargarla en Word (.docx): una versión de una columna, con títulos estándar, fácil de editar y de leer para los sistemas ATS. También puedes importar un archivo de Word para empezar a partir de él.",
   },
 ];
 
@@ -91,7 +91,7 @@ export function CreateCvPage() {
             Crea tu hoja de vida gratis, sin registro y lista para los filtros ATS
           </h1>
           <p className="mt-4 text-lg leading-8 text-ui-muted">
-            Elige una plantilla, importa tu CV actual o empieza desde cero, y descárgala en PDF en pocos minutos. No necesitas crear una cuenta para empezar.
+            Elige una plantilla, importa tu CV actual o empieza desde cero, y descárgala en PDF o Word en pocos minutos. No necesitas crear una cuenta para empezar.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
@@ -122,7 +122,7 @@ export function CreateCvPage() {
           )}
         </div>
         <ul className="grid gap-3 rounded-2xl border border-ui-border bg-ui-surface p-6 text-sm text-ui-text shadow-sm">
-          {["12 plantillas, 10 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
+          {["13 plantillas, 11 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF y Word", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-700 dark:text-brand-300" aria-hidden="true" />
               {item}

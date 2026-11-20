@@ -9,6 +9,7 @@ import { CVData, SectionType, SkillItem } from "../../../../shared/types";
 import { EditorTabs } from "./EditorTabs";
 import { changeEditorSection } from "./navigationValidation";
 import { TemplateRenderer, CVData as RendererCVData } from "../TemplateRenderer";
+import { trackEvent } from "@prosolutions/ui";
 import { WithCustomStyles } from "../withCustomStyles";
 import { CoverLetterPreview } from "../CoverLetterPreview";
 import { CoverLetterSection } from "./sections/CoverLetterSection";
@@ -39,7 +40,7 @@ import { SkillsSection } from "./sections/SkillsSection";
 import { LanguagesSection } from "./sections/LanguagesSection";
 import { CertificatesSection } from "./sections/CertificatesSection";
 import { LinksSection } from "./sections/LinksSection";
-import { Format1003Fields } from "./sections/EmploymentApplicationSection";
+import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
@@ -664,6 +665,24 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     handleCancelImportReview();
   }, [cvData, handleCancelImportReview, pendingMergedData, t, updateCvData]);
 
+  // Word export from the CV data (one column, ATS-friendly); loads `docx` on demand.
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const handleExportDocx = useCallback(async () => {
+    setIsExportingDocx(true);
+    try {
+      const { exportCoverLetterDocx, exportCvDocx } = await import("../../exportDocx");
+      if (docMode === 'letter') await exportCoverLetterDocx(cvData);
+      else await exportCvDocx(cvData);
+      toast.success(t("editor.export.docxSuccess", "Documento de Word descargado"));
+      trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'docx', template: cvData.template });
+    } catch (error) {
+      console.error("DOCX export error:", error);
+      toast.error(t("editor.export.docxError", "No se pudo generar el documento de Word. Inténtalo de nuevo."));
+    } finally {
+      setIsExportingDocx(false);
+    }
+  }, [cvData, docMode, t]);
+
   // Export PDF using html2pdf.js - works with local guest state (no cvId required)
   const handleExportPdf = useCallback(async () => {
     try {
@@ -699,6 +718,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
+          trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'pdf', template: cvData.template });
         })
         .catch((error: any) => {
           console.error("PDF export error:", error);
@@ -712,7 +732,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, cvData.coverLetter?.body, docMode, t]);
+  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t]);
 
   // Get completion status for all sections
   const completionStatus = {
@@ -778,6 +798,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
               {cvData.template === 'employment' ? (
                 <Format1003Fields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} />
+              ) : null}
+              {cvData.template === 'dafp' ? (
+                <FormatDafpFields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} />
               ) : null}
             </>
           );
@@ -1029,6 +1052,20 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     </>
                   )}
                 </button>
+
+              <button
+                type="button"
+                onClick={handleExportDocx}
+                disabled={isExportingDocx}
+                aria-label={docMode === 'letter' ? 'Descargar la carta en Word' : 'Descargar la hoja de vida en Word'}
+                title="Word (.docx): formato editable de una columna, ideal para portales y reclutadores"
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-600 bg-white px-2 py-2 text-sm font-medium text-brand-800 shadow-sm hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
+              >
+                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="hidden sm:inline">{isExportingDocx ? 'Generando…' : 'Word'}</span>
+              </button>
 
               </div>
             </div>

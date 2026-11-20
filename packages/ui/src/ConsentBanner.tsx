@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useConsent, useConsentPreferencesRequest } from "./consent.js";
 import { LEGAL_URLS } from "./links.js";
+import { ANALYTICS_ENABLED, applyAnalyticsConsent } from "./analytics.js";
 
 /**
  * Cookie consent banner (CMP) shown until the user decides. Non-intrusive:
@@ -17,6 +18,8 @@ export function ConsentBanner() {
   const titleId = useId();
 
   useEffect(() => setMounted(true), []);
+  // Google Tag Manager loads only after analytics consent (no-op without VITE_GTM_ID).
+  useEffect(() => applyAnalyticsConsent(consent), [consent]);
 
   const openPreferences = useCallback(() => {
     setAnalytics(Boolean(consent?.analytics));
@@ -46,8 +49,9 @@ export function ConsentBanner() {
         <div role="region" aria-label="Preferencias de cookies" className="fixed inset-x-0 bottom-0 z-[1400] border-t border-ui-border bg-ui-surface/95 shadow-floating backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
             <p className="text-sm text-ui-muted">
-              Usamos cookies necesarias para que la plataforma funcione y, solo si lo aceptas, cookies de publicidad de Google para
-              financiar las herramientas gratuitas.{" "}
+              {ANALYTICS_ENABLED
+                ? "Usamos cookies necesarias para que la plataforma funcione y, solo si lo aceptas, cookies de analítica (Google Analytics) para mejorar el sitio y de publicidad de Google para financiar las herramientas gratuitas."
+                : "Usamos cookies necesarias para que la plataforma funcione y, solo si lo aceptas, cookies de publicidad de Google para financiar las herramientas gratuitas."}{" "}
               <a href={LEGAL_URLS.cookies} className="font-medium text-ui-accent underline underline-offset-2">Política de cookies</a>
             </p>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -89,7 +93,11 @@ export function ConsentBanner() {
               <li className="flex items-start justify-between gap-4">
                 <label htmlFor={`${titleId}-analytics`}>
                   <span className="block text-sm font-semibold">Analítica</span>
-                  <span className="block text-sm text-ui-muted">Medición agregada de uso. Hoy no usamos herramientas de analítica de terceros.</span>
+                  <span className="block text-sm text-ui-muted">
+                    {ANALYTICS_ENABLED
+                      ? "Google Analytics mide de forma agregada qué páginas y funciones se usan, para mejorarlas."
+                      : "Medición agregada de uso. Hoy no usamos herramientas de analítica de terceros."}
+                  </span>
                 </label>
                 <input id={`${titleId}-analytics`} type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="mt-1 h-4 w-4 accent-brand-700" />
               </li>

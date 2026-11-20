@@ -8,7 +8,7 @@ La primera vez que visitas cualquiera de nuestros sitios verás un aviso con tre
 - **Rechazar no esenciales**: solo se usan las cookies estrictamente necesarias.
 - **Configurar**: eliges por categoría.
 
-Tu decisión se guarda en la cookie `ps_consent` y se comparte entre los servicios de prosolutions.page (portal, ProCV y ProJobs) para no preguntarte en cada uno. Puedes cambiarla cuando quieras con el enlace **«Configurar cookies»** del pie de página. Mientras no aceptes la publicidad, **no cargamos el código de anuncios de Google**.
+Tu decisión se guarda en la cookie `ps_consent` y se comparte entre los servicios de prosolutions.page (portal, ProCV y ProJobs) para no preguntarte en cada uno. Puedes cambiarla cuando quieras con el enlace **«Configurar cookies»** del pie de página. Mientras no aceptes la analítica, **no cargamos Google Tag Manager ni Google Analytics**, y mientras no aceptes la publicidad, **no cargamos el código de anuncios de Google**.
 
 ## Categorías
 
@@ -28,7 +28,14 @@ También usamos almacenamiento local del navegador (localStorage y sessionStorag
 
 ### Analítica
 
-Nos ayudarían a entender de forma agregada cómo se usan las páginas para mejorarlas. Actualmente no tenemos herramientas de analítica de terceros activas; si las incorporamos, solo funcionarán con tu consentimiento y las listaremos aquí.
+Si las aceptas, usamos Google Analytics (cargado a través de Google Tag Manager) para entender de forma agregada qué páginas y funciones se usan: por ejemplo, cuántas búsquedas de empleo se hacen o cuántas hojas de vida se descargan. No lo usamos para identificarte ni para publicidad, y funciona en modo de consentimiento (Consent Mode): sin tu aceptación no se carga.
+
+| Nombre | Proveedor | Finalidad | Duración |
+|---|---|---|---|
+| _ga | Google | Distinguir visitantes de forma anónima para las estadísticas | 2 años |
+| _ga_&lt;ID&gt; | Google | Mantener el estado de la sesión de medición | 2 años |
+
+Google Tag Manager no instala cookies propias. Si retiras tu consentimiento desde «Configurar cookies», dejamos de cargar estas herramientas y borramos estas cookies de tu navegador. Puedes consultar cómo usa Google los datos en [policies.google.com/technologies/partner-sites](https://policies.google.com/technologies/partner-sites).
 
 ### Publicidad
 

@@ -2698,6 +2698,162 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
   );
 }
 
+/** CEFR level → the three levels of the public-sector form. */
+function dafpLanguageLevel(level?: string): string {
+  const value = String(level || "").toUpperCase();
+  if (value.startsWith("C")) return "Muy bien";
+  if (value.startsWith("B")) return "Bien";
+  if (value.startsWith("A")) return "Regular";
+  return "";
+}
+
+/**
+ * Colombian public-sector CV ("Formato Único de Hoja de Vida – Persona
+ * Natural", Función Pública, Ley 190 de 1995): same sections and order as the
+ * official form, built from the regular CV data plus the DAFP-only fields
+ * (data.application, keys prefixed "dafp").
+ */
+function TemplateDafp({ data }: { data: CVData }) {
+  const app = data.application || {};
+  const personal = data.personal || {};
+  const value = (key: string) => String(app[key] || "").trim();
+  const Row = Format1003Row;
+  const Grid = Format1003Grid;
+  const Section = Format1003Section;
+  const emails = normalizeContactItems(personal.emails).map((item) => item.value).filter(Boolean);
+  const phones = normalizeContactItems(personal.phones).map((item) => item.value).filter(Boolean);
+  const education = data.education || [];
+  const experience = data.experience || [];
+  const languages = normalizeLanguages(data.languages).filter((item) => item.name);
+  const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
+  const hasSplitName = Boolean(value("dafpFirstSurname") || value("dafpGivenNames"));
+  const ineligible = value("dafpIneligible").toLowerCase();
+
+  return (
+    <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <header className="border-b-2 border-slate-800 pb-3 text-center">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Formato único · Hoja de vida</p>
+        <h1 className="mt-1 text-xl font-bold uppercase leading-tight">Persona natural</h1>
+        <p className="text-[11px] text-slate-600">Leyes 190 de 1995, 489 y 443 de 1998</p>
+      </header>
+
+      <Format1003Section title="1. Datos personales">
+        <Grid>
+          {hasSplitName ? (
+            <>
+              <Row label="Primer apellido">{value("dafpFirstSurname")}</Row>
+              <Row label="Segundo apellido">{value("dafpSecondSurname")}</Row>
+              <Row label="Nombres" wide>{value("dafpGivenNames")}</Row>
+            </>
+          ) : (
+            <Row label="Nombres y apellidos" wide>{personal.name}</Row>
+          )}
+          <Row label="Documento de identificación">{documentText}</Row>
+          <Row label="Sexo">{value("dafpSex").toUpperCase()}</Row>
+          <Row label="Nacionalidad">{formatCountry(personal.nationality)}</Row>
+          <Row label="Libreta militar">{value("dafpMilitaryCard")}</Row>
+          <Row label="Fecha de nacimiento">{personal.birthDate ? formatBirthDate(personal.birthDate) : ""}</Row>
+          <Row label="Lugar de nacimiento">{value("dafpBirthPlace")}</Row>
+          <Row label="Dirección de correspondencia" wide>{[personal.address, formatLocation(personal.city, personal.country)].filter(Boolean).join(", ")}</Row>
+          <Row label="Teléfono">{phones.join(" · ")}</Row>
+          <Row label="Correo electrónico">{emails.join(" · ")}</Row>
+        </Grid>
+      </Format1003Section>
+
+      <Section title="2. Formación académica">
+        {value("dafpLastGrade") || value("dafpSchoolTitle") ? (
+          <Grid>
+            <Row label="Educación básica y media: último grado aprobado">{value("dafpLastGrade")}</Row>
+            <Row label="Título obtenido">{value("dafpSchoolTitle")}</Row>
+            <Row label="Fecha de grado" wide>{value("dafpSchoolDate")}</Row>
+          </Grid>
+        ) : null}
+        {education.length ? (
+          <table className="w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
+                <th className={CELL}>Educación superior: estudios o título</th><th className={CELL}>Institución</th><th className={CELL}>Terminación</th>
+              </tr>
+            </thead>
+            <tbody>
+              {education.map((item) => (
+                <tr key={item.id}>
+                  <td className={`${CELL} font-semibold`}>{getLocalizedDegreeLabel(item.degree)}</td>
+                  <td className={CELL}>{item.institution}</td>
+                  <td className={`${CELL} whitespace-nowrap`}>{item.to ? formatMonthYear(item.to) : "En curso"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+        {value("dafpProfessionalCard") ? <Grid><Row label="Tarjeta o matrícula profesional" wide>{value("dafpProfessionalCard")}</Row></Grid> : null}
+        {languages.length ? (
+          <table className="mt-2 w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
+                <th className={CELL}>Idioma</th><th className={CELL}>Lo habla / lo lee / lo escribe</th>
+              </tr>
+            </thead>
+            <tbody>
+              {languages.map((item) => (
+                <tr key={item.id}>
+                  <td className={`${CELL} font-semibold`}>{item.name}</td>
+                  <td className={CELL}>{dafpLanguageLevel(item.level)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+      </Section>
+
+      {experience.length ? (
+        <Section title="3. Experiencia laboral">
+          <table className="w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
+                <th className={CELL}>Empresa o entidad</th><th className={CELL}>Cargo o contrato</th><th className={CELL}>Ingreso</th><th className={CELL}>Retiro</th><th className={CELL}>Ciudad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {experience.map((item) => (
+                <tr key={item.id}>
+                  <td className={`${CELL} font-semibold`}>{item.company}</td>
+                  <td className={CELL}>{item.role}</td>
+                  <td className={`${CELL} whitespace-nowrap`}>{formatMonthYear(item.from)}</td>
+                  <td className={`${CELL} whitespace-nowrap`}>{item.to ? formatMonthYear(item.to) : "Actual"}</td>
+                  <td className={CELL}>{formatLocation(item.city, item.country)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Section>
+      ) : null}
+
+      {value("dafpTimePublic") || value("dafpTimePrivate") || value("dafpTimeIndependent") ? (
+        <Section title="4. Tiempo total de experiencia">
+          <Grid>
+            <Row label="Servidor público">{value("dafpTimePublic")}</Row>
+            <Row label="Sector privado">{value("dafpTimePrivate")}</Row>
+            <Row label="Trabajador independiente" wide>{value("dafpTimeIndependent")}</Row>
+          </Grid>
+        </Section>
+      ) : null}
+
+      <Section title="5. Firma del servidor público o contratista">
+        <p className="border-x border-b border-slate-300 px-2 py-2 text-[10px] leading-4">
+          Manifiesto bajo la gravedad del juramento que{" "}
+          <strong>{ineligible.startsWith("s") ? "SÍ" : ineligible.startsWith("n") ? "NO" : "SÍ ___ NO ___"}</strong>{" "}
+          me encuentro dentro de las causales de inhabilidad e incompatibilidad del orden constitucional o legal para ejercer cargos o empleos públicos o para celebrar contratos de prestación de servicios con la administración pública. Para todos los efectos legales, certifico que los datos por mí anotados en el presente formato único de hoja de vida son veraces (artículo 5.º de la Ley 190 de 1995).
+        </p>
+        <div className="mt-8 grid grid-cols-2 gap-10 text-[11px]">
+          <div className="border-t border-slate-800 pt-1">{[value("dafpSignPlace"), value("dafpSignDate")].filter(Boolean).join(", ") || "Lugar y fecha de diligenciamiento"}</div>
+          <div className="border-t border-slate-800 pt-1">Firma{documentText ? ` · ${documentText}` : ""}</div>
+        </div>
+      </Section>
+    </article>
+  );
+}
+
 /** Width of each template's page, so the supplemental block lines up with it. */
 const TEMPLATE_PAGE_WIDTH: Record<string, string> = {
   executive: "max-w-3xl",
@@ -2781,6 +2937,7 @@ const TEMPLATE_COMPONENTS: Record<string, (props: { data: CVData }) => JSX.Eleme
   ats: TemplateMinimal,
   minimal: TemplateMinimal,
   employment: TemplateEmploymentApplication,
+  dafp: TemplateDafp,
   // Legacy aliases kept for backward compatibility with existing CVs
   "ats-optimized": TemplateMinimal,
   "photo-professional": TemplateExecutive,
@@ -2804,7 +2961,7 @@ export function TemplateRenderer({ template, data }: Props) {
   return (
     <>
       <Template data={data} />
-      {canonical === "employment" ? null : (
+      {canonical === "employment" || canonical === "dafp" ? null : (
         <SupplementalPersonalSections
           data={data}
           template={canonical}

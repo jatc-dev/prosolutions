@@ -3,6 +3,7 @@ export { ProFooter } from "./ProFooter.js";
 export { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 export { AdSlot, NoAds, type AdFormat, type AdPlacement } from "./AdSlot.js";
 export { ConsentBanner } from "./ConsentBanner.js";
+export { ANALYTICS_ENABLED, applyAnalyticsConsent, trackEvent } from "./analytics.js";
 export { CONSENT_COOKIE, consentCookieString, hasAdvertisingConsent, openConsentPreferences, parseConsent, readConsent, serializeConsent, useConsent, writeConsent, type ConsentState } from "./consent.js";
 export { AD_MIN_HEIGHT, AD_PLACEMENTS, ADS_DISABLED, adEligibility, isAdAllowedOnPath, normalizePublisherId, type AdsConfig } from "./adsPolicy.js";
 export { loadAdsConfig, resetAdsConfigCache, sanitizeAdsConfig, useAdsConfig } from "./adsConfig.js";
