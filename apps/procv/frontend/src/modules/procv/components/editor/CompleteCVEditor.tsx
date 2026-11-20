@@ -294,7 +294,14 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       role: exp.position,
       from: exp.startDate,
       to: exp.isCurrentPosition ? undefined : exp.endDate,
-      description: exp.description,
+      // Achievements ("Logros destacados") are printed as bullets under the description.
+      description: [
+        String(exp.description || '').trim(),
+        ...(Array.isArray(exp.achievements) ? exp.achievements : [])
+          .map((item: unknown) => String(item || '').trim())
+          .filter(Boolean)
+          .map((item: string) => `• ${item}`),
+      ].filter(Boolean).join('\n'),
       city: exp.location?.split(',')[0]?.trim() || '',
       country: exp.location?.split(',')[1]?.trim() || '',
     })) || [],

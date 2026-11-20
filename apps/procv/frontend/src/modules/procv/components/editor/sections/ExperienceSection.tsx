@@ -10,6 +10,8 @@ import {
   SelectField
 } from "../FormSection";
 import { getPrefixMatches } from "../utils/suggestions";
+import { PhraseSuggestions } from "../components/PhraseSuggestions";
+import { appendPhrase } from "../../../phrases";
 
 interface ExperienceSectionProps {
   data: ExperienceItem[];
@@ -547,6 +549,12 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       placeholder={t('editor.experience.placeholders.jobDescription')}
                       rows={4}
                     />
+                    <PhraseSuggestions
+                      title={experience.position}
+                      kind="duties"
+                      onPick={(phrase) => updateExperience(experience.id, { description: appendPhrase(experience.description, phrase) })}
+                      isUsed={(phrase) => String(experience.description || '').includes(phrase)}
+                    />
                   </FormField>
 
                   {/* Achievements */}
@@ -595,6 +603,12 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                         {t('editor.experience.emptyAchievements')}
                       </p>
                     )}
+                    <PhraseSuggestions
+                      title={experience.position}
+                      kind="achievements"
+                      onPick={(phrase) => updateExperience(experience.id, { achievements: [...experience.achievements.filter((item) => item.trim()), phrase] })}
+                      isUsed={(phrase) => experience.achievements.includes(phrase)}
+                    />
                   </div>
 
                   {/* Technologies */}

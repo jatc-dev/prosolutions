@@ -1065,7 +1065,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
                     </div>
                     <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
                   </div>
-                  {item.description && <p className="mt-1 text-sm text-slate-700">{item.description}</p>}
+                  {item.description && <p className="mt-1 text-sm text-slate-700 whitespace-pre-line">{item.description}</p>}
                 </div>
               ))}
             </div>
@@ -1241,7 +1241,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
                   </div>
                   <p className="text-xs text-slate-400">{formatRange(item.from, item.to)}</p>
                 </div>
-                {item.description && <p className="mt-2 text-sm text-slate-300">{item.description}</p>}
+                {item.description && <p className="mt-2 text-sm text-slate-300 whitespace-pre-line">{item.description}</p>}
               </div>
             ))}
           </div>
@@ -1400,7 +1400,7 @@ function TemplateCreative({ data }: { data: CVData }) {
                   </div>
                   <p className="text-xs text-slate-300">{formatRange(item.from, item.to)}</p>
                 </div>
-                {item.description && <p className="mt-2 text-sm text-slate-200">{item.description}</p>}
+                {item.description && <p className="mt-2 text-sm text-slate-200 whitespace-pre-line">{item.description}</p>}
               </div>
             ))}
           </div>
@@ -1538,7 +1538,7 @@ function TemplateClassic({ data }: { data: CVData }) {
                       {formatLocation(item.city, item.country) ? ` • ${formatLocation(item.city, item.country)}` : ""}
                       {' • '}{formatRange(item.from, item.to)}
                     </p>
-                {item.description && <p className="mt-1 text-sm text-slate-700">{item.description}</p>}
+                {item.description && <p className="mt-1 text-sm text-slate-700 whitespace-pre-line">{item.description}</p>}
               </div>
             ))}
           </div>
@@ -1701,7 +1701,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
                       </div>
                       <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
                     </div>
-                    {item.description && <p className="mt-1 text-sm text-slate-700">{item.description}</p>}
+                    {item.description && <p className="mt-1 text-sm text-slate-700 whitespace-pre-line">{item.description}</p>}
                   </div>
                 ))}
               </div>
@@ -2149,7 +2149,7 @@ function TemplateCompact({ data }: { data: CVData }) {
                   <p className="text-xs text-slate-500 whitespace-nowrap">{formatRange(item.from, item.to)}</p>
                 </div>
                 <p className="text-xs text-slate-600">{item.company || "Empresa"}</p>
-                {item.description ? <p className="text-sm text-slate-700 mt-1">{item.description}</p> : null}
+                {item.description ? <p className="text-sm text-slate-700 mt-1 whitespace-pre-line">{item.description}</p> : null}
               </div>
             ))}
           </div>
