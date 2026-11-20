@@ -9,6 +9,8 @@ import {
   InputField,
   TextareaField
 } from "../FormSection";
+import { PhraseSuggestions } from "../components/PhraseSuggestions";
+import { appendPhrase } from "../../../phrases";
 
 interface PersonalSectionProps {
   data: PersonalData;
@@ -825,6 +827,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             onChange={(value) => updateField('summary', value)}
             placeholder={t('editor.personal.placeholders.summary')}
             rows={6}
+          />
+          <PhraseSuggestions
+            title={data.professionalTitle}
+            kind="summaries"
+            onPick={(phrase) => updateField('summary', appendPhrase(data.summary, phrase))}
+            isUsed={(phrase) => String(data.summary || '').includes(phrase)}
           />
           <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
             <label className="inline-flex items-center gap-2 text-sm text-slate-700">
