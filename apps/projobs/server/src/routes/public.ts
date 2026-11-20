@@ -4,6 +4,7 @@ import { optionalAuth } from '../auth/identity.js';
 import { asyncHandler, notFound, parse } from '../http/errors.js';
 import { externalJobsQuery, jobReportInput, jobSearchQuery } from '../http/schemas.js';
 import type { ExternalJobsResponse } from '../contracts.js';
+import { searchExternalJobs } from '../integrations/externalJobs.js';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { appliedJobIds } from '../repositories/applications.js';
 import { findPublicJob, findSimilarJobs, searchJobs, UUID } from '../repositories/jobs.js';
@@ -196,27 +197,24 @@ export function publicRouter({ db, verify, config, externalJobs, log }: AppDeps)
       const query = parse(externalJobsQuery, req.query);
       res.set('Cache-Control', 'no-store');
       res.set('X-Robots-Tag', 'noindex');
-      if (!externalJobs) {
-        const off: ExternalJobsResponse = { enabled: false, source: null, items: [], total: 0 };
+      if (!externalJobs?.length) {
+        const off: ExternalJobsResponse = { enabled: false, sources: [], items: [], total: 0 };
         res.json(off);
         return;
       }
-      try {
-        const result = await externalJobs.search({
+      // Each feed fails on its own: a partner outage never breaks ProJobs.
+      const body = await searchExternalJobs(
+        externalJobs,
+        {
           q: query.q,
           location: query.location,
           page: query.page,
           userIp: (req.ip ?? '').replace(/^::ffff:/, ''),
           userAgent: String(req.get('user-agent') ?? '').slice(0, 300),
-        });
-        const body: ExternalJobsResponse = { enabled: true, source: externalJobs.source, ...result };
-        res.json(body);
-      } catch (error) {
-        // A partner outage must never break ProJobs: the section just stays empty.
-        log('external jobs search failed', { error: error instanceof Error ? error.message : String(error) });
-        const empty: ExternalJobsResponse = { enabled: true, source: externalJobs.source, items: [], total: 0 };
-        res.json(empty);
-      }
+        },
+        log,
+      );
+      res.json(body);
     }),
   );
 

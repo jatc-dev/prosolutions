@@ -67,7 +67,7 @@ export interface TestApi {
   close: () => Promise<void>;
 }
 
-export async function startTestApi(options: { internalToken?: boolean; seed?: boolean; externalJobs?: ExternalJobsProvider | null } = {}): Promise<TestApi> {
+export async function startTestApi(options: { internalToken?: boolean; seed?: boolean; externalJobs?: ExternalJobsProvider[] } = {}): Promise<TestApi> {
   // Runtime role projobs_api: queries run with the same privileges and RLS as production.
   const db = await createPgliteDatabase('projobs_api');
   await runMigrations(db);
@@ -86,7 +86,7 @@ export async function startTestApi(options: { internalToken?: boolean; seed?: bo
     log: () => undefined,
     verify: createIdentityVerifier(config.jwt),
     procv: fakeProCv(),
-    externalJobs: options.externalJobs ?? null,
+    externalJobs: options.externalJobs ?? [],
   });
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, () => resolve(s));

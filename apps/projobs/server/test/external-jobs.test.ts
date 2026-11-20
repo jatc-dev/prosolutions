@@ -2,7 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { loadConfig } from '../src/config.js';
 import {
   CAREERJET_ENDPOINT,
+  REMOTIVE_ENDPOINT,
   createCareerjetProvider,
+  createRemotiveProvider,
+  searchExternalJobs,
+  toRemotiveJob,
   plainText,
   toExternalJob,
   type ExternalJobsProvider,
@@ -95,11 +99,84 @@ describe('careerjet mapping', () => {
     expect(uncached.calls).toHaveLength(2);
   });
 
-  it('stays off unless explicitly enabled with a key', () => {
+  it('keeps every feed off unless explicitly enabled (Careerjet also needs its key)', () => {
     const base = { NODE_ENV: 'test' as const };
-    expect(loadConfig({ ...base, CAREERJET_API_KEY: 'key-123456' }).externalJobs.enabled).toBe(false);
-    expect(loadConfig({ ...base, EXTERNAL_JOBS_ENABLED: 'true' }).externalJobs.enabled).toBe(false);
-    expect(loadConfig({ ...base, EXTERNAL_JOBS_ENABLED: 'true', CAREERJET_API_KEY: 'key-123456' }).externalJobs).toMatchObject({ enabled: true, careerjetLocale: 'es_CO', cacheSeconds: 0 });
+    expect(loadConfig({ ...base, CAREERJET_API_KEY: 'key-123456' }).externalJobs).toMatchObject({ careerjet: { enabled: false }, remotiveEnabled: false });
+    expect(loadConfig({ ...base, CAREERJET_ENABLED: 'true' }).externalJobs.careerjet.enabled).toBe(false);
+    expect(loadConfig({ ...base, CAREERJET_ENABLED: 'true', CAREERJET_API_KEY: 'key-123456' }).externalJobs).toMatchObject({ careerjet: { enabled: true, locale: 'es_CO' }, cacheSeconds: 0 });
+    expect(loadConfig({ ...base, REMOTIVE_ENABLED: 'true' }).externalJobs).toMatchObject({ remotiveEnabled: true, careerjet: { enabled: false } });
+  });
+});
+
+const remotiveJob = (overrides: Record<string, unknown> = {}) => ({
+  id: 1,
+  url: 'https://remotive.com/remote-jobs/customer-support/agente-soporte-1',
+  title: 'Agente de soporte al cliente',
+  company_name: 'Acme',
+  category: 'Customer Service',
+  tags: ['soporte', 'español'],
+  publication_date: '2026-11-18T09:00:00',
+  candidate_required_location: 'LATAM',
+  salary: '$1,200 - $1,500',
+  description: '<p>Atención por <b>chat</b> y correo.</p>',
+  ...overrides,
+});
+
+describe('remotive feed', () => {
+  it('keeps only offers open to Colombia and maps them as remote', () => {
+    expect(toRemotiveJob(remotiveJob())).toMatchObject({ title: 'Agente de soporte al cliente', location: 'Remoto · LATAM', snippet: 'Atención por chat y correo.', source: 'remotive' });
+    expect(toRemotiveJob(remotiveJob({ candidate_required_location: 'Worldwide' }))).not.toBeNull();
+    expect(toRemotiveJob(remotiveJob({ candidate_required_location: 'USA Only' }))).toBeNull();
+    expect(toRemotiveJob(remotiveJob({ candidate_required_location: 'Europe' }))).toBeNull();
+    expect(toRemotiveJob(remotiveJob({ url: 'ftp://x' }))).toBeNull();
+  });
+
+  it('fetches at most once per 6 hours, filters by keywords (accents aside) and paginates', async () => {
+    let clock = 0;
+    const many = Array.from({ length: 23 }, (_, i) => remotiveJob({ id: i, url: `https://remotive.com/remote-jobs/x/${i}`, title: i < 15 ? `Soporte técnico ${i}` : `Diseñador ${i}` }));
+    const { impl, calls } = fakeFetch({ jobs: many });
+    const provider = createRemotiveProvider({ fetchImpl: impl, now: () => clock });
+    const all = await provider.search({ ...QUERY, q: '', page: 1 });
+    expect(all.total).toBe(23);
+    expect(all.items).toHaveLength(10);
+    const tecnico = await provider.search({ ...QUERY, q: 'TECNICO', page: 2 });
+    expect(tecnico.total).toBe(15);
+    expect(tecnico.items).toHaveLength(5);
+    expect(tecnico.items[0]).not.toHaveProperty('searchText');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toBe(REMOTIVE_ENDPOINT);
+    clock = 6 * 60 * 60 * 1000;
+    await provider.search({ ...QUERY, q: '' });
+    expect(calls).toHaveLength(2);
+  });
+
+  it('keeps the last good copy when a refresh fails and waits before retrying', async () => {
+    let clock = 0;
+    let fail = false;
+    let count = 0;
+    const impl = (async () => {
+      count += 1;
+      if (fail) return new Response('{}', { status: 500 });
+      return new Response(JSON.stringify({ jobs: [remotiveJob()] }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }) as typeof fetch;
+    const provider = createRemotiveProvider({ fetchImpl: impl, now: () => clock });
+    expect((await provider.search(QUERY)).items).toHaveLength(0); // "contador" does not match
+    expect((await provider.search({ ...QUERY, q: 'soporte' })).total).toBe(1);
+    fail = true;
+    clock = 7 * 60 * 60 * 1000;
+    await provider.search({ ...QUERY, q: 'soporte' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect((await provider.search({ ...QUERY, q: 'soporte' })).total).toBe(1);
+    expect(count).toBe(2);
+  });
+
+  it('combines feeds and drops only the failing one', async () => {
+    const ok: ExternalJobsProvider = { source: { id: 'remotive', name: 'Remotive', url: 'https://remotive.com' }, search: async () => ({ items: [toRemotiveJob(remotiveJob())!], total: 1 }) };
+    const broken: ExternalJobsProvider = { source: { id: 'careerjet', name: 'Careerjet', url: 'https://www.careerjet.com.co' }, search: async () => { throw new Error('down'); } };
+    const logs: string[] = [];
+    const result = await searchExternalJobs([broken, ok], QUERY, (message) => logs.push(message));
+    expect(result).toMatchObject({ enabled: true, total: 1, sources: [{ id: 'remotive' }] });
+    expect(logs).toEqual(['external jobs search failed']);
   });
 });
 
@@ -110,7 +187,7 @@ describe('GET /api/external-jobs', () => {
   const seen: ExternalJobsQuery[] = [];
 
   const provider = (fail = false): ExternalJobsProvider => ({
-    source: { name: 'Careerjet', url: 'https://www.careerjet.com.co' },
+    source: { id: 'careerjet', name: 'Careerjet', url: 'https://www.careerjet.com.co' },
     async search(query) {
       seen.push(query);
       if (fail) throw new Error('partner down');
@@ -121,8 +198,8 @@ describe('GET /api/external-jobs', () => {
   beforeAll(async () => {
     [off, on, failing] = await Promise.all([
       startTestApi({ seed: false }),
-      startTestApi({ seed: false, externalJobs: provider() }),
-      startTestApi({ seed: false, externalJobs: provider(true) }),
+      startTestApi({ seed: false, externalJobs: [provider()] }),
+      startTestApi({ seed: false, externalJobs: [provider(true)] }),
     ]);
   });
   afterAll(async () => {
@@ -132,13 +209,13 @@ describe('GET /api/external-jobs', () => {
   it('reports the integration as disabled when no provider is configured', async () => {
     const response = await off.request('/api/external-jobs?q=contador');
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ enabled: false, source: null, items: [], total: 0 });
+    expect(response.body).toEqual({ enabled: false, sources: [], items: [], total: 0 });
   });
 
   it('forwards the search with the visitor user agent and returns attributed results', async () => {
     const response = await on.request('/api/external-jobs?q=contador&location=Bogot%C3%A1&page=2', { headers: { 'user-agent': 'TestBrowser/1.0' } });
     expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ enabled: true, source: { name: 'Careerjet' }, total: 1 });
+    expect(response.body).toMatchObject({ enabled: true, sources: [{ id: 'careerjet', name: 'Careerjet' }], total: 1 });
     expect(response.body.items[0]).toMatchObject({ title: 'Auxiliar contable Bogotá', source: 'careerjet' });
     expect(seen.at(-1)).toMatchObject({ q: 'contador', location: 'Bogotá', page: 2, userAgent: 'TestBrowser/1.0' });
     expect(seen.at(-1)!.userIp).not.toBe('');

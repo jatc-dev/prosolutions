@@ -12,7 +12,7 @@ export interface AppDeps {
   db: Database;
   verify: IdentityVerifier;
   procv: ProCvClient;
-  /** Partner job feed; null when the integration is off. */
-  externalJobs?: ExternalJobsProvider | null;
+  /** Partner job feeds that are switched on (empty: the section stays hidden). */
+  externalJobs?: ExternalJobsProvider[];
   log: Logger;
 }

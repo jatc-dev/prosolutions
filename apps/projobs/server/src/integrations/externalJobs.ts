@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { ExternalJob } from '../contracts.js';
+import type { ExternalJob, ExternalJobsResponse, ExternalSource } from '../contracts.js';
 
 /**
  * Partner job feeds shown next to ProJobs' own offers. Searches run live on
@@ -22,7 +22,7 @@ export interface ExternalJobsResult {
 }
 
 export interface ExternalJobsProvider {
-  readonly source: { name: string; url: string };
+  readonly source: ExternalSource;
   search(query: ExternalJobsQuery): Promise<ExternalJobsResult>;
 }
 
@@ -65,6 +65,10 @@ function safeUrl(value: unknown): string | null {
 
 /** Map one Careerjet v4 job to our contract (null when it has no title or valid link). */
 export function toExternalJob(raw: unknown): ExternalJob | null {
+  return toCareerjetJob(raw);
+}
+
+function toCareerjetJob(raw: unknown): ExternalJob | null {
   if (!isRecord(raw)) return null;
   const title = text(raw.title);
   const url = safeUrl(raw.url);
@@ -101,7 +105,7 @@ export function createCareerjetProvider(options: CareerjetOptions): ExternalJobs
   const ttlMs = (options.cacheSeconds ?? 0) * 1000;
 
   return {
-    source: { name: 'Careerjet', url: 'https://www.careerjet.com.co' },
+    source: { id: 'careerjet', name: 'Careerjet', url: 'https://www.careerjet.com.co' },
     async search(query) {
       const key = JSON.stringify([query.q.toLowerCase(), query.location.toLowerCase(), query.page]);
       const cached = ttlMs > 0 ? cache.get(key) : undefined;
@@ -138,4 +142,121 @@ export function createCareerjetProvider(options: CareerjetOptions): ExternalJobs
       return value;
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Remotive: public remote-jobs feed. Its terms allow at most ~4 fetches a day,
+// require naming and linking Remotive, forbid passing the jobs to Google Jobs
+// or other boards, and forbid using them to capture sign-ups. So: one cached
+// copy refreshed every 6 hours, filtered locally, each offer linking back.
+// ---------------------------------------------------------------------------
+
+export const REMOTIVE_ENDPOINT = 'https://remotive.com/api/remote-jobs';
+const SIX_HOURS = 6 * 60 * 60 * 1000;
+const RETRY_AFTER_FAILURE = 30 * 60 * 1000;
+
+/** Locations a candidate in Colombia can apply from. */
+const OPEN_TO_COLOMBIA = /(worldwide|anywhere|global|latam|latin america|south america|americas|colombia|no restriction)/i;
+
+const fold = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+interface RemotiveJob extends ExternalJob {
+  searchText: string;
+}
+
+export function toRemotiveJob(raw: unknown): RemotiveJob | null {
+  if (!isRecord(raw)) return null;
+  const title = text(raw.title);
+  const url = safeUrl(raw.url);
+  if (!title || !url) return null;
+  const region = text(raw.candidate_required_location) ?? '';
+  if (region && !OPEN_TO_COLOMBIA.test(region)) return null;
+  const date = text(raw.publication_date);
+  const parsedDate = date ? new Date(date) : null;
+  const company = text(raw.company_name);
+  const tags = Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+  return {
+    id: createHash('sha256').update(url).digest('hex').slice(0, 16),
+    title: plainText(title, 160),
+    company: company ? plainText(company, 120) : null,
+    location: region ? `Remoto · ${plainText(region, 80)}` : 'Remoto',
+    snippet: plainText(String(raw.description ?? '')),
+    salary: text(raw.salary) ? plainText(String(raw.salary), 80) : null,
+    postedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
+    url,
+    source: 'remotive',
+    searchText: fold([title, company, text(raw.category), ...tags].filter(Boolean).join(' ')),
+  };
+}
+
+export interface RemotiveOptions {
+  fetchImpl?: typeof fetch;
+  now?: () => number;
+  timeoutMs?: number;
+  log?: (message: string, meta?: Record<string, unknown>) => void;
+}
+
+export function createRemotiveProvider(options: RemotiveOptions = {}): ExternalJobsProvider {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const now = options.now ?? Date.now;
+  let jobs: RemotiveJob[] = [];
+  let nextFetchAt = 0;
+  let inFlight: Promise<void> | null = null;
+
+  const refresh = async () => {
+    try {
+      const response = await fetchImpl(REMOTIVE_ENDPOINT, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(options.timeoutMs ?? 15_000),
+      });
+      if (!response.ok) throw new Error(`remotive responded ${response.status}`);
+      const body: unknown = await response.json();
+      const list = isRecord(body) && Array.isArray(body.jobs) ? body.jobs : [];
+      jobs = list.map(toRemotiveJob).filter((job): job is RemotiveJob => job !== null);
+      nextFetchAt = now() + SIX_HOURS;
+    } catch (error) {
+      // Keep serving the previous copy; do not hammer the feed after a failure.
+      nextFetchAt = now() + RETRY_AFTER_FAILURE;
+      options.log?.('remotive refresh failed', { error: error instanceof Error ? error.message : String(error) });
+    }
+  };
+
+  return {
+    source: { id: 'remotive', name: 'Remotive', url: 'https://remotive.com' },
+    async search(query) {
+      if (now() >= nextFetchAt) {
+        inFlight ??= refresh().finally(() => {
+          inFlight = null;
+        });
+        // First load waits; later refreshes happen in the background.
+        if (!jobs.length) await inFlight;
+      }
+      const words = fold(query.q).split(/\s+/).filter((word) => word.length > 1);
+      const matches = words.length ? jobs.filter((job) => words.every((word) => job.searchText.includes(word))) : jobs;
+      const start = (Math.min(Math.max(query.page, 1), 10) - 1) * EXTERNAL_PAGE_SIZE;
+      const items = matches.slice(start, start + EXTERNAL_PAGE_SIZE).map(({ searchText: _searchText, ...job }) => job);
+      return { items, total: matches.length };
+    },
+  };
+}
+
+/** Runs every enabled feed in parallel; a failing feed only drops its own results. */
+export async function searchExternalJobs(
+  providers: ExternalJobsProvider[],
+  query: ExternalJobsQuery,
+  log: (message: string, meta?: Record<string, unknown>) => void,
+): Promise<ExternalJobsResponse> {
+  const settled = await Promise.allSettled(providers.map((provider) => provider.search(query)));
+  const response: ExternalJobsResponse = { enabled: true, sources: [], items: [], total: 0 };
+  settled.forEach((result, index) => {
+    const provider = providers[index]!;
+    if (result.status === 'rejected') {
+      log('external jobs search failed', { source: provider.source.id, error: result.reason instanceof Error ? result.reason.message : String(result.reason) });
+      return;
+    }
+    if (result.value.items.length) response.sources.push(provider.source);
+    response.items.push(...result.value.items);
+    response.total += result.value.total;
+  });
+  return response;
 }

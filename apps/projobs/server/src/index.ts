@@ -7,7 +7,7 @@ import { loadConfig } from './config.js';
 import type { Database } from './db/database.js';
 import { createPgDatabase } from './db/pg.js';
 import { createProCvClient } from './integrations/procv.js';
-import { createCareerjetProvider } from './integrations/externalJobs.js';
+import { createCareerjetProvider, createRemotiveProvider, type ExternalJobsProvider } from './integrations/externalJobs.js';
 import type { Logger } from './routes/context.js';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -47,22 +47,28 @@ if (keyStore) {
   log('identity jwks loaded', { keys: keyStore.size });
   setInterval(() => void keyStore.refresh(), 10 * 60 * 1000).unref();
 }
+const externalProviders: ExternalJobsProvider[] = [];
+if (config.externalJobs.careerjet.enabled && config.externalJobs.careerjet.apiKey) {
+  externalProviders.push(
+    createCareerjetProvider({
+      apiKey: config.externalJobs.careerjet.apiKey,
+      locale: config.externalJobs.careerjet.locale,
+      timeoutMs: config.externalJobs.timeoutMs,
+      cacheSeconds: config.externalJobs.cacheSeconds,
+    }),
+  );
+}
+if (config.externalJobs.remotiveEnabled) externalProviders.push(createRemotiveProvider({ log }));
+log('external jobs', { providers: externalProviders.map((provider) => provider.source.id) });
+
 const app = createApp({
   config,
   db,
   log,
   verify: createIdentityVerifier({ ...config.jwt, keyStore }),
   procv: createProCvClient({ baseUrl: config.procvApiUrl, timeoutMs: config.procvTimeoutMs }),
-  externalJobs: config.externalJobs.enabled && config.externalJobs.careerjetApiKey
-    ? createCareerjetProvider({
-        apiKey: config.externalJobs.careerjetApiKey,
-        locale: config.externalJobs.careerjetLocale,
-        timeoutMs: config.externalJobs.timeoutMs,
-        cacheSeconds: config.externalJobs.cacheSeconds,
-      })
-    : null,
+  externalJobs: externalProviders,
 });
-log(config.externalJobs.enabled ? 'external jobs: careerjet enabled' : 'external jobs: disabled');
 
 const mailer = createMailer(readSmtpConfig(), log);
 if (!mailer.enabled) log('SMTP not configured: transactional emails and job alerts are logged, not sent');
