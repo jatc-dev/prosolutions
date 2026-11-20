@@ -1,4 +1,4 @@
-import { AdSlot, cn } from "@prosolutions/ui";
+import { AdSlot, cn, trackEvent } from "@prosolutions/ui";
 import { ArrowLeft, ArrowRight, BellRing, Briefcase, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -50,7 +50,10 @@ export function JobsPage() {
 
   // Instant search: typing updates the URL (debounced) which triggers the query.
   useEffect(() => {
-    if (debouncedQuery !== filters.q) update({ q: debouncedQuery });
+    if (debouncedQuery !== filters.q) {
+      update({ q: debouncedQuery });
+      if (debouncedQuery.trim().length > 1) trackEvent("search", { search_term: debouncedQuery.trim().slice(0, 100), source: "projobs" });
+    }
   }, [debouncedQuery]);
   useEffect(() => {
     if (debouncedLocation !== filters.location) update({ location: debouncedLocation });

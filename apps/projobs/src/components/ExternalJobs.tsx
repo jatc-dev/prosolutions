@@ -1,5 +1,6 @@
 import { ExternalLink, Globe2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import type { ExternalJob, ExternalJobsResponse, ExternalSource } from "../../server/src/contracts";
 import { apiRequest } from "../lib/api";
 import { useAsync } from "../lib/hooks";
@@ -76,6 +77,7 @@ export function ExternalJobs({ q, location }: { q: string; location: string }) {
               </div>
               <a
                 href={job.url}
+                onClick={() => trackEvent("select_external_job", { source: job.source })}
                 target="_blank"
                 rel="nofollow noopener noreferrer sponsored"
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 self-start rounded-lg border border-ui-border-strong px-3 text-sm font-semibold text-ui-text hover:bg-ui-soft"

@@ -23,7 +23,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     title: "Política de privacidad y tratamiento de datos personales",
     description:
       "Cómo ProSolutions recolecta, usa y protege tus datos personales conforme a la Ley 1581 de 2012, el Decreto 1377 de 2013 y el RGPD, y cómo ejercer tus derechos.",
-    updatedAt: "2026-11-18",
+    updatedAt: "2026-11-20",
     body: privacy,
   },
   {
@@ -39,7 +39,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     path: "/legal/cookies",
     title: "Política de cookies",
     description: "Qué cookies usa ProSolutions, para qué sirven, cómo funciona la publicidad de Google AdSense y cómo cambiar tus preferencias.",
-    updatedAt: "2026-11-18",
+    updatedAt: "2026-11-20",
     body: cookies,
   },
   {

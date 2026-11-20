@@ -18,6 +18,7 @@ function readEnv(): Record<string, string | undefined> {
     VITE_ADSENSE_CLIENT: import.meta.env.VITE_ADSENSE_CLIENT,
     VITE_ADSENSE_CLIENT_ID: import.meta.env.VITE_ADSENSE_CLIENT_ID,
     VITE_IDENTITY_API_URL: import.meta.env.VITE_IDENTITY_API_URL,
+    VITE_GTM_ID: import.meta.env.VITE_GTM_ID,
   };
 }
 
@@ -80,6 +81,12 @@ export const IDENTITY_ORIGIN = (env.VITE_IDENTITY_API_URL || "https://identity.p
   .trim()
   .replace(/\/+$/, "")
   .replace(/\/api\/auth(\/.*)?$/i, "");
+
+/**
+ * Google Tag Manager container (VITE_GTM_ID, production only). Empty means
+ * no analytics at all: nothing is loaded even with consent.
+ */
+export const GTM_ID = /^GTM-[A-Z0-9]{4,12}$/.test((env.VITE_GTM_ID || "").trim()) ? (env.VITE_GTM_ID || "").trim() : "";
 
 /** Marca si la URL apunta a otro origen (abre en pestaña nueva). */
 export function isExternalUrl(url: string): boolean {

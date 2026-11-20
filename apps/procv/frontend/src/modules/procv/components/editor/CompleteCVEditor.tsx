@@ -9,6 +9,7 @@ import { CVData, SectionType, SkillItem } from "../../../../shared/types";
 import { EditorTabs } from "./EditorTabs";
 import { changeEditorSection } from "./navigationValidation";
 import { TemplateRenderer, CVData as RendererCVData } from "../TemplateRenderer";
+import { trackEvent } from "@prosolutions/ui";
 import { WithCustomStyles } from "../withCustomStyles";
 import { CoverLetterPreview } from "../CoverLetterPreview";
 import { CoverLetterSection } from "./sections/CoverLetterSection";
@@ -699,6 +700,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
+          trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'pdf', template: cvData.template });
         })
         .catch((error: any) => {
           console.error("PDF export error:", error);
@@ -712,7 +714,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, cvData.coverLetter?.body, docMode, t]);
+  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t]);
 
   // Get completion status for all sections
   const completionStatus = {

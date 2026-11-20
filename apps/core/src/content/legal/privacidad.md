@@ -40,6 +40,7 @@ Para operar usamos proveedores que tratan datos por cuenta nuestra, con obligaci
 - **Red de entrega y seguridad**: Cloudflare.
 - **Inicio de sesión con Google** (opcional): Google, solo si eliges esa opción.
 - **Asistente de redacción con IA en ProCV** (opcional): Anthropic, solo con el texto que envías al usar el asistente. Más detalles en la [política de uso de IA](/legal/uso-ia).
+- **Analítica**: Google Analytics (mediante Google Tag Manager), solo con tu consentimiento. Mide de forma agregada el uso de las páginas; detalles en la [política de cookies](/legal/cookies).
 - **Publicidad**: Google AdSense, solo con tu consentimiento.
 
 Algunos de estos proveedores procesan información fuera de Colombia. Al aceptar esta política autorizas esa transmisión o transferencia internacional, que realizamos con proveedores que ofrecen niveles adecuados de protección. Para personas del Espacio Económico Europeo, las transferencias se amparan en las cláusulas contractuales tipo u otros mecanismos reconocidos por el RGPD.

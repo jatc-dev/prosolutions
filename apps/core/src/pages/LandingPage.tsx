@@ -14,7 +14,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { APP_URLS, ProFooter, ProHeader, RESOURCE_URLS } from "@prosolutions/ui";
+import { APP_URLS, ProFooter, ProHeader, RESOURCE_URLS, trackEvent } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { useHeaderSession } from "../useHeaderSession";
 import { useDocumentHead } from "../public/seo";
@@ -80,7 +80,17 @@ function JobSearchForm() {
   const { copy } = useCoreLocale();
   const t = copy.landing;
   return (
-    <form action={APP_URLS.projobs} method="get" role="search" aria-label={t.searchTitle} className="rounded-2xl border border-ui-border bg-ui-surface p-3 shadow-sm">
+    <form
+      action={APP_URLS.projobs}
+      method="get"
+      role="search"
+      aria-label={t.searchTitle}
+      onSubmit={(event) => {
+        const term = String(new FormData(event.currentTarget).get("q") || "").trim();
+        trackEvent("search", { search_term: term.slice(0, 100), source: "landing" });
+      }}
+      className="rounded-2xl border border-ui-border bg-ui-surface p-3 shadow-sm"
+    >
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="flex min-h-12 flex-1 items-center gap-2 rounded-xl bg-ui-soft px-3">
           <Search className="h-4 w-4 shrink-0 text-ui-subtle" aria-hidden="true" />
@@ -177,7 +187,7 @@ export function LandingPage() {
               ) : (
                 <div className="mt-8">
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <a href={APP_URLS.procvEditor} className={primaryButton}>
+                    <a href={APP_URLS.procvEditor} onClick={() => trackEvent("cta_click", { cta: "create_cv", location: "hero" })} className={primaryButton}>
                       <FileText className="h-5 w-5" aria-hidden="true" />
                       {t.primaryCta}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
