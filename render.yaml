@@ -33,6 +33,7 @@ services:
         source: /*
         destination: /app.html
     envVars:
+      - { key: VITE_GTM_ID, sync: false }   # Google Tag Manager (production only)
       - { key: VITE_CORE_URL, sync: false }
       - { key: VITE_PROCV_URL, sync: false }
       - { key: VITE_PROJOBS_URL, sync: false }
@@ -77,6 +78,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - { key: VITE_GTM_ID, sync: false }   # Google Tag Manager (production only)
       - { key: VITE_API_BASE_URL, sync: false }
       - { key: VITE_CORE_URL, sync: false }
       - { key: VITE_PROCV_URL, sync: false }
@@ -266,6 +268,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - { key: VITE_GTM_ID, sync: false }   # Google Tag Manager (production only)
       - { key: VITE_CORE_URL, sync: false }
       - { key: VITE_IDENTITY_API_URL, sync: false }
       - { key: VITE_PROCV_URL, sync: false }

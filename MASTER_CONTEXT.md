@@ -7,7 +7,7 @@ Architectural overview of the platform. Working rules live in `AGENTS.md` (and `
 ProSolutions is a free employability platform for every sector, focused on Colombia and Latin America:
 
 - **Core** — `prosolutions.page`: landing, ProAcademy guides, ProTools calculators (net salary, severance, contract comparison, CV checker), "create a CV" landing, legal pages, login, dashboard and ProAdmin.
-- **ProCV** — `procv.prosolutions.page`: CV editor without sign-up (12 templates, 10 ATS-friendly, including the Colombian 1003 format), cover letter, suggested phrases by job family, import from PDF/Word, PDF export.
+- **ProCV** — `procv.prosolutions.page`: CV editor without sign-up (13 templates, 11 ATS-friendly, including the Colombian 1003 and Función Pública formats), cover letter (optional AI improvement when ANTHROPIC_API_KEY is set), suggested phrases by job family, import from PDF/Word, PDF and Word export.
 - **ProJobs** — `projobs.prosolutions.page`: job board with its own offers (companies, applications, alerts, moderation) plus partner feeds (Jooble, Remotive; Careerjet pending).
 - **ProIdentity** — `identity.prosolutions.page`: accounts, sessions, JWT/JWKS, Google sign-in, module access, consents, contact form.
 

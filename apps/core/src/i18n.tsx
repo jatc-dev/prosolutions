@@ -33,7 +33,7 @@ export const messages = {
       titleAccent: "una hoja de vida que sí pasa los filtros",
       description: "Crea tu hoja de vida optimizada para ATS en minutos, busca vacantes de todos los sectores y resuelve tus dudas laborales con calculadoras y guías gratuitas.",
       primaryCta: "Crear mi hoja de vida gratis",
-      primaryNote: "Sin registro · Descarga en PDF · 12 plantillas",
+      primaryNote: "Sin registro · PDF y Word · 13 plantillas",
       secondaryCta: "Ver cómo funciona",
       searchTitle: "Buscar empleo",
       searchQuery: "Cargo o habilidad",
@@ -46,7 +46,7 @@ export const messages = {
       productsTitle: "Todo lo que necesitas para tu búsqueda de empleo",
       productsDescription: "Herramientas gratuitas que funcionan juntas con una sola cuenta, para profesionales de todas las áreas.",
       products: {
-        procv: { name: "ProCV", tagline: "Hoja de vida ATS", description: "Editor con plantillas que los sistemas de selección leen bien. Importa tu CV en PDF o Word y descárgalo en PDF.", cta: "Crear hoja de vida" },
+        procv: { name: "ProCV", tagline: "Hoja de vida ATS", description: "Editor con plantillas que los sistemas de selección leen bien. Importa tu CV en PDF o Word y descárgalo en PDF o Word.", cta: "Crear hoja de vida" },
         projobs: { name: "ProJobs", tagline: "Empleo en todos los sectores", description: "Vacantes con filtros por modalidad, salario y habilidades. Postúlate en un clic con tu CV de ProCV.", cta: "Buscar vacantes" },
         tools: { name: "ProTools", tagline: "Calculadoras laborales", description: "Salario neto, liquidación, contrato laboral frente a prestación de servicios y evaluador de hoja de vida.", cta: "Usar herramientas" },
         academy: { name: "ProAcademy", tagline: "Guías prácticas", description: "Artículos para preparar entrevistas, negociar tu salario y entender tus derechos laborales.", cta: "Leer guías" },
@@ -97,24 +97,6 @@ export const messages = {
       createAccount: "Regístrate",
       loginError: "No se pudo iniciar sesión.",
     },
-    home: {
-      title: "Tu carrera profesional, potenciada por un solo ecosistema",
-      subtitle: "Crea CVs optimizados para ATS, encuentra empleo y gestiona tu perfil profesional en un solo ecosistema.",
-      platformTitle: "Todo lo que necesitas para tu carrera profesional",
-      platformDescription: "Accede a herramientas especializadas para crear currículums, buscar empleo y gestionar tu identidad profesional con un único inicio de sesión.",
-      moduleProcv: {
-        title: "ProCV Platform",
-        badge: "Creador de CVs · Optimización ATS",
-        description: "Crea y gestiona tu currículum optimizado para filtros ATS en minutos. Exporta en PDF, JSON y XML.",
-        action: "Crear CV sin registro"
-      },
-      moduleProjobs: {
-        title: "ProJobs Platform",
-        badge: "Búsqueda de empleo · Todos los sectores",
-        description: "Encuentra empleo según tus habilidades, tu experiencia y la modalidad que prefieras.",
-        action: "Explorar vacantes"
-      }
-    }
   },
   en: {
     seo: {
@@ -146,7 +128,7 @@ export const messages = {
       titleAccent: "a CV that actually gets through",
       description: "Build an ATS-friendly CV in minutes, search jobs in every sector and get answers to your work questions with free calculators and guides.",
       primaryCta: "Create my free CV",
-      primaryNote: "No sign-up · PDF download · 12 templates",
+      primaryNote: "No sign-up · PDF and Word · 13 templates",
       secondaryCta: "See how it works",
       searchTitle: "Search jobs",
       searchQuery: "Job title or skill",
@@ -159,7 +141,7 @@ export const messages = {
       productsTitle: "Everything you need for your job search",
       productsDescription: "Free tools that work together with a single account, for professionals in every field.",
       products: {
-        procv: { name: "ProCV", tagline: "ATS-friendly CV", description: "An editor with templates that hiring systems read well. Import your CV from PDF or Word and download it as PDF.", cta: "Create a CV" },
+        procv: { name: "ProCV", tagline: "ATS-friendly CV", description: "An editor with templates that hiring systems read well. Import your CV from PDF or Word and download it as PDF or Word.", cta: "Create a CV" },
         projobs: { name: "ProJobs", tagline: "Jobs in every sector", description: "Openings you can filter by work mode, salary and skills. Apply in one click with your ProCV CV.", cta: "Search jobs" },
         tools: { name: "ProTools", tagline: "Work calculators", description: "Net salary, severance, employment vs. contractor and a CV checker.", cta: "Use the tools" },
         academy: { name: "ProAcademy", tagline: "Practical guides", description: "Articles to prepare interviews, negotiate your salary and understand your rights at work.", cta: "Read the guides" },
@@ -210,24 +192,6 @@ export const messages = {
       createAccount: "Register",
       loginError: "Login failed.",
     },
-    home: {
-      title: "Your professional career, powered by one ecosystem",
-      subtitle: "Create ATS-optimized CVs, find jobs, and manage your professional profile in one ecosystem.",
-      platformTitle: "Everything you need for your professional career",
-      platformDescription: "Access specialized tools to create CVs, find jobs, and manage your professional identity with a single login.",
-      moduleProcv: {
-        title: "ProCV Platform",
-        badge: "CV Builder · ATS Optimization",
-        description: "Create and manage your ATS-optimized CV in minutes. Export in PDF, JSON, and XML.",
-        action: "Create CV without registration"
-      },
-      moduleProjobs: {
-        title: "ProJobs Platform",
-        badge: "Job Search · Every Field",
-        description: "Find jobs based on your skills, experience, and preferred workplace.",
-        action: "Explore vacancies"
-      }
-    }
   },
 } as const;
 

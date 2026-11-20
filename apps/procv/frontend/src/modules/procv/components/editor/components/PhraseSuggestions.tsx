@@ -20,8 +20,8 @@ const HEADINGS: Record<Kind, string> = {
 };
 
 /**
- * Collapsible list of suggested phrases for the job family of a title. Always a
- * light surface: the editor cards it sits in are light in both themes.
+ * Collapsible list of suggested phrases for the job family of a title. Uses
+ * light-mode classes; the editor's dark-mode CSS (cv-editor.css) maps them.
  */
 export function PhraseSuggestions({ title, kind, onPick, isUsed }: Props) {
   const [open, setOpen] = useState(false);
@@ -37,7 +37,7 @@ export function PhraseSuggestions({ title, kind, onPick, isUsed }: Props) {
   const phrases = family[kind];
 
   return (
-    <div className="mt-2 rounded-md border border-dashed border-slate-300 bg-white text-slate-700" style={{ colorScheme: "light" }}>
+    <div className="mt-2 rounded-md border border-dashed border-slate-300 bg-white text-slate-700">
       <button
         type="button"
         aria-expanded={open}

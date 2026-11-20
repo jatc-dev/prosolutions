@@ -95,9 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Storage may be unavailable in hardened browser contexts.
     }
-    void refreshToken().finally(() => {
-      if (active) useAuthStore.setState({ loading: false });
-    });
+    refreshToken()
+      .catch(() => {
+        // No central session (guests) or Identity unreachable: stay signed out.
+        // Expected on every guest visit, so it is not reported as an error.
+        if (active) useAuthStore.setState({ user: null, accessToken: null, isAuthenticated: false });
+      })
+      .finally(() => {
+        if (active) useAuthStore.setState({ loading: false });
+      });
     return () => { active = false; };
   }, [refreshToken]);
 

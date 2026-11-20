@@ -84,7 +84,7 @@ export const HOME_HEAD: PageHead = {
 export const CREATE_CV_HEAD: PageHead = {
   title: "Crear hoja de vida gratis, sin registro y compatible con ATS | ProSolutions",
   description:
-    "Crea tu hoja de vida gratis y sin registro: plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF. Lista en pocos minutos.",
+    "Crea tu hoja de vida gratis y sin registro: plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF o Word. Lista en pocos minutos.",
   path: "/crear-hoja-de-vida",
 };
 const CREATE_CV_UPDATED = "2026-11-19";
@@ -178,7 +178,7 @@ export function headForPath(rawPath: string): PageHead | null {
           applicationCategory: "BusinessApplication",
           operatingSystem: "Web",
           url: absoluteUrl(path),
-          description: "Editor de hojas de vida con plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF.",
+          description: "Editor de hojas de vida con plantillas compatibles con ATS, importación desde PDF o Word y descarga en PDF o Word.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "COP" },
           publisher: ORGANIZATION,
         },

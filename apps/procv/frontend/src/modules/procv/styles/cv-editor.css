@@ -251,6 +251,29 @@
   --cv-brand-text-light: #6ee7b7;
 }
 
+/* Dark mode for the form panel only (never the CV preview, which is a printed
+   page). Many section cards were styled for light mode only (white cards with
+   light labels on dark inputs); this maps them to the dark surface. */
+.dark .cv-editor-panel :is(.bg-white, .bg-slate-50) {
+  background-color: #0f172a;
+}
+
+.dark .cv-editor-panel :is(.border-slate-200, .border-slate-300) {
+  border-color: #334155;
+}
+
+.dark .cv-editor-panel :is(.text-slate-900, .text-slate-800, .text-slate-700) {
+  color: #e2e8f0;
+}
+
+.dark .cv-editor-panel :is(.text-slate-600, .text-slate-500) {
+  color: #94a3b8;
+}
+
+.dark .cv-editor-panel :is(.hover\:bg-slate-50, .hover\:bg-slate-100):hover {
+  background-color: #1e293b;
+}
+
 .dark .cv-editor .cv-btn-primary,
 [data-theme="dark"] .cv-editor .cv-btn-primary {
   color: #111210;

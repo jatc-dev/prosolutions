@@ -40,4 +40,5 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "timeline", label: "Timeline", category: "modern", group: "professional", supportsPhoto: false, atsFriendly: true },
   { key: "compact", label: "Compacta", category: "ats", group: "ats", supportsPhoto: false, atsFriendly: true },
   { key: "employment", label: "Formato 1003", category: "traditional", group: "professional", supportsPhoto: true, atsFriendly: true },
+  { key: "dafp", label: "Función Pública (DAFP)", category: "traditional", group: "professional", supportsPhoto: false, atsFriendly: true },
 ];
