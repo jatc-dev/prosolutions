@@ -7,7 +7,7 @@ import { getAccessToken, identityRequest } from "./preferencesApi";
  */
 
 const trimSlash = (value: string) => value.replace(/\/+$/, "");
-const PROCV_API = trimSlash(import.meta.env.VITE_PROCV_API_BASE_URL || "https://procvbkn.onrender.com/api");
+const PROCV_API = trimSlash(import.meta.env.VITE_PROCV_API_BASE_URL || "https://procv-api.onrender.com/api");
 const PROJOBS_API = trimSlash(import.meta.env.VITE_PROJOBS_API_URL || "https://projobs-api-0clw.onrender.com");
 
 export type ConsentPurpose = "privacy_policy" | "marketing_emails" | "job_alert_emails";

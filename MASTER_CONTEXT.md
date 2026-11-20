@@ -18,7 +18,7 @@ ProSolutions is a free employability platform for every sector, focused on Colom
 | Core | `apps/core` | Static site (prerendered public pages + noindex SPA shell `app.html`) |
 | ProIdentity | `apps/identity` | Docker (`apps/identity/Dockerfile`) |
 | ProCV frontend | `apps/procv/frontend` | Static site |
-| ProCV backend | `apps/procv/backend` | Node (production) / Docker (QA) |
+| ProCV backend | `apps/procv/backend` | Docker (production `ProCV-API` and QA, same image) |
 | ProJobs web | `apps/projobs` | Static site (`/sitemap.xml` rewritten to the API) |
 | ProJobs API | `apps/projobs/server` | Node |
 | Shared UI | `packages/ui` | Library consumed from source by every frontend |
