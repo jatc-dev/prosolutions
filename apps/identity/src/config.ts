@@ -52,14 +52,22 @@ function getDatabaseUrl(isProduction: boolean): string {
 const DEFAULT_ALLOWED_ORIGINS: string[] = [
   'https://prosolutions.page',
   'https://www.prosolutions.page',
-  'https://procv-platform.onrender.com',
   'https://procv.prosolutions.page',
   'https://projobs.prosolutions.page',
+  // Local development only: dropped in production by productionSafeOrigins().
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
 ];
+
+/**
+ * Production accepts only https origins, so a stray localhost/http entry in
+ * ALLOWED_ORIGINS can never open the credentialed API to a local page.
+ */
+export function productionSafeOrigins(origins: string[], isProduction: boolean): string[] {
+  return isProduction ? origins.filter((origin) => origin.startsWith('https://')) : origins;
+}
 
 function parseOrigins(value?: string): string[] {
   return (value || '').split(',').map((origin) => origin.trim()).filter(Boolean);
@@ -134,5 +142,8 @@ export const config = {
     ? undefined
     : process.env.COOKIE_DOMAIN || '.prosolutions.page',
   cookieNameSuffix: getCookieNameSuffix(),
-  allowedOrigins: [...new Set([...configuredAllowedOrigins, ...additionalAllowedOrigins])],
+  allowedOrigins: productionSafeOrigins(
+    [...new Set([...configuredAllowedOrigins, ...additionalAllowedOrigins])],
+    getEnvironment() === 'production',
+  ),
 };

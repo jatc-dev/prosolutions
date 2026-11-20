@@ -1,192 +1,360 @@
-# IMPORTANT: this Blueprint is NOT reconciled with the live Render services.
-# Audit on 2026-11-06 found differences in service runtimes and AutoDeploy settings.
-# Do NOT run Blueprint Sync or use this file to recreate/update production services.
-# Treat the Render dashboard as the source of truth until a separately approved
-# reconciliation has compared service IDs, root dirs, runtimes, commands, domains,
-# health checks, environment variables and AutoDeploy behavior.
-# Operational docs: docs/deployment/PRODUCTION_ARCHITECTURE.md
-# This warning intentionally does not alter any service definitions below.
+# ProSolutions — Render services (documentation of the live configuration).
+#
+# Reconciled with the Render dashboard on 2026-11-20 (12 services, two
+# workspaces). The dashboard remains the source of truth and Blueprint Sync is
+# NOT used: applying this file could recreate or rename services. Update this
+# file whenever a service changes in the dashboard.
+#
+# Environment variables are listed by name only (`sync: false`): values live in
+# Render and are documented in docs/deployment/ENVIRONMENT_VARIABLES.md.
+# Node.js is pinned to 22.x through `engines` and `.node-version`; the Docker
+# images use node:22.
+#
+# Workspaces:
+#   ProSolutions-ProCV : Core (ProSolutions) and ProCV (frontend + backend)
+#   ProJobs-ProIdentity: ProIdentity and ProJobs (web + API)
+# Free web services sleep after 15 minutes without traffic and share 750
+# instance hours per workspace per month.
 
 services:
+  # ---------------------------------------------------------------- Core ----
   - type: web
-    name: proidentity
-    env: docker
-    region: oregon
+    runtime: static
+    name: ProSolutions            # https://prosolutions.page
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
+    rootDir: apps/core
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    routes:
+      # Prerendered pages are files; everything else gets the noindex SPA shell.
+      - type: rewrite
+        source: /*
+        destination: /app.html
+    envVars:
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_PROCV_API_BASE_URL, sync: false }
+      - { key: VITE_ADSENSE_CLIENT_ID, sync: false }
+      - { key: VITE_ADSENSE_CLIENT, sync: false }   # legacy alias of VITE_ADSENSE_CLIENT_ID
+      - { key: ADS_TXT_CONTENT, sync: false }
+
+  - type: web
+    runtime: static
+    name: ProSolutions-QA         # https://qa.prosolutions.page (Cloudflare Worker)
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
+    buildCommand: npm install && npm run build:core
+    staticPublishPath: apps/core/dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /app.html
+    envVars:
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_IDENTITY_API_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROCV_APP_URL, sync: false }
+      - { key: VITE_PROCV_API_BASE_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_ADSENSE_CLIENT_ID, sync: false }
+      - { key: ADS_TXT_CONTENT, sync: false }
+
+  # ------------------------------------------------------------ ProCV web ----
+  - type: web
+    runtime: static
+    name: ProCVFrontEnd           # https://procv.prosolutions.page
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
+    buildCommand: npm install && npm run build:procv
+    staticPublishPath: apps/procv/frontend/dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - { key: VITE_API_BASE_URL, sync: false }
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_APP_NAME, sync: false }
+      - { key: VITE_ADSENSE_CLIENT, sync: false }
+
+  - type: web
+    runtime: static
+    name: ProCVFrontEnd-QA        # https://procv-qa.prosolutions.page (Cloudflare Worker)
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
+    buildCommand: npm install && npm run build:procv
+    staticPublishPath: apps/procv/frontend/dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - { key: VITE_API_BASE_URL, sync: false }
+      - { key: VITE_API_URL, sync: false }
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_IDENTITY_API_URL, sync: false }
+      - { key: VITE_IDENTITY_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_PROSOLUTIONS_URL, sync: false }
+
+  # -------------------------------------------------------- ProCV backend ----
+  - type: web
+    runtime: node
+    name: ProCVBackEnd            # https://procvbkn.onrender.com
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
     plan: free
-    # Matches the live ProIdentity service (2026-11-19). The image does NOT run
-    # migrations on start: apply them manually (docs/deployment/ETAPA3_DEPLOY.md §3).
+    region: oregon
+    rootDir: apps/procv/backend
+    buildCommand: npm install --include=dev && npm run prisma:generate && npm run build
+    # NOTE: `npm start` keeps DIRECT_DATABASE_URL, which config.ts prefers at
+    # runtime (see CLAUDE.md risk #3). Pending owner decision.
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - { key: NODE_ENV, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DIRECT_DATABASE_URL, sync: false }
+      - { key: PROCV_RLS_CONTEXT_KEY, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: IDENTITY_URL, sync: false }
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: FRONTEND_URL, sync: false }
+      - { key: COOKIE_DOMAIN, sync: false }
+      - { key: COOKIE_SAME_SITE, sync: false }
+      - { key: COOKIE_SECURE, sync: false }
+      - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
+      - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
+      - { key: SMTP_HOST, sync: false }
+      - { key: SMTP_PORT, sync: false }
+      - { key: SMTP_SECURE, sync: false }
+      - { key: SMTP_USER, sync: false }
+      - { key: SMTP_PASS, sync: false }
+      - { key: SMTP_FROM, sync: false }
+      # Compatibility fallbacks in config.ts, unused while IDENTITY_JWT_SECRET is set:
+      - { key: JWT_SECRET, sync: false }
+      - { key: JWT_EXPIRES_IN, sync: false }
+      - { key: JWT_REFRESH_EXPIRES_IN, sync: false }
+
+  - type: web
+    runtime: docker
+    name: ProCVBackEnd-QA         # https://procv-backend-qa-v2.onrender.com
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
+    plan: free
+    region: oregon
+    dockerfilePath: ./apps/procv/backend/Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    envVars:
+      - { key: NODE_ENV, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DIRECT_DATABASE_URL, sync: false }
+      - { key: PROCV_ADMIN_DATABASE_URL, sync: false }
+      - { key: PROCV_RLS_CONTEXT_KEY, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: IDENTITY_URL, sync: false }
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: FRONTEND_URL, sync: false }
+      - { key: COOKIE_SAME_SITE, sync: false }
+      - { key: COOKIE_SECURE, sync: false }
+      - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
+      - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
+
+  # ---------------------------------------------------------- ProIdentity ----
+  - type: web
+    runtime: docker
+    name: ProIdentity             # https://identity.prosolutions.page
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
+    plan: free
+    region: oregon
     dockerfilePath: ./apps/identity/Dockerfile
     dockerContext: ./apps/identity
     healthCheckPath: /health
     autoDeploy: true
+    # Does not migrate on start: apply Prisma migrations in Neon before merging.
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: ALLOWED_ORIGINS
-        value: https://prosolutions.page,https://www.prosolutions.page,https://procv-platform.onrender.com,https://procv.prosolutions.page,https://projobs.prosolutions.page,http://localhost:3000,http://localhost:5173
-      - key: DATABASE_URL
-        sync: false
-      - key: DIRECT_DATABASE_URL
-        sync: false
-      - key: IDENTITY_JWT_SECRET
-        sync: false
-      - key: IDENTITY_JWT_EXPIRES_IN
-        value: 15m
-      - key: IDENTITY_JWT_REFRESH_EXPIRES_IN
-        value: 7d
-      - key: IDENTITY_ISSUER
-        value: https://identity.prosolutions.page
-      - key: IDENTITY_AUDIENCE
-        value: prosolutions-api
-      - key: FRONTEND_URL
-        value: https://prosolutions.page
-      - key: COOKIE_SECURE
-        value: true
-      - key: COOKIE_SAME_SITE
-        value: none
-      - key: COOKIE_DOMAIN
-        value: .prosolutions.page
-      - key: CORS_ORIGIN
-        value: https://procv.prosolutions.page,https://projobs.prosolutions.page
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_SECURE
-        value: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
-        value: noreply@prosolutions.page
-      - key: DISABLE_RATE_LIMIT
-        value: false
-      - key: SESSION_IDLE_TIMEOUT_MINUTES
-        value: 30
+      - { key: NODE_ENV, sync: false }
+      - { key: PORT, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DIRECT_DATABASE_URL, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: ALLOWED_ORIGINS, sync: false }
+      - { key: FRONTEND_URL, sync: false }
+      - { key: COOKIE_DOMAIN, sync: false }
+      - { key: COOKIE_SAME_SITE, sync: false }
+      - { key: COOKIE_SECURE, sync: false }
+      - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
+      - { key: DISABLE_RATE_LIMIT, sync: false }   # must stay "false"
+      - { key: CONTACT_INBOX, sync: false }
+      - { key: PROJOBS_API_URL, sync: false }
+      - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
+      - { key: SMTP_HOST, sync: false }
+      - { key: SMTP_PORT, sync: false }
+      - { key: SMTP_SECURE, sync: false }
+      - { key: SMTP_USER, sync: false }
+      - { key: SMTP_PASS, sync: false }
+      - { key: SMTP_FROM, sync: false }
+      # Legacy, not read by the current code (candidates for removal):
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: PROCV_DATABASE_JWT_SECRET, sync: false }
 
   - type: web
-    name: prosolutions
-    env: static
-    region: oregon
+    runtime: docker
+    name: ProIdentity-QA          # https://identity-qa.prosolutions.page (Cloudflare Worker)
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
     plan: free
-    buildCommand: npm run build --workspace=apps/core
-    publishPath: apps/core/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    region: oregon
+    dockerfilePath: ./apps/identity/Dockerfile
+    dockerContext: ./apps/identity
     autoDeploy: true
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: VITE_IDENTITY_API_URL
-        value: https://identity.prosolutions.page/api/auth
-      - key: VITE_PROCV_URL
-        value: https://procv.prosolutions.page
-      - key: VITE_PROCV_API_BASE_URL
-        value: https://procvbkn.onrender.com/api
-      - key: VITE_ADSENSE_CLIENT
-        value: ca-pub-3956322934366702
+      - { key: NODE_ENV, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DIRECT_DATABASE_URL, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_JWT_EXPIRES_IN, sync: false }
+      - { key: IDENTITY_JWT_REFRESH_EXPIRES_IN, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: ALLOWED_ORIGINS, sync: false }
+      - { key: ADDITIONAL_ALLOWED_ORIGINS, sync: false }
+      - { key: FRONTEND_URL, sync: false }
+      - { key: COOKIE_DOMAIN, sync: false }
+      - { key: COOKIE_NAME_SUFFIX, sync: false }   # "_qa": never remove while COOKIE_DOMAIN=.prosolutions.page
+      - { key: COOKIE_SAME_SITE, sync: false }
+      - { key: COOKIE_SECURE, sync: false }
+      - { key: CONTACT_INBOX, sync: false }
+      - { key: PROCV_BACKEND_URL, sync: false }
+      - { key: PROJOBS_API_URL, sync: false }
+      - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
 
+  # ---------------------------------------------------------- ProJobs web ----
   - type: web
-    name: procv-frontend
-    env: docker
-    region: oregon
-    plan: free
-    dockerfilePath: ./apps/procv/frontend/Dockerfile
-    dockerContext: .
-    healthCheckPath: /
-    autoDeploy: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: VITE_IDENTITY_API_URL
-        value: https://identity.prosolutions.page/api/auth
-      - key: VITE_PROSOLUTIONS_URL
-        value: https://prosolutions.page
-      - key: VITE_PROCV_URL
-        value: https://procv.prosolutions.page
-
-  - type: web
-    name: procv-backend
-    env: docker
-    region: oregon
-    plan: free
-    dockerfilePath: ./apps/procv/backend/Dockerfile
-    dockerContext: .
-    healthCheckPath: /health
-    autoDeploy: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: IDENTITY_JWT_SECRET
-        sync: false
-      - key: IDENTITY_URL
-        value: https://identity.prosolutions.page
-      - key: FRONTEND_URL
-        value: https://procv.prosolutions.page
-      - key: CORS_ORIGIN
-        value: https://procv.prosolutions.page,https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page
-      - key: DATABASE_URL
-        sync: false
-      - key: DIRECT_DATABASE_URL
-        sync: false
-
-  # ProJobs v2 web (React SPA). Mirrors the live static site "ProJobs" (rootDir apps/projobs).
-  - type: web
-    name: projobs-frontend
-    env: static
-    region: oregon
-    plan: free
+    runtime: static
+    name: ProJobs                 # https://projobs.prosolutions.page
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
     rootDir: apps/projobs
     buildCommand: npm install --include=dev && npm run build
-    publishPath: dist
+    staticPublishPath: dist
+    autoDeploy: true
+    buildFilter:
+      paths: ["apps/projobs/**", "packages/ui/**"]
     routes:
+      - type: rewrite
+        source: /sitemap.xml
+        destination: https://projobs-api-0clw.onrender.com/api/sitemap.xml
       - type: rewrite
         source: /*
         destination: /index.html
-    autoDeploy: false
     envVars:
-      - key: VITE_PROJOBS_API_URL
-        value: https://projobs-api-0clw.onrender.com
-      - key: VITE_IDENTITY_API_URL
-        value: https://identity.prosolutions.page/api/auth
-      - key: VITE_CORE_URL
-        value: https://prosolutions.page
-      - key: VITE_PROCV_URL
-        value: https://procv.prosolutions.page
-      - key: VITE_ADSENSE_CLIENT
-        value: ca-pub-3956322934366702
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_IDENTITY_API_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_PROJOBS_API_URL, sync: false }
+      - { key: VITE_ADSENSE_CLIENT, sync: false }
 
-  # ProJobs v2 API. Mirrors the live native Node service "ProJobs API" (rootDir apps/projobs/server).
-  # Schema changes run separately: MIGRATION_DATABASE_URL=<owner URL> npm run migrate.
   - type: web
-    name: projobs-api
-    env: node
-    region: oregon
+    runtime: static
+    name: ProJobs-QA              # https://projobs-qa.prosolutions.page (Cloudflare Worker)
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
+    rootDir: apps/projobs
+    buildCommand: npm install --include=dev && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    buildFilter:
+      paths: ["apps/projobs/**", "packages/ui/**"]
+    routes:
+      - type: rewrite
+        source: /sitemap.xml
+        destination: https://projobs-api-qa.onrender.com/api/sitemap.xml
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - { key: VITE_CORE_URL, sync: false }
+      - { key: VITE_IDENTITY_API_URL, sync: false }
+      - { key: VITE_PROCV_URL, sync: false }
+      - { key: VITE_PROJOBS_URL, sync: false }
+      - { key: VITE_PROJOBS_API_URL, sync: false }
+      - { key: VITE_ADSENSE_CLIENT, sync: false }
+
+  # ---------------------------------------------------------- ProJobs API ----
+  - type: web
+    runtime: node
+    name: ProJobs API             # https://projobs-api-0clw.onrender.com
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: main
     plan: free
+    region: oregon
     rootDir: apps/projobs/server
     buildCommand: npm ci --include=dev --workspaces=false && npm run build
     startCommand: npm start
     healthCheckPath: /health
+    # Manual deploys: SQL migrations are applied in Neon first.
     autoDeploy: false
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: PROJOBS_DB_RUNTIME_ROLE
-        value: projobs_api
-      - key: IDENTITY_JWT_SECRET
-        sync: false
-      - key: IDENTITY_ISSUER
-        value: https://identity.prosolutions.page
-      - key: IDENTITY_AUDIENCE
-        value: prosolutions-api
-      - key: PROCV_API_URL
-        value: https://procvbkn.onrender.com
-      - key: PROJOBS_INTERNAL_TOKEN
-        sync: false
-      - key: CORS_ORIGIN
-        value: https://projobs.prosolutions.page,https://prosolutions.page,https://www.prosolutions.page
+      - { key: NODE_ENV, sync: false }
+      - { key: PORT, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: IDENTITY_URL, sync: false }
+      - { key: PROCV_API_URL, sync: false }
+      - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: JOOBLE_ENABLED, sync: false }
+      - { key: JOOBLE_API_KEY, sync: false }
+      - { key: JOOBLE_API_URL, sync: false }
+      - { key: REMOTIVE_ENABLED, sync: false }
+      - { key: CAREERJET_API_KEY, sync: false }
+
+  - type: web
+    runtime: node
+    name: ProJobs-API-QA          # https://projobs-api-qa.onrender.com
+    repo: https://github.com/jatc-dev/prosolutions
+    branch: qa
+    plan: free
+    region: oregon
+    rootDir: apps/projobs/server
+    buildCommand: npm ci --include=dev --workspaces=false && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - { key: NODE_ENV, sync: false }
+      - { key: DATABASE_URL, sync: false }
+      - { key: PROJOBS_DB_RUNTIME_ROLE, sync: false }
+      - { key: IDENTITY_JWT_SECRET, sync: false }
+      - { key: IDENTITY_ISSUER, sync: false }
+      - { key: IDENTITY_AUDIENCE, sync: false }
+      - { key: PROCV_API_URL, sync: false }
+      - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
+      - { key: PUBLIC_WEB_URL, sync: false }
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: JOOBLE_ENABLED, sync: false }
+      - { key: JOOBLE_API_KEY, sync: false }
+      - { key: JOOBLE_API_URL, sync: false }
+      - { key: REMOTIVE_ENABLED, sync: false }
+      - { key: CAREERJET_API_KEY, sync: false }
