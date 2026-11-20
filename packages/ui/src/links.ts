@@ -40,6 +40,8 @@ export const APP_URLS = {
   // Enter through the protected route so ProCV can preserve its return URL
   // when the central QA login is required.
   procvLogin: `${procvUrl.replace(/\/+$/, "")}/dashboard`,
+  /** Guest editor: build a CV without an account (saved in the browser). */
+  procvEditor: `${procvUrl.replace(/\/+$/, "")}/editor`,
   projobs: env.VITE_PROJOBS_URL ?? "https://projobs.prosolutions.page",
 } as const;
 
@@ -60,6 +62,8 @@ export const LEGAL_URLS = {
 export const RESOURCE_URLS = {
   tools: `${coreBase}/tools/`,
   academy: `${coreBase}/academy/`,
+  /** Public landing for "create a CV" (prerendered on Core; ProCV "/" sends guests here). */
+  createCv: `${coreBase}/crear-hoja-de-vida/`,
 } as const;
 
 export const PRIVACY_URL = LEGAL_URLS.privacy;

@@ -13,6 +13,7 @@ import { SecuritySessionsPage } from "./pages/SecuritySessionsPage";
 import { PreferencesPage } from "./pages/PreferencesPage";
 import { AcademyIndexPage, ArticlePage } from "./public/pages/AcademyPages";
 import { CvCheckToolPage, NetSalaryToolPage, OpsToolPage, SettlementToolPage, ToolsIndexPage } from "./public/pages/ToolsPages";
+import { CreateCvPage } from "./public/pages/CreateCvPage";
 import { AboutPage, ContactPage, LegalPage, NotFoundPage } from "./public/pages/InfoPages";
 
 /** Route table shared by the browser app and the build-time prerender. */
@@ -37,6 +38,7 @@ export function AppRoutes() {
       <Route path="/verify-email" element={<EmailVerificationPage />} />
 
       {/* Public, prerendered pages */}
+      <Route path="/crear-hoja-de-vida" element={<CreateCvPage />} />
       <Route path="/academy" element={<AcademyIndexPage />} />
       <Route path="/academy/:slug" element={<ArticlePage />} />
       <Route path="/tools" element={<ToolsIndexPage />} />
