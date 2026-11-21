@@ -65,6 +65,10 @@ export const RESOURCE_URLS = {
   academy: `${coreBase}/academy/`,
   /** Public landing for "create a CV" (prerendered on Core; ProCV "/" sends guests here). */
   createCv: `${coreBase}/crear-hoja-de-vida/`,
+  templates: `${coreBase}/plantillas-hoja-de-vida/`,
+  dafpFormat: `${coreBase}/formato-unico-hoja-de-vida/`,
+  format1003: `${coreBase}/hoja-de-vida-formato-1003/`,
+  primaTool: `${coreBase}/tools/prima/`,
 } as const;
 
 export const PRIVACY_URL = LEGAL_URLS.privacy;

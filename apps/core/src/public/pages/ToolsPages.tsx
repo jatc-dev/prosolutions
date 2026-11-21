@@ -7,6 +7,7 @@ import { compareEmploymentVsServices } from "../../lib/payroll/ops";
 import { ARL_RATES, paramsFor, type RiskClass } from "../../lib/payroll/params";
 import { calculateEmployerCost, calculateNetSalary } from "../../lib/payroll/salary";
 import { calculateSettlement, type ContractType, type SettlementResult, type TerminationReason } from "../../lib/payroll/settlement";
+import { calculatePrima, currentSemester, type PrimaResult, type PrimaSemester } from "../../lib/payroll/prima";
 import { PublicLayout, formatDate } from "../PublicLayout";
 import { headForPath, useDocumentHead } from "../seo";
 
@@ -168,6 +169,117 @@ const paramsNote = (
     {formatMoney(PARAMS.uvt)}. Fuentes: {PARAMS.sources.join("; ")}.
   </p>
 );
+
+const SEMESTER_LABELS: Record<PrimaSemester, string> = {
+  1: `Enero–junio ${PARAMS.year} (pago hasta el 30 de junio)`,
+  2: `Julio–diciembre ${PARAMS.year} (pago hasta el 20 de diciembre)`,
+};
+
+export function PrimaToolPage() {
+  const [semester, setSemester] = useState<PrimaSemester>(() => currentSemester());
+  const [salary, setSalary] = useState("");
+  const [variable, setVariable] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [unpaidDays, setUnpaidDays] = useState("");
+  const [integral, setIntegral] = useState(false);
+
+  const { result, error } = useMemo((): { result: PrimaResult | null; error: string | null } => {
+    const amount = parseMoney(salary);
+    if (amount <= 0) return { result: null, error: null };
+    try {
+      return {
+        result: calculatePrima({
+          semester,
+          monthlySalary: amount,
+          variableMonthly: parseMoney(variable),
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          unpaidDays: Number(unpaidDays) || 0,
+          integralSalary: integral,
+        }),
+        error: null,
+      };
+    } catch (caught) {
+      return { result: null, error: caught instanceof Error ? caught.message : "Revisa los datos ingresados." };
+    }
+  }, [semester, salary, variable, startDate, endDate, unpaidDays, integral]);
+
+  return (
+    <ToolShell
+      slug="prima"
+      form={
+        <>
+          <Field label="Semestre">
+            {(id) => (
+              <select id={id} className={inputClass} value={semester} onChange={(event) => setSemester(Number(event.target.value) as PrimaSemester)}>
+                {([1, 2] as PrimaSemester[]).map((value) => (
+                  <option key={value} value={value}>{SEMESTER_LABELS[value]}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <MoneyInput label="Salario básico mensual (COP)" hint="Si tu salario cambió en el semestre, usa el promedio." value={salary} onChange={setSalary} />
+          <MoneyInput label="Promedio mensual de pagos variables (opcional)" hint="Horas extra, recargos o comisiones habituales del semestre." value={variable} onChange={setVariable} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Fecha de ingreso (opcional)" hint="Solo si empezaste durante este semestre.">
+              {(id) => <input id={id} type="date" className={inputClass} value={startDate} onChange={(event) => setStartDate(event.target.value)} />}
+            </Field>
+            <Field label="Fecha de retiro (opcional)" hint="Solo si saliste durante este semestre.">
+              {(id) => <input id={id} type="date" className={inputClass} value={endDate} onChange={(event) => setEndDate(event.target.value)} />}
+            </Field>
+          </div>
+          <Field label="Días de licencia no remunerada o suspensión (opcional)" hint="No cuentan para la prima. Las vacaciones y las incapacidades sí cuentan.">
+            {(id) => <input id={id} type="number" min={0} className={inputClass} value={unpaidDays} onChange={(event) => setUnpaidDays(event.target.value)} />}
+          </Field>
+          <label className="flex items-start gap-2 text-sm text-ui-text">
+            <input type="checkbox" className="mt-1" checked={integral} onChange={(event) => setIntegral(event.target.checked)} />
+            <span>Tengo salario integral <span className="block text-xs text-ui-subtle">El salario integral ya incluye la prima, así que no se paga aparte.</span></span>
+          </label>
+        </>
+      }
+      results={
+        error ? (
+          <p role="alert" className="rounded-ui-lg border border-ui-danger p-4 text-sm text-ui-danger">{error}</p>
+        ) : (
+          result && (
+            <ResultCard title={result.integral ? "Con salario integral no hay prima aparte" : "Tu prima de servicios estimada"}>
+              <Rows
+                rows={[
+                  ["Salario base", result.base.salary],
+                  ...(result.base.transportAllowance > 0 ? [["Auxilio de transporte", result.base.transportAllowance, "Se suma porque ganas hasta 2 salarios mínimos"] as [string, number, string]] : []),
+                  ["Base de liquidación", result.base.total],
+                ]}
+                total={["Prima a recibir", result.amount]}
+              />
+              <p className="mt-2 text-xs text-ui-subtle">
+                {result.daysWorked.toLocaleString("es-CO")} días trabajados en el semestre (del {formatDate(result.from)} al {formatDate(result.to)}, calendario comercial de 360 días).
+                Fecha límite de pago: <strong className="text-ui-text">{formatDate(result.deadline)}</strong>.
+              </p>
+            </ResultCard>
+          )
+        )
+      }
+      formula={
+        <>
+          <p>
+            <strong>Fórmula:</strong> prima = (salario + auxilio de transporte) × días trabajados en el semestre ÷ 360. Un semestre completo son 180 días, así que equivale a medio mes de salario (15 días).
+          </p>
+          <p>
+            <strong>Cuándo se paga:</strong> la primera cuota, a más tardar el 30 de junio; la segunda, a más tardar el 20 de diciembre (artículo 306 del Código Sustantivo del Trabajo). Si sales de la empresa antes, la prima proporcional se paga con la liquidación.
+          </p>
+          <p>
+            <strong>Quién tiene derecho:</strong> todos los trabajadores con contrato laboral (indefinido, a término fijo o por obra), incluidos los trabajadores del servicio doméstico, chóferes y trabajadores por días (Ley 1788 de 2016). No aplica a contratos de prestación de servicios ni al salario integral.
+          </p>
+          <p>
+            <strong>Base:</strong> si tu salario es variable o cambió durante el semestre, se usa el promedio de lo devengado. El auxilio de transporte se incluye cuando el salario no supera dos salarios mínimos. No se descuentan aportes de salud ni pensión de la prima.
+          </p>
+          {paramsNote}
+        </>
+      }
+    />
+  );
+}
 
 export function NetSalaryToolPage() {
   const [salary, setSalary] = useState("");

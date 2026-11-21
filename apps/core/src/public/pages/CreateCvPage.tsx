@@ -102,13 +102,13 @@ export function CreateCvPage() {
               Empezar mi hoja de vida
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </a>
-            <a
-              href={`${trim(APP_URLS.procv)}/templates`}
+            <Link
+              to="/plantillas-hoja-de-vida/"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-ui-border-strong bg-ui-surface px-6 font-semibold text-ui-text transition-colors hover:bg-ui-soft"
             >
               <LayoutTemplate className="h-5 w-5" aria-hidden="true" />
               Ver plantillas
-            </a>
+            </Link>
           </div>
           {user ? (
             <p className="mt-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-ui-text dark:border-brand-900 dark:bg-brand-950/40">
@@ -120,6 +120,11 @@ export function CreateCvPage() {
           ) : (
             <p className="mt-3 text-sm text-ui-subtle">Sin cuenta, tu avance se guarda en este navegador.</p>
           )}
+          <p className="mt-4 text-sm text-ui-muted">
+            ¿Te piden un formato específico? Llena en línea el{" "}
+            <Link to="/formato-unico-hoja-de-vida/" className="font-medium text-brand-800 underline dark:text-brand-300">formato único de Función Pública</Link> o el{" "}
+            <Link to="/hoja-de-vida-formato-1003/" className="font-medium text-brand-800 underline dark:text-brand-300">formato 1003</Link>.
+          </p>
         </div>
         <ul className="grid gap-3 rounded-2xl border border-ui-border bg-ui-surface p-6 text-sm text-ui-text shadow-sm">
           {["13 plantillas, 11 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF y Word", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (

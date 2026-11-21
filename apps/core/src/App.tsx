@@ -12,7 +12,8 @@ import { LandingPage } from "./pages/LandingPage";
 import { SecuritySessionsPage } from "./pages/SecuritySessionsPage";
 import { PreferencesPage } from "./pages/PreferencesPage";
 import { AcademyIndexPage, ArticlePage } from "./public/pages/AcademyPages";
-import { CvCheckToolPage, NetSalaryToolPage, OpsToolPage, SettlementToolPage, ToolsIndexPage } from "./public/pages/ToolsPages";
+import { CvCheckToolPage, NetSalaryToolPage, OpsToolPage, PrimaToolPage, SettlementToolPage, ToolsIndexPage } from "./public/pages/ToolsPages";
+import { DafpFormatPage, Format1003Page, TemplatesGalleryPage } from "./public/pages/FormatPages";
 import { CreateCvPage } from "./public/pages/CreateCvPage";
 import { AboutPage, ContactPage, LegalPage, NotFoundPage } from "./public/pages/InfoPages";
 
@@ -39,9 +40,13 @@ export function AppRoutes() {
 
       {/* Public, prerendered pages */}
       <Route path="/crear-hoja-de-vida" element={<CreateCvPage />} />
+      <Route path="/plantillas-hoja-de-vida" element={<TemplatesGalleryPage />} />
+      <Route path="/formato-unico-hoja-de-vida" element={<DafpFormatPage />} />
+      <Route path="/hoja-de-vida-formato-1003" element={<Format1003Page />} />
       <Route path="/academy" element={<AcademyIndexPage />} />
       <Route path="/academy/:slug" element={<ArticlePage />} />
       <Route path="/tools" element={<ToolsIndexPage />} />
+      <Route path="/tools/prima" element={<PrimaToolPage />} />
       <Route path="/tools/salario-neto" element={<NetSalaryToolPage />} />
       <Route path="/tools/liquidacion" element={<SettlementToolPage />} />
       <Route path="/tools/contrato-vs-prestacion" element={<OpsToolPage />} />

@@ -1,6 +1,6 @@
 import { paramsFor } from "../lib/payroll/params";
 
-export type ToolSlug = "salario-neto" | "liquidacion" | "contrato-vs-prestacion" | "evaluador-cv";
+export type ToolSlug = "prima" | "salario-neto" | "liquidacion" | "contrato-vs-prestacion" | "evaluador-cv";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -14,6 +14,14 @@ export interface ToolInfo {
 const payrollReviewedAt = paramsFor().reviewedAt;
 
 export const TOOLS: ToolInfo[] = [
+  {
+    slug: "prima",
+    title: "Calculadora de prima de servicios 2026 en Colombia (junio y diciembre)",
+    shortTitle: "Prima de servicios",
+    description:
+      "Calcula cuánto te pagan de prima en diciembre o en junio: 15 días de salario por semestre, proporcional al tiempo trabajado, con auxilio de transporte y fechas límite de pago.",
+    updatedAt: payrollReviewedAt,
+  },
   {
     slug: "salario-neto",
     title: "Calculadora de salario neto y costo empresa en Colombia 2026",
