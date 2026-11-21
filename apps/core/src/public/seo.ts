@@ -3,6 +3,7 @@ import { ARTICLES, AUTHORS, CATEGORIES, getArticle } from "../content/academy";
 import { ABOUT_PAGE, LEGAL_DOCUMENTS } from "../content/legal";
 import { SITE, absoluteUrl } from "../content/site";
 import { TOOLS, getTool } from "../content/tools";
+import { DAFP_FAQ, FORMAT_1003_FAQ, FORMAT_PAGES_UPDATED, TEMPLATE_CARDS, type FaqItem } from "../content/formats";
 
 export interface PageHead {
   title: string;
@@ -69,7 +70,7 @@ export const ACADEMY_HEAD: PageHead = {
 export const TOOLS_HEAD: PageHead = {
   title: "ProTools: calculadoras laborales gratuitas para Colombia | ProSolutions",
   description:
-    "Calculadoras gratuitas y sin registro: salario neto y costo empresa, liquidación laboral, contrato laboral vs. prestación de servicios y evaluador de hoja de vida.",
+    "Calculadoras gratuitas y sin registro: prima de servicios, salario neto y costo empresa, liquidación laboral, contrato laboral vs. prestación de servicios y evaluador de hoja de vida.",
   path: "/tools",
 };
 
@@ -88,6 +89,34 @@ export const CREATE_CV_HEAD: PageHead = {
   path: "/crear-hoja-de-vida",
 };
 const CREATE_CV_UPDATED = "2026-11-19";
+
+/** Landing pages for the CV formats people search for, and the template gallery. */
+export const FORMAT_HEADS: Record<string, PageHead> = {
+  "/formato-unico-hoja-de-vida": {
+    title: "Formato único de hoja de vida Función Pública: llénalo en línea gratis | ProSolutions",
+    description:
+      "Diligencia el Formato Único de Hoja de Vida (Función Pública, Ley 190 de 1995) en línea y descárgalo en PDF o Word. Gratis, sin registro y con guía paso a paso.",
+    path: "/formato-unico-hoja-de-vida",
+  },
+  "/hoja-de-vida-formato-1003": {
+    title: "Hoja de vida formato 1003 para llenar en línea gratis | ProSolutions",
+    description:
+      "Llena la hoja de vida formato 1003 desde el celular o el computador, con foto y referencias, y descárgala en PDF o Word. Gratis, sin registro y con guía paso a paso.",
+    path: "/hoja-de-vida-formato-1003",
+  },
+  "/plantillas-hoja-de-vida": {
+    title: "Plantillas de hoja de vida gratis para descargar en Word y PDF | ProSolutions",
+    description:
+      "13 plantillas de hoja de vida gratis, 11 compatibles con ATS, más el formato único de Función Pública y el formato 1003. Llénalas en línea y descárgalas en Word o PDF.",
+    path: "/plantillas-hoja-de-vida",
+  },
+};
+
+const faqPage = (items: FaqItem[]) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: items.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })),
+});
 
 export const CONTACT_HEAD: PageHead = {
   title: "Contacto | ProSolutions",
@@ -187,6 +216,34 @@ export function headForPath(rawPath: string): PageHead | null {
     };
   }
 
+  const formatHead = FORMAT_HEADS[path];
+  if (formatHead) {
+    const isGallery = path === "/plantillas-hoja-de-vida";
+    const crumbs = isGallery
+      ? [{ name: "Plantillas", path }]
+      : [{ name: "Plantillas", path: "/plantillas-hoja-de-vida" }, { name: formatHead.title.split(":")[0]!.split(" (")[0]!, path }];
+    return {
+      ...formatHead,
+      modifiedAt: FORMAT_PAGES_UPDATED,
+      jsonLd: [
+        webPage(isGallery ? "CollectionPage" : "WebPage", formatHead.title, formatHead.description, path, {
+          dateModified: FORMAT_PAGES_UPDATED,
+          ...(isGallery
+            ? {
+                mainEntity: {
+                  "@type": "ItemList",
+                  numberOfItems: TEMPLATE_CARDS.length,
+                  itemListElement: TEMPLATE_CARDS.map((template, index) => ({ "@type": "ListItem", position: index + 1, name: `Plantilla ${template.name}`, image: absoluteUrl(`/plantillas/${template.key}.webp`) })),
+                },
+              }
+            : {}),
+        }),
+        ...(path === "/formato-unico-hoja-de-vida" ? [faqPage(DAFP_FAQ)] : path === "/hoja-de-vida-formato-1003" ? [faqPage(FORMAT_1003_FAQ)] : []),
+        breadcrumb(crumbs),
+      ],
+    };
+  }
+
   if (path === "/tools") {
     return {
       ...TOOLS_HEAD,
@@ -256,6 +313,7 @@ export function publicRoutes(): PublicRoute[] {
   const today = latest([...ARTICLES.map((a) => a.updatedAt), ...TOOLS.map((t) => t.updatedAt)]);
   return [
     { path: CREATE_CV_HEAD.path, lastmod: CREATE_CV_UPDATED, priority: 0.9, changefreq: "monthly" },
+    ...Object.keys(FORMAT_HEADS).map((formatPath) => ({ path: formatPath, lastmod: FORMAT_PAGES_UPDATED, priority: 0.9, changefreq: "monthly" as const })),
     { path: "/academy", lastmod: latest(ARTICLES.map((a) => a.updatedAt)), priority: 0.9, changefreq: "weekly" },
     ...ARTICLES.map((article) => ({ path: `/academy/${article.slug}`, lastmod: article.updatedAt, priority: 0.8, changefreq: "monthly" as const })),
     { path: "/tools", lastmod: latest(TOOLS.map((t) => t.updatedAt)), priority: 0.9, changefreq: "monthly" },

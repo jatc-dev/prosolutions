@@ -740,8 +740,11 @@ export const useCVEditorStore = create<CVEditorState>()(
 
         // Guest Mode
         setIsGuest: (value: boolean) => {
+          // Load the saved draft only when entering guest mode: calling this
+          // again while already a guest must not overwrite in-memory edits.
+          const wasGuest = get().isGuest;
           set({ isGuest: value });
-          if (value) {
+          if (value && !wasGuest) {
             // Load from localStorage when entering guest mode
             const saved = localStorage.getItem('procv_guest_resume');
             if (saved) {

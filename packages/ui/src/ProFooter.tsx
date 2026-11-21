@@ -14,6 +14,9 @@ function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ l
       links: [
         link(en ? "Jobs" : "Empleos", APP_URLS.projobs),
         link(en ? "Create CV" : "Crear CV", RESOURCE_URLS.createCv),
+        link(en ? "CV templates" : "Plantillas de hoja de vida", RESOURCE_URLS.templates),
+        link(en ? "Public service CV form" : "Formato único Función Pública", RESOURCE_URLS.dafpFormat),
+        link(en ? "Form 1003 CV" : "Hoja de vida formato 1003", RESOURCE_URLS.format1003),
         link(en ? "For employers" : "Para empresas", `${APP_URLS.projobs.replace(/\/+$/, "")}/empresa`),
       ],
     },
@@ -22,6 +25,7 @@ function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ l
       links: [
         link(en ? "Academy" : "Academia", RESOURCE_URLS.academy),
         link(en ? "Free tools" : "Herramientas gratuitas", RESOURCE_URLS.tools),
+        link(en ? "Bonus (prima) calculator" : "Calculadora de prima", RESOURCE_URLS.primaTool),
         link(en ? "About us" : "Nosotros", LEGAL_URLS.about),
         link(en ? "Contact and support" : "Contacto y soporte", LEGAL_URLS.contact),
       ],

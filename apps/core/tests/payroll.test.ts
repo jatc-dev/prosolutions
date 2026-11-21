@@ -3,6 +3,7 @@ import { compareEmploymentVsServices } from "../src/lib/payroll/ops";
 import { paramsFor } from "../src/lib/payroll/params";
 import { calculateEmployerCost, calculateNetSalary, solidarityFundRate, withholdingUvt } from "../src/lib/payroll/salary";
 import { calculateIndemnity, calculateSettlement, days360 } from "../src/lib/payroll/settlement";
+import { calculatePrima } from "../src/lib/payroll/prima";
 
 const P = paramsFor(2026);
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -140,5 +141,33 @@ describe("employment vs. service contract", () => {
     expect(result.equivalentFee).toBeGreaterThan(3_000_000);
     const check = compareEmploymentVsServices({ salary: 3_000_000, fee: result.equivalentFee });
     expect(check.services.netMonthly).toBeGreaterThanOrEqual(result.employment.totalMonthlyValue);
+  });
+});
+
+describe("prima de servicios", () => {
+  it("pays half a month per full semester, with transport allowance up to 2 SMMLV", () => {
+    const result = calculatePrima({ semester: 2, monthlySalary: 2_000_000 });
+    expect(result.daysWorked).toBe(180);
+    expect(result.base.transportAllowance).toBe(249_095);
+    expect(result.amount).toBe(Math.round((2_249_095 * 180) / 360)); // 1.124.548
+    expect(result.deadline).toBe("2026-12-20");
+  });
+
+  it("is proportional when the job starts during the semester and discounts unpaid leave", () => {
+    const result = calculatePrima({ semester: 2, monthlySalary: 2_000_000, startDate: "2026-09-15", unpaidDays: 6 });
+    expect(result.from).toBe("2026-09-15");
+    expect(result.daysWorked).toBe(106 - 6);
+    expect(result.amount).toBe(Math.round((2_249_095 * 100) / 360));
+  });
+
+  it("leaves out the transport allowance above 2 SMMLV and pays nothing on integral salary", () => {
+    expect(calculatePrima({ semester: 1, monthlySalary: 4_000_000 }).amount).toBe(2_000_000);
+    expect(calculatePrima({ semester: 1, monthlySalary: 20_000_000, integralSalary: true }).amount).toBe(0);
+    expect(calculatePrima({ semester: 1, monthlySalary: 2_000_000 }).deadline).toBe("2026-06-30");
+  });
+
+  it("rejects dates outside the semester", () => {
+    expect(() => calculatePrima({ semester: 1, monthlySalary: 2_000_000, startDate: "2026-08-01" })).toThrow();
+    expect(() => calculatePrima({ semester: 2, monthlySalary: 2_000_000, endDate: "2026-03-01" })).toThrow();
   });
 });

@@ -62,7 +62,7 @@ describe("markdown renderer", () => {
 describe("SEO and prerender", () => {
   it("lists every public page with head metadata and no private areas", () => {
     const routes = publicRoutes();
-    expect(routes.length).toBe(1 + 1 + 12 + 1 + 4 + 4 + 2);
+    expect(routes.length).toBe(1 + 3 + 1 + 12 + 1 + 5 + 4 + 2);
     for (const route of routes) {
       const head = headForPath(route.path);
       expect(head, route.path).not.toBeNull();
@@ -114,7 +114,25 @@ describe("SEO and prerender", () => {
     const html = renderRoute("/crear-hoja-de-vida");
     expect(html).toContain("Crea tu hoja de vida gratis");
     expect(html).toContain(`href="${APP_URLS.procvEditor}"`);
-    expect(html).toContain(`href="${APP_URLS.procv.replace(/\/+$/, "")}/templates"`);
+    expect(html).toContain('href="/plantillas-hoja-de-vida/"');
+    expect(html).toContain('href="/formato-unico-hoja-de-vida/"');
+  });
+
+  it("format landing pages are prerendered with FAQ data and open the editor with their template", () => {
+    const dafpTags = renderHeadTags(headForPath("/formato-unico-hoja-de-vida")!);
+    expect(dafpTags).toContain('<link rel="canonical" href="https://prosolutions.page/formato-unico-hoja-de-vida/" />');
+    expect(dafpTags).toContain('"@type":"FAQPage"');
+    expect(renderRoute("/formato-unico-hoja-de-vida")).toContain(`href="${APP_URLS.procvEditor}?plantilla=dafp"`);
+    expect(renderRoute("/hoja-de-vida-formato-1003")).toContain(`href="${APP_URLS.procvEditor}?plantilla=employment"`);
+    const gallery = renderRoute("/plantillas-hoja-de-vida");
+    for (const key of ["dafp", "employment", "ats", "sidebar"]) expect(gallery).toContain(`src="/plantillas/${key}.webp"`);
+    expect(renderHeadTags(headForPath("/plantillas-hoja-de-vida")!)).toContain('"@type":"ItemList"');
+  });
+
+  it("prima calculator is listed and prerendered", () => {
+    expect(headForPath("/tools/prima")!.title).toMatch(/prima de servicios/i);
+    expect(renderRoute("/tools/prima")).toContain("Prima de servicios");
+    expect(renderRoute("/tools")).toContain('href="/tools/prima/"');
   });
 
   it("escapes JSON-LD against script breakouts", () => {

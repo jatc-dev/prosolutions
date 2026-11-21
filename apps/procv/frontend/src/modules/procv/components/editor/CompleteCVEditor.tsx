@@ -879,6 +879,24 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [designCloseSignal, setDesignCloseSignal] = useState(0);
   const foldDesign = useCallback(() => setDesignCloseSignal((value) => value + 1), []);
 
+  // Deep link from the public pages: /editor?plantilla=dafp opens a new CV with
+  // that template selected. Only the template changes (never the user's data),
+  // and the parameter is removed so a reload does not re-apply it.
+  // Applied once the session check is over, after guest mode loaded any saved draft.
+  const requestedTemplate = useRef(new URLSearchParams(window.location.search).get('plantilla'));
+  useEffect(() => {
+    const requested = requestedTemplate.current;
+    if (!requested || authLoading) return;
+    requestedTemplate.current = null;
+    if (!cvId && CURATED_CV_TEMPLATES.some((template) => template.key === requested)) {
+      setTemplate(requested);
+    }
+    const params = new URLSearchParams(window.location.search);
+    params.delete('plantilla');
+    const query = params.toString();
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+  }, [authLoading, cvId, isGuest, setTemplate]);
+
   // The ATS match lives in its own dialog (header button), not in the form.
   const [showAtsDialog, setShowAtsDialog] = useState(false);
   useEffect(() => {
