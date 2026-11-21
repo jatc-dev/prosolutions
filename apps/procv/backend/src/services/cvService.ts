@@ -207,7 +207,6 @@ export class CVService {
     // Invalidate relevant cache entries
     cache.deleteByPrefix(`user_cvs_${userId}_page_`);
     cache.delete(`cv_${cvId}_user_${userId}`);
-    cache.delete(`cv_export_${cvId}_user_${userId}`);
     cache.delete(`cv_versions_${cvId}_user_${userId}`);
 
     return updated;
@@ -235,47 +234,7 @@ export class CVService {
     // Invalidate relevant cache entries
     cache.deleteByPrefix(`user_cvs_${userId}_page_`);
     cache.delete(`cv_${cvId}_user_${userId}`);
-    cache.delete(`cv_export_${cvId}_user_${userId}`);
     cache.delete(`cv_versions_${cvId}_user_${userId}`);
-  }
-
-  /**
-   * Export CV to PDF
-   * Note: This could be cached if PDF generation is expensive
-   */
-  static async exportCVToPDF(cvId: string, userId: string) {
-    // Try to get from cache first
-    const cacheKey = `cv_export_${cvId}_user_${userId}`;
-    const cached = cache.get<{
-      data: any;
-      id: string;
-      userId: string;
-      title: string;
-      template: string;
-      createdAt: Date;
-      updatedAt: Date;
-    } | null>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    const cv = await withUserContext(userId, tx =>
-      tx.cV.findFirst({ where: { id: cvId, userId } }),
-    );
-    if (!cv) {
-      throw new Error('CV not found');
-    }
-
-    // This would normally call the PDF generation utilities
-    // For now, we'll return the CV data
-    const result = {
-      ...cv,
-      data: JSON.parse(cv.data ?? '{}'),
-    };
-
-    // Cache the result for 5 minutes (PDF generation can be expensive)
-    cache.set(cacheKey, result, 300);
-    return result;
   }
 
   /**
@@ -348,7 +307,6 @@ export class CVService {
     // Invalidate relevant cache entries
     cache.deleteByPrefix(`user_cvs_${userId}_page_`);
     cache.delete(`cv_${cvId}_user_${userId}`);
-    cache.delete(`cv_export_${cvId}_user_${userId}`);
     cache.delete(`cv_versions_${cvId}_user_${userId}`);
 
     return updated;

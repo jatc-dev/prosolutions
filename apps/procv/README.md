@@ -21,8 +21,6 @@ Desde backend:
 ```bash
 npm run build
 npm test -- --runInBand
-npm run pdf:smoke
-npm run pdf:audit
 ```
 
 Para pruebas RLS de integración, configura una base no productiva y ejecuta npm run test:rls:integration.

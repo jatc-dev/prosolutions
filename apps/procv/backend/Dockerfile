@@ -26,40 +26,18 @@ COPY packages/ui/package.json ./packages/ui/package.json
 # Build: full dependencies, Prisma client and TypeScript compilation.
 # ---------------------------------------------------------------------------
 FROM base AS build
-ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN npm ci --include=dev --workspace=apps/procv/backend --include-workspace-root
 COPY apps/procv/backend/ ./apps/procv/backend/
 WORKDIR /app/apps/procv/backend
 RUN npx prisma generate && npm run build
 
 # ---------------------------------------------------------------------------
-# Runtime: production dependencies, Chromium libraries for Puppeteer (PDF),
-# the generated Prisma client and the compiled output.
+# Runtime: production dependencies, the generated Prisma client and the
+# compiled output. PDF and Word are generated in the browser, so the image
+# needs no Chromium.
 # ---------------------------------------------------------------------------
 FROM base AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcairo2 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnss3 \
-    libpango-1.0-0 \
-    libx11-6 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libxrandr2 \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV NODE_ENV=production
-# Production install; puppeteer's postinstall downloads Chromium here.
 RUN npm ci --omit=dev --workspace=apps/procv/backend --include-workspace-root \
     && npm cache clean --force
 
@@ -69,10 +47,6 @@ COPY apps/procv/backend/prisma ./prisma
 COPY apps/procv/backend/scripts ./scripts
 COPY --from=build /app/apps/procv/backend/dist ./dist
 RUN mkdir -p uploads/logos
-
-# Fail the build (instead of the first user export) if Chromium or one of its
-# system libraries is missing: launch Puppeteer and render a real PDF.
-RUN node -e "require('puppeteer').launch({args:['--no-sandbox','--disable-setuid-sandbox']}).then(async(b)=>{const p=await b.newPage();await p.setContent('<h1>ProCV</h1>');const pdf=await p.pdf();await b.close();console.log('Puppeteer PDF smoke test OK:',pdf.length,'bytes');}).catch((e)=>{console.error('Puppeteer PDF smoke test FAILED',e);process.exit(1);})"
 
 # Render injects PORT at runtime.
 EXPOSE 10000

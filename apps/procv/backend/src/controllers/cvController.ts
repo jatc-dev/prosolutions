@@ -1,9 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { CVService } from '../services/cvService';
-import { buildPdfHtml } from '../utils/templates';
-import { renderToPdf } from '../utils/pdfGenerator';
-import { withSafeProfileImage } from '../utils/safeImage';
 import { parseCVFileToDraft } from '../services/cvImportService';
 import { ATSService } from '../services/atsService';
 import { CVAtsService } from '../services/cvAtsService';
@@ -237,39 +234,6 @@ export async function deleteCV(req: AuthRequest, res: Response) {
 
     await CVService.deleteCV(id, userId);
     return res.status(204).send();
-  } catch (error) {
-    if (error instanceof Error && error.message === 'CV not found') {
-      return res.status(404).json({ message: 'CV not found' });
-    }
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return res.status(500).json({ message });
-  }
-}
-
-export async function exportPDF(req: AuthRequest, res: Response) {
-  const userId = req.userId;
-  if (!userId) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  try {
-    const { id } = req.params;
-
-    const exportedCv = await CVService.exportCVToPDF(id, userId);
-    // SSRF defence: remote photos are fetched under strict rules and inlined;
-    // anything that does not qualify is dropped from the PDF.
-    const normalizedCv = await withSafeProfileImage(exportedCv, {
-      onRejected: (reason) => logger.warn('Profile image omitted from PDF export', { reason }),
-    });
-    const html = buildPdfHtml(normalizedCv as any);
-    const pdf = await renderToPdf(html);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${normalizedCv.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cv'}.pdf"`,
-    );
-    res.send(pdf);
   } catch (error) {
     if (error instanceof Error && error.message === 'CV not found') {
       return res.status(404).json({ message: 'CV not found' });

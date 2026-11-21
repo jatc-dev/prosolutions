@@ -128,7 +128,8 @@
     "identityTitle": "Sign in with your ProSolutions account",
     "identitySubtitle": "Secure access to your CV, job applications, and professional profile",
     "signInWithProIdentity": "Sign in with ProIdentity",
-    "loginFailed": "Login Failed",    "identityError": "Could not authenticate with ProIdentity. Please try again.",
+    "loginFailed": "Login Failed",
+    "identityError": "Could not authenticate with ProIdentity. Please try again.",
     "noToken": "No authentication token received.",
     "tokenExchangeFailed": "Failed to exchange token. Please try logging in again.",
     "retryLogin": "Try Logging In Again",
@@ -884,6 +885,10 @@
         "invalidUrl": "Please enter a valid URL.",
         "duplicateUrl": "This URL is already added."
       }
+    },
+    "templateDesign": {
+      "title": "Template and design",
+      "hint": "Choose the template and adjust fonts, colours and spacing"
     }
   },
   "admin": {

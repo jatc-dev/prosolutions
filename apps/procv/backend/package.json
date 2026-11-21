@@ -11,8 +11,6 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node scripts/ensure-build.mjs && node dist/index.js",
     "start:migrate": "node dist/index.js",
-    "pdf:smoke": "npm run build && node dist/scripts/pdfPaginationSmoke.js",
-    "pdf:audit": "npm run build && node dist/scripts/pdfPaginationAudit.js",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
     "format": "prettier --write src/**/*.ts tests/**/*.ts",
@@ -45,7 +43,6 @@
     "nodemailer": "^10.1.0",
     "pdf-parse": "^2.4.5",
     "prisma": "^5.22.0",
-    "puppeteer": "^24.39.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

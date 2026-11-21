@@ -702,19 +702,25 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         return;
       }
 
+      // The preview page is narrower than A4 and centred, which html2pdf turned
+      // into wide side margins. Export a copy that fills the page width; the
+      // template's own padding (~8 mm) is the side margin. Top/bottom keep a
+      // small margin so text never touches the edge after a page break.
+      const exportNode = element.cloneNode(true) as HTMLElement;
+      exportNode.classList.add("cv-pdf-export");
       const options = {
-        margin: 0.12, // ~3 mm on each side
+        margin: [6, 0, 6, 0] as [number, number, number, number], // mm: top, left, bottom, right
         filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
       };
 
       const html2pdf = (await import("html2pdf.js")).default;
 
       html2pdf()
         .set(options)
-        .from(element)
+        .from(exportNode)
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
@@ -1110,14 +1116,20 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             <div className="p-4 sm:p-6">
               <EditorDisclosure
                 storageKey="procv.editor.template-selector"
-                title={t("editor.templateSelector.title", "Selector de plantilla")}
-                description={t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}
+                title={t("editor.templateDesign.title", "Plantilla y diseño")}
+                description={t("editor.templateDesign.hint", "Elige la plantilla y ajusta tipografía, colores y espaciado")}
               >
                 <TemplateSelector
                   templates={CURATED_CV_TEMPLATES}
                   currentTemplate={cvData.template}
                   onTemplateSelect={setTemplate}
                 />
+                <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-700">
+                  <CustomizerPanel
+                    settings={cvData.settings || {}}
+                    onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
+                  />
+                </div>
               </EditorDisclosure>
               <div className="h-4" />
               {docMode === 'cv' ? (
@@ -1138,12 +1150,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
               </EditorDisclosure>
               ) : null}
-              <EditorDisclosure storageKey="procv.editor.customizer" title={t("customizer.title", "Personalizar plantilla")} description={t("editor.customizer.hint", "Ajusta tipografía, color y distribución")}>
-                <CustomizerPanel
-                  settings={cvData.settings || {}}
-                  onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
-                />
-              </EditorDisclosure>
 
 
 
