@@ -26,7 +26,7 @@ export function PreferencesPage() {
       loadUserPreferences(),
       identityRequest("/api/auth/me"),
     ]).then(async ([preferences, response]) => {
-      if (!response.ok) throw new Error("No se pudo verificar la sesión.");
+      if (!response.ok) throw new Error(locale === "en" ? "Your session could not be verified." : "No se pudo verificar la sesión.");
       const data = await response.json();
       if (!active) return;
       const nextTheme = preferences.theme || preference;
@@ -38,7 +38,7 @@ export function PreferencesPage() {
       setAccount(data.user ? { name: data.user.name, email: data.user.email } : null);
     }).catch((reason: unknown) => {
       if (active) {
-        const text = reason instanceof Error ? reason.message : "No se pudieron cargar las preferencias.";
+        const text = reason instanceof Error ? reason.message : locale === "en" ? "Your preferences could not be loaded." : "No se pudieron cargar las preferencias.";
         setError(text);
         if (/sesión expiró|verificar la sesión/i.test(text)) navigate("/login", { replace: true });
       }
