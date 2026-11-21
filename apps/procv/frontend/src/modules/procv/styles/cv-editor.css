@@ -484,3 +484,8 @@
   margin-right: 0;
   align-self: center;
 }
+
+/* Photo framing chosen in the editor (centred by default). */
+.cv-custom-wrapper .cv-photo {
+  object-position: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}

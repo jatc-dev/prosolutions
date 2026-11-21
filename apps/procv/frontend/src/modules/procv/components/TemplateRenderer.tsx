@@ -35,7 +35,10 @@ export interface CVData {
     showSummaryTitle?: boolean;
     showSummaryContent?: boolean;
     profileImage?: string;
-    profileImageStyle?: "round" | "square" | "portrait";
+    profileImageStyle?: "round" | "square" | "portrait" | "oval" | "arch";
+    profileImagePositionX?: number;
+    profileImagePositionY?: number;
+    profileImageBorder?: boolean;
     profileImageSize?: "sm" | "md" | "lg" | "xl";
     showProfileImage?: boolean;
     documentType?: string;
@@ -417,9 +420,18 @@ function getProfileImageClass(personal: CVData["personal"], size: "small" | "med
   const style = personal?.profileImageStyle || "round";
   const scale = personal?.profileImageSize && personal.profileImageSize in PROFILE_IMAGE_SIZES[size] ? personal.profileImageSize : "md";
   const [width, portraitHeight, squareHeight] = PROFILE_IMAGE_SIZES[size][scale];
-  const sizeClass = `${width} ${style === "portrait" ? portraitHeight : squareHeight} shrink-0`;
-  const shapeClass = style === "round" ? "rounded-full" : "rounded-xl";
-  return `${sizeClass} ${shapeClass} object-cover`;
+  // Portrait, oval and arch are taller than wide; round and square are square.
+  const tall = style === "portrait" || style === "oval" || style === "arch";
+  const sizeClass = `${width} ${tall ? portraitHeight : squareHeight} shrink-0`;
+  const shapeClass =
+    style === "round" ? "rounded-full"
+    : style === "oval" ? "rounded-[50%]"
+    : style === "arch" ? "rounded-t-full rounded-b-md"
+    : "rounded-xl";
+  // cv-photo: framing via --cv-photo-x/y (set by CustomStylesWrapper). "!border-0"
+  // overrides each template's own border when the user turns it off.
+  const borderClass = personal?.profileImageBorder === false ? " !border-0" : "";
+  return `${sizeClass} ${shapeClass} object-cover cv-photo${borderClass}`;
 }
 
 function calculateAge(value?: string) {
@@ -2739,6 +2751,21 @@ function dafpLanguageLevel(level?: string): string {
  * official form, built from the regular CV data plus the DAFP-only fields
  * (data.application, keys prefixed "dafp").
  */
+/** Square box of the official form, marked with an X when checked. */
+function CheckBox({ checked }: { checked: boolean }) {
+  return (
+    <span className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px] text-[9px] leading-none">{checked ? "X" : ""}</span>
+  );
+}
+
+const SPANISH_MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+/** "2026-11-20" -> "20 de noviembre de 2026"; anything else is shown as typed. */
+function formatSpanishDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return value.trim();
+  return `${Number(match[3])} de ${SPANISH_MONTHS[Number(match[2]) - 1] ?? ""} de ${match[1]}`;
+}
+
 function TemplateDafp({ data }: { data: CVData }) {
   const app = data.application || {};
   const personal = data.personal || {};
@@ -2753,7 +2780,8 @@ function TemplateDafp({ data }: { data: CVData }) {
   const languages = normalizeLanguages(data.languages).filter((item) => item.name);
   const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
   const hasSplitName = Boolean(value("dafpFirstSurname") || value("dafpGivenNames"));
-  const ineligible = value("dafpIneligible").toLowerCase();
+  const ineligible = value("dafpIneligible").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const signDate = formatSpanishDate(value("dafpSignDate"));
 
   return (
     <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
@@ -2868,12 +2896,20 @@ function TemplateDafp({ data }: { data: CVData }) {
       <Section title="5. Firma del servidor público o contratista">
         <p className="border-x border-b border-slate-300 px-2 py-2 text-[10px] leading-4">
           Manifiesto bajo la gravedad del juramento que{" "}
-          <strong>{ineligible.startsWith("s") ? "SÍ" : ineligible.startsWith("n") ? "NO" : "SÍ ___ NO ___"}</strong>{" "}
+          <span className="whitespace-nowrap font-semibold">
+            SÍ <CheckBox checked={ineligible.startsWith("s")} /> NO <CheckBox checked={ineligible.startsWith("n")} />
+          </span>{" "}
           me encuentro dentro de las causales de inhabilidad e incompatibilidad del orden constitucional o legal para ejercer cargos o empleos públicos o para celebrar contratos de prestación de servicios con la administración pública. Para todos los efectos legales, certifico que los datos por mí anotados en el presente formato único de hoja de vida son veraces (artículo 5.º de la Ley 190 de 1995).
         </p>
         <div className="mt-8 grid grid-cols-2 gap-10 text-[11px]">
-          <div className="border-t border-slate-800 pt-1">{[value("dafpSignPlace"), value("dafpSignDate")].filter(Boolean).join(", ") || "Lugar y fecha de diligenciamiento"}</div>
-          <div className="border-t border-slate-800 pt-1">Firma{documentText ? ` · ${documentText}` : ""}</div>
+          <div>
+            <div className="min-h-[1.25rem] text-[11px]">{[value("dafpSignPlace"), signDate].filter(Boolean).join(", ")}</div>
+            <div className="border-t border-slate-800 pt-1">Lugar y fecha de diligenciamiento</div>
+          </div>
+          <div>
+            <div className="min-h-[1.25rem]" />
+            <div className="border-t border-slate-800 pt-1">Firma{documentText ? ` · ${documentText}` : ""}</div>
+          </div>
         </div>
       </Section>
     </article>

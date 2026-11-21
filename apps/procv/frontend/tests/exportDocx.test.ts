@@ -80,4 +80,9 @@ describe("Word export", () => {
     expect(buffer.subarray(0, 2).toString()).toBe("PK");
     expect(buffer.length).toBeGreaterThan(1000);
   });
+
+  it("leaves sections hidden in the editor out of the Word file", () => {
+    const cv = { ...sampleCv(), settings: { ...sampleCv().settings, hiddenSections: ["skills", "languages"] } };
+    expect(cvDocxContent(cv).sections.map((section) => section.key)).toEqual(["summary", "experience", "references"]);
+  });
 });

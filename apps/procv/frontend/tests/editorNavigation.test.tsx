@@ -108,4 +108,37 @@ describe("editor navigation validation", () => {
     rerender(<ValidationSummary section="personal" errors={{}} />);
     expect(screen.queryByText("El nombre es requerido")).toBeNull();
   });
+
+  it("offers add / hide / show under each optional section and never for personal data", () => {
+    const onToggle = vi.fn();
+    render(
+      <EditorTabs
+        activeSection="personal"
+        onSectionChange={vi.fn()}
+        completionStatus={completionStatus}
+        sectionStatus={{ experience: { count: 2, hidden: false }, education: { count: 0, hidden: false }, skills: { count: 1, hidden: true } }}
+        onSectionToggle={onToggle}
+      />,
+    );
+    // The i18n mock returns keys: hide for a filled section, add for an empty one, show for a hidden one.
+    const toggles = screen.getAllByRole("button").filter((button) => button.getAttribute("aria-label")?.startsWith("editor.sectionToggle."));
+    expect(toggles.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "editor.sectionToggle.hideAria",
+      "editor.sectionToggle.addAria",
+      "editor.sectionToggle.showAria",
+    ]);
+    fireEvent.click(toggles[0]!);
+    expect(onToggle).toHaveBeenCalledWith("experience");
+  });
+
+  it("shows which sections have errors on their tab and under the progress bar", () => {
+    const onSectionChange = vi.fn();
+    render(<EditorTabs activeSection="personal" onSectionChange={onSectionChange} completionStatus={completionStatus} errorCounts={{ experience: 2, education: 1 }} />);
+    expect(screen.getByRole("button", { name: /Experiencia\s*2/ })).toBeTruthy();
+    const summary = screen.getByRole("status");
+    expect(summary.textContent).toContain("Experiencia (2)");
+    expect(summary.textContent).toContain("Educación (1)");
+    fireEvent.click(screen.getByRole("button", { name: "Educación (1)" }));
+    expect(onSectionChange).toHaveBeenCalledWith("education");
+  });
 });

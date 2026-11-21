@@ -19,7 +19,8 @@ export type SkillCategory = 'technical' | 'soft' | 'language' | 'certification';
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
 export type LanguageLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type LinkType = 'linkedin' | 'github' | 'portfolio' | 'website' | 'twitter' | 'other';
-export type ProfileImageStyle = 'round' | 'square' | 'portrait';
+/** Photo shape: round, square, portrait (rounded rectangle), oval (ellipse), arch (rounded top, flat base). */
+export type ProfileImageStyle = 'round' | 'square' | 'portrait' | 'oval' | 'arch';
 /** Photo size in templates: small, medium (default), large, extra large. */
 export type ProfileImageSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -69,6 +70,11 @@ export interface PersonalData {
   profileImage?: string;
   profileImageStyle?: ProfileImageStyle;
   profileImageSize?: ProfileImageSize;
+  /** Photo framing inside its shape, 0–100 % (50 = centred). */
+  profileImagePositionX?: number;
+  profileImagePositionY?: number;
+  /** false removes the template's photo border. */
+  profileImageBorder?: boolean;
   showProfileImage?: boolean;
   documentType?: string;
   documentNumber?: string;
@@ -243,6 +249,8 @@ export interface CVData {
   title: string;
   template: string;
   settings?: {
+    /** Sections hidden from the CV (their data is kept), e.g. ["certificates"]. */
+    hiddenSections?: string[];
     // Colores
     sidebarBg?: string;
     developerBg?: string;

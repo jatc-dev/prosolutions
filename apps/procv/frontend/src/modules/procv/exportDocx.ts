@@ -41,7 +41,7 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
   const emails = visible(personal?.emails).map((item) => item.value).filter(Boolean);
   const phones = visible(personal?.phones).map((item) => item.number).filter(Boolean);
   const place = [personal?.showCity === false ? "" : personal?.city, personal?.showCountry === false ? "" : personal?.country].filter(Boolean).join(", ");
-  const links = visible(cv.links).map((link) => link.url).filter(Boolean);
+  const links = (Array.isArray(cv.settings?.hiddenSections) && cv.settings.hiddenSections.includes("links") ? [] : visible(cv.links)).map((link) => link.url).filter(Boolean);
   const sections: DocxSection[] = [];
 
   if (personal?.summary?.trim() && personal.showSummaryContent !== false) {
@@ -108,12 +108,14 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
   }
 
   const contactItems = [...emails, ...phones, place, ...links].filter(Boolean);
+  // Sections the user hid from the CV (editor tabs) stay out of the Word file too.
+  const hidden = Array.isArray(cv.settings?.hiddenSections) ? cv.settings.hiddenSections : [];
   return {
     name: personal?.showFullName === false ? "" : personal?.fullName || "",
     headline: personal?.showProfessionalTitle === false ? "" : personal?.professionalTitle || "",
     contact: contactItems.join(" · "),
     contactItems,
-    sections,
+    sections: sections.filter((section) => !hidden.includes(section.key)),
   };
 }
 

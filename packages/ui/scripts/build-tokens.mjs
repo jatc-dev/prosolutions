@@ -50,10 +50,14 @@ ${vars('dark')}
 ${slateVars(tokens.palette.neutralDark)}
 }
 
-/* Printed documents (CV templates, cover letters, PDF export) keep the
-   standard neutral ramp in every theme: they are paper, not app chrome. */
+/* Printed documents (CV templates, cover letters, PDF export) are paper, not
+   app chrome: in every theme they use the light tokens, the standard neutral
+   ramp and the light text colour, so nothing inherits the dark theme. */
 .ui-print {
+  color-scheme: light;
+${vars('light')}
 ${slateVars(tokens.palette.neutral)}
+  color: var(--ui-text);
 }
 
 html {
