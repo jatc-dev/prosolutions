@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCVEditorStore } from "../../../../shared/stores/cvEditorStore";
 import { useAuthStore } from "../../../../shared/stores/authStore";
@@ -476,6 +477,28 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     }
   }, [activeSection, validateSection, setActiveSection, t]);
 
+  // Back to the CV list (or home for guests). Signed-in users never lose
+  // pending edits: they are saved first, and a failed save asks before leaving.
+  // A guest draft already lives in this browser (persisted editor store).
+  const navigate = useNavigate();
+  const [isLeaving, setIsLeaving] = useState(false);
+  const handleBack = useCallback(async () => {
+    if (!isAuthenticated) {
+      navigate('/');
+      return;
+    }
+    if (hasUnsavedChanges) {
+      setIsLeaving(true);
+      try {
+        await saveCV();
+      } catch {
+        setIsLeaving(false);
+        if (!window.confirm(t('editor.back.saveFailed', 'No se pudieron guardar los últimos cambios. ¿Salir de todos modos?'))) return;
+      }
+    }
+    navigate('/dashboard');
+  }, [isAuthenticated, hasUnsavedChanges, saveCV, navigate, t]);
+
   // Handle manual save
   const handleSave = useCallback(async () => {
     try {
@@ -932,15 +955,35 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={isLeaving}
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
+                title={isAuthenticated ? t('editor.back.toListHint', 'Guarda los cambios y vuelve a tus hojas de vida') : t('editor.back.toHomeHint', 'Tu borrador queda guardado en este navegador')}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                {isLeaving
+                  ? t('dashboard.saving', 'Guardando…')
+                  : isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+              </button>
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={isLeaving}
+                className="flex min-w-0 items-center gap-3 rounded-md text-left focus:outline-none focus:ring-2 focus:ring-brand-700"
+                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
                   <EditorBrandGlyph />
-                </div>
-                <h1 className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                </span>
+                <span className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
                   <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
                   <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
-                </h1>
-              </div>
+                </span>
+              </button>
 
               <AutoSaveIndicator
                 isSaving={isSaving}

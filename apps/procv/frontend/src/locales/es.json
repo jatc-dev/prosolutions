@@ -904,6 +904,13 @@
     "templateDesign": {
       "title": "Plantilla y diseño",
       "hint": "Elige la plantilla y ajusta tipografía, colores y espaciado"
+    },
+    "back": {
+      "toList": "Mis hojas de vida",
+      "toListHint": "Guarda los cambios y vuelve a tus hojas de vida",
+      "toHome": "Inicio",
+      "toHomeHint": "Tu borrador queda guardado en este navegador",
+      "saveFailed": "No se pudieron guardar los últimos cambios. ¿Salir de todos modos?"
     }
   },
   "admin": {

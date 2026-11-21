@@ -46,7 +46,9 @@ export function CustomStylesWrapper({ settings, children }: { settings: unknown;
   const spacing = typeof s.sectionSpacing === "number" ? s.sectionSpacing : DEFAULT_SECTION_SPACING;
 
   const cssVars: Record<string, string> = {};
-  const classes = ["cv-custom-wrapper"];
+  // ui-print: the CV is a printed page, so it keeps the standard neutral
+  // palette even when the app is in dark mode.
+  const classes = ["cv-custom-wrapper", "ui-print"];
   // Stored font values are keys ("merriweather"), not family names.
   if (bodyFont) {
     cssVars["--font-body"] = bodyFont;

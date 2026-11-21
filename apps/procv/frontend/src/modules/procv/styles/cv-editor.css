@@ -64,6 +64,27 @@
   color: #022c22;
 }
 
+/* Dark editor chrome: the darkest brand text steps become the light brand
+   text, so outline buttons stay readable (dark:text-* loses to the rules above). */
+.dark .cv-editor :is(.text-brand-900, .text-brand-950) {
+  color: var(--cv-brand-text);
+}
+
+/* The CV preview is a printed page: inside it the brand variables keep their
+   light-mode values in every theme, so templates look identical to the PDF. */
+.cv-editor .ui-print {
+  --cv-brand-primary: #047857;
+  --cv-brand-primary-hover: #065f46;
+  --cv-brand-primary-focus: #047857;
+  --cv-brand-secondary: #ecfdf5;
+  --cv-brand-accent: #d1fae5;
+  --cv-brand-border: #a7f3d0;
+  --cv-brand-text: #065f46;
+  --cv-brand-text-light: #047857;
+}
+.dark .cv-editor .ui-print .text-brand-900 { color: #064e3b; }
+.dark .cv-editor .ui-print .text-brand-950 { color: #022c22; }
+
 /* Border colors */
 .cv-editor .border-brand-200 {
   border-color: var(--cv-brand-border);
@@ -255,23 +276,23 @@
    page). Many section cards were styled for light mode only (white cards with
    light labels on dark inputs); this maps them to the dark surface. */
 .dark .cv-editor-panel :is(.bg-white, .bg-slate-50) {
-  background-color: #0f172a;
+  background-color: rgb(var(--ui-slate-900));
 }
 
 .dark .cv-editor-panel :is(.border-slate-200, .border-slate-300) {
-  border-color: #334155;
+  border-color: rgb(var(--ui-slate-700));
 }
 
 .dark .cv-editor-panel :is(.text-slate-900, .text-slate-800, .text-slate-700) {
-  color: #e2e8f0;
+  color: rgb(var(--ui-slate-200));
 }
 
 .dark .cv-editor-panel :is(.text-slate-600, .text-slate-500) {
-  color: #94a3b8;
+  color: rgb(var(--ui-slate-400));
 }
 
 .dark .cv-editor-panel :is(.hover\:bg-slate-50, .hover\:bg-slate-100):hover {
-  background-color: #1e293b;
+  background-color: rgb(var(--ui-slate-800));
 }
 
 .dark .cv-editor .cv-btn-primary,

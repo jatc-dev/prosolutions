@@ -889,6 +889,13 @@
     "templateDesign": {
       "title": "Template and design",
       "hint": "Choose the template and adjust fonts, colours and spacing"
+    },
+    "back": {
+      "toList": "My CVs",
+      "toListHint": "Saves your changes and goes back to your CVs",
+      "toHome": "Home",
+      "toHomeHint": "Your draft stays saved in this browser",
+      "saveFailed": "Your latest changes could not be saved. Leave anyway?"
     }
   },
   "admin": {

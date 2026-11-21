@@ -15,10 +15,22 @@ const vars = (scheme) =>
     .map(([name, value]) => `  --ui-${name}: ${value};`)
     .join('\n');
 
+/** "#rrggbb" -> "r g b", so Tailwind can apply opacity (bg-slate-900/50). */
+const channels = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+};
+const slateVars = (ramp) =>
+  Object.entries(ramp)
+    .filter(([step]) => step !== '0')
+    .map(([step, value]) => `  --ui-slate-${step}: ${channels(value)};`)
+    .join('\n');
+
 const css = `/* GENERATED from tokens.json by scripts/build-tokens.mjs. Do not edit by hand. */
 :root {
   color-scheme: light;
 ${vars('light')}
+${slateVars(tokens.palette.neutral)}
   --ui-radius-sm: ${tokens.radius.sm};
   --ui-radius-md: ${tokens.radius.md};
   --ui-radius-lg: ${tokens.radius.lg};
@@ -35,6 +47,22 @@ ${vars('light')}
 [data-theme="dark"] {
   color-scheme: dark;
 ${vars('dark')}
+${slateVars(tokens.palette.neutralDark)}
+}
+
+/* Printed documents (CV templates, cover letters, PDF export) keep the
+   standard neutral ramp in every theme: they are paper, not app chrome. */
+.ui-print {
+${slateVars(tokens.palette.neutral)}
+}
+
+/* Dark theme signature: a faint brand glow behind the app, never on content. */
+.dark body,
+[data-theme="dark"] body {
+  background-image:
+    radial-gradient(1100px 520px at 12% -8%, rgba(16, 185, 129, 0.09), transparent 62%),
+    radial-gradient(900px 480px at 100% 0%, rgba(5, 150, 105, 0.06), transparent 58%);
+  background-attachment: fixed;
 }
 
 html {
