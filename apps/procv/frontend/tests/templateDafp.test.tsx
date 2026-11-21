@@ -26,6 +26,7 @@ const data: CVData = {
     dafpTimePublic: "3 años y 8 meses",
     dafpIneligible: "No",
     dafpSignPlace: "Facatativá",
+    dafpSignDate: "2026-11-20",
   },
 };
 
@@ -35,7 +36,7 @@ describe("Función Pública (DAFP) template", () => {
   });
 
   it("renders the official sections from the regular CV data plus the DAFP-only fields", () => {
-    render(<TemplateRenderer template="dafp" data={data} />);
+    const { container } = render(<TemplateRenderer template="dafp" data={data} />);
     for (const heading of ["1. Datos personales", "2. Formación académica", "3. Experiencia laboral", "4. Tiempo total de experiencia", "5. Firma del servidor público o contratista"]) {
       expect(screen.getByText(heading)).toBeTruthy();
     }
@@ -44,7 +45,10 @@ describe("Función Pública (DAFP) template", () => {
     expect(screen.getByText("CC 1.020.345.678")).toBeTruthy();
     expect(screen.getByText("Alcaldía de Facatativá")).toBeTruthy();
     expect(screen.getByText("Bien")).toBeTruthy(); // B2 → "Bien"
-    expect(screen.getByText("NO")).toBeTruthy();
+    // Official yes/no boxes: only "NO" is marked.
+    const declaration = screen.getByText(/bajo la gravedad del juramento/);
+    expect(declaration.textContent?.replace(/\s+/g, " ")).toMatch(/SÍ\s*NO\s*X/);
+    expect(container.textContent).toContain("Facatativá, 20 de noviembre de 2026");
     // The supplemental references block is not appended to official forms.
     expect(screen.queryByText(/disponibles a solicitud/)).toBeNull();
   });

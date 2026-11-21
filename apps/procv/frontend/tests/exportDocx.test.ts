@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import * as docx from "docx";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { createInitialCVData } from "../src/stores/cvEditorStore";
 import type { CVData } from "../src/types";
-import { cvDocxContent, monthYear, period } from "../src/modules/procv/exportDocx";
+import { buildCvDocument, cvDocxContent, docxTheme, monthYear, period } from "../src/modules/procv/exportDocx";
 
 function sampleCv(): CVData {
   const initial = createInitialCVData();
@@ -51,6 +52,26 @@ describe("Word export", () => {
     expect(references[1]!.text).toContain("disponibles a solicitud");
   });
 
+  it("styles the document like the chosen template and honours the user's choices", () => {
+    expect(docxTheme("classic")).toMatchObject({ bodyFont: "Georgia", headingStyle: "rule", layout: "single" });
+    expect(docxTheme("sidebar")).toMatchObject({ layout: "sidebar", sidebarColor: "0F172A" });
+    expect(docxTheme("executive")).toMatchObject({ header: "band", bandColor: "0F172A", accent: "3B82F6" });
+    expect(docxTheme("developer").pageColor).toBe("0F172A");
+    expect(docxTheme("employment")).toMatchObject({ headingStyle: "bar", formTitle: "HOJA DE VIDA · FORMATO 1003" });
+    // User font and colour choices; old default colours mean "not customized".
+    const custom = docxTheme("minimal", { fontBody: "merriweather", fontHeading: "montserrat", headingColor: "#7c3aed", textColor: "#1e293b" });
+    expect(custom).toMatchObject({ bodyFont: "Georgia", headingFont: "Century Gothic", heading: "7C3AED", text: "1E293B" });
+    expect(docxTheme("sidebar", { sidebarBg: "#14532d" }).sidebarColor).toBe("14532D");
+  });
+
+  it("builds a valid .docx for every template", async () => {
+    for (const template of ["sidebar", "minimal", "ats", "corporate", "developer", "creative", "classic", "executive", "extensa", "timeline", "compact", "employment", "dafp"]) {
+      const doc = await buildCvDocument({ ...sampleCv(), template }, docx);
+      const buffer = await docx.Packer.toBuffer(doc);
+      expect(buffer.subarray(0, 2).toString(), template).toBe("PK");
+    }
+  });
+
   it("produces a valid .docx package with the text inside", async () => {
     const content = cvDocxContent(sampleCv());
     const doc = new Document({ sections: [{ children: [new Paragraph({ children: [new TextRun(content.name)] })] }] });
@@ -58,5 +79,10 @@ describe("Word export", () => {
     // A .docx is a zip archive ("PK" signature).
     expect(buffer.subarray(0, 2).toString()).toBe("PK");
     expect(buffer.length).toBeGreaterThan(1000);
+  });
+
+  it("leaves sections hidden in the editor out of the Word file", () => {
+    const cv = { ...sampleCv(), settings: { ...sampleCv().settings, hiddenSections: ["skills", "languages"] } };
+    expect(cvDocxContent(cv).sections.map((section) => section.key)).toEqual(["summary", "experience", "references"]);
   });
 });

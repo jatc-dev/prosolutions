@@ -128,7 +128,8 @@
     "identityTitle": "Sign in with your ProSolutions account",
     "identitySubtitle": "Secure access to your CV, job applications, and professional profile",
     "signInWithProIdentity": "Sign in with ProIdentity",
-    "loginFailed": "Login Failed",    "identityError": "Could not authenticate with ProIdentity. Please try again.",
+    "loginFailed": "Login Failed",
+    "identityError": "Could not authenticate with ProIdentity. Please try again.",
     "noToken": "No authentication token received.",
     "tokenExchangeFailed": "Failed to exchange token. Please try logging in again.",
     "retryLogin": "Try Logging In Again",
@@ -261,7 +262,9 @@
     "supportedFormats": "Supported formats: .json, .xml",
     "noFileSelected": "No file selected",
     "invalidFile": "Invalid file format",
-    "fileTooLarge": "File too large"
+    "fileTooLarge": "File too large",
+    "saveLocalSuccess": "CV saved in this browser",
+    "validationBeforeSave": "Check the highlighted fields before saving."
   },
   "ai": {
     "suggestions": "Writing ideas",
@@ -440,7 +443,10 @@
       "skills": "Skills",
       "languages": "Languages",
       "certificates": "Certificates",
-      "links": "Links"
+      "links": "Links",
+      "errorsTitle": "{{count}} field(s) to fix",
+      "errorsSr": "fields to fix",
+      "reviewPrefix": "Check:"
     },
     "actions": {
       "save": "Save",
@@ -533,7 +539,9 @@
       "profileImageStyles": {
         "round": "Round",
         "square": "Square",
-        "portrait": "Portrait"
+        "portrait": "Portrait",
+        "oval": "Oval",
+        "arch": "Arch"
       },
       "showProfileImage": "Show profile photo on resume",
       "showBirthDate": "Show birth date on resume",
@@ -884,6 +892,61 @@
         "invalidUrl": "Please enter a valid URL.",
         "duplicateUrl": "This URL is already added."
       }
+    },
+    "templateDesign": {
+      "title": "Template and design",
+      "hint": "Choose the template and adjust fonts, colours and spacing"
+    },
+    "back": {
+      "toList": "My CVs",
+      "toListHint": "Saves your changes and goes back to your CVs",
+      "toHome": "Home",
+      "toHomeHint": "Your draft stays saved in this browser",
+      "saveFailed": "Your latest changes could not be saved. Leave anyway?"
+    },
+    "ats": {
+      "title": "Match with a job offer",
+      "openButton": "Match a job offer",
+      "openHint": "Compare your CV with a job offer (ATS)",
+      "close": "Close",
+      "analyzeAgainstVacancy": "Compare your CV with a job offer, the way automatic screening (ATS) does",
+      "helpTitle": "What is this and how does it help?",
+      "helpIntro": "Many companies use an ATS (applicant tracking system): software that reads CVs and compares them with the job offer before a person sees them. If your CV does not use the words in the offer, it can be filtered out even when you fit the role.",
+      "helpStep1": "Copy the full job description (duties and requirements) and paste it below.",
+      "helpStep2": "Press “Analyze”. You will get a match score, the keywords you are missing and recommendations.",
+      "helpStep3": "Add the keywords that truly describe your experience, or use “Adapt automatically” and review the proposal before applying it.",
+      "helpNote": "Tip: adapt your CV to each important application and never add skills you do not have.",
+      "jobDescriptionPlaceholder": "Paste the job description here (duties, requirements, skills)…",
+      "analyzing": "Analyzing…",
+      "analyzeButton": "Analyze",
+      "tailoring": "Adapting…",
+      "tailorButton": "Adapt automatically",
+      "applyKeywords": "Add missing keywords",
+      "applyTailoring": "Apply adaptation",
+      "scoreComparison": "Score change",
+      "keywordComparison": "Keyword change",
+      "score": "ATS score",
+      "completeness": "Completeness",
+      "keywords": "Keywords",
+      "impact": "Impact",
+      "missingKeywords": "Missing keywords",
+      "noMissingKeywords": "Great! No important keywords are missing.",
+      "recommendations": "Recommendations",
+      "tailoringReady": "Adaptation ready to review",
+      "insertedKeywords": "Keywords added",
+      "noChanges": "no changes",
+      "tailoringSummary": "Proposed summary and {{count}} rewritten experience entries.",
+      "history": "Previous analyses"
+    },
+    "sectionToggle": {
+      "add": "Add",
+      "show": "Show",
+      "hide": "Hide",
+      "hidden": "Hidden",
+      "addAria": "Add {{section}} to the CV",
+      "showAria": "Show {{section}} in the CV again",
+      "hideAria": "Hide {{section}} from the CV (your data is kept)",
+      "hiddenToast": "Section hidden from your CV. Your data is kept."
     }
   },
   "admin": {

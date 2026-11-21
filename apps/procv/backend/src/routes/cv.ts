@@ -8,7 +8,6 @@ import {
   listCVATSHistory,
   createCV,
   deleteCV,
-  exportPDF,
   getCV,
   listCVs,
   parseCVUpload,
@@ -41,7 +40,6 @@ router.post('/:id/tailor', tailorCVATS);
 router.get('/:id/ats-history', listCVATSHistory);
 router.put('/:id', updateCV);
 router.delete('/:id', deleteCV);
-router.get('/:id/pdf', exportPDF);
 router.get('/:id/versions', listCVVersions);
 router.post('/:id/versions/:versionId/restore', restoreVersion);
 

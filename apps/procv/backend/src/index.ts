@@ -4,7 +4,6 @@ import { createApp } from './app';
 import prisma from './prismaClient';
 import { logger } from './utils/logger';
 import { startIdentityKeyRefresh } from './auth/identityToken';
-import { closeBrowser } from './utils/pdfGenerator';
 
 const port = config.port;
 const app = createApp();
@@ -51,15 +50,6 @@ async function shutdown(signal: string): Promise<void> {
   server.close(async serverError => {
     if (serverError) {
       logger.error('Error while closing HTTP server', { error: serverError.message });
-    }
-
-    try {
-      await closeBrowser();
-      logger.info('Puppeteer browser closed successfully');
-    } catch (browserError) {
-      logger.warn('Error closing browser during shutdown', {
-        error: browserError instanceof Error ? browserError.message : String(browserError),
-      });
     }
 
     try {

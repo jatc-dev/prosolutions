@@ -152,7 +152,7 @@ const normalizeLoadedCVData = (rawData: any): CVData => {
   const initial = createInitialCVData();
   const safe = rawData || {};
   const safePersonal = safe.personal || {};
-  const normalizedProfileImageStyle = ['round', 'square', 'portrait'].includes(String(safePersonal.profileImageStyle))
+  const normalizedProfileImageStyle = ['round', 'square', 'portrait', 'oval', 'arch'].includes(String(safePersonal.profileImageStyle))
     ? safePersonal.profileImageStyle
     : initial.personal.profileImageStyle;
   const rawSkills = Array.isArray(safe.skills) ? safe.skills : [];
@@ -652,7 +652,8 @@ export const useCVEditorStore = create<CVEditorState>()(
                 originalCvData: { ...state.cvData },
               });
 
-              toast.success('CV guardado localmente');
+              // Silent: the manual Save button shows its own toast and the
+              // 30 s auto-save is reported by the auto-save indicator.
               return;
             }
 
@@ -681,8 +682,6 @@ export const useCVEditorStore = create<CVEditorState>()(
               hasUnsavedChanges: false,
               originalCvData: { ...state.cvData },
             });
-
-            toast.success('CV guardado exitosamente');
           } catch (error: any) {
             set({ isSaving: false });
             const message = error?.response?.data?.message || 'Error al guardar el CV';

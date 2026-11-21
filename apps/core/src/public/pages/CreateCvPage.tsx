@@ -31,7 +31,7 @@ const STEPS = [
 const FEATURES = [
   { icon: LayoutTemplate, title: "Plantillas compatibles con ATS", text: "Diseños que los sistemas de selección pueden leer: texto real, orden lógico y secciones con nombres que reconocen." },
   { icon: FileUp, title: "Importación de tu CV actual", text: "Sube un PDF, un .docx o un .txt y ahorra el trabajo de copiar y pegar cada cargo." },
-  { icon: Download, title: "Descarga en PDF y Word", text: "El PDF conserva el diseño de la vista previa; el Word (.docx) es de una columna y fácil de editar por los reclutadores." },
+  { icon: Download, title: "Descarga en PDF y Word", text: "El PDF conserva el diseño de la vista previa; el Word (.docx) mantiene las fuentes y colores de tu plantilla y es fácil de editar." },
   { icon: Save, title: "Guardado automático", text: "Sin cuenta, tu avance se guarda en este navegador. Con cuenta, en tu perfil, para abrirlo desde cualquier equipo." },
   { icon: Sparkles, title: "Asistente de redacción opcional", text: "Sugerencias para tu perfil y tus logros. Tú decides qué usar; nada se envía a una empresa sin tu acción." },
   { icon: ShieldCheck, title: "Tus datos bajo tu control", text: "No vendemos tu información. Puedes descargarla o eliminar tu cuenta cuando quieras." },
@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "¿Puedo descargarla en Word?",
-    a: "Sí. Además del PDF, que conserva el diseño de la plantilla, puedes descargarla en Word (.docx): una versión de una columna, con títulos estándar, fácil de editar y de leer para los sistemas ATS. También puedes importar un archivo de Word para empezar a partir de él.",
+    a: "Sí. Además del PDF, que conserva el diseño de la plantilla, puedes descargarla en Word (.docx): conserva las fuentes, los colores y la estructura de tu plantilla, con texto real que puedes editar y que los sistemas ATS leen bien. También puedes importar un archivo de Word para empezar a partir de él.",
   },
 ];
 

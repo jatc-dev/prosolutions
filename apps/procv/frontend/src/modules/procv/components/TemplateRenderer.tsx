@@ -1,22 +1,15 @@
 import React from "react";
 import i18n from "../../../shared/i18n";
+import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 
-export type ContactType =
-  | "Personal"
-  | "Trabajo"
-  | "Laboral"
-  | "Institucional"
-  | "Universitario"
-  | "Educativo"
-  | "Oficina"
-  | "Casa"
-  | "WhatsApp"
-  | "Otro";
+/** Label shown before the value, e.g. "Correo personal" or "WhatsApp". */
+export type ContactType = string;
 
 export interface ContactItem {
   value: string;
   isVisible?: boolean;
   type: ContactType;
+  kind?: ContactKind;
 }
 
 export interface CVData {
@@ -27,6 +20,7 @@ export interface CVData {
     phone?: string;
     emails?: ContactItem[];
     phones?: ContactItem[];
+    contactLabelStyle?: ContactLabelStyle;
     address?: string;
     city?: string;
     country?: string;
@@ -41,7 +35,10 @@ export interface CVData {
     showSummaryTitle?: boolean;
     showSummaryContent?: boolean;
     profileImage?: string;
-    profileImageStyle?: "round" | "square" | "portrait";
+    profileImageStyle?: "round" | "square" | "portrait" | "oval" | "arch";
+    profileImagePositionX?: number;
+    profileImagePositionY?: number;
+    profileImageBorder?: boolean;
     profileImageSize?: "sm" | "md" | "lg" | "xl";
     showProfileImage?: boolean;
     documentType?: string;
@@ -423,9 +420,18 @@ function getProfileImageClass(personal: CVData["personal"], size: "small" | "med
   const style = personal?.profileImageStyle || "round";
   const scale = personal?.profileImageSize && personal.profileImageSize in PROFILE_IMAGE_SIZES[size] ? personal.profileImageSize : "md";
   const [width, portraitHeight, squareHeight] = PROFILE_IMAGE_SIZES[size][scale];
-  const sizeClass = `${width} ${style === "portrait" ? portraitHeight : squareHeight} shrink-0`;
-  const shapeClass = style === "round" ? "rounded-full" : "rounded-xl";
-  return `${sizeClass} ${shapeClass} object-cover`;
+  // Portrait, oval and arch are taller than wide; round and square are square.
+  const tall = style === "portrait" || style === "oval" || style === "arch";
+  const sizeClass = `${width} ${tall ? portraitHeight : squareHeight} shrink-0`;
+  const shapeClass =
+    style === "round" ? "rounded-full"
+    : style === "oval" ? "rounded-[50%]"
+    : style === "arch" ? "rounded-t-full rounded-b-md"
+    : "rounded-xl";
+  // cv-photo: framing via --cv-photo-x/y (set by CustomStylesWrapper). "!border-0"
+  // overrides each template's own border when the user turns it off.
+  const borderClass = personal?.profileImageBorder === false ? " !border-0" : "";
+  return `${sizeClass} ${shapeClass} object-cover cv-photo${borderClass}`;
 }
 
 function calculateAge(value?: string) {
@@ -638,6 +644,10 @@ function ProgressBar({ percent }: { percent: number }) {
 }
 
 function normalizeContactItems(value: unknown): ContactItem[] {
+  return toContactItems(value).filter((item) => item.value.trim() !== "");
+}
+
+function toContactItems(value: unknown): ContactItem[] {
   if (!value) return [];
   if (Array.isArray(value)) {
     return value.map((item) => {
@@ -648,6 +658,7 @@ function normalizeContactItems(value: unknown): ContactItem[] {
         return {
           value: String(typed.value ?? ""),
           type: (typed.type as ContactType) ?? "Personal",
+          kind: typed.kind as ContactKind | undefined,
         };
       }
       return { value: String(item), type: "Personal" as ContactType };
@@ -655,6 +666,33 @@ function normalizeContactItems(value: unknown): ContactItem[] {
   }
   if (typeof value === "string") return [{ value: value, type: "Personal" }];
   return [];
+}
+
+/** Contact display chosen in the editor; set by TemplateRenderer. */
+const ContactStyleContext = React.createContext<ContactLabelStyle>("label");
+
+function ContactIcon({ item }: { item: ContactItem }) {
+  const isPhone = item.kind === "phone";
+  const isWhatsApp = isPhone && /whatsapp/i.test(item.type);
+  return (
+    <svg className="cv-contact-icon mr-1 inline-block h-[1em] w-[1em] align-[-0.15em]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+      {isWhatsApp ? (
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 21l1.7-4.7A8.5 8.5 0 1 1 8 19.6L3 21zM9 8.5c0 3.5 3 6.5 6.5 6.5l1.5-1.5-2-1-1 1c-1.3-.5-2.5-1.7-3-3l1-1-1-2L9 8.5z" />
+      ) : isPhone ? (
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 0 1 2-2h3.3a1 1 0 0 1 .9.7l1.5 4.5a1 1 0 0 1-.5 1.2l-2.3 1.1a11 11 0 0 0 5.6 5.6l1.1-2.3a1 1 0 0 1 1.2-.5l4.5 1.5a1 1 0 0 1 .7.9V19a2 2 0 0 1-2 2h-1C9.7 21 3 14.3 3 6V5z" />
+      ) : (
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.9 5.3a2 2 0 0 0 2.2 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" />
+      )}
+    </svg>
+  );
+}
+
+/** "Correo personal:", an icon, or nothing, as chosen in the editor. */
+function ContactPrefix({ item, className = "font-semibold" }: { item: ContactItem; className?: string }) {
+  const style = React.useContext(ContactStyleContext);
+  if (style === "none") return null;
+  if (style === "icon") return <ContactIcon item={item} />;
+  return <span className={className}>{item.type}:</span>;
 }
 
 function TemplateMinimal({ data }: { data: CVData }) {
@@ -706,7 +744,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
         <div className="mt-3 space-y-1">
           {emails.map((email, idx) => (
             <div key={`email-${idx}`} className="ats-contact">
-              <span className="font-medium">{email.type}:</span>{" "}
+              <ContactPrefix item={email} className="font-medium" />{" "}
               <a
                 href={`mailto:${email.value}`}
                 className="text-slate-700 ats-email"
@@ -718,7 +756,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
           ))}
           {phones.map((phone, idx) => (
             <div key={`phone-${idx}`} className="ats-contact">
-              <span className="font-medium">{phone.type}:</span>{" "}
+              <ContactPrefix item={phone} className="font-medium" />{" "}
               <a
                 href={`tel:${phone.value}`}
                 className="text-slate-700 ats-phone"
@@ -1023,12 +1061,12 @@ function TemplateCorporate({ data }: { data: CVData }) {
         <div className="text-xs text-slate-500 space-y-1">
           {emails.map((email, idx) => (
             <div key={`email-${idx}`} className="flex items-center gap-1">
-              <span className="font-semibold">{email.type}:</span> {email.value}
+              <ContactPrefix item={email} /> {email.value}
             </div>
           ))}
           {phones.map((phone, idx) => (
             <div key={`phone-${idx}`} className="flex items-center gap-1">
-              <span className="font-semibold">{phone.type}:</span> {phone.value}
+              <ContactPrefix item={phone} /> {phone.value}
             </div>
           ))}
           {personalMetaLines.map((line) => (
@@ -1092,7 +1130,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         ) : null}
       </div>
 
-      {(data.skills?.length || data.languages?.length) && (
+      {Boolean(data.skills?.length || data.languages?.length) && (
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {data.skills?.length ? (
             <div>
@@ -1197,12 +1235,12 @@ function TemplateDeveloper({ data }: { data: CVData }) {
         <div className="space-y-1 text-xs" style={{ color: textMuted }}>
           {emails.map((email, idx) => (
             <div key={`email-${idx}`} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
-              <span className="font-semibold">{email.type}:</span> {email.value}
+              <ContactPrefix item={email} /> {email.value}
             </div>
           ))}
           {phones.map((phone, idx) => (
             <div key={`phone-${idx}`} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
-              <span className="font-semibold">{phone.type}:</span> {phone.value}
+              <ContactPrefix item={phone} /> {phone.value}
             </div>
           ))}
           {personalMetaLines.map((line) => (
@@ -1354,12 +1392,12 @@ function TemplateCreative({ data }: { data: CVData }) {
         <div className="flex flex-wrap gap-2 text-xs" style={{ color: creativeMutedColor }}>
           {emails.map((email, idx) => (
             <span key={`email-${idx}`} className="px-2 py-1 bg-white/10 rounded-full">
-              <span className="font-semibold">{email.type}:</span> {email.value}
+              <ContactPrefix item={email} /> {email.value}
             </span>
           ))}
           {phones.map((phone, idx) => (
             <span key={`phone-${idx}`} className="px-2 py-1 bg-white/10 rounded-full">
-              <span className="font-semibold">{phone.type}:</span> {phone.value}
+              <ContactPrefix item={phone} /> {phone.value}
             </span>
           ))}
           {personalMetaLines.map((line) => (
@@ -1426,7 +1464,7 @@ function TemplateCreative({ data }: { data: CVData }) {
         </section>
       ) : null}
 
-      {(data.skills?.length || data.languages?.length) && (
+      {Boolean(data.skills?.length || data.languages?.length) && (
         <section className="mt-10">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">Habilidades</h2>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -1490,7 +1528,7 @@ function TemplateClassic({ data }: { data: CVData }) {
         <p className="mt-3 text-xs text-slate-500">
           {contacts.map((contact, idx) => (
             <span key={idx}>
-              <span className="font-semibold">{contact.type}:</span> {contact.value}
+              <ContactPrefix item={contact} /> {contact.value}
               {idx < contacts.length - 1 && <span className="mx-2">•</span>}
             </span>
           ))}
@@ -1559,7 +1597,7 @@ function TemplateClassic({ data }: { data: CVData }) {
         </section>
       ) : null}
 
-      {(data.skills?.length || data.languages?.length) && (
+      {Boolean(data.skills?.length || data.languages?.length) && (
         <section className="mt-8">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Habilidades</h2>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -1636,12 +1674,12 @@ function TemplateSidebar({ data }: { data: CVData }) {
             <div className="mt-6 space-y-3 text-sm" style={{ color: mutedColor }}>
               {emails.map((email, idx) => (
                 <div key={`email-${idx}`}>
-                  <span className="font-semibold">{email.type}:</span> {email.value}
+                  <ContactPrefix item={email} /> {email.value}
                 </div>
               ))}
               {phones.map((phone, idx) => (
                 <div key={`phone-${idx}`}>
-                  <span className="font-semibold">{phone.type}:</span> {phone.value}
+                  <ContactPrefix item={phone} /> {phone.value}
                 </div>
               ))}
               {personalMetaLines.map((line) => (
@@ -1727,7 +1765,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             </section>
           ) : null}
 
-          {(data.skills?.length || data.languages?.length) && (
+          {Boolean(data.skills?.length || data.languages?.length) && (
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.skills?.length ? (
                 <div>
@@ -2285,12 +2323,12 @@ function TemplateExtensa({ data }: { data: CVData }) {
         <div className={`${dense ? "mt-3" : "mt-4"} flex flex-wrap gap-2 text-xs`} style={{ color: subtitleColor }}>
           {emails.map((email, idx) => (
             <span key={`email-${idx}`} className="rounded-full px-2 py-1" style={{ backgroundColor: badgeBg }}>
-              <span className="font-semibold">{email.type}:</span> {email.value}
+              <ContactPrefix item={email} /> {email.value}
             </span>
           ))}
           {phones.map((phone, idx) => (
             <span key={`phone-${idx}`} className="rounded-full px-2 py-1" style={{ backgroundColor: badgeBg }}>
-              <span className="font-semibold">{phone.type}:</span> {phone.value}
+              <ContactPrefix item={phone} /> {phone.value}
             </span>
           ))}
           {personalMetaLines.map((line) => (
@@ -2713,6 +2751,21 @@ function dafpLanguageLevel(level?: string): string {
  * official form, built from the regular CV data plus the DAFP-only fields
  * (data.application, keys prefixed "dafp").
  */
+/** Square box of the official form, marked with an X when checked. */
+function CheckBox({ checked }: { checked: boolean }) {
+  return (
+    <span className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px] text-[9px] leading-none">{checked ? "X" : ""}</span>
+  );
+}
+
+const SPANISH_MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+/** "2026-11-20" -> "20 de noviembre de 2026"; anything else is shown as typed. */
+function formatSpanishDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return value.trim();
+  return `${Number(match[3])} de ${SPANISH_MONTHS[Number(match[2]) - 1] ?? ""} de ${match[1]}`;
+}
+
 function TemplateDafp({ data }: { data: CVData }) {
   const app = data.application || {};
   const personal = data.personal || {};
@@ -2727,7 +2780,8 @@ function TemplateDafp({ data }: { data: CVData }) {
   const languages = normalizeLanguages(data.languages).filter((item) => item.name);
   const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
   const hasSplitName = Boolean(value("dafpFirstSurname") || value("dafpGivenNames"));
-  const ineligible = value("dafpIneligible").toLowerCase();
+  const ineligible = value("dafpIneligible").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const signDate = formatSpanishDate(value("dafpSignDate"));
 
   return (
     <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
@@ -2842,12 +2896,20 @@ function TemplateDafp({ data }: { data: CVData }) {
       <Section title="5. Firma del servidor público o contratista">
         <p className="border-x border-b border-slate-300 px-2 py-2 text-[10px] leading-4">
           Manifiesto bajo la gravedad del juramento que{" "}
-          <strong>{ineligible.startsWith("s") ? "SÍ" : ineligible.startsWith("n") ? "NO" : "SÍ ___ NO ___"}</strong>{" "}
+          <span className="whitespace-nowrap font-semibold">
+            SÍ <CheckBox checked={ineligible.startsWith("s")} /> NO <CheckBox checked={ineligible.startsWith("n")} />
+          </span>{" "}
           me encuentro dentro de las causales de inhabilidad e incompatibilidad del orden constitucional o legal para ejercer cargos o empleos públicos o para celebrar contratos de prestación de servicios con la administración pública. Para todos los efectos legales, certifico que los datos por mí anotados en el presente formato único de hoja de vida son veraces (artículo 5.º de la Ley 190 de 1995).
         </p>
         <div className="mt-8 grid grid-cols-2 gap-10 text-[11px]">
-          <div className="border-t border-slate-800 pt-1">{[value("dafpSignPlace"), value("dafpSignDate")].filter(Boolean).join(", ") || "Lugar y fecha de diligenciamiento"}</div>
-          <div className="border-t border-slate-800 pt-1">Firma{documentText ? ` · ${documentText}` : ""}</div>
+          <div>
+            <div className="min-h-[1.25rem] text-[11px]">{[value("dafpSignPlace"), signDate].filter(Boolean).join(", ")}</div>
+            <div className="border-t border-slate-800 pt-1">Lugar y fecha de diligenciamiento</div>
+          </div>
+          <div>
+            <div className="min-h-[1.25rem]" />
+            <div className="border-t border-slate-800 pt-1">Firma{documentText ? ` · ${documentText}` : ""}</div>
+          </div>
         </div>
       </Section>
     </article>
@@ -2959,7 +3021,7 @@ export function TemplateRenderer({ template, data }: Props) {
   const Template = TEMPLATE_COMPONENTS[key];
   const canonical = TEMPLATE_ALIASES[key] ?? key;
   return (
-    <>
+    <ContactStyleContext.Provider value={data.personal?.contactLabelStyle ?? "label"}>
       <Template data={data} />
       {canonical === "employment" || canonical === "dafp" ? null : (
         <SupplementalPersonalSections
@@ -2971,6 +3033,6 @@ export function TemplateRenderer({ template, data }: Props) {
           includeDocument={canonical !== "sidebar"}
         />
       )}
-    </>
+    </ContactStyleContext.Provider>
   );
 }

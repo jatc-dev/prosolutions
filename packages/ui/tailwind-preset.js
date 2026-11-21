@@ -15,9 +15,14 @@ export default {
     extend: {
       colors: {
         brand: tokens.palette.brand,
-        // Neutral = Tailwind's default cool slate; listed explicitly so apps
-        // cannot drift (tokens.json is the reference).
-        slate: Object.fromEntries(Object.entries(tokens.palette.neutral).filter(([step]) => step !== '0')),
+        // Neutral ramp through CSS variables (theme.css): Tailwind's cool slate
+        // in light mode, neutral dark greys (zinc-like) in dark mode, and the
+        // standard slate again inside printed documents (.ui-print).
+        slate: Object.fromEntries(
+          Object.keys(tokens.palette.neutral)
+            .filter((step) => step !== '0')
+            .map((step) => [step, `rgb(var(--ui-slate-${step}) / <alpha-value>)`]),
+        ),
         ui: {
           bg: cssVar('bg'),
           surface: cssVar('surface'),

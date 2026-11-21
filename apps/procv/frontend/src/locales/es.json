@@ -128,7 +128,8 @@
     "identityTitle": "Inicia sesión con tu cuenta de ProSolutions",
     "identitySubtitle": "Acceso seguro a tu CV, postulaciones y perfil profesional",
     "signInWithProIdentity": "Iniciar sesión con ProIdentity",
-    "loginFailed": "Inicio de Sesión Fallido",    "identityError": "No se pudo autenticar con ProIdentity. Por favor, intenta de nuevo.",
+    "loginFailed": "Inicio de Sesión Fallido",
+    "identityError": "No se pudo autenticar con ProIdentity. Por favor, intenta de nuevo.",
     "noToken": "No se recibió ningún token de autenticación.",
     "tokenExchangeFailed": "No se pudo intercambiar el token. Por favor, intenta iniciar sesión de nuevo.",
     "retryLogin": "Intentar Iniciar Sesión de Nuevo",
@@ -261,7 +262,9 @@
     "supportedFormats": "Formatos soportados: .json, .xml",
     "noFileSelected": "Ningún archivo seleccionado",
     "invalidFile": "Formato de archivo inválido",
-    "fileTooLarge": "Archivo demasiado grande"
+    "fileTooLarge": "Archivo demasiado grande",
+    "saveLocalSuccess": "CV guardado en este navegador",
+    "validationBeforeSave": "Revisa los campos marcados antes de guardar."
   },
   "ai": {
     "suggestions": "Ideas de redacción",
@@ -455,7 +458,10 @@
       "skills": "Habilidades",
       "languages": "Idiomas",
       "certificates": "Certificados",
-      "links": "Enlaces"
+      "links": "Enlaces",
+      "errorsTitle": "{{count}} campo(s) por corregir",
+      "errorsSr": "campos por corregir",
+      "reviewPrefix": "Revisa:"
     },
     "actions": {
       "save": "Guardar",
@@ -548,7 +554,9 @@
       "profileImageStyles": {
         "round": "Redonda",
         "square": "Cuadrada",
-        "portrait": "Retrato"
+        "portrait": "Retrato",
+        "oval": "Ovalada",
+        "arch": "Arco"
       },
       "showProfileImage": "Mostrar foto de perfil en la hoja de vida",
       "showBirthDate": "Mostrar fecha de nacimiento en la hoja de vida",
@@ -899,6 +907,61 @@
         "invalidUrl": "Por favor ingresa una URL válida.",
         "duplicateUrl": "Esta URL ya está agregada."
       }
+    },
+    "templateDesign": {
+      "title": "Plantilla y diseño",
+      "hint": "Elige la plantilla y ajusta tipografía, colores y espaciado"
+    },
+    "back": {
+      "toList": "Mis hojas de vida",
+      "toListHint": "Guarda los cambios y vuelve a tus hojas de vida",
+      "toHome": "Inicio",
+      "toHomeHint": "Tu borrador queda guardado en este navegador",
+      "saveFailed": "No se pudieron guardar los últimos cambios. ¿Salir de todos modos?"
+    },
+    "ats": {
+      "title": "Compatibilidad con una vacante",
+      "openButton": "Comparar con vacante",
+      "openHint": "Compara tu hoja de vida con una oferta de empleo (ATS)",
+      "close": "Cerrar",
+      "analyzeAgainstVacancy": "Compara tu hoja de vida con una oferta, como lo hacen los filtros automáticos (ATS)",
+      "helpTitle": "¿Qué es esto y cómo me ayuda?",
+      "helpIntro": "Muchas empresas usan un ATS (sistema de seguimiento de candidatos): un programa que lee las hojas de vida y las compara con la oferta antes de que las vea una persona. Si tu hoja de vida no usa las palabras de la vacante, puede quedar fuera aunque tengas el perfil.",
+      "helpStep1": "Copia la descripción completa de la vacante (funciones y requisitos) y pégala abajo.",
+      "helpStep2": "Pulsa «Analizar». Verás un puntaje de compatibilidad, las palabras clave que te faltan y recomendaciones.",
+      "helpStep3": "Añade las palabras clave que de verdad describen tu experiencia, o usa «Adaptar automáticamente» y revisa la propuesta antes de aplicarla.",
+      "helpNote": "Consejo: adapta tu hoja de vida a cada vacante importante y no agregues habilidades que no tienes.",
+      "jobDescriptionPlaceholder": "Pega aquí la descripción de la vacante (funciones, requisitos, habilidades)…",
+      "analyzing": "Analizando…",
+      "analyzeButton": "Analizar",
+      "tailoring": "Adaptando…",
+      "tailorButton": "Adaptar automáticamente",
+      "applyKeywords": "Añadir palabras clave faltantes",
+      "applyTailoring": "Aplicar adaptación",
+      "scoreComparison": "Cambio en el puntaje",
+      "keywordComparison": "Cambio en palabras clave",
+      "score": "Puntaje ATS",
+      "completeness": "Completitud",
+      "keywords": "Palabras clave",
+      "impact": "Impacto",
+      "missingKeywords": "Palabras clave que faltan",
+      "noMissingKeywords": "¡Excelente! No faltan palabras clave importantes.",
+      "recommendations": "Recomendaciones",
+      "tailoringReady": "Adaptación lista para revisar",
+      "insertedKeywords": "Palabras clave añadidas",
+      "noChanges": "sin cambios",
+      "tailoringSummary": "Resumen propuesto y {{count}} experiencias reescritas.",
+      "history": "Análisis anteriores"
+    },
+    "sectionToggle": {
+      "add": "Agregar",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "hidden": "Oculta",
+      "addAria": "Agregar {{section}} al CV",
+      "showAria": "Volver a mostrar {{section}} en el CV",
+      "hideAria": "Ocultar {{section}} del CV (los datos se conservan)",
+      "hiddenToast": "Sección oculta en la hoja de vida. Tus datos se conservan."
     }
   },
   "admin": {

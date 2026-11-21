@@ -64,6 +64,27 @@
   color: #022c22;
 }
 
+/* Dark editor chrome: the darkest brand text steps become the light brand
+   text, so outline buttons stay readable (dark:text-* loses to the rules above). */
+.dark .cv-editor :is(.text-brand-900, .text-brand-950) {
+  color: var(--cv-brand-text);
+}
+
+/* The CV preview is a printed page: inside it the brand variables keep their
+   light-mode values in every theme, so templates look identical to the PDF. */
+.cv-editor .ui-print {
+  --cv-brand-primary: #047857;
+  --cv-brand-primary-hover: #065f46;
+  --cv-brand-primary-focus: #047857;
+  --cv-brand-secondary: #ecfdf5;
+  --cv-brand-accent: #d1fae5;
+  --cv-brand-border: #a7f3d0;
+  --cv-brand-text: #065f46;
+  --cv-brand-text-light: #047857;
+}
+.dark .cv-editor .ui-print .text-brand-900 { color: #064e3b; }
+.dark .cv-editor .ui-print .text-brand-950 { color: #022c22; }
+
 /* Border colors */
 .cv-editor .border-brand-200 {
   border-color: var(--cv-brand-border);
@@ -255,23 +276,23 @@
    page). Many section cards were styled for light mode only (white cards with
    light labels on dark inputs); this maps them to the dark surface. */
 .dark .cv-editor-panel :is(.bg-white, .bg-slate-50) {
-  background-color: #0f172a;
+  background-color: rgb(var(--ui-slate-900));
 }
 
 .dark .cv-editor-panel :is(.border-slate-200, .border-slate-300) {
-  border-color: #334155;
+  border-color: rgb(var(--ui-slate-700));
 }
 
 .dark .cv-editor-panel :is(.text-slate-900, .text-slate-800, .text-slate-700) {
-  color: #e2e8f0;
+  color: rgb(var(--ui-slate-200));
 }
 
 .dark .cv-editor-panel :is(.text-slate-600, .text-slate-500) {
-  color: #94a3b8;
+  color: rgb(var(--ui-slate-400));
 }
 
 .dark .cv-editor-panel :is(.hover\:bg-slate-50, .hover\:bg-slate-100):hover {
-  background-color: #1e293b;
+  background-color: rgb(var(--ui-slate-800));
 }
 
 .dark .cv-editor .cv-btn-primary,
@@ -290,9 +311,12 @@
     color: var(--color-text);
   }
 
-  /* The CV is always a printed page: headings take the template's text colour,
-     never the app's global (dark-mode) heading colour. */
-  .cv-custom-wrapper :is(h1, h2, h3, h4) {
+  /* The CV is always a printed page: headings without a colour class take the
+     template's text colour, never the app's global (dark-mode) heading colour.
+     Headings that set their own colour (text-slate-*, …) keep it — inheriting
+     there made the sidebar template's main-column titles take the light
+     sidebar text and nearly vanish on white. */
+  .cv-custom-wrapper :is(h1, h2, h3, h4):not([class*="text-slate-"], [class*="text-brand-"], [class*="text-white"]) {
     color: inherit;
   }
 
@@ -427,3 +451,41 @@
       border: 1px solid #e5e7eb;
     }
   }
+
+/* PDF export (html2pdf clone of the preview): the page fills the A4 width
+   instead of being a centred card, so the side margin is the template's own
+   padding. Covers the CV templates, the supplemental block and the letter. */
+.cv-pdf-export .cv-custom-wrapper > * {
+  max-width: none !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Contact icons: keep the icon and its value together (the space between
+   them was a line-break point in narrow columns). inline-flex keeps inline
+   contact rows inline; very long emails can still wrap. */
+.cv-custom-wrapper :has(> .cv-contact-icon) {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+/* Rows laid out side by side (minimal/ATS, corporate) lost the space that
+   separated one contact from the next; stacked rows need no extra margin. */
+.cv-custom-wrapper :is(.ats-contact, .flex):has(> .cv-contact-icon) {
+  margin-inline-end: 0.8em;
+}
+.cv-custom-wrapper :has(> .cv-contact-icon) > .cv-contact-icon {
+  flex-shrink: 0;
+  margin-right: 0;
+  align-self: center;
+}
+
+/* Photo framing chosen in the editor (centred by default). */
+.cv-custom-wrapper .cv-photo {
+  object-position: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}

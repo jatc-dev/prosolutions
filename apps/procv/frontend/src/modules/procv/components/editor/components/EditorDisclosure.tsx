@@ -1,10 +1,12 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 
 interface EditorDisclosureProps {
   storageKey: string;
   title: string;
   description?: string;
   defaultOpen?: boolean;
+  /** Each change of this value folds the section (e.g. once the user starts filling the form). */
+  closeSignal?: number;
   children: ReactNode;
 }
 
@@ -13,6 +15,7 @@ export function EditorDisclosure({
   title,
   description,
   defaultOpen = false,
+  closeSignal,
   children,
 }: EditorDisclosureProps) {
   const [open, setOpen] = useState(() => {
@@ -24,6 +27,13 @@ export function EditorDisclosure({
   useEffect(() => {
     window.localStorage.setItem(storageKey, String(open));
   }, [open, storageKey]);
+
+  const lastSignal = useRef(closeSignal);
+  useEffect(() => {
+    if (closeSignal === lastSignal.current) return;
+    lastSignal.current = closeSignal;
+    setOpen(false);
+  }, [closeSignal]);
 
   const contentId = `${storageKey.replace(/[^a-zA-Z0-9_-]/g, "-")}-content`;
 

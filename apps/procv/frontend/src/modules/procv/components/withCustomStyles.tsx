@@ -38,7 +38,10 @@ export function isCustomColor(key: ColorKey, value?: string): boolean {
  * Applies the user's fonts, colours and spacing (only those they changed) to
  * any CV document: the CV templates and the cover letter.
  */
-export function CustomStylesWrapper({ settings, children }: { settings: unknown; children: React.ReactNode }) {
+/** Keeps a framing percentage within 0–100. */
+const clampPercent = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : null);
+
+export function CustomStylesWrapper({ settings, photo, children }: { settings: unknown; photo?: { x?: number; y?: number }; children: React.ReactNode }) {
   const s: Record<string, string | number | undefined> = (settings as Record<string, string | number | undefined>) || {};
 
   const bodyFont = cvFontFamily(s.fontBody as string | undefined);
@@ -46,7 +49,9 @@ export function CustomStylesWrapper({ settings, children }: { settings: unknown;
   const spacing = typeof s.sectionSpacing === "number" ? s.sectionSpacing : DEFAULT_SECTION_SPACING;
 
   const cssVars: Record<string, string> = {};
-  const classes = ["cv-custom-wrapper"];
+  // ui-print: the CV is a printed page, so it keeps the standard neutral
+  // palette even when the app is in dark mode.
+  const classes = ["cv-custom-wrapper", "ui-print"];
   // Stored font values are keys ("merriweather"), not family names.
   if (bodyFont) {
     cssVars["--font-body"] = bodyFont;
@@ -68,6 +73,10 @@ export function CustomStylesWrapper({ settings, children }: { settings: unknown;
     classes.push("cv-spacing-custom");
   }
   classes.push(s.density === "compact" ? "density-compact" : s.density === "spacious" ? "density-spacious" : "density-balanced");
+  const photoX = clampPercent(photo?.x);
+  const photoY = clampPercent(photo?.y);
+  if (photoX !== null) cssVars["--cv-photo-x"] = `${photoX}%`;
+  if (photoY !== null) cssVars["--cv-photo-y"] = `${photoY}%`;
 
   return (
     <div className={classes.join(" ")} style={cssVars as React.CSSProperties}>
@@ -78,7 +87,7 @@ export function CustomStylesWrapper({ settings, children }: { settings: unknown;
 
 export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
   return (
-    <CustomStylesWrapper settings={data.settings}>
+    <CustomStylesWrapper settings={data.settings} photo={{ x: data.personal?.profileImagePositionX, y: data.personal?.profileImagePositionY }}>
       <TemplateRenderer template={template} data={data} />
     </CustomStylesWrapper>
   );

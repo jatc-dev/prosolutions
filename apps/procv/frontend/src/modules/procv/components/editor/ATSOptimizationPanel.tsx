@@ -91,16 +91,28 @@ export function ATSOptimizationPanel({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{t('editor.ats.title', 'ATS Optimizer')}</h3>
-        <div className="text-xs text-slate-500 dark:text-slate-300">{t('editor.ats.analyzeAgainstVacancy', 'Analiza ajuste contra vacante')}</div>
+      <div className="mb-3">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{t('editor.ats.title', 'Compatibilidad con una vacante')}</h3>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-300">{t('editor.ats.analyzeAgainstVacancy', 'Compara tu hoja de vida con una oferta, como lo hacen los filtros automáticos (ATS)')}</p>
       </div>
+
+      {/* Plain-language help: most people have never heard of an ATS. */}
+      <details className="mb-4 rounded-lg border border-brand-200 bg-brand-50/60 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
+        <summary className="cursor-pointer font-semibold text-brand-900 dark:text-brand-300">{t('editor.ats.helpTitle', '¿Qué es esto y cómo me ayuda?')}</summary>
+        <p className="mt-2">{t('editor.ats.helpIntro', 'Muchas empresas usan un ATS (sistema de seguimiento de candidatos): un programa que lee las hojas de vida y las compara con la oferta antes de que las vea una persona. Si tu hoja de vida no usa las palabras de la vacante, puede quedar fuera aunque tengas el perfil.')}</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>{t('editor.ats.helpStep1', 'Copia la descripción completa de la vacante (funciones y requisitos) y pégala abajo.')}</li>
+          <li>{t('editor.ats.helpStep2', 'Pulsa «Analizar». Verás un puntaje de compatibilidad, las palabras clave que te faltan y recomendaciones.')}</li>
+          <li>{t('editor.ats.helpStep3', 'Añade las palabras clave que de verdad describen tu experiencia, o usa «Adaptar automáticamente» y revisa la propuesta antes de aplicarla.')}</li>
+        </ol>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t('editor.ats.helpNote', 'Consejo: adapta tu hoja de vida a cada vacante importante y no agregues habilidades que no tienes.')}</p>
+      </details>
 
       <div className="grid gap-3 lg:grid-cols-[1fr,auto]">
         <textarea
           value={jobDescription}
           onChange={(event) => onJobDescriptionChange(event.target.value)}
-          placeholder={t('editor.ats.jobDescriptionPlaceholder', 'Pega aqui la descripcion del puesto para analizar keywords y compatibilidad ATS...')}
+          placeholder={t('editor.ats.jobDescriptionPlaceholder', 'Pega aquí la descripción de la vacante (funciones, requisitos, habilidades)…')}
           rows={4}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
@@ -111,7 +123,7 @@ export function ATSOptimizationPanel({
             disabled={loading}
             className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50"
           >
-            {loading ? t('editor.ats.analyzing', 'Analizando...') : t('editor.ats.analyzeButton', 'Analizar ATS')}
+            {loading ? t('editor.ats.analyzing', 'Analizando...') : t('editor.ats.analyzeButton', 'Analizar')}
           </button>
           {onTailor ? (
             <button
@@ -120,7 +132,7 @@ export function ATSOptimizationPanel({
               disabled={tailoringLoading}
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              {tailoringLoading ? t('editor.ats.tailoring', 'Tailoring...') : t('editor.ats.tailorButton', 'Tailoring Automatico')}
+              {tailoringLoading ? t('editor.ats.tailoring', 'Adaptando…') : t('editor.ats.tailorButton', 'Adaptar automáticamente')}
             </button>
           ) : null}
           {result && onApplyMissingKeywords && result.missingKeywords.length > 0 ? (
@@ -129,7 +141,7 @@ export function ATSOptimizationPanel({
               onClick={onApplyMissingKeywords}
               className="rounded-lg border border-brand-400 px-4 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50 dark:border-brand-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
             >
-              {t('editor.ats.applyKeywords', 'Aplicar Keywords')}
+              {t('editor.ats.applyKeywords', 'Añadir palabras clave faltantes')}
             </button>
           ) : null}
           {tailoringResult && onApplyTailoring ? (
@@ -138,7 +150,7 @@ export function ATSOptimizationPanel({
               onClick={onApplyTailoring}
               className="rounded-lg border border-brand-400 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/40"
             >
-              {t('editor.ats.applyTailoring', 'Aplicar Tailoring')}
+              {t('editor.ats.applyTailoring', 'Aplicar adaptación')}
             </button>
           ) : null}
         </div>

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { contactLabel, normalizeContactLabelStyle } from '../../contactLabels';
 import { useTranslation } from 'react-i18next';
 import { useCVEditorStore } from "../../../../shared/stores/cvEditorStore";
 import { useAuthStore } from "../../../../shared/stores/authStore";
@@ -26,7 +28,7 @@ import {
 } from "./ATSOptimizationPanel";
 import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
 import { TemplateSelector } from "./components/TemplateSelector";
-import { BlockPalette, createEmptyItem } from "./components/DraggableBlock";
+import { createEmptyItem } from "./components/DraggableBlock";
 import { CustomizerPanel } from "./components/CustomizerPanel";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { AIPanel } from "./components/AIPanel";
@@ -54,6 +56,10 @@ interface CompleteCVEditorProps {
 }
 
 /** Compact document glyph used by the editor header. */
+/** True when the user hid this section from the CV (+/− under the section tabs). */
+const hiddenIn = (cv: any, section: string): boolean =>
+  Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
+
 function EditorBrandGlyph() {
   return (
     <svg className="w-5 h-5 text-brand-800 dark:text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,14 +259,18 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       role: cvData.personal?.showProfessionalTitle === false ? '' : (cvData.personal?.professionalTitle || ''),
       email: cvData.personal?.emails?.find((e: any) => e.isPrimary && e.isVisible !== false)?.value || '',
       phone: cvData.personal?.phones?.find((p: any) => p.isPrimary && p.isVisible !== false)?.number || '',
-      emails: cvData.personal?.emails?.filter((e: any) => e.isVisible !== false).map((e: any) => ({
-        value: e.value,
-        type: e.type === 'personal' ? 'Personal' : 'Trabajo'
+      // Empty entries are dropped so a label never shows without its value.
+      emails: cvData.personal?.emails?.filter((e: any) => e.isVisible !== false && String(e.value || '').trim()).map((e: any) => ({
+        value: String(e.value).trim(),
+        type: contactLabel('email', e.type),
+        kind: 'email' as const,
       })) || [],
-      phones: cvData.personal?.phones?.filter((p: any) => p.isVisible !== false).map((p: any) => ({
-        value: p.number,
-        type: p.type === 'personal' ? 'Personal' : 'Trabajo'
+      phones: cvData.personal?.phones?.filter((p: any) => p.isVisible !== false && String(p.number || '').trim()).map((p: any) => ({
+        value: String(p.number).trim(),
+        type: contactLabel('phone', p.type),
+        kind: 'phone' as const,
       })) || [],
+      contactLabelStyle: normalizeContactLabelStyle(cvData.personal?.contactLabelStyle),
       address: cvData.personal?.address || '',
       city: cvData.personal?.city || '',
       country: cvData.personal?.country || '',
@@ -281,6 +291,9 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       profileImage: cvData.personal?.profileImage || '',
       profileImageStyle: cvData.personal?.profileImageStyle || 'round',
       profileImageSize: cvData.personal?.profileImageSize || 'md',
+      profileImagePositionX: cvData.personal?.profileImagePositionX,
+      profileImagePositionY: cvData.personal?.profileImagePositionY,
+      profileImageBorder: cvData.personal?.profileImageBorder,
       showProfileImage: cvData.personal?.showProfileImage !== false,
       birthDate: cvData.personal?.birthDate || '',
       showBirthDate: Boolean(cvData.personal?.showBirthDate),
@@ -289,7 +302,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       showCity: cvData.personal?.showCity !== false,
       showCountry: cvData.personal?.showCountry !== false,
     },
-    experience: cvData.experience?.filter((exp: any) => exp.isVisible !== false).map((exp: any) => ({
+    experience: hiddenIn(cvData, 'experience') ? [] : cvData.experience?.filter((exp: any) => exp.isVisible !== false).map((exp: any) => ({
       id: exp.id,
       company: exp.company,
       role: exp.position,
@@ -306,7 +319,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       city: exp.location?.split(',')[0]?.trim() || '',
       country: exp.location?.split(',')[1]?.trim() || '',
     })) || [],
-    education: cvData.education?.filter((edu: any) => edu.isVisible !== false).map((edu: any) => ({
+    education: hiddenIn(cvData, 'education') ? [] : cvData.education?.filter((edu: any) => edu.isVisible !== false).map((edu: any) => ({
       id: edu.id,
       institution: edu.institution,
       degree: edu.degree,
@@ -315,7 +328,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       city: edu.location?.split(',')[0]?.trim() || '',
       country: edu.location?.split(',')[1]?.trim() || '',
     })) || [],
-    skills: cvData.skills?.filter((skill: any) => skill.isVisible !== false).map((skill: any) => ({
+    skills: hiddenIn(cvData, 'skills') ? [] : cvData.skills?.filter((skill: any) => skill.isVisible !== false).map((skill: any) => ({
       id: skill.id,
       name: skill.name,
       level: skill.level === 'beginner' ? 1 :
@@ -323,19 +336,19 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
              skill.level === 'advanced' ? 3 :
              skill.level === 'expert' ? 4 : 0,
     })) || [],
-    languages: cvData.languages?.filter((lang: any) => lang.isVisible !== false).map((lang: any) => ({
+    languages: hiddenIn(cvData, 'languages') ? [] : cvData.languages?.filter((lang: any) => lang.isVisible !== false).map((lang: any) => ({
       id: lang.id,
       name: lang.language,
       level: lang.listeningLevel || 'B1',
       certificateUrl: lang.certification || '',
     })) || [],
-    certificates: cvData.certificates?.filter((cert: any) => cert.isVisible !== false).map((cert: any) => ({
+    certificates: hiddenIn(cvData, 'certificates') ? [] : cvData.certificates?.filter((cert: any) => cert.isVisible !== false).map((cert: any) => ({
       id: cert.id,
       title: cert.title,
       url: cert.verificationUrl || '',
     })) || [],
     application: cvData.application || {},
-    links: cvData.links?.reduce((acc: any, link: any) => {
+    links: (hiddenIn(cvData, 'links') ? [] : cvData.links)?.reduce((acc: any, link: any) => {
       if (link.isVisible) {
         acc[link.label.toLowerCase().replace(/\s+/g, '_')] = link.url;
       }
@@ -456,7 +469,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       try {
         await saveCV();
       } catch {
-        toast.error(t('cv.errorSave'));
+        // saveCV already showed the error (with the server's message).
       }
     }, 30000); // Auto-save every 30 seconds
 
@@ -476,15 +489,41 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     }
   }, [activeSection, validateSection, setActiveSection, t]);
 
+  // Back to the CV list (or home for guests). Signed-in users never lose
+  // pending edits: they are saved first, and a failed save asks before leaving.
+  // A guest draft already lives in this browser (persisted editor store).
+  const navigate = useNavigate();
+  const [isLeaving, setIsLeaving] = useState(false);
+  const handleBack = useCallback(async () => {
+    if (!isAuthenticated) {
+      navigate('/');
+      return;
+    }
+    if (hasUnsavedChanges) {
+      setIsLeaving(true);
+      try {
+        await saveCV();
+      } catch {
+        setIsLeaving(false);
+        if (!window.confirm(t('editor.back.saveFailed', 'No se pudieron guardar los últimos cambios. ¿Salir de todos modos?'))) return;
+      }
+    }
+    navigate('/dashboard');
+  }, [isAuthenticated, hasUnsavedChanges, saveCV, navigate, t]);
+
   // Handle manual save
   const handleSave = useCallback(async () => {
     try {
       await saveCV();
-      toast.success(t('cv.saveSuccess'));
+      // One toast per manual save; errors are reported by saveCV itself.
+      toast.success(isGuest ? t('cv.saveLocalSuccess', 'CV guardado en este navegador') : t('cv.saveSuccess'));
     } catch (error) {
-      toast.error(t('cv.errorSave'));
+      // Server and storage errors were reported by saveCV; validation is not.
+      if (error instanceof Error && error.message === 'VALIDATION_ERROR') {
+        toast.error(t('cv.validationBeforeSave', 'Revisa los campos marcados antes de guardar.'));
+      }
     }
-  }, [saveCV, t]);
+  }, [saveCV, isGuest, t]);
 
   // Handle reset
   const handleReset = useCallback(() => {
@@ -702,19 +741,43 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         return;
       }
 
+      // The preview page is narrower than A4 and centred, which html2pdf turned
+      // into wide side margins. Export a copy that fills the page width; the
+      // template's own padding (~8 mm) is the side margin. Top/bottom keep a
+      // small margin so text never touches the edge after a page break.
+      const exportNode = element.cloneNode(true) as HTMLElement;
+      exportNode.classList.add("cv-pdf-export");
+      // html2canvas ignores object-fit, so cropped photos (portrait, oval,
+      // arch…) came out stretched. Swap each one for a box with a "cover"
+      // background image, which html2canvas crops correctly.
+      const livePhotos = Array.from(element.querySelectorAll("img"));
+      Array.from(exportNode.querySelectorAll("img")).forEach((img, index) => {
+        const live = livePhotos[index];
+        if (!live || getComputedStyle(live).objectFit !== "cover") return;
+        const box = document.createElement("div");
+        box.className = img.className;
+        box.setAttribute("role", "img");
+        box.setAttribute("aria-label", img.alt || "");
+        box.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+        box.style.backgroundSize = "cover";
+        // Same framing as on screen (object-position → background-position).
+        box.style.backgroundPosition = getComputedStyle(live).objectPosition || "center";
+        box.style.backgroundRepeat = "no-repeat";
+        img.replaceWith(box);
+      });
       const options = {
-        margin: 0.12, // ~3 mm on each side
+        margin: [6, 0, 6, 0] as [number, number, number, number], // mm: top, left, bottom, right
         filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
       };
 
       const html2pdf = (await import("html2pdf.js")).default;
 
       html2pdf()
         .set(options)
-        .from(element)
+        .from(exportNode)
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
@@ -779,6 +842,52 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     toast.success(t('editor.block.added', 'Bloque agregado'));
   };
 
+  // +/- under each section tab: add the first item, hide (data kept) or show again.
+  const OPTIONAL_SECTIONS = ['experience', 'education', 'skills', 'languages', 'certificates', 'links'] as const;
+  type OptionalSection = typeof OPTIONAL_SECTIONS[number];
+  const hiddenSections: string[] = Array.isArray(cvData.settings?.hiddenSections) ? cvData.settings.hiddenSections : [];
+  const sectionStatus = Object.fromEntries(OPTIONAL_SECTIONS.map((section) => [section, {
+    count: Array.isArray(cvData[section]) ? cvData[section].length : 0,
+    hidden: hiddenSections.includes(section),
+  }])) as Record<OptionalSection, { count: number; hidden: boolean }>;
+  const handleSectionToggle = (section: SectionType) => {
+    if (!OPTIONAL_SECTIONS.includes(section as OptionalSection)) return;
+    const key = section as OptionalSection;
+    const setHidden = (next: string[]) => updateCvData({ settings: { ...(cvData.settings || {}), hiddenSections: next } });
+    if (sectionStatus[key].hidden) {
+      setHidden(hiddenSections.filter((item) => item !== key));
+    } else if (sectionStatus[key].count === 0) {
+      handleAddBlock(key);
+    } else {
+      setHidden([...hiddenSections, key]);
+      toast(t('editor.sectionToggle.hiddenToast', 'Sección oculta en la hoja de vida. Tus datos se conservan.'));
+    }
+  };
+
+  // Validation errors grouped by section ("experience.0.position" -> experience).
+  // The 1003/DAFP extra fields live inside "personal".
+  const sectionErrorCounts = Object.entries(validationErrors || {}).reduce<Partial<Record<SectionType, number>>>((acc, [field, messages]) => {
+    if (!messages || (Array.isArray(messages) && messages.length === 0)) return acc;
+    const prefix = field.split('.')[0] as SectionType | 'application';
+    const section = (prefix === 'application' ? 'personal' : prefix) as SectionType;
+    acc[section] = (acc[section] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  // "Plantilla y diseño" folds away once the user is filling in the content,
+  // so the form stays short; it can be reopened at any time.
+  const [designCloseSignal, setDesignCloseSignal] = useState(0);
+  const foldDesign = useCallback(() => setDesignCloseSignal((value) => value + 1), []);
+
+  // The ATS match lives in its own dialog (header button), not in the form.
+  const [showAtsDialog, setShowAtsDialog] = useState(false);
+  useEffect(() => {
+    if (!showAtsDialog) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setShowAtsDialog(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showAtsDialog]);
+
   // Render active section
   const renderActiveSection = () => {
     const commonProps = {
@@ -797,10 +906,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 {...commonProps}
               />
               {cvData.template === 'employment' ? (
-                <Format1003Fields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} />
+                <Format1003Fields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} city={cvData.personal?.city} />
               ) : null}
               {cvData.template === 'dafp' ? (
-                <FormatDafpFields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} />
+                <FormatDafpFields data={cvData.application || {}} onChange={(application) => updateCvData({ application })} isLoading={commonProps.isLoading} city={cvData.personal?.city} />
               ) : null}
             </>
           );
@@ -926,15 +1035,35 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={isLeaving}
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
+                title={isAuthenticated ? t('editor.back.toListHint', 'Guarda los cambios y vuelve a tus hojas de vida') : t('editor.back.toHomeHint', 'Tu borrador queda guardado en este navegador')}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                {isLeaving
+                  ? t('dashboard.saving', 'Guardando…')
+                  : isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+              </button>
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={isLeaving}
+                className="flex min-w-0 items-center gap-3 rounded-md text-left focus:outline-none focus:ring-2 focus:ring-brand-700"
+                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
                   <EditorBrandGlyph />
-                </div>
-                <h1 className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                </span>
+                <span className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
                   <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
                   <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
-                </h1>
-              </div>
+                </span>
+              </button>
 
               <AutoSaveIndicator
                 isSaving={isSaving}
@@ -1028,6 +1157,23 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 <span className="hidden sm:inline">{t('editor.actions.reset')}</span>
               </button>
 
+              {docMode === 'cv' ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAtsDialog(true)}
+                  aria-haspopup="dialog"
+                  title={t('editor.ats.openHint', 'Compara tu hoja de vida con una oferta de empleo (ATS)')}
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                >
+                  <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                    <circle cx="12" cy="12" r="5" strokeWidth={2} />
+                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  </svg>
+                  <span className="hidden sm:inline">{t('editor.ats.openButton', 'Comparar con vacante')}</span>
+                </button>
+              ) : null}
+
               <button
                 onClick={handleExportPdf}
                 disabled={isExportingPdf}
@@ -1089,39 +1235,24 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        {docMode === 'cv' ? (
-        <div className="cv-editor-tabs">
-          <EditorTabs
-            activeSection={activeSection}
-            onSectionChange={handleSectionChange}
-            completionStatus={completionStatus}
-          />
-        </div>
-        ) : null}
-
-        {/* Main Content */}
-        <div className="cv-editor-workspace flex" style={{ height: 'calc(100vh - 140px)' }}>
-          {/* Editor Panel */}
-          <div
-            className="cv-editor-panel min-w-0 overflow-y-auto border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
-            style={{ width: showPreview ? `${panelSizes.editor}%` : '100%' }}
-          >
-            <div className="p-4 sm:p-6">
-              <EditorDisclosure
-                storageKey="procv.editor.template-selector"
-                title={t("editor.templateSelector.title", "Selector de plantilla")}
-                description={t("editor.templateSelector.hint", "Selecciona el diseño de tu hoja de vida")}
+        {showAtsDialog ? (
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/60 p-4 sm:p-8" onClick={() => setShowAtsDialog(false)}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('editor.ats.title', 'Compatibilidad con una vacante')}
+              className="relative w-full max-w-3xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowAtsDialog(false)}
+                autoFocus
+                className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                aria-label={t('editor.ats.close', 'Cerrar')}
               >
-                <TemplateSelector
-                  templates={CURATED_CV_TEMPLATES}
-                  currentTemplate={cvData.template}
-                  onTemplateSelect={setTemplate}
-                />
-              </EditorDisclosure>
-              <div className="h-4" />
-              {docMode === 'cv' ? (
-              <EditorDisclosure storageKey="procv.editor.ats" title={t("editor.ats.title", "ATS Optimizer")} description={t("editor.ats.analyzeAgainstVacancy", "Analiza el ajuste contra una vacante")}>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" /></svg>
+              </button>
               <ATSOptimizationPanel
                 jobDescription={jobDescription}
                 onJobDescriptionChange={setJobDescription}
@@ -1136,27 +1267,51 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 history={atsHistory}
                 comparison={atsComparison}
               />
-              </EditorDisclosure>
-              ) : null}
-              <EditorDisclosure storageKey="procv.editor.customizer" title={t("customizer.title", "Personalizar plantilla")} description={t("editor.customizer.hint", "Ajusta tipografía, color y distribución")}>
-                <CustomizerPanel
-                  settings={cvData.settings || {}}
-                  onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
-                />
-              </EditorDisclosure>
+            </div>
+          </div>
+        ) : null}
 
+        {/* Navigation Tabs */}
+        {docMode === 'cv' ? (
+        <div className="cv-editor-tabs">
+          <EditorTabs
+            activeSection={activeSection}
+            onSectionChange={(section) => { foldDesign(); handleSectionChange(section); }}
+            completionStatus={completionStatus}
+            sectionStatus={sectionStatus}
+            onSectionToggle={handleSectionToggle}
+            errorCounts={sectionErrorCounts}
+          />
+        </div>
+        ) : null}
 
-
-              {docMode === 'cv' ? (
+        {/* Main Content */}
+        <div className="cv-editor-workspace flex" style={{ height: 'calc(100vh - 140px)' }}>
+          {/* Editor Panel */}
+          <div
+            className="cv-editor-panel min-w-0 overflow-y-auto border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+            style={{ width: showPreview ? `${panelSizes.editor}%` : '100%' }}
+          >
+            <div className="p-4 sm:p-6">
               <EditorDisclosure
-                storageKey="procv.editor.blocks"
-                title={t('editor.block.paletteToggle', 'Añadir bloque')}
-                description={t('editor.block.paletteDescription', 'Agrega una sección sin perder tu progreso')}
+                storageKey="procv.editor.template-selector"
+                title={t("editor.templateDesign.title", "Plantilla y diseño")}
+                description={t("editor.templateDesign.hint", "Elige la plantilla y ajusta tipografía, colores y espaciado")}
+                closeSignal={designCloseSignal}
               >
-                <BlockPalette onAdd={handleAddBlock} />
+                <TemplateSelector
+                  templates={CURATED_CV_TEMPLATES}
+                  currentTemplate={cvData.template}
+                  onTemplateSelect={setTemplate}
+                />
+                <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-700">
+                  <CustomizerPanel
+                    settings={cvData.settings || {}}
+                    onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
+                  />
+                </div>
               </EditorDisclosure>
-              ) : null}
-
+              <div className="h-4" />
               <div className="mt-4">
                 <button
                   type="button"
@@ -1210,12 +1365,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 description={t("editor.form.description", "Completa cada sección; los cambios se reflejan inmediatamente en la vista previa")}
                 defaultOpen
               >
+              <div onFocusCapture={foldDesign}>
               {/* Validation Summary */}
               <ValidationSummary errors={validationErrors} section={activeSection} />
 
               {/* Active Section Content */}
               <div className="mt-6">
                 {renderActiveSection()}
+              </div>
               </div>
               </EditorDisclosure>
               )}

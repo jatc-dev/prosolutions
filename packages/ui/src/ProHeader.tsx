@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, Briefcase, Building2, Calculator, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
+import { BookOpen, Briefcase, Building2, Calculator, ClipboardList, FileText, Languages, LayoutDashboard, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { APP_URLS, RESOURCE_URLS, isExternalUrl } from "./links.js";
 import { ProSolutionsLogo } from "./ProSolutionsLogo.js";
 import { useTheme } from "./useTheme.js";
@@ -58,19 +58,40 @@ interface ProHeaderProps {
   className?: string;
 }
 
+const controlButton =
+  "inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white";
+
+/** Small caption over the current value, so the control explains itself ("Idioma · ESP"). */
+function ControlLabel({ caption, value }: { caption: string; value: string }) {
+  return (
+    <span className="flex flex-col items-start leading-none">
+      <span className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:block">{caption}</span>
+      <span className="text-xs font-semibold sm:mt-0.5">{value}</span>
+    </span>
+  );
+}
+
 function ThemeToggle({ locale }: { locale: "es" | "en" }) {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
+  const en = locale === "en";
+  const action = isDark ? (en ? "Switch to light mode" : "Cambiar a modo claro") : (en ? "Switch to dark mode" : "Cambiar a modo oscuro");
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
-      aria-label={isDark ? (locale === "en" ? "Switch to light mode" : "Activar modo claro") : (locale === "en" ? "Switch to dark mode" : "Activar modo oscuro")}
-      title={isDark ? (locale === "en" ? "Light mode" : "Modo claro") : (locale === "en" ? "Dark mode" : "Modo oscuro")}
-    >
-      {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+    <button type="button" onClick={toggle} className={controlButton} aria-label={action} title={action}>
+      {isDark ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
+      <ControlLabel caption={en ? "Theme" : "Modo"} value={isDark ? (en ? "Dark" : "Oscuro") : (en ? "Light" : "Claro")} />
+    </button>
+  );
+}
+
+function LanguageToggle({ locale, onChange }: { locale: "es" | "en"; onChange: () => void }) {
+  const en = locale === "en";
+  const action = en ? "Cambiar idioma a español" : "Switch language to English";
+  return (
+    <button type="button" onClick={onChange} className={controlButton} aria-label={action} title={action} lang={en ? "es" : "en"}>
+      <Languages className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+      <ControlLabel caption={en ? "Language" : "Idioma"} value={en ? "ENG" : "ESP"} />
     </button>
   );
 }
@@ -225,17 +246,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               </details>
             ) : null}
 
-            {onLocaleChange ? (
-              <button
-                type="button"
-                onClick={onLocaleChange}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                aria-label={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
-                title={locale === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés"}
-              >
-                {locale === "es" ? "EN" : "ES"}
-              </button>
-            ) : null}
+            {onLocaleChange ? <LanguageToggle locale={locale} onChange={onLocaleChange} /> : null}
 
             <div className="hidden xl:block">
               <ThemeToggle locale={locale} />
@@ -289,7 +300,7 @@ export function ProHeader({ activeApp, actions, className, locale = "es", onLoca
               ) : null}
 
               <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-700">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{locale === "en" ? "Theme" : "Tema"}</span>
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{locale === "en" ? "Appearance" : "Apariencia"}</span>
                 <ThemeToggle locale={locale} />
               </div>
 

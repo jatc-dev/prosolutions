@@ -1,6 +1,6 @@
 # ProCV — Protocolo de calidad de paginación PDF
 
-**Documento de evidencia histórica.** Alcance inicial: 9 plantillas de CV. Fecha de la primera ejecución registrada: 2026-03-16.
+**Documento de evidencia histórica.** Desde el 2026-11-20 el backend ya no genera PDF (se eliminaron Puppeteer, la ruta `GET /api/cvs/:id/pdf` y los scripts `pdf:smoke` / `pdf:audit`); el PDF y el Word se generan en el navegador desde el editor. Alcance inicial: 9 plantillas de CV. Fecha de la primera ejecución registrada: 2026-03-16.
 
 ## Ejecución reproducible
 

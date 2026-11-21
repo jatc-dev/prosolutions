@@ -1,10 +1,23 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { SectionType } from "../../../../shared/types";
+
+export interface SectionStatus {
+  /** Items in the section (0 = empty). */
+  count: number;
+  /** Section hidden from the CV (its data is kept). */
+  hidden: boolean;
+}
 
 interface EditorTabsProps {
   activeSection: SectionType;
   onSectionChange: (section: SectionType) => void;
   completionStatus: Record<SectionType, boolean>;
+  /** Enables the +/− control under each optional section. */
+  sectionStatus?: Partial<Record<SectionType, SectionStatus>>;
+  onSectionToggle?: (section: SectionType) => void;
+  /** Validation errors per section, shown on its tab and under the progress bar. */
+  errorCounts?: Partial<Record<SectionType, number>>;
 }
 
 const sections: { id: SectionType; label: string; icon: string; description: string }[] = [
@@ -66,11 +79,52 @@ const getIconPath = (iconName: string) => {
   return icons[iconName] || icons.user;
 };
 
+/**
+ * "+ Agregar" (empty section), "− Ocultar" (section with data) or "+ Mostrar"
+ * (hidden section). Hiding never deletes data. Personal info is always shown.
+ */
+function SectionToggle({ section, status, onToggle }: { section: { id: SectionType; label: string }; status?: SectionStatus; onToggle?: (section: SectionType) => void }) {
+  const { t } = useTranslation();
+  if (!onToggle || !status || section.id === 'personal') return null;
+  const name = section.label.toLowerCase();
+  const mode = status.hidden ? 'show' : status.count === 0 ? 'add' : 'hide';
+  const label = mode === 'hide' ? t('editor.sectionToggle.hide', 'Ocultar') : mode === 'show' ? t('editor.sectionToggle.show', 'Mostrar') : t('editor.sectionToggle.add', 'Agregar');
+  const aria = mode === 'hide'
+    ? t('editor.sectionToggle.hideAria', { section: name, defaultValue: `Ocultar ${name} del CV (los datos se conservan)` })
+    : mode === 'show'
+      ? t('editor.sectionToggle.showAria', { section: name, defaultValue: `Volver a mostrar ${name} en el CV` })
+      : t('editor.sectionToggle.addAria', { section: name, defaultValue: `Agregar ${name} al CV` });
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(section.id)}
+      aria-label={aria}
+      title={aria}
+      className={`-mt-2 mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${
+        mode === 'hide'
+          ? 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+          : 'border-brand-300 text-brand-800 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-950/40'
+      }`}
+    >
+      <span aria-hidden="true" className="text-sm leading-none">{mode === 'hide' ? '−' : '+'}</span>
+      {label}
+    </button>
+  );
+}
+
 export const EditorTabs: React.FC<EditorTabsProps> = ({
   activeSection,
   onSectionChange,
   completionStatus,
+  sectionStatus,
+  onSectionToggle,
+  errorCounts,
 }) => {
+  const { t } = useTranslation();
+  const withErrors = sections.filter((section) => (errorCounts?.[section.id] ?? 0) > 0);
+  // Hidden sections leave the CV, so they do not count towards its progress.
+  const counted = sections.filter((section) => !sectionStatus?.[section.id]?.hidden);
+  const completed = counted.filter((section) => completionStatus[section.id]).length;
   return (
     <div className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,12 +132,15 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
           {sections.map((section) => {
             const isActive = activeSection === section.id;
             const isCompleted = completionStatus[section.id];
+            const isHidden = Boolean(sectionStatus?.[section.id]?.hidden);
+            const errorCount = errorCounts?.[section.id] ?? 0;
 
             return (
+              <div key={section.id} className="flex shrink-0 flex-col items-center">
               <button
-                key={section.id}
                 onClick={() => onSectionChange(section.id)}
-                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                aria-describedby={errorCount ? `tab-errors-${section.id}` : undefined}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${isHidden ? 'opacity-60 ' : ''}${errorCount ? 'text-red-700 dark:text-red-400 ' : ''}${
                   isActive
                     ? 'border-brand-700 text-brand-800 dark:text-brand-300'
                     : 'border-transparent text-slate-500 hover:text-brand-800 hover:border-brand-300 dark:text-slate-400 dark:hover:text-brand-300 dark:hover:border-brand-800/50'
@@ -129,7 +186,14 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                   </div>
 
                   {/* Section label */}
-                  <span>{section.label}</span>
+                  <span className={isHidden ? 'line-through' : undefined}>{section.label}</span>
+                  {errorCount ? (
+                    <span id={`tab-errors-${section.id}`} title={t('editor.tabs.errorsTitle', { count: errorCount, defaultValue: `${errorCount} campo(s) por corregir` })} className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white">
+                      {errorCount}
+                      <span className="sr-only"> {t('editor.tabs.errorsSr', 'campos por corregir')}</span>
+                    </span>
+                  ) : null}
+                  {isHidden ? <span className="rounded bg-slate-100 px-1 text-[10px] font-semibold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">{t('editor.sectionToggle.hidden', 'Oculta')}</span> : null}
 
                   {/* Progress indicator for mobile */}
                   <div className="md:hidden">
@@ -146,6 +210,8 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                   {section.description}
                 </div>
               </button>
+              <SectionToggle section={section} status={sectionStatus?.[section.id]} onToggle={onSectionToggle} />
+              </div>
             );
           })}
         </nav>
@@ -156,16 +222,29 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
             <div
               className="bg-brand-800 h-2 rounded-full transition-all duration-300 ease-out"
               style={{
-                width: `${(Object.values(completionStatus).filter(Boolean).length / sections.length) * 100}%`,
+                width: `${counted.length ? (completed / counted.length) * 100 : 0}%`,
               }}
             ></div>
           </div>
           <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
             <span>Progreso del CV</span>
             <span>
-              {Object.values(completionStatus).filter(Boolean).length} de {sections.length} secciones completadas
+              {completed} de {counted.length} secciones completadas
             </span>
           </div>
+          {withErrors.length ? (
+            <p role="status" className="mt-2 text-xs font-medium text-red-700 dark:text-red-400">
+              {t('editor.tabs.reviewPrefix', 'Revisa:')}{' '}
+              {withErrors.map((section, index) => (
+                <React.Fragment key={section.id}>
+                  {index ? ', ' : ''}
+                  <button type="button" onClick={() => onSectionChange(section.id)} className="underline underline-offset-2 hover:no-underline">
+                    {section.label} ({errorCounts?.[section.id]})
+                  </button>
+                </React.Fragment>
+              ))}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
