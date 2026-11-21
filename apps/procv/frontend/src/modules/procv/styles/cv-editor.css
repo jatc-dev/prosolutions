@@ -311,9 +311,12 @@
     color: var(--color-text);
   }
 
-  /* The CV is always a printed page: headings take the template's text colour,
-     never the app's global (dark-mode) heading colour. */
-  .cv-custom-wrapper :is(h1, h2, h3, h4) {
+  /* The CV is always a printed page: headings without a colour class take the
+     template's text colour, never the app's global (dark-mode) heading colour.
+     Headings that set their own colour (text-slate-*, …) keep it — inheriting
+     there made the sidebar template's main-column titles take the light
+     sidebar text and nearly vanish on white. */
+  .cv-custom-wrapper :is(h1, h2, h3, h4):not([class*="text-slate-"], [class*="text-brand-"], [class*="text-white"]) {
     color: inherit;
   }
 
@@ -459,4 +462,25 @@
   margin-right: 0 !important;
   border-width: 0 !important;
   box-shadow: none !important;
+}
+
+/* Contact icons: keep the icon and its value together (the space between
+   them was a line-break point in narrow columns). inline-flex keeps inline
+   contact rows inline; very long emails can still wrap. */
+.cv-custom-wrapper :has(> .cv-contact-icon) {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+/* Rows laid out side by side (minimal/ATS, corporate) lost the space that
+   separated one contact from the next; stacked rows need no extra margin. */
+.cv-custom-wrapper :is(.ats-contact, .flex):has(> .cv-contact-icon) {
+  margin-inline-end: 0.8em;
+}
+.cv-custom-wrapper :has(> .cv-contact-icon) > .cv-contact-icon {
+  flex-shrink: 0;
+  margin-right: 0;
+  align-self: center;
 }

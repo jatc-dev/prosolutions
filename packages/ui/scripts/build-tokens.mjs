@@ -56,15 +56,6 @@ ${slateVars(tokens.palette.neutralDark)}
 ${slateVars(tokens.palette.neutral)}
 }
 
-/* Dark theme signature: a faint brand glow behind the app, never on content. */
-.dark body,
-[data-theme="dark"] body {
-  background-image:
-    radial-gradient(1100px 520px at 12% -8%, rgba(16, 185, 129, 0.09), transparent 62%),
-    radial-gradient(900px 480px at 100% 0%, rgba(5, 150, 105, 0.06), transparent 58%);
-  background-attachment: fixed;
-}
-
 html {
   font-family: var(--ui-font-sans);
   font-feature-settings: "cv11", "ss01";

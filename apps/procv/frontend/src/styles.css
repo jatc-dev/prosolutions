@@ -37,11 +37,11 @@
 }
 
 .dark, [data-theme="dark"] {
-  /* Module tokens: ProCV (dark) — forest ramp, see packages/ui tokens.json */
-  --module-procv-bg: #0a1411;
-  --module-procv-surface: #121f1a;
-  --module-procv-border: #22362e;
-  --module-procv-text: #eef5f1;
+  /* Module tokens: ProCV (dark) — neutral dark greys, see packages/ui tokens.json */
+  --module-procv-bg: #0c0c0e;
+  --module-procv-surface: #18181b;
+  --module-procv-border: #2a2a2f;
+  --module-procv-text: #f4f4f5;
   --ui-procv-accent: #34d399;
   --ui-procv-accent-hover: #6ee7b7;
   --ui-procv-accent-soft: #153b2e;
@@ -49,10 +49,10 @@
   --ui-procv-gradient: linear-gradient(135deg, #34d399 0%, #047857 100%);
 
   /* Module tokens: ProJobs (dark) */
-  --module-projobs-bg: #0a1411;
-  --module-projobs-surface: #121f1a;
-  --module-projobs-border: #22362e;
-  --module-projobs-text: #eef5f1;
+  --module-projobs-bg: #0c0c0e;
+  --module-projobs-surface: #18181b;
+  --module-projobs-border: #2a2a2f;
+  --module-projobs-text: #f4f4f5;
   --ui-projobs-accent: #34d399;
   --ui-projobs-accent-hover: #6ee7b7;
   --ui-projobs-accent-soft: #153b2e;

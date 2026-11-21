@@ -3,6 +3,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { contactLabel, normalizeContactLabelStyle } from '../../contactLabels';
 import { useTranslation } from 'react-i18next';
 import { useCVEditorStore } from "../../../../shared/stores/cvEditorStore";
 import { useAuthStore } from "../../../../shared/stores/authStore";
@@ -254,14 +255,18 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       role: cvData.personal?.showProfessionalTitle === false ? '' : (cvData.personal?.professionalTitle || ''),
       email: cvData.personal?.emails?.find((e: any) => e.isPrimary && e.isVisible !== false)?.value || '',
       phone: cvData.personal?.phones?.find((p: any) => p.isPrimary && p.isVisible !== false)?.number || '',
-      emails: cvData.personal?.emails?.filter((e: any) => e.isVisible !== false).map((e: any) => ({
-        value: e.value,
-        type: e.type === 'personal' ? 'Personal' : 'Trabajo'
+      // Empty entries are dropped so a label never shows without its value.
+      emails: cvData.personal?.emails?.filter((e: any) => e.isVisible !== false && String(e.value || '').trim()).map((e: any) => ({
+        value: String(e.value).trim(),
+        type: contactLabel('email', e.type),
+        kind: 'email' as const,
       })) || [],
-      phones: cvData.personal?.phones?.filter((p: any) => p.isVisible !== false).map((p: any) => ({
-        value: p.number,
-        type: p.type === 'personal' ? 'Personal' : 'Trabajo'
+      phones: cvData.personal?.phones?.filter((p: any) => p.isVisible !== false && String(p.number || '').trim()).map((p: any) => ({
+        value: String(p.number).trim(),
+        type: contactLabel('phone', p.type),
+        kind: 'phone' as const,
       })) || [],
+      contactLabelStyle: normalizeContactLabelStyle(cvData.personal?.contactLabelStyle),
       address: cvData.personal?.address || '',
       city: cvData.personal?.city || '',
       country: cvData.personal?.country || '',

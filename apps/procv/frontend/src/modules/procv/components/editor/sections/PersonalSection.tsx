@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { CONTACT_LABEL_STYLES, normalizeContactLabelStyle } from '../../../contactLabels';
 import { useTranslation } from 'react-i18next';
 import { CountrySelect } from "../../../../../components/ui/CountrySelect";
 import toast from 'react-hot-toast';
@@ -539,6 +540,26 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <h4 className="text-md font-medium text-slate-900 border-b border-slate-200 pb-2">
           {t('editor.personal.contactInfo')}
         </h4>
+
+        <FormField label="Cómo mostrar correos y teléfonos" help={CONTACT_LABEL_STYLES.find((option) => option.value === normalizeContactLabelStyle(data.contactLabelStyle))?.hint}>
+          <div role="radiogroup" aria-label="Cómo mostrar correos y teléfonos" className="grid grid-cols-3 gap-2">
+            {CONTACT_LABEL_STYLES.map((option) => {
+              const selected = normalizeContactLabelStyle(data.contactLabelStyle) === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => updateField('contactLabelStyle', option.value)}
+                  className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${selected ? 'border-brand-700 bg-brand-50 font-semibold text-slate-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200'}`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </FormField>
 
         {/* Emails */}
         <div className="space-y-4">

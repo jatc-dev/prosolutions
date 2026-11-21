@@ -16,7 +16,7 @@ export default {
       colors: {
         brand: tokens.palette.brand,
         // Neutral ramp through CSS variables (theme.css): Tailwind's cool slate
-        // in light mode, the brand-tinted "forest" ramp in dark mode, and the
+        // in light mode, neutral dark greys (zinc-like) in dark mode, and the
         // standard slate again inside printed documents (.ui-print).
         slate: Object.fromEntries(
           Object.keys(tokens.palette.neutral)

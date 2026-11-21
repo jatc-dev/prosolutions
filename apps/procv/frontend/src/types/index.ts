@@ -76,6 +76,8 @@ export interface PersonalData {
   showFullName?: boolean;
   showProfessionalTitle?: boolean;
   showNationality?: boolean;
+  /** How emails and phones are introduced in the templates (default: label). */
+  contactLabelStyle?: 'label' | 'icon' | 'none';
   showDocumentType?: boolean;
   showDocumentNumber?: boolean;
   sidebarIntroMode?: 'valueProposition' | 'summary' | 'none';

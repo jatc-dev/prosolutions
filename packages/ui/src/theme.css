@@ -49,16 +49,16 @@
 .dark,
 [data-theme="dark"] {
   color-scheme: dark;
-  --ui-bg: #0a1411;
-  --ui-surface: #121f1a;
-  --ui-surface-soft: #0e1915;
-  --ui-surface-raised: #18291f;
-  --ui-surface-floating: #1c2c26;
-  --ui-border: #22362e;
-  --ui-border-strong: #506a5f;
-  --ui-text: #eef5f1;
-  --ui-text-muted: #c4d4cc;
-  --ui-text-subtle: #8fa89c;
+  --ui-bg: #0c0c0e;
+  --ui-surface: #18181b;
+  --ui-surface-soft: #131316;
+  --ui-surface-raised: #1f1f23;
+  --ui-surface-floating: #232328;
+  --ui-border: #2a2a2f;
+  --ui-border-strong: #52525b;
+  --ui-text: #f4f4f5;
+  --ui-text-muted: #d4d4d8;
+  --ui-text-subtle: #a1a1aa;
   --ui-accent: #34d399;
   --ui-accent-hover: #6ee7b7;
   --ui-accent-soft: rgba(52, 211, 153, 0.14);
@@ -69,19 +69,19 @@
   --ui-danger: #f87171;
   --ui-info: #38bdf8;
   --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --ui-shadow-md: 0 0 0 1px rgba(110, 231, 183, 0.06), 0 4px 14px -2px rgba(0, 0, 0, 0.55);
-  --ui-shadow-floating: 0 0 0 1px rgba(110, 231, 183, 0.09), 0 18px 44px -8px rgba(0, 0, 0, 0.65);
-  --ui-slate-50: 241 246 243;
-  --ui-slate-100: 227 236 231;
-  --ui-slate-200: 201 216 208;
-  --ui-slate-300: 168 189 179;
-  --ui-slate-400: 127 151 140;
-  --ui-slate-500: 92 115 104;
-  --ui-slate-600: 65 87 77;
-  --ui-slate-700: 44 64 56;
-  --ui-slate-800: 28 44 38;
-  --ui-slate-900: 18 31 26;
-  --ui-slate-950: 10 20 17;
+  --ui-shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 14px -2px rgba(0, 0, 0, 0.55);
+  --ui-shadow-floating: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 18px 44px -8px rgba(0, 0, 0, 0.65);
+  --ui-slate-50: 250 250 250;
+  --ui-slate-100: 244 244 245;
+  --ui-slate-200: 228 228 231;
+  --ui-slate-300: 212 212 216;
+  --ui-slate-400: 161 161 170;
+  --ui-slate-500: 113 113 122;
+  --ui-slate-600: 82 82 91;
+  --ui-slate-700: 63 63 70;
+  --ui-slate-800: 39 39 42;
+  --ui-slate-900: 24 24 27;
+  --ui-slate-950: 12 12 14;
 }
 
 /* Printed documents (CV templates, cover letters, PDF export) keep the
@@ -98,15 +98,6 @@
   --ui-slate-800: 30 41 59;
   --ui-slate-900: 15 23 42;
   --ui-slate-950: 2 6 23;
-}
-
-/* Dark theme signature: a faint brand glow behind the app, never on content. */
-.dark body,
-[data-theme="dark"] body {
-  background-image:
-    radial-gradient(1100px 520px at 12% -8%, rgba(16, 185, 129, 0.09), transparent 62%),
-    radial-gradient(900px 480px at 100% 0%, rgba(5, 150, 105, 0.06), transparent 58%);
-  background-attachment: fixed;
 }
 
 html {
