@@ -25,7 +25,7 @@ export function JobPage() {
     const restoreSeo = applyJobSeo(data?.job ?? null, WEB_URL);
     return () => {
       restoreSeo();
-      document.title = "ProJobs — Empleos y postulación en un clic | ProSolutions";
+      document.title = "ProJobs — Busca empleo en todos los sectores | ProSolutions";
     };
   }, [data]);
 
