@@ -816,7 +816,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-3 space-y-4">
             {data.experience.map((item, index) => (
-              <div
+              <div data-cv-item
                 key={item.id}
                 className="ats-experience-item"
                 itemProp="hasOccupation"
@@ -871,7 +871,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
           <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-3 space-y-4">
             {data.education.map((item) => (
-              <div
+              <div data-cv-item
                 key={item.id}
                 className="ats-education-item"
                 itemScope
@@ -927,7 +927,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                 <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "skills")}</h2>
                 <div className="mt-3 space-y-2">
                   {skills.map((skill) => (
-                    <div key={skill.id} className="ats-skill-item">
+                    <div key={skill.id} data-cv-item className="ats-skill-item">
                       <span className="text-sm font-medium text-slate-700 ats-skill-name">
                         {skill.name}
                       </span>
@@ -950,7 +950,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                   <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "languages")}</h2>
                   <div className="mt-3 space-y-2">
                     {languages.map((lang) => (
-                      <div key={lang.id} className="ats-language-item">
+                      <div key={lang.id} data-cv-item className="ats-language-item">
                         <span className="text-sm font-medium text-slate-700 ats-language-name">
                           {lang.name}
                         </span>
@@ -979,7 +979,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                   <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "certificates")}</h2>
                   <div className="mt-3 space-y-3">
                     {certificates.map((cert) => (
-                      <div key={cert.id} className="ats-certificate-item">
+                      <div key={cert.id} data-cv-item className="ats-certificate-item">
                         <h3 className="text-sm font-semibold text-slate-800 ats-certificate-title">
                           {cert.title}
                         </h3>
@@ -1098,7 +1098,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
-                <div key={item.id} className="">
+                <div key={item.id} data-cv-item className="">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{item.role || "Rol"}</p>
@@ -1118,7 +1118,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "education")}</h2>
             <div className="mt-3 space-y-4">
               {data.education.map((item) => (
-                <div key={item.id} className="">
+                <div key={item.id} data-cv-item className="">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1167,7 +1167,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-2 space-y-2 text-sm text-slate-700">
             {certificates.map((cert) => (
-              <div key={cert.id}>
+              <div key={cert.id} data-cv-item>
                 <p className="font-semibold">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1274,7 +1274,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id} className="bg-slate-900 p-4 rounded-lg">
+              <div key={item.id} data-cv-item className="bg-slate-900 p-4 rounded-lg">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{item.role || "Rol"}</p>
@@ -1322,7 +1322,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
+              <div key={cert.id} data-cv-item className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-400">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1433,7 +1433,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id} className="bg-white/10 p-4 rounded-xl">
+              <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{item.role || "Rol"}</p>
@@ -1453,7 +1453,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
-              <div key={item.id} className="bg-white/10 p-4 rounded-xl">
+              <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1490,7 +1490,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id} className="rounded-xl bg-white/10 px-3 py-2">
+              <div key={cert.id} data-cv-item className="rounded-xl bg-white/10 px-3 py-2">
                 <p className="text-sm font-semibold text-white">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-200">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1572,7 +1572,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id}>
+              <div key={item.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
                     <p className="text-xs text-slate-500">
                       {item.company || "Empresa"}
@@ -1591,7 +1591,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
-              <div key={item.id}>
+              <div key={item.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                 <p className="text-xs text-slate-500">{item.institution || "Institución"} • {formatRange(item.from, item.to)}</p>
               </div>
@@ -1623,7 +1623,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id}>
+              <div key={cert.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1731,7 +1731,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
               <div className="mt-3 space-y-4">
                 {data.experience.map((item) => (
-                  <div key={item.id} className="">
+                  <div key={item.id} data-cv-item className="">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{item.role || "Rol"}</p>
@@ -1754,7 +1754,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
               <div className="mt-3 space-y-4">
                 {data.education.map((item) => (
-                  <div key={item.id} className="">
+                  <div key={item.id} data-cv-item className="">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1802,7 +1802,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-2">
                 {certificates.map((cert) => (
-                  <div key={cert.id}>
+                  <div key={cert.id} data-cv-item>
                     <p className="text-sm font-semibold text-slate-800">{cert.title}</p>
                     {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                     {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1838,7 +1838,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
           {(personal.showReferences !== false && (personal.references || []).some((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship))) || personal.referencesAvailableOnRequest ? (
             <section className="mt-8 border-t border-slate-200 pt-5">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h3>
-              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
+              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} data-cv-item className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
               {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
             </section>
           ) : null}
@@ -1902,7 +1902,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
             <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
-                <div key={item.id} className="border-l-2 border-slate-300 pl-4 py-0.5">
+                <div key={item.id} data-cv-item className="border-l-2 border-slate-300 pl-4 py-0.5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
@@ -1926,7 +1926,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
               <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className="mt-3 space-y-3">
                 {data.education.map((item) => (
-                  <div key={item.id}>
+                  <div key={item.id} data-cv-item>
                     <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                     <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                     <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -1968,7 +1968,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className="mt-2 space-y-2 text-xs text-slate-700">
                   {certificates.map((cert) => (
-                    <div key={cert.id}>
+                    <div key={cert.id} data-cv-item>
                       <p className="font-semibold text-slate-800">{cert.title}</p>
                       {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                       {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2052,7 +2052,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
           <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-5">
             {data.experience.map((item, index) => (
-              <div key={item.id} className="relative pl-6">
+              <div key={item.id} data-cv-item className="relative pl-6">
                 <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-brand-700" />
                 {index < data.experience!.length - 1 ? (
                   <span className="absolute left-[4px] top-5 bottom-[-22px] w-px bg-slate-200" />
@@ -2078,7 +2078,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-3 space-y-3">
               {data.education.map((item) => (
-                <div key={item.id}>
+                <div key={item.id} data-cv-item>
                   <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                   <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                   <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -2093,7 +2093,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
             <div className="mt-3 space-y-2">
               {data.skills.map((skill) => (
-                <div key={skill.id}>
+                <div key={skill.id} data-cv-item>
                   <div className="flex justify-between text-xs text-slate-700 mb-1">
                     <span>{skill.name}</span>
                     <span>{Math.round(skillLevelPercent(skill.level))}%</span>
@@ -2110,7 +2110,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
             <div className="mt-3 space-y-2 text-xs text-slate-700">
               {certificates.map((cert) => (
-                <div key={cert.id}>
+                <div key={cert.id} data-cv-item>
                   <p className="font-semibold text-slate-800">{cert.title}</p>
                   {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                   {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2184,7 +2184,7 @@ function TemplateCompact({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-2 space-y-3">
             {data.experience.map((item) => (
-              <div key={item.id} className="text-sm">
+              <div key={item.id} data-cv-item className="text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-semibold text-slate-900">{item.role || "Rol"}</p>
                   <p className="text-xs text-slate-500 whitespace-nowrap">{formatRange(item.from, item.to)}</p>
@@ -2203,7 +2203,7 @@ function TemplateCompact({ data }: { data: CVData }) {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-2 space-y-2 text-sm">
               {data.education.map((item) => (
-                <div key={item.id}>
+                <div key={item.id} data-cv-item>
                   <p className="font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                   <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                 </div>
@@ -2244,7 +2244,7 @@ function TemplateCompact({ data }: { data: CVData }) {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-1 text-xs text-slate-700">
                 {certificates.map((cert) => (
-                  <div key={cert.id}>
+                  <div key={cert.id} data-cv-item>
                     <p className="font-semibold text-slate-800">{cert.title}</p>
                     {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                     {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2361,7 +2361,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
             <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className={`${dense ? "mt-2 space-y-3" : "mt-3 space-y-4"}`}>
               {data.experience.map((item) => (
-                <div key={item.id} className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
+                <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
@@ -2385,7 +2385,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
               <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className={`${dense ? "mt-2 space-y-2" : "mt-3 space-y-3"}`}>
                 {data.education.map((item) => (
-                  <div key={item.id} className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
+                  <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
                     <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                     <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                     <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -2401,7 +2401,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {skills.map((skill) => (
-                    <div key={skill.id}>
+                    <div key={skill.id} data-cv-item>
                       <div className="mb-1 flex justify-between text-xs text-slate-700">
                         <span>{skill.name}</span>
                         <span>{Math.round(skillLevelPercent(skill.level))}%</span>
@@ -2418,7 +2418,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {languages.map((lang) => (
-                    <div key={lang.id} className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
+                    <div key={lang.id} data-cv-item className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
                       <span className="font-semibold">{lang.name}</span>
                       {lang.level ? <span className="ml-2">• {lang.level.toUpperCase()}</span> : null}
                       {lang.certificateUrl ? (
@@ -2437,7 +2437,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"} text-xs text-slate-700`}>
                   {certificates.map((cert) => (
-                    <div key={cert.id} className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
+                    <div key={cert.id} data-cv-item className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
                       <p className="font-semibold text-slate-800">{cert.title}</p>
                       {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                       {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2609,7 +2609,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
         <Section title="III. Experiencia laboral">
           {experience.length
             ? experience.map((item, index) => (
-                <div key={item.id} className="break-inside-avoid border-x border-b border-slate-300">
+                <div key={item.id} data-cv-item className="break-inside-avoid border-x border-b border-slate-300">
                   <div className="flex flex-wrap items-baseline justify-between gap-2 bg-slate-50 px-2 py-1 text-[11px]">
                     <span className="font-bold">{index + 1}. {item.company}</span>
                     <span className="text-slate-600">
@@ -2973,7 +2973,7 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
               const show = (field: string) => !hidden.includes(field);
               const details = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean);
               return (
-                <div key={reference.id} className="min-w-0 text-sm">
+                <div key={reference.id} data-cv-item className="min-w-0 text-sm">
                   {show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}
                   {details.length ? <p className={`text-xs ${meta}`}>{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {details.join(" · ")}</p> : null}
                   {show("phone") && reference.phone ? <p className={`text-xs ${meta}`}>{reference.phone}</p> : null}

@@ -348,6 +348,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       description={t('editor.personal.description')}
       errors={errors}
       isLoading={isLoading}
+      grouped
     >
       {/* Profile Image */}
       <FormField
@@ -513,6 +514,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label={tx('editor.ui.showTitle', 'Mostrar título profesional')} />
       </div>
 
+      <div className="space-y-2">
       <FormField
         label={t('editor.personal.fields.nationality')}
         help={t('editor.personal.help.nationality')}
@@ -526,7 +528,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         />
       </FormField>
       <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label={tx('editor.ui.showNationality', 'Mostrar nacionalidad')} />
+      </div>
 
+      <div className="space-y-3">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label={tx('editor.ui.docType', 'Tipo de documento de identidad')}>
           <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
@@ -538,6 +542,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
       </div>
       <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
+      </div>
 
       {/* Birth Date */}
       <FormField
@@ -599,7 +604,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
 
       {/* Contact Information */}
       <div className="space-y-6">
-        <h4 className="text-md font-medium text-slate-900 border-b border-slate-200 pb-2">
+        <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">
           {t('editor.personal.contactInfo')}
         </h4>
 
@@ -915,7 +920,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
       </FormField>
-      <section className="space-y-4 border-t border-slate-200 pt-5">
+      <section className="space-y-4">
         <div><h4 className="text-sm font-semibold text-slate-900">{tx('editor.ui.references', 'Referencias')}</h4><p className="text-xs text-slate-500">{tx('editor.ui.referencesHint', 'Se mostrarán al final del contenido principal de la hoja de vida.')}</p></div>
         <div className="space-y-2">
           <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.includeReferences', 'Incluir referencias directas')}</label>

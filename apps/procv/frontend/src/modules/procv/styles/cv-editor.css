@@ -555,9 +555,9 @@
     }
   }
 
-/* PDF export (html2pdf clone of the preview): the page fills the A4 width
-   instead of being a centred card, so the side margin is the template's own
-   padding. Covers the CV templates, the supplemental block and the letter. */
+/* PDF export (html2pdf clone of the preview): the page fills the printable
+   width (A4 minus PDF_MARGIN_MM) instead of being a centred card. Covers the
+   CV templates, the supplemental block and the letter. */
 .cv-pdf-export .cv-custom-wrapper > * {
   max-width: none !important;
   width: 100% !important;
@@ -591,4 +591,23 @@
 /* Photo framing chosen in the editor (centred by default). */
 .cv-custom-wrapper .cv-photo {
   object-position: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}
+
+/* Form groups: each datum (field, its options and help) is a card, so it is
+   clear where one ends and the next begins. */
+.cv-form-groups > * {
+  border: 1px solid var(--ui-border, #d9ddd7);
+  border-radius: 0.75rem;
+  background: var(--ui-surface, #ffffff);
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .cv-form-groups > * {
+    padding: 1.25rem;
+  }
+}
+.dark .cv-form-groups > *,
+[data-theme="dark"] .cv-form-groups > * {
+  border-color: #334155;
+  background: #0f172a;
 }

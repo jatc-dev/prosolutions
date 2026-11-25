@@ -49,7 +49,8 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
-import { History } from "lucide-react";
+import { FileText, History, Mail } from "lucide-react";
+import { DownloadMenu } from "./components/DownloadMenu";
 
 // Import custom styles
 import "../../styles/cv-editor.css";
@@ -63,6 +64,25 @@ interface CompleteCVEditorProps {
 /** True when the user hid this section from the CV (+/− under the section tabs). */
 const hiddenIn = (cv: any, section: string): boolean =>
   Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
+
+/**
+ * PDF page margin in mm (top, left, bottom, right). Printers cannot print to
+ * the edge and the page breaks need a top/bottom margin, so the same margin on
+ * every side frames coloured panels (sidebar, header band, dark pages)
+ * symmetrically instead of touching the side edges only.
+ */
+export const PDF_MARGIN_MM: [number, number, number, number] = [6, 6, 6, 6];
+
+/** Elements the PDF export never splits across two pages. */
+export const PDF_AVOID_BREAK = [
+  // A whole entry (job, degree, certificate) when it fits on one page.
+  "[data-cv-item]",
+  // Invisible block before each section title (see handleExportPdf).
+  "[data-pdf-keep-with-next]",
+  "p", "li", "h1", "h2", "h3", "h4", "img", "tr", "[role='img']",
+  // Leaf text boxes (dates, contact rows, labels): divs with no block children.
+  "div:not(:has(div, p, ul, ol, section, table))",
+];
 
 function EditorBrandGlyph() {
   return (
@@ -749,9 +769,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       }
 
       // The preview page is narrower than A4 and centred, which html2pdf turned
-      // into wide side margins. Export a copy that fills the page width; the
-      // template's own padding (~8 mm) is the side margin. Top/bottom keep a
-      // small margin so text never touches the edge after a page break.
+      // into wide side margins. Export a copy that fills the printable width
+      // inside the same small margin on every side (PDF_MARGIN_MM).
       const exportNode = element.cloneNode(true) as HTMLElement;
       exportNode.classList.add("cv-pdf-export");
       // html2canvas ignores object-fit, so cropped photos (portrait, oval,
@@ -772,12 +791,35 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         box.style.backgroundRepeat = "no-repeat";
         img.replaceWith(box);
       });
+      // Keep section titles with what follows: an invisible block before each
+      // title covers the title and the first lines under it without taking
+      // space (negative margin). When that block does not fit at the bottom
+      // of a page, the title moves to the next page instead of being left alone.
+      const liveHeadings = Array.from(element.querySelectorAll("h2, h3"));
+      Array.from(exportNode.querySelectorAll("h2, h3")).forEach((heading, index) => {
+        if (heading.closest("[data-cv-item]")) return;
+        const parent = liveHeadings[index]?.parentElement;
+        const style = parent ? getComputedStyle(parent) : null;
+        if (style && style.display.includes("flex") && !style.flexDirection.startsWith("column")) return;
+        const probe = document.createElement("div");
+        probe.setAttribute("data-pdf-keep-with-next", "");
+        probe.setAttribute("aria-hidden", "true");
+        probe.style.height = "6em";
+        probe.style.marginBottom = "-6em";
+        probe.style.pointerEvents = "none";
+        heading.before(probe);
+      });
       const options = {
-        margin: [6, 0, 6, 0] as [number, number, number, number], // mm: top, left, bottom, right
+        margin: PDF_MARGIN_MM,
         filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        // html2pdf slices one long image every A4 page, which cut lines of
+        // text in half. Blocks that would cross a page edge (paragraphs,
+        // bullets, titles, photos and small text boxes) move whole to the
+        // next page instead.
+        pagebreak: { mode: ["css", "legacy"], avoid: PDF_AVOID_BREAK },
       };
 
       const html2pdf = (await import("html2pdf.js")).default;
@@ -1124,27 +1166,18 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               <button
                 onClick={handleSave}
                 disabled={isSaving}
+                aria-busy={isSaving}
                 aria-label={t('editor.actions.save')}
                 title={`${t('editor.actions.save')} (Ctrl+S)`}
                 aria-keyshortcuts="Control+S Meta+S"
                 className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
               >
-                {isSaving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {t('dashboard.saving')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {t('editor.actions.save')}
-                  </>
-                )}
+                {/* The status next to it already says "Guardando…": the button
+                    only gets disabled, so the message is not shown twice. */}
+                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {t('editor.actions.save')}
               </button>
               </div>
 
@@ -1153,8 +1186,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             <div className="flex w-full flex-wrap items-center justify-end gap-2">
               {/* Document switch (CV or cover letter): part of the toolbar, so it
                   no longer takes a full row of screen height. */}
-              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="mr-auto inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                {([['cv', 'Hoja de vida', 'CV'], ['letter', 'Carta de presentación', 'Carta']] as const).map(([mode, label, short]) => (
+              {/* Same height, border and colours as the other toolbar buttons. */}
+              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="mr-auto inline-flex min-h-10 items-stretch rounded-md border border-brand-300 bg-white p-0.5 dark:border-brand-900 dark:bg-slate-900">
+                {([['cv', 'Hoja de vida', 'CV', FileText], ['letter', 'Carta de presentación', 'Carta', Mail]] as const).map(([mode, label, short, Icon]) => (
                   <button
                     key={mode}
                     type="button"
@@ -1162,8 +1196,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     aria-selected={docMode === mode}
                     aria-label={label}
                     onClick={() => setDocMode(mode)}
-                    className={`min-h-8 rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+                    className={`inline-flex items-center gap-2 rounded px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-brand-800 text-white shadow-sm dark:bg-brand-500 dark:text-slate-950' : 'text-brand-900 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/40'}`}
                   >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                     <span className="sm:hidden" aria-hidden="true">{short}</span>
                     <span className="hidden sm:inline" aria-hidden="true">{label}</span>
                   </button>
@@ -1257,44 +1292,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 </button>
               ) : null}
 
-              <button
-                onClick={handleExportPdf}
-                disabled={isExportingPdf}
-                aria-label={`${t('editor.actions.export', 'Export')} PDF`}
-                title={`${t('editor.actions.export', 'Export')} PDF`}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-transparent bg-brand-600 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                {isExportingPdf ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {t('dashboard.saving')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="hidden sm:inline">PDF</span>
-                    </>
-                  )}
-                </button>
-
-              <button
-                type="button"
-                onClick={handleExportDocx}
-                disabled={isExportingDocx}
-                aria-label={docMode === 'letter' ? 'Descargar la carta en Word' : 'Descargar la hoja de vida en Word'}
-                title={tx('editor.ui.wordHint', 'Word (.docx): editable, con el estilo de tu plantilla')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-600 bg-white px-2 py-2 text-sm font-medium text-brand-800 shadow-sm hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
-              >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="hidden sm:inline">{isExportingDocx ? 'Generando…' : 'Word'}</span>
-              </button>
+              <DownloadMenu
+                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
+                onPdf={() => void handleExportPdf()}
+                onWord={() => void handleExportDocx()}
+                busy={isExportingPdf || isExportingDocx}
+              />
 
               </div>
             </div>
