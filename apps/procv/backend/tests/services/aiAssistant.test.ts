@@ -5,6 +5,7 @@ import {
   buildCvContext,
   improveCvText,
   NUMBER_PLACEHOLDER,
+  resolveAiModel,
   setAiClientForTests,
   stripUnverifiedFigures,
 } from '../../src/services/aiAssistantService';
@@ -15,7 +16,7 @@ function fakeClient(parse: jest.Mock) {
 
 function parsedResponse(output: unknown, overrides: Record<string, unknown> = {}) {
   return {
-    model: 'claude-opus-5-5',
+    model: 'claude-sonnet-5-5',
     stop_reason: 'end_turn',
     stop_details: null,
     usage: { input_tokens: 100, output_tokens: 50 },
@@ -84,7 +85,7 @@ describe('CV assistant guardrails', () => {
     });
 
     const request = parse.mock.calls[0][0];
-    expect(request.model).toBe('claude-opus-5-5');
+    expect(request.model).toBe('claude-sonnet-5-5');
     expect(request.fallbacks).toBe('default');
     expect(request.betas).toEqual(['server-side-fallback-2026-07-01']);
     expect(request.output_config.format).toBeDefined();
@@ -121,5 +122,40 @@ describe('CV assistant guardrails', () => {
     await expect(
       improveCvText({ section: 'summary', instruction: 'mejora', text: 'x', cvContext: '' }),
     ).rejects.toBeInstanceOf(AiBusyError);
+  });
+
+  it('defaults to Sonnet 5.5 and accepts a valid AI_MODEL override', () => {
+    expect(resolveAiModel({})).toBe('claude-sonnet-5-5');
+    expect(resolveAiModel({ AI_MODEL: ' claude-haiku-5-5 ' })).toBe('claude-haiku-5-5');
+    expect(resolveAiModel({ AI_MODEL: 'gpt-4; rm -rf' })).toBe('claude-sonnet-5-5');
+  });
+
+  it('omits the server-side fallback for Haiku, which does not support it', async () => {
+    const parse = jest
+      .fn()
+      .mockResolvedValue(
+        parsedResponse(
+          { suggestion: 'Texto mejorado', changes: [], needsUserInput: [] },
+          { model: 'claude-haiku-5-5' },
+        ),
+      );
+    setAiClientForTests(fakeClient(parse));
+    const previous = process.env.AI_MODEL;
+    process.env.AI_MODEL = 'claude-haiku-5-5';
+    try {
+      await improveCvText({
+        section: 'summary',
+        instruction: 'mejora',
+        text: 'Texto',
+        cvContext: '',
+      });
+    } finally {
+      if (previous === undefined) delete process.env.AI_MODEL;
+      else process.env.AI_MODEL = previous;
+    }
+    const request = parse.mock.calls[0][0];
+    expect(request.model).toBe('claude-haiku-5-5');
+    expect(request).not.toHaveProperty('fallbacks');
+    expect(request).not.toHaveProperty('betas');
   });
 });

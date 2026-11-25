@@ -39,7 +39,7 @@ Para operar usamos proveedores que tratan datos por cuenta nuestra, con obligaci
 - **Base de datos**: Neon (servicio PostgreSQL en la nube).
 - **Red de entrega y seguridad**: Cloudflare.
 - **Inicio de sesión con Google** (opcional): Google, solo si eliges esa opción.
-- **Asistente de redacción con IA en ProCV** (opcional): Anthropic, solo con el texto que envías al usar el asistente. Más detalles en la [política de uso de IA](/legal/uso-ia).
+- **Asistente de redacción con IA en ProCV** (opcional): Groq (Estados Unidos) y, cuando se habilite, Anthropic (Estados Unidos), solo con el texto que envías y un resumen de tu hoja de vida al usar el asistente. Más detalles en la [política de uso de IA](/legal/uso-ia).
 - **Analítica**: Google Analytics (mediante Google Tag Manager), solo con tu consentimiento. Mide de forma agregada el uso de las páginas; detalles en la [política de cookies](/legal/cookies).
 - **Publicidad**: Google AdSense, solo con tu consentimiento.
 
