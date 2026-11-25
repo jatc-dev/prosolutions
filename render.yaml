@@ -142,6 +142,11 @@ services:
       - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
       - { key: PROCV_INTERNAL_TOKEN, sync: false }   # 32+ chars; /api/internal returns 404 without it
+      - { key: GROQ_API_KEY, sync: false }           # CV assistant (free tier, gpt-oss-120b); enable Zero Data Retention in Groq
+      - { key: ANTHROPIC_API_KEY, sync: false }      # paid alternative; used first when both keys exist
+      - { key: AI_PROVIDER, sync: false }            # optional: groq | anthropic (forces one provider)
+      - { key: AI_MODEL, sync: false }               # optional; default openai/gpt-oss-120b (groq) or claude-sonnet-5-5
+      - { key: AI_DAILY_LIMIT, sync: false }         # optional; suggestions per user per day (default 30)
       - { key: SMTP_HOST, sync: false }
       - { key: SMTP_PORT, sync: false }
       - { key: SMTP_SECURE, sync: false }
@@ -180,6 +185,11 @@ services:
       - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
       - { key: PROCV_INTERNAL_TOKEN, sync: false }   # 32+ chars; /api/internal returns 404 without it
+      - { key: GROQ_API_KEY, sync: false }           # CV assistant (free tier, gpt-oss-120b); enable Zero Data Retention in Groq
+      - { key: ANTHROPIC_API_KEY, sync: false }      # paid alternative; used first when both keys exist
+      - { key: AI_PROVIDER, sync: false }            # optional: groq | anthropic (forces one provider)
+      - { key: AI_MODEL, sync: false }               # optional; default openai/gpt-oss-120b (groq) or claude-sonnet-5-5
+      - { key: AI_DAILY_LIMIT, sync: false }         # optional; suggestions per user per day (default 30)
 
   # ---------------------------------------------------------- ProIdentity ----
   - type: web

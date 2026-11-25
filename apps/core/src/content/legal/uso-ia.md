@@ -14,9 +14,9 @@ Otras funciones que pueden parecer automáticas **no usan IA generativa**:
 
 ## Qué datos se envían
 
-Cuando usas el asistente de ProCV, enviamos al proveedor de IA únicamente el fragmento de texto que deseas mejorar y las instrucciones necesarias. No enviamos tu correo, tu contraseña ni el resto de tu cuenta.
+Cuando usas el asistente de ProCV, enviamos al proveedor de IA el fragmento de texto que deseas mejorar, tus instrucciones y un resumen de los datos de tu hoja de vida que le dan contexto: cargo objetivo, cargos, empresas, fechas, descripciones y logros de tu experiencia, estudios y habilidades. No enviamos tu correo, tu teléfono, tu documento de identidad, tu contraseña ni otros datos de tu cuenta.
 
-El proveedor actual es **Anthropic**, que procesa la solicitud como encargado y, según sus condiciones comerciales para clientes de su API, no usa esos datos para entrenar sus modelos. Te recomendamos no incluir datos sensibles en el texto que envíes.
+El proveedor actual es **Groq** (Estados Unidos), que ejecuta el modelo abierto gpt-oss y procesa la solicitud como encargado. Según su documentación, no conserva el contenido de las solicitudes de forma predeterminada, y en ProSolutions tenemos activada la opción de no retener datos. Más adelante podremos usar **Anthropic** (Estados Unidos), que según sus condiciones comerciales para clientes de su API no usa esos datos para entrenar sus modelos; si cambiamos de proveedor actualizaremos esta página. Te recomendamos no incluir datos sensibles en el texto que envíes.
 
 ## Límites que nos imponemos
 

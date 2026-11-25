@@ -101,7 +101,7 @@ export function JobsPage() {
         <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Encuentra tu próximo empleo</h1>
           <p className="mt-2 max-w-2xl text-ui-muted">
-            Filtra por modalidad, salario y habilidades. Postúlate en un clic con tu CV de ProCV y descubre tu afinidad con cada vacante.
+            Busca ofertas de otros portales y de empresas en ProJobs. Filtra por modalidad, salario y habilidades, guarda las que te interesan y crea alertas. En las vacantes publicadas en ProJobs te postulas con tu CV de ProCV.
           </p>
           <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-6 grid gap-2 rounded-2xl border border-ui-border bg-ui-surface p-2 shadow-panel sm:grid-cols-[1fr_minmax(0,16rem)]">
             <label className="flex items-center gap-2 rounded-xl px-3">

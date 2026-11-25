@@ -1,0 +1,105 @@
+name: Database backup
+
+# Daily encrypted logical backup of the three production databases, kept
+# outside Neon (whose point-in-time history is only 6 hours on this plan).
+# Each run also restores every dump into a throwaway PostgreSQL and checks the
+# row counts, so a broken backup is noticed the same day.
+#
+# Required configuration (Settings → Secrets and variables → Actions):
+#   secrets.BACKUP_DB_PROIDENTITY_URL, secrets.BACKUP_DB_PROCV_URL,
+#   secrets.BACKUP_DB_PROJOBS_URL  direct (non-pooled) URLs of a role that
+#                                  bypasses RLS, e.g. neondb_owner
+#   vars.BACKUP_AGE_RECIPIENT      age public key (age1…); keep the private key offline
+#
+# The repository is public: artifacts can be downloaded by any GitHub user,
+# so only the .age files are uploaded. Restore: see docs/deployment/DATABASE_BACKUPS.md.
+
+on:
+  schedule:
+    - cron: "15 7 * * *" # 02:15 Bogotá
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Dump, encrypt and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: postgres:18
+    services:
+      restore:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: verify
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+      RESTORE_URL: postgresql://postgres:verify@restore:5432/postgres
+      OUT: /tmp/backup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install age
+        run: apt-get update -qq && apt-get install -y -qq age > /dev/null
+
+      - name: Check configuration
+        env:
+          PROIDENTITY: ${{ secrets.BACKUP_DB_PROIDENTITY_URL }}
+          PROCV: ${{ secrets.BACKUP_DB_PROCV_URL }}
+          PROJOBS: ${{ secrets.BACKUP_DB_PROJOBS_URL }}
+        run: |
+          missing=""
+          [ -n "$PROIDENTITY" ] || missing="$missing BACKUP_DB_PROIDENTITY_URL"
+          [ -n "$PROCV" ] || missing="$missing BACKUP_DB_PROCV_URL"
+          [ -n "$PROJOBS" ] || missing="$missing BACKUP_DB_PROJOBS_URL"
+          case "$BACKUP_AGE_RECIPIENT" in age1*) ;; *) missing="$missing BACKUP_AGE_RECIPIENT(variable)";; esac
+          if [ -n "$missing" ]; then echo "::error::Missing configuration:$missing"; exit 1; fi
+
+      - name: Dump ProIdentity
+        env:
+          SRC: ${{ secrets.BACKUP_DB_PROIDENTITY_URL }}
+        run: bash scripts/db-backup.sh dump proidentity "$SRC" "$OUT"
+
+      - name: Dump ProCV
+        env:
+          SRC: ${{ secrets.BACKUP_DB_PROCV_URL }}
+        run: bash scripts/db-backup.sh dump procv "$SRC" "$OUT"
+
+      - name: Dump ProJobs
+        env:
+          SRC: ${{ secrets.BACKUP_DB_PROJOBS_URL }}
+        run: bash scripts/db-backup.sh dump projobs "$SRC" "$OUT"
+
+      - name: Verify restores
+        run: |
+          status=0
+          for db in proidentity procv projobs; do
+            bash scripts/db-backup.sh verify "$db" "$OUT" "$RESTORE_URL" || status=1
+          done
+          exit "$status"
+
+      - name: Keep only encrypted files
+        run: |
+          mkdir -p "$OUT/upload"
+          mv "$OUT"/*.dump.age "$OUT/upload/"
+          (cd "$OUT/upload" && sha256sum *.age > SHA256SUMS)
+          rm -f "$OUT"/*.dump
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: /tmp/backup/upload/
+          retention-days: 30
+          if-no-files-found: error

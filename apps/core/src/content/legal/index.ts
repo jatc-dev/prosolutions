@@ -23,7 +23,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     title: "Política de privacidad y tratamiento de datos personales",
     description:
       "Cómo ProSolutions recolecta, usa y protege tus datos personales conforme a la Ley 1581 de 2012, el Decreto 1377 de 2013 y el RGPD, y cómo ejercer tus derechos.",
-    updatedAt: "2026-11-20",
+    updatedAt: "2026-11-25",
     body: privacy,
   },
   {
@@ -47,7 +47,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     path: "/legal/uso-ia",
     title: "Política de uso de inteligencia artificial",
     description: "Dónde usa ProSolutions inteligencia artificial, qué datos intervienen y qué límites aplicamos para proteger a los usuarios.",
-    updatedAt: "2026-11-18",
+    updatedAt: "2026-11-25",
     body: ai,
   },
 ];

@@ -47,7 +47,7 @@ export const messages = {
       productsDescription: "Herramientas gratuitas que funcionan juntas con una sola cuenta, para profesionales de todas las áreas.",
       products: {
         procv: { name: "ProCV", tagline: "Hoja de vida ATS", description: "Editor con plantillas que los sistemas de selección leen bien. Importa tu CV en PDF o Word y descárgalo en PDF o Word.", cta: "Crear hoja de vida" },
-        projobs: { name: "ProJobs", tagline: "Empleo en todos los sectores", description: "Vacantes con filtros por modalidad, salario y habilidades. Postúlate en un clic con tu CV de ProCV.", cta: "Buscar vacantes" },
+        projobs: { name: "ProJobs", tagline: "Empleo en todos los sectores", description: "Ofertas de otros portales y de empresas en ProJobs, con filtros, alertas y ofertas guardadas. En las vacantes de ProJobs te postulas con tu CV de ProCV.", cta: "Buscar vacantes" },
         tools: { name: "ProTools", tagline: "Calculadoras laborales", description: "Salario neto, liquidación, contrato laboral frente a prestación de servicios y evaluador de hoja de vida.", cta: "Usar herramientas" },
         academy: { name: "ProAcademy", tagline: "Guías prácticas", description: "Artículos para preparar entrevistas, negociar tu salario y entender tus derechos laborales.", cta: "Leer guías" },
       },
@@ -55,7 +55,7 @@ export const messages = {
       steps: [
         { title: "Crea tu hoja de vida", description: "Elige una plantilla, importa tu CV actual o empieza desde cero. No necesitas cuenta para empezar." },
         { title: "Encuentra vacantes", description: "Busca por cargo, ciudad o modalidad y guarda las ofertas que te interesan." },
-        { title: "Postúlate en un clic", description: "Con tu cuenta, envía tu hoja de vida de ProCV y sigue el estado de cada postulación." },
+        { title: "Postúlate con tu CV", description: "En las vacantes de ProJobs envías tu hoja de vida de ProCV y sigues cada postulación; en las de otros portales te llevamos a la oferta original." },
       ],
       toolsTitle: "Calculadoras gratuitas",
       toolsDescription: "Resuelve en segundos las dudas más comunes sobre tu salario y tu contrato.",
@@ -142,7 +142,7 @@ export const messages = {
       productsDescription: "Free tools that work together with a single account, for professionals in every field.",
       products: {
         procv: { name: "ProCV", tagline: "ATS-friendly CV", description: "An editor with templates that hiring systems read well. Import your CV from PDF or Word and download it as PDF or Word.", cta: "Create a CV" },
-        projobs: { name: "ProJobs", tagline: "Jobs in every sector", description: "Openings you can filter by work mode, salary and skills. Apply in one click with your ProCV CV.", cta: "Search jobs" },
+        projobs: { name: "ProJobs", tagline: "Jobs in every sector", description: "Openings from other job sites and from companies on ProJobs, with filters, alerts and saved jobs. On ProJobs openings you apply with your ProCV CV.", cta: "Search jobs" },
         tools: { name: "ProTools", tagline: "Work calculators", description: "Net salary, severance, employment vs. contractor and a CV checker.", cta: "Use the tools" },
         academy: { name: "ProAcademy", tagline: "Practical guides", description: "Articles to prepare interviews, negotiate your salary and understand your rights at work.", cta: "Read the guides" },
       },
@@ -150,7 +150,7 @@ export const messages = {
       steps: [
         { title: "Create your CV", description: "Pick a template, import your current CV or start from scratch. No account needed to begin." },
         { title: "Find openings", description: "Search by title, city or work mode and save the jobs you like." },
-        { title: "Apply in one click", description: "With an account, send your ProCV CV and track every application." },
+        { title: "Apply with your CV", description: "On ProJobs openings you send your ProCV CV and track every application; for other job sites we take you to the original posting." },
       ],
       toolsTitle: "Free calculators",
       toolsDescription: "Answer the most common salary and contract questions in seconds (Colombian rules, in Spanish).",

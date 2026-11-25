@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { identityAuthApiUrl } from "../identityApi";
+import { useSlowRequest } from "./SlowConnectionNotice";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
-/** Shows "Continue with Google" only when ProIdentity has Google configured. */
+/**
+ * "Continue with Google". Shown (disabled) while ProIdentity answers whether
+ * Google is configured, so a sleeping service does not hide the option; the
+ * same request also wakes ProIdentity up while the user fills in the form.
+ */
 export function GoogleSignInButton({
   next,
   privacyAccepted,
@@ -17,33 +22,42 @@ export function GoogleSignInButton({
   disabled?: boolean;
   label?: string;
 }) {
-  const [available, setAvailable] = useState(false);
+  const [state, setState] = useState<"checking" | "available" | "unavailable">("checking");
+  const [opening, setOpening] = useState(false);
+  const slowCheck = useSlowRequest(state === "checking", 2500);
+  const english = typeof document !== "undefined" && document.documentElement.lang === "en";
 
   useEffect(() => {
     let active = true;
     fetch(`${IDENTITY_API_URL}/providers`)
       .then((response) => (response.ok ? response.json() : { google: false }))
       .then((providers: { google?: boolean }) => {
-        if (active) setAvailable(Boolean(providers.google));
+        if (active) setState(providers.google ? "available" : "unavailable");
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active) setState("unavailable");
+      });
     return () => {
       active = false;
     };
   }, []);
 
-  if (!available) return null;
+  if (state === "unavailable") return null;
+  const checking = state === "checking";
+  const blocked = disabled || checking;
 
   const href = `${IDENTITY_API_URL}/google/start?next=${encodeURIComponent(next)}${privacyAccepted ? "&privacy=1" : ""}`;
   return (
     <a
-      href={disabled ? undefined : href}
-      aria-disabled={disabled}
+      href={blocked ? undefined : href}
+      aria-disabled={blocked}
+      aria-busy={checking || opening}
       onClick={(event) => {
-        if (disabled) event.preventDefault();
+        if (blocked) event.preventDefault();
+        else setOpening(true);
       }}
       className={`flex min-h-11 w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 ${
-        disabled ? "pointer-events-none opacity-50" : ""
+        blocked ? "pointer-events-none opacity-50" : ""
       }`}
     >
       <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5">
@@ -52,7 +66,11 @@ export function GoogleSignInButton({
         <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
         <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
       </svg>
-      {label}
+      {checking && slowCheck
+        ? english ? "Connecting…" : "Conectando…"
+        : opening
+          ? english ? "Opening Google…" : "Abriendo Google…"
+          : label}
     </a>
   );
 }
