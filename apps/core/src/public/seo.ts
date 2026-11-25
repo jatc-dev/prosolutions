@@ -4,6 +4,10 @@ import { ABOUT_PAGE, LEGAL_DOCUMENTS } from "../content/legal";
 import { SITE, absoluteUrl } from "../content/site";
 import { TOOLS, getTool } from "../content/tools";
 import { DAFP_FAQ, FORMAT_1003_FAQ, FORMAT_PAGES_UPDATED, TEMPLATE_CARDS, type FaqItem } from "../content/formats";
+import { PHRASE_FAMILIES as ALL_PHRASE_FAMILIES } from "../../../procv/frontend/src/modules/procv/phrases";
+/** Example pages exist for job families only ("general" is the editor catch-all). */
+const PHRASE_FAMILIES = ALL_PHRASE_FAMILIES.filter((family) => family.id !== "general");
+import { paramsFor } from "../lib/payroll/params";
 
 export interface PageHead {
   title: string;
@@ -112,6 +116,8 @@ export const FORMAT_HEADS: Record<string, PageHead> = {
   },
 };
 
+const EXAMPLES_UPDATED = "2026-11-24";
+
 const faqPage = (items: FaqItem[]) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -216,6 +222,45 @@ export function headForPath(rawPath: string): PageHead | null {
     };
   }
 
+  if (path === "/ejemplos-hoja-de-vida") {
+    const title = "Ejemplos de hoja de vida por oficio: perfil, funciones y logros | ProSolutions";
+    const description = `Ejemplos de hoja de vida para ${PHRASE_FAMILIES.length} oficios y sectores: perfiles profesionales, funciones y logros con cifras listos para adaptar. Gratis.`;
+    return {
+      title, description, path, modifiedAt: EXAMPLES_UPDATED,
+      jsonLd: [
+        webPage("CollectionPage", title, description, path, {
+          dateModified: EXAMPLES_UPDATED,
+          hasPart: PHRASE_FAMILIES.map((family) => ({ "@type": "WebPage", name: `Ejemplo de hoja de vida de ${family.label.toLowerCase()}`, url: absoluteUrl(`/ejemplos-hoja-de-vida/${family.id}`) })),
+        }),
+        breadcrumb([{ name: "Ejemplos de hoja de vida", path }]),
+      ],
+    };
+  }
+  const exampleMatch = path.match(/^\/ejemplos-hoja-de-vida\/([a-z0-9-]+)$/);
+  if (exampleMatch) {
+    const family = PHRASE_FAMILIES.find((item) => item.id === exampleMatch[1]);
+    if (!family) return null;
+    const name = family.label.toLowerCase();
+    const title = `Ejemplo de hoja de vida de ${name}: perfil, funciones y logros | ProSolutions`;
+    const description = `Ejemplo de hoja de vida de ${name} con perfil profesional, funciones y logros con cifras listos para copiar y adaptar. Créala gratis en PDF o Word.`;
+    return {
+      title, description, path, modifiedAt: EXAMPLES_UPDATED,
+      jsonLd: [
+        webPage("WebPage", title, description, path, { dateModified: EXAMPLES_UPDATED }),
+        breadcrumb([{ name: "Ejemplos de hoja de vida", path: "/ejemplos-hoja-de-vida" }, { name: family.label, path }]),
+      ],
+    };
+  }
+  if (path === "/salario-minimo-colombia") {
+    const params = paramsFor();
+    const title = `Salario mínimo ${params.year} en Colombia: valor, auxilio de transporte y ${params.year + 1} | ProSolutions`;
+    const description = `Salario mínimo ${params.year} en Colombia: valor mensual y diario, auxilio de transporte y total con auxilio. Te contamos cuándo se fija el de ${params.year + 1}.`;
+    return {
+      title, description, path, modifiedAt: params.reviewedAt,
+      jsonLd: [webPage("WebPage", title, description, path, { dateModified: params.reviewedAt }), breadcrumb([{ name: "Herramientas", path: "/tools" }, { name: `Salario mínimo ${params.year}`, path }])],
+    };
+  }
+
   const formatHead = FORMAT_HEADS[path];
   if (formatHead) {
     const isGallery = path === "/plantillas-hoja-de-vida";
@@ -314,6 +359,9 @@ export function publicRoutes(): PublicRoute[] {
   return [
     { path: CREATE_CV_HEAD.path, lastmod: CREATE_CV_UPDATED, priority: 0.9, changefreq: "monthly" },
     ...Object.keys(FORMAT_HEADS).map((formatPath) => ({ path: formatPath, lastmod: FORMAT_PAGES_UPDATED, priority: 0.9, changefreq: "monthly" as const })),
+    { path: "/ejemplos-hoja-de-vida", lastmod: EXAMPLES_UPDATED, priority: 0.8, changefreq: "monthly" },
+    ...PHRASE_FAMILIES.map((family) => ({ path: `/ejemplos-hoja-de-vida/${family.id}`, lastmod: EXAMPLES_UPDATED, priority: 0.7, changefreq: "monthly" as const })),
+    { path: "/salario-minimo-colombia", lastmod: paramsFor().reviewedAt, priority: 0.9, changefreq: "monthly" },
     { path: "/academy", lastmod: latest(ARTICLES.map((a) => a.updatedAt)), priority: 0.9, changefreq: "weekly" },
     ...ARTICLES.map((article) => ({ path: `/academy/${article.slug}`, lastmod: article.updatedAt, priority: 0.8, changefreq: "monthly" as const })),
     { path: "/tools", lastmod: latest(TOOLS.map((t) => t.updatedAt)), priority: 0.9, changefreq: "monthly" },

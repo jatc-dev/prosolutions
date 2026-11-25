@@ -69,6 +69,8 @@ export const RESOURCE_URLS = {
   dafpFormat: `${coreBase}/formato-unico-hoja-de-vida/`,
   format1003: `${coreBase}/hoja-de-vida-formato-1003/`,
   primaTool: `${coreBase}/tools/prima/`,
+  cvExamples: `${coreBase}/ejemplos-hoja-de-vida/`,
+  minimumWage: `${coreBase}/salario-minimo-colombia/`,
 } as const;
 
 export const PRIVACY_URL = LEGAL_URLS.privacy;

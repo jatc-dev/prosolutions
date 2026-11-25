@@ -8,6 +8,7 @@ import { ARL_RATES, paramsFor, type RiskClass } from "../../lib/payroll/params";
 import { calculateEmployerCost, calculateNetSalary } from "../../lib/payroll/salary";
 import { calculateSettlement, type ContractType, type SettlementResult, type TerminationReason } from "../../lib/payroll/settlement";
 import { calculatePrima, currentSemester, type PrimaResult, type PrimaSemester } from "../../lib/payroll/prima";
+import { calculateSeverance, calculateVacation, type SeveranceResult, type VacationResult } from "../../lib/payroll/benefits";
 import { PublicLayout, formatDate } from "../PublicLayout";
 import { headForPath, useDocumentHead } from "../seo";
 
@@ -275,6 +276,154 @@ export function PrimaToolPage() {
             <strong>Base:</strong> si tu salario es variable o cambió durante el semestre, se usa el promedio de lo devengado. El auxilio de transporte se incluye cuando el salario no supera dos salarios mínimos. No se descuentan aportes de salud ni pensión de la prima.
           </p>
           {paramsNote}
+        </>
+      }
+    />
+  );
+}
+
+export function SeveranceToolPage() {
+  const [salary, setSalary] = useState("");
+  const [variable, setVariable] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [unpaidDays, setUnpaidDays] = useState("");
+  const [integral, setIntegral] = useState(false);
+
+  const { result, error } = useMemo((): { result: SeveranceResult | null; error: string | null } => {
+    const amount = parseMoney(salary);
+    if (amount <= 0) return { result: null, error: null };
+    try {
+      return { result: calculateSeverance({ monthlySalary: amount, variableMonthly: parseMoney(variable), startDate: startDate || undefined, endDate: endDate || undefined, unpaidDays: Number(unpaidDays) || 0, integralSalary: integral }), error: null };
+    } catch (caught) {
+      return { result: null, error: caught instanceof Error ? caught.message : "Revisa los datos ingresados." };
+    }
+  }, [salary, variable, startDate, endDate, unpaidDays, integral]);
+
+  return (
+    <ToolShell
+      slug="cesantias"
+      form={
+        <>
+          <MoneyInput label="Salario básico mensual (COP)" hint="Si cambió durante el año, usa el promedio de los últimos tres meses o del año." value={salary} onChange={setSalary} />
+          <MoneyInput label="Promedio mensual de pagos variables (opcional)" hint="Horas extra, recargos o comisiones habituales." value={variable} onChange={setVariable} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Fecha de ingreso (opcional)" hint={`Solo si empezaste durante ${PARAMS.year}.`}>
+              {(id) => <input id={id} type="date" className={inputClass} value={startDate} onChange={(event) => setStartDate(event.target.value)} />}
+            </Field>
+            <Field label="Fecha de retiro (opcional)" hint={`Solo si saliste durante ${PARAMS.year}.`}>
+              {(id) => <input id={id} type="date" className={inputClass} value={endDate} onChange={(event) => setEndDate(event.target.value)} />}
+            </Field>
+          </div>
+          <Field label="Días de licencia no remunerada o suspensión (opcional)" hint="No cuentan como tiempo de servicio.">
+            {(id) => <input id={id} type="number" min={0} className={inputClass} value={unpaidDays} onChange={(event) => setUnpaidDays(event.target.value)} />}
+          </Field>
+          <label className="flex items-start gap-2 text-sm text-ui-text">
+            <input type="checkbox" className="mt-1" checked={integral} onChange={(event) => setIntegral(event.target.checked)} />
+            <span>Tengo salario integral <span className="block text-xs text-ui-subtle">El salario integral ya incluye las cesantías y sus intereses.</span></span>
+          </label>
+        </>
+      }
+      results={
+        error ? (
+          <p role="alert" className="rounded-ui-lg border border-ui-danger p-4 text-sm text-ui-danger">{error}</p>
+        ) : (
+          result && (
+            <ResultCard title={result.integral ? "Con salario integral no hay cesantías aparte" : `Tus cesantías de ${result.year}`}>
+              <Rows
+                rows={[
+                  ["Base de liquidación", result.base.total, result.base.transportAllowance > 0 ? "Incluye auxilio de transporte" : undefined],
+                  ["Cesantías", result.severance, `Se consignan en tu fondo hasta el ${formatDate(result.depositDeadline)}`],
+                  ["Intereses a las cesantías (12 % anual)", result.interest, `Te los paga el empleador hasta el ${formatDate(result.interestDeadline)}`],
+                ]}
+                total={["Total", result.severance + result.interest]}
+              />
+              <p className="mt-2 text-xs text-ui-subtle">
+                {result.daysWorked.toLocaleString("es-CO")} días trabajados en {result.year} (del {formatDate(result.from)} al {formatDate(result.to)}, calendario comercial de 360 días).
+              </p>
+            </ResultCard>
+          )
+        )
+      }
+      formula={
+        <>
+          <p><strong>Cesantías:</strong> (salario + auxilio de transporte) × días trabajados en el año ÷ 360. Un año completo equivale a un mes de salario (artículo 249 del Código Sustantivo del Trabajo).</p>
+          <p><strong>Intereses:</strong> cesantías × días trabajados × 12 % ÷ 360 (Ley 52 de 1975). Se pagan directamente al trabajador a más tardar el 31 de enero del año siguiente.</p>
+          <p><strong>Consignación:</strong> el empleador debe consignar las cesantías en el fondo que elijas a más tardar el 14 de febrero del año siguiente. Si terminas el contrato, se pagan directamente con la liquidación.</p>
+          <p>Si tu salario fue variable, la base es el promedio de lo devengado en el último año (o en todo el tiempo si es menor a un año). El auxilio de transporte se incluye cuando el salario no supera dos salarios mínimos.</p>
+          {paramsNote}
+        </>
+      }
+    />
+  );
+}
+
+export function VacationToolPage() {
+  const [startDate, setStartDate] = useState("");
+  const [cutoffDate, setCutoffDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [salary, setSalary] = useState("");
+  const [variable, setVariable] = useState("");
+  const [taken, setTaken] = useState("");
+  const [unpaidDays, setUnpaidDays] = useState("");
+
+  const { result, error } = useMemo((): { result: VacationResult | null; error: string | null } => {
+    const amount = parseMoney(salary);
+    if (!startDate || !cutoffDate || amount <= 0) return { result: null, error: null };
+    try {
+      return { result: calculateVacation({ startDate, cutoffDate, monthlySalary: amount, variableMonthly: parseMoney(variable), daysTaken: Number(taken) || 0, unpaidDays: Number(unpaidDays) || 0 }), error: null };
+    } catch (caught) {
+      return { result: null, error: caught instanceof Error ? caught.message : "Revisa los datos ingresados." };
+    }
+  }, [startDate, cutoffDate, salary, variable, taken, unpaidDays]);
+
+  return (
+    <ToolShell
+      slug="vacaciones"
+      form={
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Fecha de ingreso">{(id) => <input id={id} type="date" className={inputClass} value={startDate} onChange={(event) => setStartDate(event.target.value)} />}</Field>
+            <Field label="Fecha de corte" hint="Hoy, o la fecha de retiro.">{(id) => <input id={id} type="date" className={inputClass} value={cutoffDate} onChange={(event) => setCutoffDate(event.target.value)} />}</Field>
+          </div>
+          <MoneyInput label="Salario básico mensual (COP)" value={salary} onChange={setSalary} />
+          <MoneyInput label="Promedio mensual de pagos variables (opcional)" hint="Comisiones u horas extra habituales del último año." value={variable} onChange={setVariable} />
+          <Field label="Días de vacaciones ya disfrutados" hint="Días hábiles tomados durante toda la relación laboral.">
+            {(id) => <input id={id} type="number" min={0} className={inputClass} value={taken} onChange={(event) => setTaken(event.target.value)} />}
+          </Field>
+          <Field label="Días de licencia no remunerada o suspensión (opcional)">
+            {(id) => <input id={id} type="number" min={0} className={inputClass} value={unpaidDays} onChange={(event) => setUnpaidDays(event.target.value)} />}
+          </Field>
+        </>
+      }
+      results={
+        error ? (
+          <p role="alert" className="rounded-ui-lg border border-ui-danger p-4 text-sm text-ui-danger">{error}</p>
+        ) : (
+          result && (
+            <ResultCard title="Tus vacaciones">
+              <dl className="grid grid-cols-3 gap-3 text-center">
+                {[["Acumuladas", result.daysEarned], ["Disfrutadas", result.daysTaken], ["Pendientes", result.daysPending]].map(([label, value]) => (
+                  <div key={label as string} className="rounded-ui-md border border-ui-border p-3">
+                    <dt className="text-xs text-ui-muted">{label}</dt>
+                    <dd className="mt-1 text-xl font-bold tabular-nums text-ui-text">{(value as number).toLocaleString("es-CO", { maximumFractionDigits: 2 })}</dd>
+                    <dd className="text-xs text-ui-subtle">días hábiles</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-4">
+                <Rows rows={[["Salario diario", result.dailySalary, "Sin auxilio de transporte"]]} total={["Valor de los días pendientes", result.value]} />
+              </div>
+              <p className="mt-2 text-xs text-ui-subtle">{result.daysWorked.toLocaleString("es-CO")} días trabajados (calendario comercial de 360 días).</p>
+            </ResultCard>
+          )
+        )
+      }
+      formula={
+        <>
+          <p><strong>Días:</strong> 15 días hábiles de descanso remunerado por cada año de servicio, proporcionales al tiempo trabajado (artículo 186 del Código Sustantivo del Trabajo). Los domingos y festivos no se cuentan como días de vacaciones.</p>
+          <p><strong>Valor:</strong> salario diario (salario ÷ 30) × días pendientes. Se usa el salario ordinario sin auxilio de transporte; si es variable, el promedio del último año.</p>
+          <p><strong>Cuándo se pagan en dinero:</strong> las vacaciones se deben disfrutar; solo se compensan en dinero al terminar el contrato o, por acuerdo escrito, hasta la mitad de ellas durante la relación laboral.</p>
+          <p>El empleador puede acumular hasta dos periodos (cuatro en casos especiales); conviene no dejar que se acumulen más.</p>
         </>
       }
     />

@@ -4,6 +4,7 @@ import { paramsFor } from "../src/lib/payroll/params";
 import { calculateEmployerCost, calculateNetSalary, solidarityFundRate, withholdingUvt } from "../src/lib/payroll/salary";
 import { calculateIndemnity, calculateSettlement, days360 } from "../src/lib/payroll/settlement";
 import { calculatePrima } from "../src/lib/payroll/prima";
+import { calculateSeverance, calculateVacation } from "../src/lib/payroll/benefits";
 
 const P = paramsFor(2026);
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -169,5 +170,33 @@ describe("prima de servicios", () => {
   it("rejects dates outside the semester", () => {
     expect(() => calculatePrima({ semester: 1, monthlySalary: 2_000_000, startDate: "2026-08-01" })).toThrow();
     expect(() => calculatePrima({ semester: 2, monthlySalary: 2_000_000, endDate: "2026-03-01" })).toThrow();
+  });
+});
+
+describe("cesantías, intereses y vacaciones", () => {
+  it("pays one month per full year plus 12 % interest", () => {
+    const result = calculateSeverance({ monthlySalary: 2_000_000 });
+    expect(result.daysWorked).toBe(360);
+    expect(result.severance).toBe(2_249_095);
+    expect(result.interest).toBe(Math.round(2_249_095 * 0.12));
+    expect(result.interestDeadline).toBe("2027-01-31");
+    expect(result.depositDeadline).toBe("2027-02-14");
+  });
+
+  it("is proportional for a partial year and pays nothing aside on integral salary", () => {
+    const result = calculateSeverance({ monthlySalary: 4_000_000, startDate: "2026-07-01" });
+    expect(result.daysWorked).toBe(180);
+    expect(result.severance).toBe(2_000_000);
+    expect(result.interest).toBe(Math.round((2_000_000 * 180 * 0.12) / 360));
+    expect(calculateSeverance({ monthlySalary: 20_000_000, integralSalary: true }).severance).toBe(0);
+  });
+
+  it("earns 15 business days of vacation per year, minus the days already taken", () => {
+    const result = calculateVacation({ startDate: "2024-01-01", cutoffDate: "2025-12-30", monthlySalary: 3_000_000, daysTaken: 15 });
+    expect(result.daysWorked).toBe(720);
+    expect(result.daysEarned).toBe(30);
+    expect(result.daysPending).toBe(15);
+    expect(result.value).toBe(1_500_000);
+    expect(() => calculateVacation({ startDate: "2025-01-01", cutoffDate: "2024-01-01", monthlySalary: 1 })).toThrow();
   });
 });

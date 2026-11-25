@@ -26,6 +26,8 @@ function navGroups(locale: "es" | "en"): Array<{ title: string; links: Array<{ l
         link(en ? "Academy" : "Academia", RESOURCE_URLS.academy),
         link(en ? "Free tools" : "Herramientas gratuitas", RESOURCE_URLS.tools),
         link(en ? "Bonus (prima) calculator" : "Calculadora de prima", RESOURCE_URLS.primaTool),
+        link(en ? "CV examples by job" : "Ejemplos de hoja de vida", RESOURCE_URLS.cvExamples),
+        link(en ? "Minimum wage" : "Salario mínimo", RESOURCE_URLS.minimumWage),
         link(en ? "About us" : "Nosotros", LEGAL_URLS.about),
         link(en ? "Contact and support" : "Contacto y soporte", LEGAL_URLS.contact),
       ],
