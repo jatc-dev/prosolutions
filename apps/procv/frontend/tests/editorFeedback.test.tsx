@@ -13,7 +13,8 @@ import type { CertificateItem, LinkItem } from "../src/types";
 import { TemplateRenderer, type CVData as RendererCVData } from "../src/modules/procv/components/TemplateRenderer";
 import { SectionTitlesEditor } from "../src/modules/procv/components/editor/components/SectionTitlesEditor";
 import { sectionTitle } from "../src/modules/procv/sectionTitles";
-import { fitWithin } from "../src/modules/procv/photo";
+import { fitWithin, halvingSteps } from "../src/modules/procv/photo";
+import { professionalCardText } from "../src/modules/procv/professionalCard";
 import { DownloadMenu } from "../src/modules/procv/components/editor/components/DownloadMenu";
 import { PDF_AVOID_BREAK, PDF_MARGIN_MM } from "../src/modules/procv/components/editor/CompleteCVEditor";
 
@@ -169,10 +170,16 @@ describe("section titles", () => {
 });
 
 describe("profile photo size", () => {
-  it("shrinks to at most 640 px on the longest side, never enlarges", () => {
-    expect(fitWithin(4000, 3000)).toEqual({ width: 640, height: 480 });
-    expect(fitWithin(1080, 1920)).toEqual({ width: 360, height: 640 });
+  it("shrinks to at most 800 px on the longest side, never enlarges", () => {
+    expect(fitWithin(4000, 3000)).toEqual({ width: 800, height: 600 });
+    expect(fitWithin(1080, 1920)).toEqual({ width: 450, height: 800 });
     expect(fitWithin(300, 300)).toEqual({ width: 300, height: 300 });
+  });
+
+  it("reduces large photos in halving steps for a sharper result", () => {
+    expect(halvingSteps(4000, 3000, 800, 600)).toEqual([{ width: 2000, height: 1500 }]);
+    expect(halvingSteps(8000, 6000, 800, 600)).toEqual([{ width: 4000, height: 3000 }, { width: 2000, height: 1500 }]);
+    expect(halvingSteps(1200, 900, 800, 600)).toEqual([]);
   });
 });
 
@@ -231,5 +238,21 @@ describe("experience entries from older CVs", () => {
     const data = normalizeLoadedCVData({ experience: [{ id: "x1", position: "Vendedora", company: "Éxito" }] });
     expect(data.experience[0].achievements).toEqual([]);
     expect(data.experience[0].technologies).toEqual([]);
+  });
+});
+
+describe("professional card", () => {
+  it("shows number, issuer and date unless hidden", () => {
+    const card = { professionalCardNumber: "25202-123456", professionalCardIssuer: "COPNIA", professionalCardDate: "2019-03" };
+    expect(professionalCardText(card)).toBe("N.º 25202-123456 · COPNIA · expedida 03/2019");
+    expect(professionalCardText({ ...card, showProfessionalCardIssuer: false, showProfessionalCardDate: false })).toBe("N.º 25202-123456");
+    expect(professionalCardText({ ...card, showProfessionalCard: false })).toBe("");
+    expect(professionalCardText({ professionalCardIssuer: "COPNIA" })).toBe("");
+  });
+
+  it("appears on the CV next to the identity document", () => {
+    render(<TemplateRenderer template="corporate" data={{ personal: { name: "Ana", professionalCard: "N.º 123 · COPNIA" } } as unknown as RendererCVData} />);
+    expect(screen.getByText("Tarjeta profesional")).toBeTruthy();
+    expect(screen.getByText("N.º 123 · COPNIA")).toBeTruthy();
   });
 });

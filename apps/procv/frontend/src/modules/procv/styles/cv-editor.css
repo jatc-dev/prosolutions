@@ -567,6 +567,17 @@
   box-shadow: none !important;
 }
 
+/* Page-break spacers inserted by html2pdf (a classless div with only an
+   inline "display: block; height: …px"): 3 px more, so a moved box does not
+   leave a 1 px sliver of its border at the bottom of the previous page.
+   padding, not margin: a margin would collapse with the next box's. */
+.cv-pdf-export div[style^="display: block; height:"] {
+  /* content-box: with Tailwind's border-box the padding stayed inside the
+     fixed height and pushed nothing. */
+  box-sizing: content-box !important;
+  padding-bottom: 3px !important;
+}
+
 /* Contact icons: keep the icon and its value together (the space between
    them was a line-break point in narrow columns). inline-flex keeps inline
    contact rows inline; very long emails can still wrap. */
@@ -594,11 +605,13 @@
 }
 
 /* Form groups: each datum (field, its options and help) is a card, so it is
-   clear where one ends and the next begins. */
+   clear where one ends and the next begins. Neutral greys: a light grey in
+   light mode, a dark grey (no blue cast) in dark mode; fields stay white /
+   darker so they stand out inside the card. */
 .cv-form-groups > * {
-  border: 1px solid var(--ui-border, #d9ddd7);
+  border: 1px solid #e4e4e7;
   border-radius: 0.75rem;
-  background: var(--ui-surface, #ffffff);
+  background: #f7f7f8;
   padding: 1rem;
 }
 @media (min-width: 640px) {
@@ -606,8 +619,18 @@
     padding: 1.25rem;
   }
 }
+/* Nested boxes (each e-mail / phone) on the grey card: white, with a border. */
+.cv-form-groups > * .bg-slate-50 {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+}
 .dark .cv-form-groups > *,
 [data-theme="dark"] .cv-form-groups > * {
-  border-color: #334155;
-  background: #0f172a;
+  border-color: #3f3f46;
+  background: #27272a;
+}
+.dark .cv-form-groups > * .bg-slate-50,
+[data-theme="dark"] .cv-form-groups > * .bg-slate-50 {
+  background: #18181b;
+  border-color: #3f3f46;
 }

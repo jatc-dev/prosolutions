@@ -79,6 +79,13 @@ export interface PersonalData {
   documentType?: string;
   documentNumber?: string;
   showDocumentIdentity?: boolean;
+  /** Tarjeta o matrícula profesional (see modules/procv/professionalCard.ts). */
+  professionalCardNumber?: string;
+  professionalCardIssuer?: string;
+  professionalCardDate?: string;
+  showProfessionalCard?: boolean;
+  showProfessionalCardIssuer?: boolean;
+  showProfessionalCardDate?: boolean;
   showFullName?: boolean;
   showProfessionalTitle?: boolean;
   showNationality?: boolean;

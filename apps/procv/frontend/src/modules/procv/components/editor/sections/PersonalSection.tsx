@@ -9,11 +9,13 @@ import {
   FormSection,
   FormField,
   InputField,
-  TextareaField
+  TextareaField,
+  DateField
 } from "../FormSection";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
 import { appendPhrase } from "../../../phrases";
 import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
+import { PROFESSIONAL_CARD_ISSUERS } from "../../../professionalCard";
 
 interface PersonalSectionProps {
   data: PersonalData;
@@ -542,6 +544,30 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
       </div>
       <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
+      </div>
+
+      {/* Professional card / licence: number, issuing body and date. */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{tx('editor.ui.professionalCard', 'Tarjeta o matrícula profesional')}</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label={tx('editor.ui.professionalCardNumber', 'Número')}>
+            <InputField value={data.professionalCardNumber || ''} onChange={(value) => updateField('professionalCardNumber', value)} placeholder={tx('editor.ui.professionalCardNumberPh', 'Ej: 25202-123456')} />
+          </FormField>
+          <FormField label={tx('editor.ui.professionalCardDate', 'Fecha de expedición')}>
+            <DateField value={data.professionalCardDate || ''} onChange={(value) => updateField('professionalCardDate', value)} allowPartial />
+          </FormField>
+          <FormField label={tx('editor.ui.professionalCardIssuer', 'Entidad que la expidió')} className="sm:col-span-2">
+            <InputField value={data.professionalCardIssuer || ''} onChange={(value) => updateField('professionalCardIssuer', value)} placeholder={tx('editor.ui.professionalCardIssuerPh', 'Ej: COPNIA, Junta Central de Contadores')} list="professional-card-issuers" />
+            <datalist id="professional-card-issuers">
+              {PROFESSIONAL_CARD_ISSUERS.map((issuer) => <option key={issuer} value={issuer} />)}
+            </datalist>
+          </FormField>
+        </div>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <VisibilityToggle checked={data.showProfessionalCardIssuer !== false} onChange={(value) => updateField('showProfessionalCardIssuer', value)} label={tx('editor.ui.showProfessionalCardIssuer', 'Mostrar entidad')} />
+          <VisibilityToggle checked={data.showProfessionalCardDate !== false} onChange={(value) => updateField('showProfessionalCardDate', value)} label={tx('editor.ui.showProfessionalCardDate', 'Mostrar fecha de expedición')} />
+        </div>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" checked={data.showProfessionalCard !== false} onChange={(e) => updateField('showProfessionalCard', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showProfessionalCard', 'Mostrar tarjeta profesional en la hoja de vida')}</label>
       </div>
 
       {/* Birth Date */}

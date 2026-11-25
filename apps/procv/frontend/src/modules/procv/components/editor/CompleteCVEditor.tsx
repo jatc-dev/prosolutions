@@ -49,8 +49,10 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
-import { FileText, History, Mail } from "lucide-react";
+import { FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Upload } from "lucide-react";
+import { ActionMenu } from "./components/ActionMenu";
 import { DownloadMenu } from "./components/DownloadMenu";
+import { professionalCardText } from "../../professionalCard";
 
 // Import custom styles
 import "../../styles/cv-editor.css";
@@ -304,6 +306,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       documentType: cvData.personal?.showDocumentType === false ? '' : (cvData.personal?.documentType || ''),
       documentNumber: cvData.personal?.showDocumentNumber === false ? '' : (cvData.personal?.documentNumber || ''),
       showDocumentIdentity: Boolean(cvData.personal?.showDocumentIdentity),
+      professionalCard: professionalCardText(cvData.personal),
       sidebarIntroMode: cvData.personal?.sidebarIntroMode || 'valueProposition',
       references: cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
       showReferences: cvData.personal?.showReferences !== false,
@@ -1163,6 +1166,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
+              <DownloadMenu
+                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
+                onPdf={() => void handleExportPdf()}
+                onWord={() => void handleExportDocx()}
+                busy={isExportingPdf || isExportingDocx}
+              />
               <button
                 onClick={handleSave}
                 disabled={isSaving}
@@ -1174,9 +1183,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               >
                 {/* The status next to it already says "Guardando…": the button
                     only gets disabled, so the message is not shown twice. */}
-                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                 {t('editor.actions.save')}
               </button>
               </div>
@@ -1225,42 +1232,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 <span className="hidden sm:inline">{showPreview ? t('editor.actions.hide') : t('editor.actions.show')} {t('editor.actions.preview')}</span>
               </button>
 
-              <button
-                onClick={handleImportClick}
-                disabled={isImporting}
-                aria-label={t('editor.importer.button')}
-                title={t('editor.importer.button')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
-              >
-                {isImporting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-900" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {t('editor.importer.loading')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                    </svg>
-                    <span className="hidden sm:inline">{t('editor.importer.button')}</span>
-                  </>
-                )}
-              </button>
 
-              <button
-                onClick={handleReset}
-                aria-label={t('editor.actions.reset')}
-                title={t('editor.actions.reset')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
-              >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="hidden sm:inline">{t('editor.actions.reset')}</span>
-              </button>
 
               {isAuthenticated && cvId ? (
                 <button
@@ -1292,12 +1264,31 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 </button>
               ) : null}
 
-              <DownloadMenu
-                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
-                onPdf={() => void handleExportPdf()}
-                onWord={() => void handleExportDocx()}
-                busy={isExportingPdf || isExportingDocx}
+              {/* Less frequent actions: importing a file and starting over. */}
+              <ActionMenu
+                label={isImporting ? t('editor.importer.loading') : tx('editor.ui.more', 'Más')}
+                ariaLabel={tx('editor.ui.moreActions', 'Más opciones')}
+                icon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
+                menuLabel={tx('editor.ui.moreActions', 'Más opciones')}
+                disabled={isImporting}
+                buttonClassName="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                items={[
+                  {
+                    label: t('editor.importer.button'),
+                    description: tx('editor.ui.importHint', 'Rellena el formulario desde un PDF, Word o texto. Revisas los datos antes de aplicarlos.'),
+                    icon: <Upload className="h-5 w-5 text-brand-700" />,
+                    onSelect: handleImportClick,
+                  },
+                  {
+                    label: t('editor.actions.reset'),
+                    description: tx('editor.ui.resetHint', 'Borra el contenido y empieza de cero. Pide confirmación.'),
+                    icon: <RotateCcw className="h-5 w-5 text-red-600" />,
+                    onSelect: handleReset,
+                    tone: 'danger',
+                  },
+                ]}
               />
+
 
               </div>
             </div>

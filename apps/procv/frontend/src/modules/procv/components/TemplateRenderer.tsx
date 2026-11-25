@@ -45,6 +45,8 @@ export interface CVData {
     documentType?: string;
     documentNumber?: string;
     showDocumentIdentity?: boolean;
+    /** Tarjeta profesional, already formatted (empty when hidden). */
+    professionalCard?: string;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
     references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
@@ -502,8 +504,10 @@ function renderValuePropositionBlock({
 
   const showTitle = personal?.showValuePropositionTitle !== false;
 
+  // data-cv-item: the PDF export keeps the title, the text and the box
+  // together on one page (it was split when it crossed a page edge).
   return (
-    <section className={containerClassName}>
+    <section data-cv-item className={containerClassName}>
       {showTitle ? <h2 className={titleClassName}>{titleText}</h2> : null}
       <p className={textClassName}>{content}</p>
     </section>
@@ -1720,6 +1724,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
 
         <main className="col-span-2 p-8">
           {personal.showDocumentIdentity && (personal.documentType || personal.documentNumber) ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-2 text-sm text-slate-700">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></section> : null}
+          {personal.professionalCard ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Tarjeta profesional</h2><p className="mt-2 text-sm text-slate-700">{personal.professionalCard}</p></section> : null}
           {personal.summary?.trim() && personal.showSummaryContent !== false ? (
             <section className="mb-8">
               {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
@@ -2843,7 +2848,7 @@ function TemplateDafp({ data }: { data: CVData }) {
             </tbody>
           </table>
         ) : null}
-        {value("dafpProfessionalCard") ? <Grid><Row label="Tarjeta o matrícula profesional" wide>{value("dafpProfessionalCard")}</Row></Grid> : null}
+        {value("dafpProfessionalCard") || personal.professionalCard ? <Grid><Row label="Tarjeta o matrícula profesional" wide>{value("dafpProfessionalCard") || personal.professionalCard}</Row></Grid> : null}
         {languages.length ? (
           <table className="mt-2 w-full border-collapse text-[11px]">
             <thead>
@@ -2950,7 +2955,8 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => { if (!item || item.isVisible === false) return false; const hidden = item.hiddenFields || []; return (item.name && !hidden.includes("name")) || (item.phone && !hidden.includes("phone")) || (item.email && !hidden.includes("email")) || (item.company && !hidden.includes("company")) || (item.position && !hidden.includes("position")) || (item.relationship && !hidden.includes("relationship")); });
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
-  if (!showDocument && references.length === 0 && !showRequestText) return null;
+  const professionalCard = includeDocument ? personal.professionalCard || "" : "";
+  if (!showDocument && !professionalCard && references.length === 0 && !showRequestText) return null;
   const width = TEMPLATE_PAGE_WIDTH[template] ?? "max-w-2xl";
   const surface = supplementalSurface(template, data);
   const border = surface.dark ? "border-white/10" : "border-slate-200 bg-white text-slate-800";
@@ -2962,6 +2968,12 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
         <div className="mb-4">
           <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Documento de identidad</h2>
           <p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p>
+        </div>
+      ) : null}
+      {professionalCard ? (
+        <div className="mb-4">
+          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Tarjeta profesional</h2>
+          <p className="mt-1 text-sm">{professionalCard}</p>
         </div>
       ) : null}
       {references.length ? (
