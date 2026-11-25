@@ -4,6 +4,7 @@ import { useState } from "react";
 import { identityAuthApiUrl } from "../identityApi";
 import { Eye, EyeOff } from "lucide-react";
 import { GoogleSignInButton, oauthErrorMessage } from "../components/GoogleSignInButton";
+import { MfaStep, takeMfaChallengeFromHash } from "../components/MfaStep";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
@@ -17,6 +18,8 @@ export function HomePage() {
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  // Second sign-in step (two-step verification). Google sign-ins arrive with it in the URL fragment.
+  const [mfaChallenge, setMfaChallenge] = useState<string | null>(() => takeMfaChallengeFromHash());
   const oauthError = oauthErrorMessage(new URLSearchParams(window.location.search).get("oauth_error"));
 
   // Preserve the requesting first-party module after central authentication.
@@ -101,6 +104,10 @@ export function HomePage() {
       }
 
       const data = await response.json();
+      if (data.mfaRequired && data.challenge) {
+        setMfaChallenge(data.challenge);
+        return;
+      }
       if (!data.accessToken) {
         setLoginError("La autenticación no devolvió una sesión válida. Intenta de nuevo.");
         return;
@@ -114,6 +121,13 @@ export function HomePage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const finishMfa = (result: { accessToken?: string; next?: string }) => {
+    if (result.next) { window.location.assign(result.next); return; }
+    if (!result.accessToken) { setMfaChallenge(null); setLoginError(copy.auth.loginError); return; }
+    sessionStorage.setItem("pro_identity_token", result.accessToken);
+    window.location.assign(getPostLoginDestination());
   };
 
   const handleResendVerification = async () => {
@@ -182,6 +196,9 @@ export function HomePage() {
                   </div>
                 )}
 
+                {mfaChallenge ? (
+                  <MfaStep apiUrl={IDENTITY_API_URL} challenge={mfaChallenge} english={language === "en"} onSignedIn={finishMfa} onRestart={() => setMfaChallenge(null)} />
+                ) : (<>
                 <form onSubmit={handleLoginSubmit} className="space-y-4">
                   <Input
                     label={copy.auth.email}
@@ -245,6 +262,7 @@ export function HomePage() {
                     si es una cuenta nueva.
                   </p>
                 </div>
+                </>)}
 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">

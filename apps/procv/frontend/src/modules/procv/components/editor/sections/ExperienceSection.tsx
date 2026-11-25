@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { ExperienceItem, EmploymentType, ValidationErrors } from "../../../../../shared/types";
 import {
@@ -421,7 +422,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
               {/* Expanded content */}
               {expandedItems.includes(experience.id) && (
                 <div className="editor-item-scroll px-6 py-6 space-y-6">
-                  <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" checked={experience.isVisible !== false} onChange={(event) => updateExperience(experience.id, { isVisible: event.target.checked })} />Mostrar esta experiencia en el CV</label>
+                  <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" checked={experience.isVisible !== false} onChange={(event) => updateExperience(experience.id, { isVisible: event.target.checked })} />{tx('editor.ui.showExperience', 'Mostrar esta experiencia en el CV')}</label>
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <FormField

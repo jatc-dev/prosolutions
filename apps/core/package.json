@@ -14,6 +14,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "clsx": "^2.1.1",
     "lucide-react": "^0.400.0",
+    "qrcode-generator": "2.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.6",

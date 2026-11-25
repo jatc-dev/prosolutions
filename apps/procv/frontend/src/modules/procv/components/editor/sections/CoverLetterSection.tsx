@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { tx } from '../../../uiText';
 import { Sparkles, Wand2 } from "lucide-react";
 import { useAuth } from "../../../../../stores/authStore";
 import { AIGenerationError, generateCVContent, isAiAvailable } from "../../../../../services/cvAIGeneration";
@@ -79,39 +80,39 @@ export function CoverLetterSection({ cv, onChange }: Props) {
   return (
     <section aria-labelledby="carta-titulo" className="space-y-6">
       <div>
-        <h3 id="carta-titulo" className="text-lg font-semibold text-slate-900 dark:text-slate-100">Carta de presentación</h3>
+        <h3 id="carta-titulo" className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tx('editor.ui.coverLetter', 'Carta de presentación')}</h3>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Usa tus datos, la plantilla, las fuentes y los colores de tu hoja de vida. Se guarda junto con ella y se descarga como un PDF aparte.
         </p>
       </div>
 
       <fieldset className="space-y-4">
-        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">Destinatario</legend>
+        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">{tx('editor.ui.recipient', 'Destinatario')}</legend>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Field label="Nombre de la persona (opcional)" value={letter.recipientName} onChange={(v) => update({ recipientName: v })} placeholder="Ej.: Laura Martínez" />
-          <Field label="Cargo (opcional)" value={letter.recipientTitle} onChange={(v) => update({ recipientTitle: v })} placeholder="Ej.: Líder de talento humano" />
-          <Field label="Empresa" value={letter.company} onChange={(v) => update({ company: v })} placeholder="Ej.: Comercial Andina S.A.S." />
-          <Field label="Dirección o ciudad de la empresa (opcional)" value={letter.companyAddress} onChange={(v) => update({ companyAddress: v })} />
+          <Field label={tx('editor.ui.recipientName', 'Nombre de la persona (opcional)')} value={letter.recipientName} onChange={(v) => update({ recipientName: v })} placeholder={tx('editor.ui.recipientNamePh', 'Ej.: Laura Martínez')} />
+          <Field label={tx('editor.ui.recipientTitle', 'Cargo (opcional)')} value={letter.recipientTitle} onChange={(v) => update({ recipientTitle: v })} placeholder={tx('editor.ui.recipientTitlePh', 'Ej.: Líder de talento humano')} />
+          <Field label={tx('editor.ui.company', 'Empresa')} value={letter.company} onChange={(v) => update({ company: v })} placeholder={tx('editor.ui.companyPh', 'Ej.: Comercial Andina S.A.S.')} />
+          <Field label={tx('editor.ui.companyAddress', 'Dirección o ciudad de la empresa (opcional)')} value={letter.companyAddress} onChange={(v) => update({ companyAddress: v })} />
         </div>
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">Vacante y fecha</legend>
+        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">{tx('editor.ui.vacancyDate', 'Vacante y fecha')}</legend>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="md:col-span-3">
-            <Field label="Cargo al que te postulas" value={letter.position} onChange={(v) => update({ position: v })} placeholder={cv.personal?.professionalTitle || "Ej.: Auxiliar administrativo"} />
+            <Field label={tx('editor.ui.position', 'Cargo al que te postulas')} value={letter.position} onChange={(v) => update({ position: v })} placeholder={cv.personal?.professionalTitle || "Ej.: Auxiliar administrativo"} />
           </div>
-          <Field label="Ciudad" value={letter.city} onChange={(v) => update({ city: v })} placeholder={cv.personal?.city || "Ej.: Bogotá"} />
-          <Field label="Fecha" type="date" value={letter.date || todayIso()} onChange={(v) => update({ date: v })} />
+          <Field label={tx('editor.ui.city', 'Ciudad')} value={letter.city} onChange={(v) => update({ city: v })} placeholder={cv.personal?.city || "Ej.: Bogotá"} />
+          <Field label={tx('editor.ui.date', 'Fecha')} type="date" value={letter.date || todayIso()} onChange={(v) => update({ date: v })} />
         </div>
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">Contenido</legend>
-        <Field label="Saludo" value={letter.greeting} onChange={(v) => update({ greeting: v })} placeholder={defaultGreeting(letter)} />
+        <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100">{tx('editor.ui.content', 'Contenido')}</legend>
+        <Field label={tx('editor.ui.greeting', 'Saludo')} value={letter.greeting} onChange={(v) => update({ greeting: v })} placeholder={defaultGreeting(letter)} />
         <div>
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <label htmlFor="carta-cuerpo" className={labelClass}>Cuerpo de la carta</label>
+            <label htmlFor="carta-cuerpo" className={labelClass}>{tx('editor.ui.body', 'Cuerpo de la carta')}</label>
             <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -140,23 +141,23 @@ export function CoverLetterSection({ cv, onChange }: Props) {
             onChange={(e) => update({ body: e.target.value })}
             rows={14}
             className={inputClass}
-            placeholder="Separa los párrafos con una línea en blanco."
+            placeholder={tx('editor.ui.bodyPh', 'Separa los párrafos con una línea en blanco.')}
             aria-describedby="carta-ayuda"
           />
           {aiError ? <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">{aiError}</p> : null}
           {aiProposal ? (
             <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm dark:border-brand-900 dark:bg-brand-950/30" aria-live="polite">
-              <p className="font-semibold text-slate-900 dark:text-slate-100">Propuesta de la IA</p>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">{tx('editor.ui.aiProposal', 'Propuesta de la IA')}</p>
               <p className="mt-2 whitespace-pre-line text-slate-800 dark:text-slate-200">{aiProposal.text}</p>
               {aiProposal.needsUserInput.length ? (
                 <div className="mt-3">
-                  <p className="font-medium text-slate-800 dark:text-slate-200">Para reforzarla, añade:</p>
+                  <p className="font-medium text-slate-800 dark:text-slate-200">{tx('editor.ui.aiAdd', 'Para reforzarla, añade:')}</p>
                   <ul className="mt-1 list-disc pl-5 text-slate-700 dark:text-slate-300">
                     {aiProposal.needsUserInput.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 </div>
               ) : null}
-              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">La IA solo reorganiza lo que ya escribiste: revisa que todo sea cierto antes de enviarla.</p>
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{tx('editor.ui.aiNote', 'La IA solo reorganiza lo que ya escribiste: revisa que todo sea cierto antes de enviarla.')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" onClick={() => { update({ body: aiProposal.text }); setAiProposal(null); }} className="rounded-md bg-brand-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-900">
                   Usar esta versión
@@ -172,16 +173,16 @@ export function CoverLetterSection({ cv, onChange }: Props) {
             {pending ? <span className="font-semibold text-amber-700 dark:text-amber-300">Tienes {pending} {pending === 1 ? "texto entre corchetes" : "textos entre corchetes"} por completar.</span> : null}
           </p>
         </div>
-        <Field label="Despedida" value={letter.closing} onChange={(v) => update({ closing: v })} placeholder="Cordialmente," />
+        <Field label={tx('editor.ui.closing', 'Despedida')} value={letter.closing} onChange={(v) => update({ closing: v })} placeholder={tx('editor.ui.closingPh', 'Cordialmente,')} />
       </fieldset>
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
-        <p className="font-semibold">Consejos</p>
+        <p className="font-semibold">{tx('editor.ui.tips', 'Consejos')}</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>Escribe una carta por vacante: menciona la empresa y el cargo exactos.</li>
-          <li>Incluye al menos un logro con cifras (porcentaje, tiempo, dinero o volumen).</li>
-          <li>Explica por qué te interesa esa empresa; es lo que más diferencia tu carta.</li>
-          <li>No repitas tu hoja de vida: complétala con lo que no cabe en ella.</li>
+          <li>{tx('editor.ui.tip1', 'Escribe una carta por vacante: menciona la empresa y el cargo exactos.')}</li>
+          <li>{tx('editor.ui.tip2', 'Incluye al menos un logro con cifras (porcentaje, tiempo, dinero o volumen).')}</li>
+          <li>{tx('editor.ui.tip3', 'Explica por qué te interesa esa empresa; es lo que más diferencia tu carta.')}</li>
+          <li>{tx('editor.ui.tip4', 'No repitas tu hoja de vida: complétala con lo que no cabe en ella.')}</li>
         </ul>
       </div>
     </section>

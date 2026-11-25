@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { tx } from '../../uiText';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
@@ -33,6 +34,7 @@ import { CustomizerPanel } from "./components/CustomizerPanel";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { AIPanel } from "./components/AIPanel";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
+import { useEditorLayout } from "./useEditorLayout";
 
 // Import all section components
 import { PersonalSection } from "./sections/PersonalSection";
@@ -414,11 +416,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     }
   }, [docMode]);
 
-  const [showPreview, setShowPreview] = useState(() =>
-    typeof window === "undefined" || !window.matchMedia
-      ? true
-      : window.matchMedia("(min-width: 769px)").matches,
-  );
+  const { isSplit, previewVisible: showPreview, formVisible, togglePreview } = useEditorLayout();
   const [panelSizes, setPanelSizes] = useState({ editor: 50, preview: 50 });
   const [isImporting, setIsImporting] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
@@ -1038,7 +1036,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         sensors={sensors}
         collisionDetection={closestCenter}
       >
-        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-ui-bg ${showPreview ? "cv-editor-preview-open" : ""} ${className}`}>
+        <div className={`cv-editor ui-page flex min-h-full flex-1 flex-col bg-ui-bg ${showPreview ? "cv-editor-preview-open" : ""} ${isSplit ? "" : "cv-editor-single"} ${className}`}>
           <ImportReviewModal
             isOpen={importReviewOpen}
             fileName={pendingImportFileName}
@@ -1101,10 +1099,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
 
               <button
-                onClick={() => setShowPreview(!showPreview)}
+                onClick={togglePreview}
                 aria-label={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
                 title={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                className="cv-editor-preview-toggle inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
               >
                 <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1222,7 +1220,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 onClick={handleExportDocx}
                 disabled={isExportingDocx}
                 aria-label={docMode === 'letter' ? 'Descargar la carta en Word' : 'Descargar la hoja de vida en Word'}
-                title="Word (.docx): formato editable de una columna, ideal para portales y reclutadores"
+                title={tx('editor.ui.wordHint', 'Word (.docx): editable, con el estilo de tu plantilla')}
                 className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-600 bg-white px-2 py-2 text-sm font-medium text-brand-800 shadow-sm hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
               >
                 <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -1237,7 +1235,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
         {/* Document switch: CV or cover letter */}
         <div className="flex justify-center border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-900">
-          <div role="tablist" aria-label="Documento" className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+          <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
             {([['cv', 'Hoja de vida'], ['letter', 'Carta de presentación']] as const).map(([mode, label]) => (
               <button
                 key={mode}
@@ -1307,8 +1305,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         <div className="cv-editor-workspace flex" style={{ height: 'calc(100vh - 140px)' }}>
           {/* Editor Panel */}
           <div
-            className="cv-editor-panel min-w-0 overflow-y-auto border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
-            style={{ width: showPreview ? `${panelSizes.editor}%` : '100%' }}
+            className={`cv-editor-panel min-w-0 overflow-y-auto border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${formVisible ? '' : 'cv-editor-hidden'}`}
+            style={{ width: isSplit && showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
             <div className="p-4 sm:p-6">
               <EditorDisclosure
@@ -1398,7 +1396,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           </div>
 
           {/* Resize Handle */}
-          {showPreview && (
+          {isSplit && showPreview && (
             <div
               className="cv-editor-resize-handle w-1 cursor-col-resize bg-slate-300 transition-colors hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600"
               onMouseDown={(e) => {
@@ -1411,11 +1409,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             />
           )}
 
-          {/* Preview Panel */}
-          {showPreview && (
+          {/* Preview Panel: always mounted because the PDF export reads it. */}
+          {(
             <div
-              className="cv-editor-preview min-w-0 overflow-y-auto bg-slate-50 dark:bg-slate-950"
-              style={{ width: `${panelSizes.preview}%` }}
+              className={`cv-editor-preview min-w-0 overflow-y-auto bg-slate-50 dark:bg-slate-950 ${showPreview ? '' : 'cv-editor-hidden'}`}
+              aria-label={t('editor.cvPreview')}
+              style={{ width: isSplit ? `${panelSizes.preview}%` : '100%' }}
             >
               <div className="p-4 sm:p-6">
                 <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
@@ -1438,6 +1437,24 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             </div>
           )}
         </div>
+
+        {/* Narrow screens: one view at a time, switched with a floating button. */}
+        {!isSplit ? (
+          <button
+            type="button"
+            onClick={togglePreview}
+            aria-pressed={showPreview}
+            className="cv-editor-view-switch fixed bottom-5 left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-brand-800 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-brand-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 dark:bg-brand-500 dark:text-slate-950 dark:hover:bg-brand-400"
+            style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            {showPreview ? (
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.5 2.5 0 00-3.536-3.536L4 16.5V20z" /></svg>
+            ) : (
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            )}
+            {showPreview ? tx('editor.ui.backToForm', 'Seguir editando') : tx('editor.ui.showPreview', 'Vista previa')}
+          </button>
+        ) : null}
 
         {/* Toast Notifications */}
         <Toaster

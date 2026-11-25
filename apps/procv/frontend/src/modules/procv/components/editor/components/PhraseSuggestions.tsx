@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { tx } from '../../../uiText';
 import { Lightbulb, Plus } from "lucide-react";
 import { PHRASE_FAMILIES, familyForTitle, getFamily, type PhraseFamily } from "../../../phrases";
 
@@ -86,7 +87,7 @@ export function PhraseSuggestions({ title, kind, onPick, isUsed }: Props) {
               );
             })}
           </ul>
-          <p className="text-[11px] text-slate-500">Adáptalas a tu experiencia real: los reclutadores notan las frases genéricas.</p>
+          <p className="text-[11px] text-slate-500">{tx('editor.ui.phrasesNote', 'Adáptalas a tu experiencia real: los reclutadores notan las frases genéricas.')}</p>
         </div>
       ) : null}
     </div>

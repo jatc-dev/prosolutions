@@ -84,7 +84,7 @@ jobs:
             if (!robots.includes(rule)) throw new Error(`robots.txt is missing "${rule}"`);
           }
           const pages = readFileSync(`${dist}/sitemap-pages.xml`, "utf8");
-          if (!pages.includes("/academy/hoja-de-vida-ats-2026") || pages.includes("/admin")) throw new Error("sitemap-pages.xml is wrong");
+          if (!pages.includes("/academy/hoja-de-vida-ats-2026") || /prosolutions\.page\/admin(\/|<)/.test(pages)) throw new Error("sitemap-pages.xml is wrong");
           if (!readFileSync(`${dist}/sitemap.xml`, "utf8").includes("<sitemapindex")) throw new Error("sitemap.xml must be a sitemap index");
           console.log("Core prerender, sitemap, robots and ads policy verified");
           NODE

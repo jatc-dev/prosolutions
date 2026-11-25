@@ -141,6 +141,7 @@ services:
       - { key: COOKIE_SECURE, sync: false }
       - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
+      - { key: PROCV_INTERNAL_TOKEN, sync: false }   # 32+ chars; /api/internal returns 404 without it
       - { key: SMTP_HOST, sync: false }
       - { key: SMTP_PORT, sync: false }
       - { key: SMTP_SECURE, sync: false }
@@ -178,6 +179,7 @@ services:
       - { key: COOKIE_SECURE, sync: false }
       - { key: HEALTH_DB_TIMEOUT_MS, sync: false }
       - { key: SESSION_IDLE_TIMEOUT_MINUTES, sync: false }
+      - { key: PROCV_INTERNAL_TOKEN, sync: false }   # 32+ chars; /api/internal returns 404 without it
 
   # ---------------------------------------------------------- ProIdentity ----
   - type: web
@@ -211,6 +213,8 @@ services:
       - { key: PROCV_BACKEND_URL, sync: false }   # https://procv-api.onrender.com (admin console proxy; 503 without it)
       - { key: PROJOBS_API_URL, sync: false }
       - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
+      - { key: PROCV_INTERNAL_TOKEN, sync: false }   # same value as ProCV API (32+ chars); admin user summary/erasure
+      - { key: MFA_ENCRYPTION_KEY, sync: false }     # 64 hex chars (openssl rand -hex 32); encrypts TOTP secrets. Never change it once users enable MFA
       - { key: SMTP_HOST, sync: false }
       - { key: SMTP_PORT, sync: false }
       - { key: SMTP_SECURE, sync: false }
@@ -251,6 +255,8 @@ services:
       - { key: PROCV_BACKEND_URL, sync: false }
       - { key: PROJOBS_API_URL, sync: false }
       - { key: PROJOBS_INTERNAL_TOKEN, sync: false }
+      - { key: PROCV_INTERNAL_TOKEN, sync: false }   # same value as ProCV API (32+ chars); admin user summary/erasure
+      - { key: MFA_ENCRYPTION_KEY, sync: false }     # 64 hex chars (openssl rand -hex 32); encrypts TOTP secrets. Never change it once users enable MFA
 
   # ---------------------------------------------------------- ProJobs web ----
   - type: web

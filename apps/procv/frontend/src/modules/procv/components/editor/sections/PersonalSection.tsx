@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { tx } from '../../../uiText';
 import { CONTACT_LABEL_STYLES, normalizeContactLabelStyle } from '../../../contactLabels';
 import { useTranslation } from 'react-i18next';
 import { CountrySelect } from "../../../../../components/ui/CountrySelect";
@@ -361,7 +362,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                 <img
                   src={imagePreview}
                   alt={t('editor.personal.profileImageAlt')}
-                  title="Arrastra para encuadrar la foto"
+                  title={tx('editor.ui.photoDragHint', 'Arrastra para encuadrar la foto')}
                   draggable={false}
                   onPointerDown={onPhotoPointerDown}
                   onPointerMove={onPhotoPointerMove}
@@ -409,74 +410,74 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
 
-        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={data.showProfileImage !== false}
-            onChange={(e) => updateField('showProfileImage', e.target.checked)}
-            className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
-          />
-          {t('editor.personal.showProfileImage')}
-        </label>
+        {/* Compact photo options: visibility toggles in one row, style and size side by side. */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={data.showProfileImage !== false}
+              onChange={(e) => updateField('showProfileImage', e.target.checked)}
+              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
+            />
+            {t('editor.personal.showProfileImage')}
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={data.profileImageBorder !== false}
+              onChange={(e) => updateField('profileImageBorder', e.target.checked)}
+              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
+            />
+            {tx('editor.ui.photoBorder', 'Mostrar borde en la foto')}
+          </label>
+        </div>
 
-        <FormField label={t('editor.personal.fields.profileImageStyle')}>
-          <select
-            value={imageStyle}
-            onChange={(e) => updateField('profileImageStyle', e.target.value as ProfileImageStyle)}
-            className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm"
-          >
-            <option value="round">{t('editor.personal.profileImageStyles.round')}</option>
-            <option value="square">{t('editor.personal.profileImageStyles.square')}</option>
-            <option value="portrait">{t('editor.personal.profileImageStyles.portrait')}</option>
-            <option value="oval">{t('editor.personal.profileImageStyles.oval', 'Ovalada')}</option>
-            <option value="arch">{t('editor.personal.profileImageStyles.arch', 'Arco')}</option>
-          </select>
-        </FormField>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label={t('editor.personal.fields.profileImageStyle')}>
+            <select
+              value={imageStyle}
+              onChange={(e) => updateField('profileImageStyle', e.target.value as ProfileImageStyle)}
+              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <option value="round">{t('editor.personal.profileImageStyles.round')}</option>
+              <option value="square">{t('editor.personal.profileImageStyles.square')}</option>
+              <option value="portrait">{t('editor.personal.profileImageStyles.portrait')}</option>
+              <option value="oval">{t('editor.personal.profileImageStyles.oval', 'Ovalada')}</option>
+              <option value="arch">{t('editor.personal.profileImageStyles.arch', 'Arco')}</option>
+            </select>
+          </FormField>
 
-        <FormField label="Tamaño de la foto" help="Ajusta el tamaño con el que aparece en la plantilla.">
-          <div role="radiogroup" aria-label="Tamaño de la foto" className="grid grid-cols-4 gap-2">
-            {PHOTO_SIZE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={(data.profileImageSize || 'md') === option.value}
-                onClick={() => updateField('profileImageSize', option.value)}
-                className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${(data.profileImageSize || 'md') === option.value ? 'border-brand-700 bg-brand-50 font-semibold text-slate-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200'}`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </FormField>
+          <FormField label={tx('editor.ui.photoSize', 'Tamaño de la foto')}>
+            <select
+              value={data.profileImageSize || 'md'}
+              onChange={(e) => updateField('profileImageSize', e.target.value as ProfileImageSize)}
+              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              {PHOTO_SIZE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{tx(`editor.ui.photoSize_${option.value}`, option.label)}</option>
+              ))}
+            </select>
+          </FormField>
+        </div>
 
         {imagePreview ? (
-          <FormField label="Encuadre de la foto" help="Arrastra la foto en la miniatura o usa los controles si quedó descentrada.">
+          <FormField label={tx('editor.ui.photoFrame', 'Encuadre de la foto')} help={tx('editor.ui.photoFrameHelp', 'Arrastra la foto en la miniatura o usa los controles si quedó descentrada.')}>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,1fr,auto] sm:items-end">
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-                Horizontal
-                <input type="range" min={0} max={100} value={photoX} onChange={(e) => setPhotoPosition(Number(e.target.value), photoY)} className="mt-1 w-full accent-brand-700" aria-label="Encuadre horizontal de la foto" />
+                {tx('editor.ui.horizontal', 'Horizontal')}
+                <input type="range" min={0} max={100} value={photoX} onChange={(e) => setPhotoPosition(Number(e.target.value), photoY)} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameX', 'Encuadre horizontal de la foto')} />
               </label>
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-                Vertical
-                <input type="range" min={0} max={100} value={photoY} onChange={(e) => setPhotoPosition(photoX, Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label="Encuadre vertical de la foto" />
+                {tx('editor.ui.vertical', 'Vertical')}
+                <input type="range" min={0} max={100} value={photoY} onChange={(e) => setPhotoPosition(photoX, Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameY', 'Encuadre vertical de la foto')} />
               </label>
               <button type="button" onClick={() => setPhotoPosition(50, 50)} disabled={photoX === 50 && photoY === 50} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
-                Centrar
+                {tx('editor.ui.center', 'Centrar')}
               </button>
             </div>
           </FormField>
         ) : null}
 
-        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={data.profileImageBorder !== false}
-            onChange={(e) => updateField('profileImageBorder', e.target.checked)}
-            className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
-          />
-          Mostrar borde en la foto
-        </label>
         </div>
       </FormField>
 
@@ -507,8 +508,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.professionalTitle')}
           />
         </FormField>
-        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label="Mostrar nombre" />
-        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label="Mostrar título profesional" />
+        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label={tx('editor.ui.showName', 'Mostrar nombre')} />
+        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label={tx('editor.ui.showTitle', 'Mostrar título profesional')} />
       </div>
 
       <FormField
@@ -523,19 +524,19 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           aria-label={t('editor.personal.fields.nationality')}
         />
       </FormField>
-      <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label="Mostrar nacionalidad" />
+      <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label={tx('editor.ui.showNationality', 'Mostrar nacionalidad')} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Tipo de documento de identidad">
+        <FormField label={tx('editor.ui.docType', 'Tipo de documento de identidad')}>
           <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-            <option value="">Seleccionar</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="Pasaporte">Pasaporte</option><option value="PEP">Permiso especial de permanencia</option><option value="PPT">Permiso por protección temporal</option><option value="Otro">Otro</option>
+            <option value="">{tx('editor.ui.select', 'Seleccionar')}</option><option value="CC">{tx('editor.ui.docCC', 'Cédula de ciudadanía')}</option><option value="CE">{tx('editor.ui.docCE', 'Cédula de extranjería')}</option><option value="Pasaporte">{tx('editor.ui.docPassport', 'Pasaporte')}</option><option value="PEP">{tx('editor.ui.docPEP', 'Permiso especial de permanencia')}</option><option value="PPT">{tx('editor.ui.docPPT', 'Permiso por protección temporal')}</option><option value="Otro">{tx('editor.ui.other', 'Otro')}</option>
           </select>
         </FormField>
-        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label="Mostrar tipo de documento" />
-        <FormField label="Número de documento"><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder="Número de identificación" /></FormField>
-        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label="Mostrar número de documento" />
+        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label={tx('editor.ui.showDocType', 'Mostrar tipo de documento')} />
+        <FormField label={tx('editor.ui.docNumber', 'Número de documento')}><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder={tx('editor.ui.docNumberPh', 'Número de identificación')} /></FormField>
+        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
       </div>
-      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar documento de identidad en la hoja de vida</label>
+      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
 
       {/* Birth Date */}
       <FormField
@@ -601,8 +602,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           {t('editor.personal.contactInfo')}
         </h4>
 
-        <FormField label="Cómo mostrar correos y teléfonos" help={CONTACT_LABEL_STYLES.find((option) => option.value === normalizeContactLabelStyle(data.contactLabelStyle))?.hint}>
-          <div role="radiogroup" aria-label="Cómo mostrar correos y teléfonos" className="grid grid-cols-3 gap-2">
+        <FormField label={tx('editor.ui.contactDisplay', 'Cómo mostrar correos y teléfonos')} help={(() => { const option = CONTACT_LABEL_STYLES.find((item) => item.value === normalizeContactLabelStyle(data.contactLabelStyle)); return option ? tx(`editor.ui.contactStyleHint_${option.value}`, option.hint) : undefined; })()}>
+          <div role="radiogroup" aria-label={tx('editor.ui.contactDisplay', 'Cómo mostrar correos y teléfonos')} className="grid grid-cols-3 gap-2">
             {CONTACT_LABEL_STYLES.map((option) => {
               const selected = normalizeContactLabelStyle(data.contactLabelStyle) === option.value;
               return (
@@ -614,7 +615,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   onClick={() => updateField('contactLabelStyle', option.value)}
                   className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${selected ? 'border-brand-700 bg-brand-50 font-semibold text-slate-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200'}`}
                 >
-                  {option.label}
+                  {tx(`editor.ui.contactStyle_${option.value}`, option.label)}
                 </button>
               );
             })}
@@ -646,7 +647,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   return (
                     <>
                 <div className="flex items-center space-x-2">
-                  <VisibilityToggle checked={email.isVisible !== false} onChange={(value) => updateEmail(email.id, { isVisible: value })} label="Mostrar este correo" />
+                  <VisibilityToggle checked={email.isVisible !== false} onChange={(value) => updateEmail(email.id, { isVisible: value })} label={tx('editor.ui.showThisEmail', 'Mostrar este correo')} />
                 </div>
 
                 <FormField label={t('editor.personal.fields.type')}>
@@ -725,7 +726,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                   return (
                     <>
                 <div className="flex items-center space-x-2">
-                  <VisibilityToggle checked={phone.isVisible !== false} onChange={(value) => updatePhone(phone.id, { isVisible: value })} label="Mostrar este teléfono" />
+                  <VisibilityToggle checked={phone.isVisible !== false} onChange={(value) => updatePhone(phone.id, { isVisible: value })} label={tx('editor.ui.showThisPhone', 'Mostrar este teléfono')} />
                 </div>
 
                 <FormField label={t('editor.personal.fields.type')}>
@@ -914,20 +915,20 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         </div>
       </FormField>
       <section className="space-y-4 border-t border-slate-200 pt-5">
-        <div><h4 className="text-sm font-semibold text-slate-900">Referencias</h4><p className="text-xs text-slate-500">Se mostrarán al final del contenido principal de la hoja de vida.</p></div>
+        <div><h4 className="text-sm font-semibold text-slate-900">{tx('editor.ui.references', 'Referencias')}</h4><p className="text-xs text-slate-500">{tx('editor.ui.referencesHint', 'Se mostrarán al final del contenido principal de la hoja de vida.')}</p></div>
         <div className="space-y-2">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Incluir referencias directas</label>
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />Mostrar «Referencias laborales y personales: Disponibles a solicitud.»</label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.includeReferences', 'Incluir referencias directas')}</label>
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.referencesOnRequest', 'Mostrar «Referencias laborales y personales: Disponibles a solicitud.»')}</label>
         </div>
         {data.showReferences !== false ? <>
-          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Agregar referencia</button></div>
+          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">{tx('editor.ui.addReference', 'Agregar referencia')}</button></div>
           {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label="Mostrar esta referencia" /></div><FormField label="Tipo de referencia"><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"><option value="laboral">Laboral</option><option value="personal">Familiar / personal</option></select></FormField>
-            <FormField label="Nombre y apellido"><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('name')} onChange={(value) => toggleReferenceField(index, 'name', value)} label="Mostrar nombre" />
-            {reference.type === 'laboral' ? <><FormField label="Cargo actual"><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('position')} onChange={(value) => toggleReferenceField(index, 'position', value)} label="Mostrar cargo" /><FormField label="Empresa"><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('company')} onChange={(value) => toggleReferenceField(index, 'company', value)} label="Mostrar empresa" /></> : <><FormField label="Parentesco"><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('relationship')} onChange={(value) => toggleReferenceField(index, 'relationship', value)} label="Mostrar parentesco" /></>}
-            <FormField label="Teléfono de contacto"><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('phone')} onChange={(value) => toggleReferenceField(index, 'phone', value)} label="Mostrar teléfono" />
-            <FormField label="Correo electrónico"><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('email')} onChange={(value) => toggleReferenceField(index, 'email', value)} label="Mostrar correo" />
-            <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">Eliminar referencia</button></div>
+            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label={tx('editor.ui.showThisReference', 'Mostrar esta referencia')} /></div><FormField label={tx('editor.ui.referenceType', 'Tipo de referencia')}><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"><option value="laboral">{tx('editor.ui.professional', 'Laboral')}</option><option value="personal">{tx('editor.ui.personalFamily', 'Familiar / personal')}</option></select></FormField>
+            <FormField label={tx('editor.ui.fullName', 'Nombre y apellido')}><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('name')} onChange={(value) => toggleReferenceField(index, 'name', value)} label={tx('editor.ui.showName', 'Mostrar nombre')} />
+            {reference.type === 'laboral' ? <><FormField label={tx('editor.ui.currentPosition', 'Cargo actual')}><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('position')} onChange={(value) => toggleReferenceField(index, 'position', value)} label={tx('editor.ui.showPosition', 'Mostrar cargo')} /><FormField label={tx('editor.ui.company', 'Empresa')}><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('company')} onChange={(value) => toggleReferenceField(index, 'company', value)} label={tx('editor.ui.showCompany', 'Mostrar empresa')} /></> : <><FormField label={tx('editor.ui.relationship', 'Parentesco')}><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('relationship')} onChange={(value) => toggleReferenceField(index, 'relationship', value)} label={tx('editor.ui.showRelationship', 'Mostrar parentesco')} /></>}
+            <FormField label={tx('editor.ui.contactPhone', 'Teléfono de contacto')}><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('phone')} onChange={(value) => toggleReferenceField(index, 'phone', value)} label={tx('editor.ui.showPhone', 'Mostrar teléfono')} />
+            <FormField label={tx('editor.ui.email', 'Correo electrónico')}><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('email')} onChange={(value) => toggleReferenceField(index, 'email', value)} label={tx('editor.ui.showEmail', 'Mostrar correo')} />
+            <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">{tx('editor.ui.removeReference', 'Eliminar referencia')}</button></div>
           </div>)}
         </> : null}
       </section>

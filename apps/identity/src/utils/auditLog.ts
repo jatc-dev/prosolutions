@@ -12,6 +12,13 @@ export interface AuditLogData {
 
 export type AuditEventType =
   | 'authentication.login_success'
+  | 'authentication.mfa_challenge'
+  | 'authentication.mfa_verified'
+  | 'authentication.mfa_failed'
+  | 'authentication.mfa_enabled'
+  | 'authentication.mfa_disabled'
+  | 'authentication.mfa_recovery_codes_regenerated'
+  | 'admin.user.mfa_reset'
   | 'authentication.login_failed'
   | 'authentication.login_unverified'
   | 'authentication.register_success'
@@ -38,6 +45,8 @@ export type AuditEventType =
   | 'authorization.module_access_granted'
   | 'authorization.module_access_revoked'
   | 'maintenance.sessions_purged'
+  | 'maintenance.scheduled_deletions'
+  | 'admin.user.deleted'
   | 'platform.settings_updated'
   | 'account.contact_request'
   | 'projobs.company_moderated'

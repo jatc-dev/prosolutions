@@ -30,6 +30,16 @@ model User {
   isActive                  Boolean             @default(true)
   preferences               Json                @default("{}")
   googleSub                 String?             @unique
+  /// Admin-scheduled erasure: the account is suspended until this date, then
+  /// erased with its module data (null = not scheduled).
+  deletionScheduledAt       DateTime?
+  deletionRequestedById     String?
+  /// Optional two-step sign-in (TOTP). Secrets are AES-GCM encrypted; recovery codes are SHA-256 hashes.
+  mfaSecret                 String?
+  mfaPendingSecret          String?
+  mfaEnabledAt              DateTime?
+  mfaLastStep               Int?
+  mfaRecoveryCodes          String[]  @default([])
 
   sessions                  Session[]
   passwordResetTokens       PasswordResetToken[]
@@ -41,6 +51,7 @@ model User {
 
   @@index([email])
   @@index([createdAt])
+  @@index([deletionScheduledAt])
 }
 
 model Session {

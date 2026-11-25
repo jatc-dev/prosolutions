@@ -8,7 +8,7 @@ import { PersonalSection } from "../src/modules/procv/components/editor/sections
 import { createInitialCVData, useCVEditorStore } from "../src/stores/cvEditorStore";
 import type { SectionType } from "../src/types";
 
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "es" } }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "es" } }), initReactI18next: { type: "3rdParty", init: () => undefined } }));
 vi.mock("../src/services/api", () => ({ api: {} }));
 
 // "application" (1003 data) is edited inside "personal" when the 1003 template is active; it has no tab.

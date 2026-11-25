@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { LanguageItem, LanguageLevel, ValidationErrors } from "../../../../../shared/types";
 import {
@@ -326,7 +327,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 
                     {/* Language name and flag */}
                     <div>
-                      <h4 className="text-lg font-medium text-slate-900">{language.language}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={language.isVisible !== false} onChange={(event) => updateLanguage(language.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
+                      <h4 className="text-lg font-medium text-slate-900">{language.language}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={language.isVisible !== false} onChange={(event) => updateLanguage(language.id, { isVisible: event.target.checked })} />{tx('editor.ui.showInCv', 'Mostrar en el CV')}</label>
                       <div className="flex items-center space-x-2 mt-1">
                         {language.certification && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">

@@ -1,6 +1,6 @@
 import { paramsFor } from "../lib/payroll/params";
 
-export type ToolSlug = "prima" | "salario-neto" | "liquidacion" | "contrato-vs-prestacion" | "evaluador-cv";
+export type ToolSlug = "prima" | "cesantias" | "vacaciones" | "salario-neto" | "liquidacion" | "contrato-vs-prestacion" | "evaluador-cv";
 
 export interface ToolInfo {
   slug: ToolSlug;
@@ -20,6 +20,22 @@ export const TOOLS: ToolInfo[] = [
     shortTitle: "Prima de servicios",
     description:
       "Calcula cuánto te pagan de prima en diciembre o en junio: 15 días de salario por semestre, proporcional al tiempo trabajado, con auxilio de transporte y fechas límite de pago.",
+    updatedAt: payrollReviewedAt,
+  },
+  {
+    slug: "cesantias",
+    title: "Calculadora de cesantías e intereses a las cesantías 2026 en Colombia",
+    shortTitle: "Cesantías e intereses",
+    description:
+      "Calcula tus cesantías del año y los intereses del 12 %, con auxilio de transporte, años incompletos y las fechas límite: intereses al 31 de enero y consignación al 14 de febrero.",
+    updatedAt: payrollReviewedAt,
+  },
+  {
+    slug: "vacaciones",
+    title: "Calculadora de vacaciones en Colombia: días acumulados y valor 2026",
+    shortTitle: "Vacaciones",
+    description:
+      "Calcula cuántos días de vacaciones has acumulado (15 días hábiles por año), cuántos te quedan pendientes y cuánto valen en dinero si te los pagan en la liquidación.",
     updatedAt: payrollReviewedAt,
   },
   {

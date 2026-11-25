@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppHeader } from "../components/AppHeader";
 import { api } from "../services/api";
 import { CURATED_CV_TEMPLATES } from "../utils/templateCatalog";
 import toast from "react-hot-toast";
+import { CvCardMenu, type CvCardAction } from "../components/CvCardMenu";
 
 interface CVItem {
   id: string;
@@ -20,6 +22,9 @@ export function UnifiedWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   const loadCvs = useCallback(async () => {
     setLoading(true);
@@ -51,13 +56,12 @@ export function UnifiedWorkspacePage() {
     }
   };
 
-  const duplicateCv = async (event: React.MouseEvent, item: CVItem) => {
-    event.stopPropagation();
+  const duplicateCv = async (item: CVItem) => {
     setBusyId(item.id);
     try {
       const original = await api.get(`/cvs/${item.id}`);
       const response = await api.post("/cvs", {
-        title: `${item.title} (Copia)`,
+        title: t("workspace.copyTitle", { title: item.title }).slice(0, 150),
         template: item.template,
         data: original?.data?.cv?.data,
       });
@@ -76,8 +80,7 @@ export function UnifiedWorkspacePage() {
     }
   };
 
-  const deleteCv = async (event: React.MouseEvent, item: CVItem) => {
-    event.stopPropagation();
+  const deleteCv = async (item: CVItem) => {
     if (!window.confirm(t("workspace.confirm.deleteCvNamed", { title: item.title }))) return;
     setBusyId(item.id);
     try {
@@ -89,6 +92,47 @@ export function UnifiedWorkspacePage() {
     } finally {
       setBusyId(null);
     }
+  };
+
+  const startRename = (item: CVItem) => {
+    setRenamingId(item.id);
+    setDraftTitle(item.title);
+  };
+
+  useEffect(() => {
+    if (!renamingId) return;
+    renameInputRef.current?.focus();
+    renameInputRef.current?.select();
+  }, [renamingId]);
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setDraftTitle("");
+  };
+
+  /** Optimistic rename; reverts if the server rejects it. */
+  const commitRename = async (item: CVItem) => {
+    if (renamingId !== item.id) return;
+    const title = draftTitle.trim().replace(/\s+/g, " ");
+    cancelRename();
+    if (!title) { toast.error(t("workspace.errors.titleRequired")); return; }
+    if (title === item.title) return;
+    setCvs((current) => current.map((cv) => (cv.id === item.id ? { ...cv, title } : cv)));
+    try {
+      const response = await api.put(`/cvs/${item.id}`, { title });
+      const updatedAt = response?.data?.cv?.updatedAt;
+      if (updatedAt) setCvs((current) => current.map((cv) => (cv.id === item.id ? { ...cv, updatedAt } : cv)));
+      toast.success(t("workspace.success.cvRenamed"));
+    } catch (err: any) {
+      setCvs((current) => current.map((cv) => (cv.id === item.id ? { ...cv, title: item.title } : cv)));
+      toast.error(err?.response?.data?.message || t("workspace.errors.renameCv"));
+    }
+  };
+
+  const onCardAction = (item: CVItem, action: CvCardAction) => {
+    if (action === "rename") startRename(item);
+    else if (action === "duplicate") void duplicateCv(item);
+    else void deleteCv(item);
   };
 
   const templateLabel = (key: string) =>
@@ -127,16 +171,49 @@ export function UnifiedWorkspacePage() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {cvs.map((cv) => (
-              <article key={cv.id} onClick={() => navigate(`/editor/${cv.id}`)} className="cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-800">
-                <div className="mb-4 flex items-start justify-between gap-3">
+              <article key={cv.id} onClick={() => { if (renamingId !== cv.id) navigate(`/editor/${cv.id}`); }} className="group cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-800">
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-900 dark:bg-brand-950/50 dark:text-brand-200">{templateLabel(cv.template)}</span>
-                  <span className="text-xs text-slate-400">{formatDate(cv.updatedAt)}</span>
+                  <CvCardMenu
+                    label={t("workspace.actions.moreFor", { title: cv.title })}
+                    disabled={busyId === cv.id}
+                    labels={{ rename: t("workspace.actions.rename"), duplicate: t("dashboard.duplicateCV"), delete: t("common.delete") }}
+                    onAction={(action) => onCardAction(cv, action)}
+                  />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{cv.title}</h2>
+                {renamingId === cv.id ? (
+                  <form onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void commitRename(cv); }}>
+                    <label className="sr-only" htmlFor={`rename-${cv.id}`}>{t("workspace.actions.renameLabel")}</label>
+                    <input
+                      id={`rename-${cv.id}`}
+                      ref={renameInputRef}
+                      value={draftTitle}
+                      maxLength={150}
+                      onChange={(event) => setDraftTitle(event.target.value)}
+                      onBlur={() => void commitRename(cv)}
+                      onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancelRename(); } }}
+                      className="w-full rounded-lg border border-brand-400 bg-white px-2 py-1 text-lg font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("workspace.actions.renameHint")}</p>
+                  </form>
+                ) : (
+                  <div className="flex items-start gap-1">
+                    <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-100">{cv.title}</h2>
+                    <button
+                      type="button"
+                      onClick={(event) => { event.stopPropagation(); startRename(cv); }}
+                      aria-label={t("workspace.actions.renameNamed", { title: cv.title })}
+                      title={t("workspace.actions.rename")}
+                      className="mt-0.5 shrink-0 rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("workspace.updated", { date: formatDate(cv.updatedAt) })}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <button type="button" onClick={(event) => { event.stopPropagation(); navigate(`/editor/${cv.id}`); }} className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">{t("common.edit")}</button>
-                  <button type="button" onClick={(event) => void duplicateCv(event, cv)} disabled={busyId === cv.id} className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-60 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">{t("dashboard.duplicateCV")}</button>
-                  <button type="button" onClick={(event) => void deleteCv(event, cv)} disabled={busyId === cv.id} className="rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60 dark:hover:bg-rose-950/30">{t("common.delete")}</button>
+                  {busyId === cv.id ? <span role="status" className="self-center text-sm text-slate-500 dark:text-slate-400">{t("common.loading")}</span> : null}
                 </div>
               </article>
             ))}

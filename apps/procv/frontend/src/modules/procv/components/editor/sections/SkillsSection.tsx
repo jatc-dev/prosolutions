@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { SkillItem, SkillLevel, SkillCategory, ValidationErrors } from "../../../../../shared/types";
@@ -364,7 +365,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                     >
                       <div className="flex-1">
                         <h5 className="text-sm font-medium text-slate-900">{skill.name}</h5>
-                        <label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500" onClick={(event) => event.stopPropagation()}><input type="checkbox" checked={skill.isVisible !== false} onChange={(event) => updateSkill(skill.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
+                        <label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500" onClick={(event) => event.stopPropagation()}><input type="checkbox" checked={skill.isVisible !== false} onChange={(event) => updateSkill(skill.id, { isVisible: event.target.checked })} />{tx('editor.ui.showInCv', 'Mostrar en el CV')}</label>
                         <div className="flex items-center mt-1 space-x-2">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                             skillLevels.find(l => l.value === skill.level)?.color

@@ -310,6 +310,22 @@ describe('employer workflow, applications and pipeline', () => {
     expect(res.body.error.code).toBe('job_not_open');
   });
 
+  it('summarizes and erases user data for ProIdentity through the internal API', async () => {
+    const auth = { Authorization: `Bearer ${INTERNAL_TOKEN}` };
+    expect((await api.request('/internal/users/summary?ids=bruno')).status).toBe(401);
+    const job = (await api.request('/api/jobs')).body.items[0];
+    expect((await api.request(`/api/me/saved-jobs/${job.id}`, { method: 'PUT', token: BRUNO })).status).toBe(204);
+    const summary = await api.request('/internal/users/summary?ids=bruno,nobody', { headers: auth });
+    expect(summary.status).toBe(200);
+    expect(summary.body.users.bruno.savedJobs).toBe(1);
+    expect(summary.body.users.nobody).toEqual({ applications: 0, savedJobs: 0, alerts: 0, companyMemberships: 0 });
+    const erased = await api.request('/internal/users/bruno', { method: 'DELETE', headers: auth });
+    expect(erased.status).toBe(200);
+    expect(erased.body.deleted.savedJobs).toBe(1);
+    expect((await api.request('/api/me/saved-jobs', { token: BRUNO })).body.jobs).toEqual([]);
+    expect((await api.request('/internal/users/bad%20id', { method: 'DELETE', headers: auth })).status).toBe(404);
+  });
+
   it('publishes integration events through the internal outbox API', async () => {
     expect((await api.request('/internal/events')).status).toBe(401);
     const res = await api.request('/internal/events?after=0', { headers: { Authorization: `Bearer ${INTERNAL_TOKEN}` } });
