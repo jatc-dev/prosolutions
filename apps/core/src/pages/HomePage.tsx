@@ -5,6 +5,7 @@ import { identityAuthApiUrl } from "../identityApi";
 import { Eye, EyeOff } from "lucide-react";
 import { GoogleSignInButton, oauthErrorMessage } from "../components/GoogleSignInButton";
 import { MfaStep, takeMfaChallengeFromHash } from "../components/MfaStep";
+import { SlowConnectionNotice } from "../components/SlowConnectionNotice";
 
 const IDENTITY_API_URL = identityAuthApiUrl();
 
@@ -252,6 +253,7 @@ export function HomePage() {
                   >
                     {isSubmitting ? copy.auth.signingIn : copy.auth.signIn}
                   </Button>
+                  <SlowConnectionNotice active={isSubmitting} english={language === "en"} />
                 </form>
 
                 <div className="mt-4 space-y-2">

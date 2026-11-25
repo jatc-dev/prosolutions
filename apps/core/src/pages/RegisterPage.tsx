@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, ProHeader } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
+import { SlowConnectionNotice } from "../components/SlowConnectionNotice";
 import { identityAuthApiUrl } from "../identityApi";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 
@@ -200,6 +201,7 @@ export function RegisterPage() {
                   <Button type="submit" disabled={isSubmitting || !acceptPrivacy} className="w-full">
                     {isSubmitting ? "Creando cuenta..." : "Regístrate"}
                   </Button>
+                  <SlowConnectionNotice active={isSubmitting} english={language === "en"} />
 
                   <div className="relative py-1 text-center text-xs text-slate-500 dark:text-slate-400">
                     <span className="bg-white px-2 dark:bg-slate-900">o</span>
