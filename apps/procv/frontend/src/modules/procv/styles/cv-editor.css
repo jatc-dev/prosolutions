@@ -338,6 +338,106 @@
     font-family: var(--font-heading) !important;
   }
 
+  /* Font size steps ("Tamaño del texto" / "Tamaño de títulos"). Each Tailwind
+     size class used by the templates is rescaled: headings (h1–h4 and the
+     name) by --cv-heading-scale, everything else by --cv-body-scale. */
+  .cv-custom-wrapper.cv-size-custom .text-\[9px\]:not(h1, h2, h3, h4) {
+    font-size: calc(9px * var(--cv-body-scale, 1)) !important;
+    line-height: 1.25 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-\[9px\] {
+    font-size: calc(9px * var(--cv-heading-scale, 1)) !important;
+    line-height: 1.25 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-\[10px\]:not(h1, h2, h3, h4) {
+    font-size: calc(10px * var(--cv-body-scale, 1)) !important;
+    line-height: 1.3 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-\[10px\] {
+    font-size: calc(10px * var(--cv-heading-scale, 1)) !important;
+    line-height: 1.3 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-\[11px\]:not(h1, h2, h3, h4) {
+    font-size: calc(11px * var(--cv-body-scale, 1)) !important;
+    line-height: 1.35 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-\[11px\] {
+    font-size: calc(11px * var(--cv-heading-scale, 1)) !important;
+    line-height: 1.35 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-\[15px\]:not(h1, h2, h3, h4) {
+    font-size: calc(15px * var(--cv-body-scale, 1)) !important;
+    line-height: 1.6 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-\[15px\] {
+    font-size: calc(15px * var(--cv-heading-scale, 1)) !important;
+    line-height: 1.6 !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-xs:not(h1, h2, h3, h4) {
+    font-size: calc(0.75rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(1rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-xs {
+    font-size: calc(0.75rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(1rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-sm:not(h1, h2, h3, h4) {
+    font-size: calc(0.875rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(1.25rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-sm {
+    font-size: calc(0.875rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(1.25rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-base:not(h1, h2, h3, h4) {
+    font-size: calc(1rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(1.5rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-base {
+    font-size: calc(1rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(1.5rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-lg:not(h1, h2, h3, h4) {
+    font-size: calc(1.125rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(1.75rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-lg {
+    font-size: calc(1.125rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(1.75rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-xl:not(h1, h2, h3, h4) {
+    font-size: calc(1.25rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(1.75rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-xl {
+    font-size: calc(1.25rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(1.75rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-2xl:not(h1, h2, h3, h4) {
+    font-size: calc(1.5rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(2rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-2xl {
+    font-size: calc(1.5rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(2rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-3xl:not(h1, h2, h3, h4) {
+    font-size: calc(1.875rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(2.25rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-3xl {
+    font-size: calc(1.875rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(2.25rem * var(--cv-heading-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom .text-4xl:not(h1, h2, h3, h4) {
+    font-size: calc(2.25rem * var(--cv-body-scale, 1)) !important;
+    line-height: calc(2.5rem * var(--cv-body-scale, 1)) !important;
+  }
+  .cv-custom-wrapper.cv-size-custom :is(h1, h2, h3, h4).text-4xl {
+    font-size: calc(2.25rem * var(--cv-heading-scale, 1)) !important;
+    line-height: calc(2.5rem * var(--cv-heading-scale, 1)) !important;
+  }
+
   .cv-custom-wrapper.cv-c-link :is(a, [class*="text-brand-"]) {
     color: var(--color-link);
   }

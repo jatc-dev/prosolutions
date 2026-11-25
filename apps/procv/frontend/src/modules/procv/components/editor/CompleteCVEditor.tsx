@@ -245,9 +245,11 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
         // Nuevos campos de personalización
         fontBody: cvData.settings?.fontBody,
         fontHeading: cvData.settings?.fontHeading,
+        fontScaleBody: cvData.settings?.fontScaleBody,
+        fontScaleHeading: cvData.settings?.fontScaleHeading,
+        sectionTitles: cvData.settings?.sectionTitles,
         density: cvData.settings?.density,
         sectionSpacing: cvData.settings?.sectionSpacing,
-        showSectionIcons: cvData.settings?.showSectionIcons,
         accentColor: cvData.settings?.accentColor,
         headingColor: cvData.settings?.headingColor,
         textColor: cvData.settings?.textColor,
@@ -348,6 +350,11 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       id: cert.id,
       title: cert.title,
       url: cert.verificationUrl || '',
+      // The templates show issuer, dates and credential ID; they were dropped here.
+      issuingOrganization: cert.issuingOrganization || '',
+      issueDate: cert.issueDate || '',
+      expiryDate: cert.expiryDate || '',
+      credentialId: cert.credentialId || '',
     })) || [],
     application: cvData.application || {},
     links: (hiddenIn(cvData, 'links') ? [] : cvData.links)?.reduce((acc: any, link: any) => {
@@ -872,6 +879,18 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     return acc;
   }, {});
 
+  // Ctrl/Cmd+S saves instead of opening the browser's "save page" dialog.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        if (!isSaving) void handleSave();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handleSave, isSaving]);
+
   // "Plantilla y diseño" folds away once the user is filling in the content,
   // so the form stays short; it can be reopened at any time.
   const [designCloseSignal, setDesignCloseSignal] = useState(0);
@@ -1081,15 +1100,62 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 </span>
               </button>
 
+              {/* Save stays at the end of the top bar, next to its status:
+                  always visible and in the same place (also Ctrl/Cmd+S). */}
+              <div className="ml-auto flex shrink-0 items-center gap-3">
               <AutoSaveIndicator
                 isSaving={isSaving}
                 lastSaved={lastSaved}
                 hasUnsavedChanges={hasUnsavedChanges}
               />
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                aria-label={t('editor.actions.save')}
+                title={`${t('editor.actions.save')} (Ctrl+S)`}
+                aria-keyshortcuts="Control+S Meta+S"
+                className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {t('dashboard.saving')}
+                  </>
+                ) : (
+                  <>
+                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {t('editor.actions.save')}
+                  </>
+                )}
+              </button>
+              </div>
 
             </div>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-2">
+              {/* Document switch (CV or cover letter): part of the toolbar, so it
+                  no longer takes a full row of screen height. */}
+              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="mr-auto inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                {([['cv', 'Hoja de vida', 'CV'], ['letter', 'Carta de presentación', 'Carta']] as const).map(([mode, label, short]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="tab"
+                    aria-selected={docMode === mode}
+                    aria-label={label}
+                    onClick={() => setDocMode(mode)}
+                    className={`min-h-8 rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+                  >
+                    <span className="sm:hidden" aria-hidden="true">{short}</span>
+                    <span className="hidden sm:inline" aria-hidden="true">{label}</span>
+                  </button>
+                ))}
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1132,31 +1198,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                     </svg>
                     <span className="hidden sm:inline">{t('editor.importer.button')}</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                aria-label={t('editor.actions.save')}
-                title={t('editor.actions.save')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-transparent bg-brand-800 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                {isSaving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {t('dashboard.saving')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="hidden sm:inline">{t('editor.actions.save')}</span>
                   </>
                 )}
               </button>
@@ -1233,24 +1274,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             </div>
         </div>
 
-        {/* Document switch: CV or cover letter */}
-        <div className="flex justify-center border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-900">
-          <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-            {([['cv', 'Hoja de vida'], ['letter', 'Carta de presentación']] as const).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                role="tab"
-                aria-selected={docMode === mode}
-                onClick={() => setDocMode(mode)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${docMode === mode ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {showAtsDialog ? (
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/60 p-4 sm:p-8" onClick={() => setShowAtsDialog(false)}>
             <div
@@ -1309,26 +1332,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             style={{ width: isSplit && showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
             <div className="p-4 sm:p-6">
-              <EditorDisclosure
-                storageKey="procv.editor.template-selector"
-                title={t("editor.templateDesign.title", "Plantilla y diseño")}
-                description={t("editor.templateDesign.hint", "Elige la plantilla y ajusta tipografía, colores y espaciado")}
-                closeSignal={designCloseSignal}
-              >
-                <TemplateSelector
-                  templates={CURATED_CV_TEMPLATES}
-                  currentTemplate={cvData.template}
-                  onTemplateSelect={setTemplate}
-                />
-                <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-700">
-                  <CustomizerPanel
-                    settings={cvData.settings || {}}
-                    onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
-                  />
-                </div>
-              </EditorDisclosure>
-              <div className="h-4" />
-              <div className="mt-4">
+              <div>
                 <button
                   type="button"
                   onClick={() => undefined}
@@ -1417,6 +1421,27 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               style={{ width: isSplit ? `${panelSizes.preview}%` : '100%' }}
             >
               <div className="p-4 sm:p-6">
+                {/* Template and design sit above the preview they change. */}
+                <div className="mb-4">
+                  <EditorDisclosure
+                    storageKey="procv.editor.template-selector"
+                    title={t("editor.templateDesign.title", "Plantilla y diseño")}
+                    description={t("editor.templateDesign.hint", "Elige la plantilla y ajusta tipografía, colores y espaciado")}
+                    closeSignal={designCloseSignal}
+                  >
+                    <TemplateSelector
+                      templates={CURATED_CV_TEMPLATES}
+                      currentTemplate={cvData.template}
+                      onTemplateSelect={setTemplate}
+                    />
+                    <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-700">
+                      <CustomizerPanel
+                        settings={cvData.settings || {}}
+                        onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
+                      />
+                    </div>
+                  </EditorDisclosure>
+                </div>
                 <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
                   <h3 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
                     {docMode === 'letter' ? 'Vista previa de la carta' : t('editor.cvPreview')}

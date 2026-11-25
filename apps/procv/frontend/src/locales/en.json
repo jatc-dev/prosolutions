@@ -202,13 +202,13 @@
     "title": "CV Title",
     "template": "Template",
     "personal": "Personal Information",
-    "experience": "Work Experience",
+    "experience": "Work experience",
     "education": "Education",
     "skills": "Skills",
     "languages": "Languages",
     "certificates": "Certificates",
     "links": "Links",
-    "summary": "Professional Summary",
+    "summary": "Professional profile",
     "fullName": "Full Name",
     "professionalTitle": "Professional Title",
     "email": "Email",
@@ -318,8 +318,8 @@
       "creative": "Creative",
       "general": "General"
     },
-    "summary": "Professional Summary",
-    "experience": "Work Experience",
+    "summary": "Professional profile",
+    "experience": "Work experience",
     "skills": "Skills",
     "result": "AI Result",
     "title": "AI Assistant",
@@ -588,7 +588,7 @@
         "github": "GitHub",
         "twitter": "Twitter",
         "valueProposition": "Value Proposition",
-        "summary": "Professional Summary",
+        "summary": "Professional profile",
         "nationality": "Nationality (country)"
       },
       "help": {
@@ -623,7 +623,7 @@
       }
     },
     "experience": {
-      "title": "Work Experience",
+      "title": "Work experience",
       "description": "Your professional history and achievements",
       "emptyTitle": "No work experience yet",
       "emptyDescription": "Add your first work experience to get started.",
@@ -836,9 +836,6 @@
       "expired": "Expired",
       "expiresSoon": "Expiring soon",
       "verifiable": "Verifiable",
-      "fileUploaded": "File uploaded",
-      "removeFile": "Remove",
-      "uploadFile": "Upload File",
       "fields": {
         "title": "Certification Title",
         "issuer": "Issuing Organization",
@@ -846,14 +843,12 @@
         "issueDate": "Issue Date",
         "expiryDate": "Expiry Date",
         "verificationUrl": "Verification URL",
-        "file": "Certificate File",
         "description": "Description"
       },
       "help": {
         "credentialId": "Unique certificate identification number",
         "expiryDate": "Optional - some certificates do not expire",
         "verificationUrl": "Link to verify certificate authenticity",
-        "file": "Upload certificate PDF or image (max 10MB)",
         "description": "Additional details about the certificate or how you obtained it"
       },
       "placeholders": {
@@ -862,10 +857,6 @@
         "credentialId": "e.g. AWS-123456789",
         "verificationUrl": "https://verify.certification.com/...",
         "description": "Describe acquired knowledge, certification process..."
-      },
-      "alerts": {
-        "invalidFileType": "Only PDF, JPG, or PNG files are allowed.",
-        "fileTooLarge": "File cannot be larger than 10MB."
       }
     },
     "links": {

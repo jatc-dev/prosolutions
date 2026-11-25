@@ -86,3 +86,12 @@ describe("Word export", () => {
     expect(cvDocxContent(cv).sections.map((section) => section.key)).toEqual(["summary", "experience", "references"]);
   });
 });
+
+describe("Word section titles", () => {
+  it("use the user's renamed titles", () => {
+    const cv = sampleCv();
+    cv.settings = { ...cv.settings, sectionTitles: { summary: "Sobre mí", experience: "Trayectoria" } };
+    const headings = cvDocxContent(cv).sections.map((section) => section.heading);
+    expect(headings).toEqual(expect.arrayContaining(["Sobre mí", "Trayectoria", "Habilidades"]));
+  });
+});

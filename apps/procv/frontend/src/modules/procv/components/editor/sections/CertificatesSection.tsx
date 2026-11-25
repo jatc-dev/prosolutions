@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -20,6 +20,15 @@ interface CertificatesSectionProps {
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
+
+/** Shows "2023", "03/2023" or the local date, keeping the precision the user chose. */
+const formatIssueDate = (value: string) => {
+  if (/^\d{4}$/.test(value)) return value;
+  const month = /^(\d{4})-(\d{2})$/.exec(value);
+  if (month) return `${month[2]}/${month[1]}`;
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+};
 const EXPANDED_STORAGE_KEY = 'editor.expanded.certificates';
 
 const CERTIFICATE_SUGGESTIONS = {
@@ -125,7 +134,6 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
   });
   const [draggedCertificateId, setDraggedCertificateId] = useState<string | null>(null);
   const [issuerDrafts, setIssuerDrafts] = useState<Record<string, string>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const locale = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
   const certificateSuggestions = CERTIFICATE_SUGGESTIONS[locale];
   const issuingOrganizations = ISSUING_ORGANIZATIONS[locale];
@@ -259,37 +267,6 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
     }));
 
     onChange(reorderedData);
-  };
-
-  const handleFileUpload = (certificateId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type and size
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) {
-        alert(t('editor.certificates.alerts.invalidFileType'));
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        alert(t('editor.certificates.alerts.fileTooLarge'));
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        updateCertificate(certificateId, { fileUrl: result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeFile = (certificateId: string) => {
-    updateCertificate(certificateId, { fileUrl: '' });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const isExpiringSoon = (expiryDate: string) => {
@@ -433,7 +410,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                       <h4 className="text-sm font-medium text-slate-900">{certificate.title}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={certificate.isVisible !== false} onChange={(event) => updateCertificate(certificate.id, { isVisible: event.target.checked })} />{tx('editor.ui.showInCv', 'Mostrar en el CV')}</label>
                       <p className="text-sm text-slate-600">
                         {certificate.issuingOrganization}
-                        {certificate.issueDate && ` • ${t('editor.certificates.issuedOn')}: ${new Date(certificate.issueDate).toLocaleDateString()}`}
+                        {certificate.issueDate && ` • ${t('editor.certificates.issuedOn')}: ${formatIssueDate(certificate.issueDate)}`}
                       </p>
 
                       {/* Status badges */}
@@ -577,13 +554,12 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <FormField
                     label={t('editor.certificates.fields.issueDate')}
-                    required
                     error={errors[`certificate.${certificate.id}.issueDate`]?.[0]}
                   >
                     <DateField
-                      value={certificate.issueDate}
+                      value={certificate.issueDate || ''}
                       onChange={(value) => updateCertificate(certificate.id, { issueDate: value })}
-                      required
+                      allowPartial
                     />
                   </FormField>
 
@@ -595,6 +571,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                     <DateField
                       value={certificate.expiryDate || ''}
                       onChange={(value) => updateCertificate(certificate.id, { expiryDate: value })}
+                      allowPartial
                     />
                   </FormField>
                 </div>
@@ -610,51 +587,6 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                     onChange={(value) => updateCertificate(certificate.id, { verificationUrl: value })}
                     placeholder={t('editor.certificates.placeholders.verificationUrl')}
                   />
-                </FormField>
-
-                {/* File upload */}
-                <FormField
-                  label={t('editor.certificates.fields.file')}
-                  error={errors[`certificate.${certificate.id}.fileUrl`]?.[0]}
-                  help={t('editor.certificates.help.file')}
-                >
-                  <div className="flex items-center space-x-4">
-                    {certificate.fileUrl ? (
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-sm text-green-600">{t('editor.certificates.fileUploaded')}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(certificate.id)}
-                          className="text-red-500 hover:text-red-700 text-sm underline"
-                        >
-                          {t('editor.certificates.removeFile')}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".pdf,image/*"
-                          onChange={(e) => handleFileUpload(certificate.id, e)}
-                          className="hidden"
-                          id={`certificate-file-${certificate.id}`}
-                        />
-                        <label
-                          htmlFor={`certificate-file-${certificate.id}`}
-                          className="inline-flex items-center px-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          {t('editor.certificates.uploadFile')}
-                        </label>
-                      </div>
-                    )}
-                  </div>
                 </FormField>
 
                 <FormField

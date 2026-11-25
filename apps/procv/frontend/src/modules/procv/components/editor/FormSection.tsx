@@ -288,8 +288,10 @@ const formatDateForInput = (dateString: string): string => {
   const raw = String(dateString).trim();
   if (!raw) return '';
 
-  // Preserve exact, month-only, and year-only values.
-  if (/^\d{4}$/.test(raw) || /^\d{4}-\d{2}$/.test(raw)) return raw;
+  // Preserve month-only and year-only values, including a year still being
+  // typed ("2", "20"…): Date.parse("2") is a valid date and used to turn it
+  // into a full date, which flipped the precision back to "día, mes y año".
+  if (/^\d{1,4}$/.test(raw) || /^\d{4}-\d{2}$/.test(raw)) return raw;
 
   // Accept canonical date input value directly.
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
@@ -324,10 +326,12 @@ const formatDateForInput = (dateString: string): string => {
 
 export const DateField: React.FC<DateFieldProps> = ({ value, onChange, disabled = false, required = false, allowPartial = false }) => {
   const normalizedExternalValue = formatDateForInput(value);
-  const getPrecision = (raw: string): 'day' | 'month' | 'year' => /^\d{4}$/.test(raw) ? 'year' : /^\d{4}-\d{2}$/.test(raw) ? 'month' : 'day';
+  const getPrecision = (raw: string): 'day' | 'month' | 'year' => /^\d{1,4}$/.test(raw) ? 'year' : /^\d{4}-\d{2}$/.test(raw) ? 'month' : 'day';
   const [inputValue, setInputValue] = useState<string>(normalizedExternalValue);
   const [precision, setPrecision] = useState<'day' | 'month' | 'year'>(getPrecision(normalizedExternalValue));
-  useEffect(() => { setInputValue(normalizedExternalValue); setPrecision(getPrecision(normalizedExternalValue)); }, [normalizedExternalValue]);
+  // An empty value keeps the chosen precision (clearing a year field must not
+  // switch it back to a full date).
+  useEffect(() => { setInputValue(normalizedExternalValue); if (normalizedExternalValue) setPrecision(getPrecision(normalizedExternalValue)); }, [normalizedExternalValue]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const selectedValue = e.target.value; setInputValue(selectedValue); onChange(selectedValue); };
   const handlePrecisionChange = (next: 'day' | 'month' | 'year') => {
     setPrecision(next);

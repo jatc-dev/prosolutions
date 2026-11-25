@@ -1,6 +1,7 @@
 import type { CVData } from "../../types";
 import { defaultGreeting, formatLetterDate, letterParagraphs } from "./coverLetter";
-import { normalizeCvFont, TEMPLATE_FONT } from "./fonts";
+import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
+import { sectionTitle } from "./sectionTitles";
 
 /**
  * Word (.docx) export. The text comes from the CV data (real, editable text
@@ -45,13 +46,13 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
   const sections: DocxSection[] = [];
 
   if (personal?.summary?.trim() && personal.showSummaryContent !== false) {
-    sections.push({ key: "summary", heading: "Perfil profesional", blocks: [{ text: personal.summary.trim() }] });
+    sections.push({ key: "summary", heading: sectionTitle(cv.settings, "summary"), blocks: [{ text: personal.summary.trim() }] });
   }
   const experience = visible(cv.experience);
   if (experience.length) {
     sections.push({
       key: "experience",
-      heading: "Experiencia laboral",
+      heading: sectionTitle(cv.settings, "experience"),
       blocks: experience.map((item) => ({
         title: [item.position, item.company].filter(Boolean).join(" — "),
         subtitle: [period(item.startDate, item.endDate, item.isCurrentPosition), item.location].filter(Boolean).join(" · "),
@@ -64,7 +65,7 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
   if (education.length) {
     sections.push({
       key: "education",
-      heading: "Formación académica",
+      heading: sectionTitle(cv.settings, "education"),
       blocks: education.map((item) => ({
         title: [item.degree, item.fieldOfStudy && item.fieldOfStudy !== item.degree ? item.fieldOfStudy : ""].filter(Boolean).join(" — "),
         subtitle: [item.institution, period(item.startDate, item.endDate, item.isCurrentlyStudying), item.location].filter(Boolean).join(" · "),
@@ -72,16 +73,16 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
     });
   }
   const skills = visible(cv.skills).map((skill) => skill.name).filter(Boolean);
-  if (skills.length) sections.push({ key: "skills", heading: "Habilidades", blocks: [{ text: skills.join(" · ") }] });
+  if (skills.length) sections.push({ key: "skills", heading: sectionTitle(cv.settings, "skills"), blocks: [{ text: skills.join(" · ") }] });
   const languages = visible(cv.languages)
     .filter((item) => item.language)
     .map((item) => `${item.language}: ${LANGUAGE_LEVELS[item.speakingLevel] ?? item.speakingLevel ?? ""}`.replace(/:\s*$/, ""));
-  if (languages.length) sections.push({ key: "languages", heading: "Idiomas", blocks: [{ bullets: languages }] });
+  if (languages.length) sections.push({ key: "languages", heading: sectionTitle(cv.settings, "languages"), blocks: [{ bullets: languages }] });
   const certificates = visible(cv.certificates);
   if (certificates.length) {
     sections.push({
       key: "certificates",
-      heading: "Cursos y certificaciones",
+      heading: sectionTitle(cv.settings, "certificates"),
       blocks: certificates.map((item) => ({ title: item.title, subtitle: [item.issuingOrganization, monthYear(item.issueDate)].filter(Boolean).join(" · ") })),
     });
   }
@@ -123,14 +124,13 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
 // Template look in Word
 // ---------------------------------------------------------------------------
 
-/** Word-safe equivalents of the six editor fonts (installed with Office/Windows). */
+/** Word-safe equivalents of the editor fonts (installed with Office/Windows). */
 const WORD_FONTS: Record<string, string> = {
   "inter-sans": "Calibri",
   montserrat: "Century Gothic",
   nunito: "Segoe UI",
   merriweather: "Georgia",
   playfair: "Garamond",
-  "roboto-slab": "Rockwell",
 };
 
 export interface DocxTheme {
@@ -151,6 +151,8 @@ export interface DocxTheme {
   headingCaps: boolean;
   nameSize: number;
   bodySize: number;
+  /** Multiplier for section titles (the user's "tamaño de títulos"). */
+  headingScale: number;
   photo: boolean;
   formTitle?: string;
 }
@@ -173,7 +175,7 @@ export function docxTheme(template: string | undefined, rawSettings?: unknown): 
   const dark = { text: "F1F5F9", muted: "94A3B8", heading: "E2E8F0", accent: "E2E8F0" };
   const base: DocxTheme = {
     bodyFont: "Calibri", headingFont: "Calibri", ...light,
-    header: "left", layout: "single", headingStyle: "rule", headingCaps: true, nameSize: 40, bodySize: 21, photo: false,
+    header: "left", layout: "single", headingStyle: "rule", headingCaps: true, nameSize: 40, bodySize: 21, headingScale: 1, photo: false,
   };
   let theme: DocxTheme;
   switch (template) {
@@ -222,6 +224,11 @@ export function docxTheme(template: string | undefined, rawSettings?: unknown): 
   const headingFont = normalizeCvFont(s.fontHeading as string | undefined);
   if (bodyFont !== TEMPLATE_FONT) theme.bodyFont = WORD_FONTS[bodyFont] ?? theme.bodyFont;
   if (headingFont !== TEMPLATE_FONT) theme.headingFont = WORD_FONTS[headingFont] ?? theme.headingFont;
+  // Same size steps as the editor; Word sizes are half-points, so keep integers.
+  const bodyScale = normalizeFontScale(s.fontScaleBody);
+  theme.headingScale = normalizeFontScale(s.fontScaleHeading);
+  theme.bodySize = Math.round(theme.bodySize * bodyScale);
+  theme.nameSize = Math.round(theme.nameSize * theme.headingScale);
   // Custom colours only apply on light pages; dark templates keep legible text.
   if (!theme.pageColor) {
     const text = customColor(s, "textColor");
@@ -291,7 +298,7 @@ export async function buildCvDocument(cv: CVData, docx: Docx) {
       keepNext: true,
       ...(theme.headingStyle === "rule" ? { border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: colors.heading, space: 2 } } } : {}),
       ...(isBar ? { shading: shade("E2E8F0") } : {}),
-      children: [new TextRun({ text: label, font: theme.headingFont, bold: true, size: isBar ? 18 : 22, characterSpacing: 30, color: isBar ? "0F172A" : colors.heading })],
+      children: [new TextRun({ text: label, font: theme.headingFont, bold: true, size: Math.round((isBar ? 18 : 22) * theme.headingScale), characterSpacing: 30, color: isBar ? "0F172A" : colors.heading })],
     });
   }
 

@@ -101,7 +101,7 @@ function SectionToggle({ section, status, onToggle }: { section: { id: SectionTy
       onClick={() => onToggle(section.id)}
       aria-label={aria}
       title={aria}
-      className={`-mt-2 mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${
+      className={`mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${
         mode === 'hide'
           ? 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           : 'border-brand-300 text-brand-800 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-950/40'
@@ -129,7 +129,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
   return (
     <div className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
+        <nav className="flex gap-2 overflow-x-auto sm:gap-4" aria-label="Tabs">
           {sections.map((section) => {
             const isActive = activeSection === section.id;
             const isCompleted = completionStatus[section.id];
@@ -138,13 +138,16 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
 
             return (
               <div key={section.id} className="flex shrink-0 flex-col items-center">
+              {/* The active section is a filled pill: the old underline sat right
+                  above the "− Ocultar" chip and read as a strike-through. */}
               <button
                 onClick={() => onSectionChange(section.id)}
+                aria-current={isActive ? 'step' : undefined}
                 aria-describedby={errorCount ? `tab-errors-${section.id}` : undefined}
-                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${isHidden ? 'opacity-60 ' : ''}${errorCount ? 'text-red-700 dark:text-red-400 ' : ''}${
+                className={`my-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isHidden ? 'opacity-60 ' : ''}${errorCount ? 'text-red-700 dark:text-red-400 ' : ''}${
                   isActive
-                    ? 'border-brand-700 text-brand-800 dark:text-brand-300'
-                    : 'border-transparent text-slate-500 hover:text-brand-800 hover:border-brand-300 dark:text-slate-400 dark:hover:text-brand-300 dark:hover:border-brand-800/50'
+                    ? 'bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-brand-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-300'
                 }`}
               >
                 <div className="flex items-center space-x-2">
@@ -218,7 +221,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
         </nav>
 
         {/* Progress bar */}
-        <div className="mt-4 mb-6">
+        <div className="mt-2 mb-4">
           <div className="bg-brand-200 rounded-full h-2">
             <div
               className="bg-brand-800 h-2 rounded-full transition-all duration-300 ease-out"

@@ -5,7 +5,6 @@ interface LayoutCustomizerProps {
   settings: {
     density?: "compact" | "balanced" | "spacious";
     sectionSpacing?: number;
-    showSectionIcons?: boolean;
   };
   onChange: (settings: Partial<LayoutCustomizerProps["settings"]>) => void;
 }
@@ -67,28 +66,6 @@ export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) 
           <span>{t("layout.tight", "Cerrado")}</span>
           <span>{t("layout.wide", "Ancho")}</span>
         </div>
-      </div>
-
-      {/* Mostrar íconos de sección */}
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
-          {t("layout.showSectionIcons", "Mostrar íconos de sección")}
-        </label>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={settings.showSectionIcons ?? true}
-          onClick={() => onChange({ showSectionIcons: !(settings.showSectionIcons ?? true) })}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.showSectionIcons ?? true ? "bg-brand-700" : "bg-slate-300 dark:bg-slate-700"
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              settings.showSectionIcons ?? true ? "translate-x-6" : "translate-x-1"
-            }`}
-          />
-        </button>
       </div>
     </div>
   );

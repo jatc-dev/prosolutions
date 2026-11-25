@@ -261,10 +261,14 @@ export interface CVData {
     // Tipografía
     fontBody?: string;
     fontHeading?: string;
+    /** Size multipliers (1 = the template's size); see FONT_SCALE_STEPS. */
+    fontScaleBody?: number;
+    fontScaleHeading?: number;
+    /** User-renamed section titles; empty or missing uses the default. */
+    sectionTitles?: Partial<Record<"summary" | "experience" | "education" | "skills" | "languages" | "certificates" | "links", string>>;
     // Densidad y layout
     density?: "compact" | "balanced" | "spacious";
     sectionSpacing?: number; // 0-3
-    showSectionIcons?: boolean;
     // Acentos
     accentColor?: string;
     headingColor?: string;
