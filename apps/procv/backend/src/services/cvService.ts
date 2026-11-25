@@ -24,6 +24,37 @@ async function retryTransientRead<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * Versions kept per CV. Every save stores a full copy of the CV (photo
+ * included), so without a limit they grow with each autosave.
+ */
+export const MAX_CV_VERSIONS = 20;
+
+type VersionTx = {
+  cVVersion: {
+    findMany(args: {
+      where: { cvId: string };
+      orderBy: { createdAt: 'desc' };
+      skip: number;
+      select: { id: true };
+    }): Promise<Array<{ id: string }>>;
+    deleteMany(args: { where: { id: { in: string[] } } }): Promise<unknown>;
+  };
+};
+
+/** Deletes the versions of a CV beyond the newest MAX_CV_VERSIONS. */
+export async function pruneCvVersions(tx: VersionTx, cvId: string): Promise<void> {
+  const stale = await tx.cVVersion.findMany({
+    where: { cvId },
+    orderBy: { createdAt: 'desc' },
+    skip: MAX_CV_VERSIONS,
+    select: { id: true },
+  });
+  if (stale.length) {
+    await tx.cVVersion.deleteMany({ where: { id: { in: stale.map(version => version.id) } } });
+  }
+}
+
+/**
  * Service layer for CV operations
  * Separates business logic from controller logic
  */
@@ -195,6 +226,7 @@ export class CVService {
           snapshot: JSON.stringify(JSON.parse(existing.data ?? '{}')),
         },
       });
+      await pruneCvVersions(tx, saved.id);
       await writeAuditLog(tx, {
         actorId: userId,
         action: 'update',
@@ -290,6 +322,7 @@ export class CVService {
       await tx.cVVersion.create({
         data: { cvId, snapshot: JSON.stringify(JSON.parse(cv.data ?? '{}')) },
       });
+      await pruneCvVersions(tx, cvId);
       const restored = await tx.cV.update({
         where: { id: cvId },
         data: { data: version.snapshot },
