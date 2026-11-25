@@ -16,10 +16,11 @@ describe("photo framing and border", () => {
   });
 
   it("keeps the template border by default and removes it on request", () => {
+    // The border belongs to the frame around the photo (the photo zooms inside it).
     const withBorder = render(<WithCustomStyles template="corporate" data={data({})} />);
-    expect(withBorder.container.querySelector("img.cv-photo")!.className).not.toContain("!border-0");
+    expect(withBorder.container.querySelector(".cv-photo-frame")!.className).not.toContain("!border-0");
     withBorder.unmount();
     const noBorder = render(<WithCustomStyles template="corporate" data={data({ profileImageBorder: false })} />);
-    expect(noBorder.container.querySelector("img.cv-photo")!.className).toContain("!border-0");
+    expect(noBorder.container.querySelector(".cv-photo-frame")!.className).toContain("!border-0");
   });
 });

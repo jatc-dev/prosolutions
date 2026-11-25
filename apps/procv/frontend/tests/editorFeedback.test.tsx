@@ -13,7 +13,10 @@ import type { CertificateItem, LinkItem } from "../src/types";
 import { TemplateRenderer, type CVData as RendererCVData } from "../src/modules/procv/components/TemplateRenderer";
 import { SectionTitlesEditor } from "../src/modules/procv/components/editor/components/SectionTitlesEditor";
 import { sectionTitle } from "../src/modules/procv/sectionTitles";
-import { fitWithin } from "../src/modules/procv/photo";
+import { fitWithin, halvingSteps } from "../src/modules/procv/photo";
+import { professionalCardText } from "../src/modules/procv/professionalCard";
+import { DownloadMenu } from "../src/modules/procv/components/editor/components/DownloadMenu";
+import { PDF_AVOID_BREAK, PDF_MARGIN_MM } from "../src/modules/procv/components/editor/CompleteCVEditor";
 
 vi.mock("../src/services/api", () => ({ api: {} }));
 
@@ -167,9 +170,122 @@ describe("section titles", () => {
 });
 
 describe("profile photo size", () => {
-  it("shrinks to at most 640 px on the longest side, never enlarges", () => {
-    expect(fitWithin(4000, 3000)).toEqual({ width: 640, height: 480 });
-    expect(fitWithin(1080, 1920)).toEqual({ width: 360, height: 640 });
+  it("shrinks to at most 800 px on the longest side, never enlarges", () => {
+    expect(fitWithin(4000, 3000)).toEqual({ width: 800, height: 600 });
+    expect(fitWithin(1080, 1920)).toEqual({ width: 450, height: 800 });
     expect(fitWithin(300, 300)).toEqual({ width: 300, height: 300 });
+  });
+
+  it("reduces large photos in halving steps for a sharper result", () => {
+    expect(halvingSteps(4000, 3000, 800, 600)).toEqual([{ width: 2000, height: 1500 }]);
+    expect(halvingSteps(8000, 6000, 800, 600)).toEqual([{ width: 4000, height: 3000 }, { width: 2000, height: 1500 }]);
+    expect(halvingSteps(1200, 900, 800, 600)).toEqual([]);
+  });
+});
+
+describe("download menu", () => {
+  it("offers PDF and Word from one button", () => {
+    const onPdf = vi.fn();
+    const onWord = vi.fn();
+    render(<DownloadMenu documentLabel="la hoja de vida" onPdf={onPdf} onWord={onWord} busy={false} />);
+    const trigger = screen.getByRole("button", { name: "Descargar la hoja de vida" });
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(screen.getByRole("menuitem", { name: /Word/ }));
+    expect(onWord).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole("menuitem", { name: /PDF/ }));
+    expect(onPdf).toHaveBeenCalledTimes(1);
+  });
+
+  it("is disabled while a file is being generated", () => {
+    render(<DownloadMenu documentLabel="la carta" onPdf={vi.fn()} onWord={vi.fn()} busy />);
+    expect((screen.getByRole("button", { name: "Descargar la carta" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("PDF page breaks", () => {
+  it("uses the same margin on every side so coloured panels look symmetric", () => {
+    expect(new Set(PDF_MARGIN_MM).size).toBe(1);
+    expect(PDF_MARGIN_MM[0]).toBeGreaterThan(0);
+  });
+
+  it("never splits entries, section titles, paragraphs or bullets", () => {
+    expect(PDF_AVOID_BREAK).toEqual(expect.arrayContaining(["[data-cv-item]", "[data-pdf-keep-with-next]", "p", "li"]));
+  });
+
+  it("every experience, degree and certificate in the templates is marked as one entry", () => {
+    const cv = {
+      personal: { name: "Ana" },
+      experience: [{ id: "x1", company: "Éxito", role: "Vendedora", from: "2021-03" }],
+      education: [{ id: "d1", institution: "UNAL", degree: "Administración", from: "2015-01" }],
+      certificates: [{ id: "c1", title: "ITIL" }],
+    } as unknown as RendererCVData;
+    for (const template of ["minimal", "corporate", "sidebar", "executive", "classic"]) {
+      const { container, unmount } = render(<TemplateRenderer template={template} data={cv} />);
+      expect(container.querySelectorAll("[data-cv-item]").length, template).toBeGreaterThanOrEqual(3);
+      unmount();
+    }
+  });
+});
+
+describe("experience entries from older CVs", () => {
+  it("always get lists for achievements and tools", () => {
+    const data = normalizeLoadedCVData({ experience: [{ id: "x1", position: "Vendedora", company: "Éxito" }] });
+    expect(data.experience[0].achievements).toEqual([]);
+    expect(data.experience[0].technologies).toEqual([]);
+  });
+});
+
+describe("professional card", () => {
+  it("shows number, issuer and date unless hidden", () => {
+    const card = { professionalCardNumber: "25202-123456", professionalCardIssuer: "COPNIA", professionalCardDate: "2019-03" };
+    expect(professionalCardText(card)).toBe("N.º 25202-123456 · COPNIA · expedida 03/2019");
+    expect(professionalCardText({ ...card, showProfessionalCardIssuer: false, showProfessionalCardDate: false })).toBe("N.º 25202-123456");
+    expect(professionalCardText({ ...card, showProfessionalCard: false })).toBe("");
+    expect(professionalCardText({ professionalCardIssuer: "COPNIA" })).toBe("");
+  });
+
+  it("appears on the CV next to the identity document", () => {
+    render(<TemplateRenderer template="corporate" data={{ personal: { name: "Ana", professionalCard: "N.º 123 · COPNIA" } } as unknown as RendererCVData} />);
+    expect(screen.getByText("Tarjeta profesional")).toBeTruthy();
+    expect(screen.getByText("N.º 123 · COPNIA")).toBeTruthy();
+  });
+});
+
+describe("photo zoom", () => {
+  it("zooms the photo inside a frame that keeps the shape", () => {
+    const { container } = render(
+      <CustomStylesWrapper settings={{}} photo={{ x: 40, y: 30, zoom: 1.8 }}>
+        <p>CV</p>
+      </CustomStylesWrapper>,
+    );
+    const wrapper = container.querySelector(".cv-custom-wrapper") as HTMLElement;
+    expect(wrapper.style.getPropertyValue("--cv-photo-zoom")).toBe("1.8");
+    expect(wrapper.style.getPropertyValue("--cv-photo-x")).toBe("40%");
+  });
+
+  it("clamps the zoom and leaves it out when there is none", () => {
+    const zoomOf = (zoom: number) => {
+      const { container, unmount } = render(<CustomStylesWrapper settings={{}} photo={{ zoom }}><p>CV</p></CustomStylesWrapper>);
+      const value = (container.querySelector(".cv-custom-wrapper") as HTMLElement).style.getPropertyValue("--cv-photo-zoom");
+      unmount();
+      return value;
+    };
+    expect(zoomOf(9)).toBe("2.5");
+    expect(zoomOf(1)).toBe("");
+  });
+
+  it("templates wrap the photo in a clipping frame", () => {
+    const cv = { personal: { name: "Ana", profileImage: "data:image/png;base64,AAAA", showProfileImage: true } } as unknown as RendererCVData;
+    const { container } = render(<TemplateRenderer template="sidebar" data={cv} />);
+    const img = container.querySelector("img.cv-photo") as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.parentElement?.className).toContain("cv-photo-frame");
+    expect(img.parentElement?.className).toContain("overflow-hidden");
   });
 });

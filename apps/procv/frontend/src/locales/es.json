@@ -968,7 +968,7 @@
       "photoSize": "Tamaño de la foto",
       "photoSizeHelp": "Ajusta el tamaño con el que aparece en la plantilla.",
       "photoFrame": "Encuadre de la foto",
-      "photoFrameHelp": "Arrastra la foto en la miniatura o usa los controles si quedó descentrada.",
+      "photoFrameHelp": "Arrastra la foto en la miniatura o usa los controles para centrarla y acercarla.",
       "photoFrameX": "Encuadre horizontal de la foto",
       "photoFrameY": "Encuadre vertical de la foto",
       "showName": "Mostrar nombre",

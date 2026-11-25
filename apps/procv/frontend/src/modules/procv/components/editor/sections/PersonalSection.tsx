@@ -9,11 +9,14 @@ import {
   FormSection,
   FormField,
   InputField,
-  TextareaField
+  TextareaField,
+  DateField
 } from "../FormSection";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
 import { appendPhrase } from "../../../phrases";
 import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
+import { PROFESSIONAL_CARD_ISSUERS } from "../../../professionalCard";
+import { PHOTO_ZOOM_MAX, PHOTO_ZOOM_MIN } from "../../withCustomStyles";
 
 interface PersonalSectionProps {
   data: PersonalData;
@@ -196,6 +199,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
   const photoY = typeof data.profileImagePositionY === 'number' ? data.profileImagePositionY : 50;
   const clampPct = (value: number) => Math.round(Math.min(100, Math.max(0, value)));
   const setPhotoPosition = (x: number, y: number) => onChange({ ...data, profileImagePositionX: clampPct(x), profileImagePositionY: clampPct(y) });
+  const photoZoom = typeof data.profileImageZoom === 'number' ? Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, data.profileImageZoom)) : 1;
+  const setPhotoZoom = (zoom: number) => onChange({ ...data, profileImageZoom: Math.round(Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, zoom)) * 100) / 100 });
+  const resetPhotoFrame = () => onChange({ ...data, profileImagePositionX: 50, profileImagePositionY: 50, profileImageZoom: 1 });
   const dragRef = useRef<{ startX: number; startY: number; x: number; y: number; width: number; height: number } | null>(null);
   const onPhotoPointerDown = (event: React.PointerEvent<HTMLImageElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
@@ -348,6 +354,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       description={t('editor.personal.description')}
       errors={errors}
       isLoading={isLoading}
+      grouped
     >
       {/* Profile Image */}
       <FormField
@@ -360,18 +367,21 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           <div className="relative">
             {imagePreview ? (
               <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt={t('editor.personal.profileImageAlt')}
-                  title={tx('editor.ui.photoDragHint', 'Arrastra para encuadrar la foto')}
-                  draggable={false}
-                  onPointerDown={onPhotoPointerDown}
-                  onPointerMove={onPhotoPointerMove}
-                  onPointerUp={onPhotoPointerUp}
-                  onPointerCancel={onPhotoPointerUp}
-                  style={{ objectPosition: `${photoX}% ${photoY}%`, touchAction: 'none' }}
-                  className={`${imagePreviewClass} cursor-move select-none object-cover ${data.profileImageBorder === false ? '' : 'border-2 border-slate-200'}`}
-                />
+                {/* Frame keeps the shape; the photo inside is framed and zoomed like on the CV. */}
+                <span className={`${imagePreviewClass} block overflow-hidden ${data.profileImageBorder === false ? '' : 'border-2 border-slate-200'}`}>
+                  <img
+                    src={imagePreview}
+                    alt={t('editor.personal.profileImageAlt')}
+                    title={tx('editor.ui.photoDragHint', 'Arrastra para encuadrar la foto')}
+                    draggable={false}
+                    onPointerDown={onPhotoPointerDown}
+                    onPointerMove={onPhotoPointerMove}
+                    onPointerUp={onPhotoPointerUp}
+                    onPointerCancel={onPhotoPointerUp}
+                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: `scale(${photoZoom})`, transformOrigin: `${photoX}% ${photoY}%`, touchAction: 'none' }}
+                    className="block h-full w-full cursor-move select-none object-cover"
+                  />
+                </span>
                 <button
                   type="button"
                   onClick={removeImage}
@@ -462,8 +472,8 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         </div>
 
         {imagePreview ? (
-          <FormField label={tx('editor.ui.photoFrame', 'Encuadre de la foto')} help={tx('editor.ui.photoFrameHelp', 'Arrastra la foto en la miniatura o usa los controles si quedó descentrada.')}>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,1fr,auto] sm:items-end">
+          <FormField label={tx('editor.ui.photoFrame', 'Encuadre de la foto')} help={tx('editor.ui.photoFrameHelp', 'Arrastra la foto en la miniatura o usa los controles para centrarla y acercarla.')}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,1fr,1fr,auto] sm:items-end">
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
                 {tx('editor.ui.horizontal', 'Horizontal')}
                 <input type="range" min={0} max={100} value={photoX} onChange={(e) => setPhotoPosition(Number(e.target.value), photoY)} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameX', 'Encuadre horizontal de la foto')} />
@@ -472,8 +482,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
                 {tx('editor.ui.vertical', 'Vertical')}
                 <input type="range" min={0} max={100} value={photoY} onChange={(e) => setPhotoPosition(photoX, Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameY', 'Encuadre vertical de la foto')} />
               </label>
-              <button type="button" onClick={() => setPhotoPosition(50, 50)} disabled={photoX === 50 && photoY === 50} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
-                {tx('editor.ui.center', 'Centrar')}
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
+                {tx('editor.ui.photoZoom', 'Zoom')} <span className="tabular-nums text-slate-500">{Math.round(photoZoom * 100)} %</span>
+                <input type="range" min={PHOTO_ZOOM_MIN} max={PHOTO_ZOOM_MAX} step={0.05} value={photoZoom} onChange={(e) => setPhotoZoom(Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoZoomAria', 'Acercar o alejar la foto')} />
+              </label>
+              <button type="button" onClick={resetPhotoFrame} disabled={photoX === 50 && photoY === 50 && photoZoom === 1} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
+                {tx('editor.ui.resetFrame', 'Restablecer')}
               </button>
             </div>
           </FormField>
@@ -513,6 +527,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label={tx('editor.ui.showTitle', 'Mostrar título profesional')} />
       </div>
 
+      <div className="space-y-2">
       <FormField
         label={t('editor.personal.fields.nationality')}
         help={t('editor.personal.help.nationality')}
@@ -526,7 +541,9 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         />
       </FormField>
       <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label={tx('editor.ui.showNationality', 'Mostrar nacionalidad')} />
+      </div>
 
+      <div className="space-y-3">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label={tx('editor.ui.docType', 'Tipo de documento de identidad')}>
           <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
@@ -538,6 +555,31 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
       </div>
       <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
+      </div>
+
+      {/* Professional card / licence: number, issuing body and date. */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{tx('editor.ui.professionalCard', 'Tarjeta o matrícula profesional')}</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label={tx('editor.ui.professionalCardNumber', 'Número')}>
+            <InputField value={data.professionalCardNumber || ''} onChange={(value) => updateField('professionalCardNumber', value)} placeholder={tx('editor.ui.professionalCardNumberPh', 'Ej: 25202-123456')} />
+          </FormField>
+          <FormField label={tx('editor.ui.professionalCardDate', 'Fecha de expedición')}>
+            <DateField value={data.professionalCardDate || ''} onChange={(value) => updateField('professionalCardDate', value)} allowPartial />
+          </FormField>
+          <FormField label={tx('editor.ui.professionalCardIssuer', 'Entidad que la expidió')} className="sm:col-span-2">
+            <InputField value={data.professionalCardIssuer || ''} onChange={(value) => updateField('professionalCardIssuer', value)} placeholder={tx('editor.ui.professionalCardIssuerPh', 'Ej: COPNIA, Junta Central de Contadores')} list="professional-card-issuers" />
+            <datalist id="professional-card-issuers">
+              {PROFESSIONAL_CARD_ISSUERS.map((issuer) => <option key={issuer} value={issuer} />)}
+            </datalist>
+          </FormField>
+        </div>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <VisibilityToggle checked={data.showProfessionalCardIssuer !== false} onChange={(value) => updateField('showProfessionalCardIssuer', value)} label={tx('editor.ui.showProfessionalCardIssuer', 'Mostrar entidad')} />
+          <VisibilityToggle checked={data.showProfessionalCardDate !== false} onChange={(value) => updateField('showProfessionalCardDate', value)} label={tx('editor.ui.showProfessionalCardDate', 'Mostrar fecha de expedición')} />
+        </div>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" checked={data.showProfessionalCard !== false} onChange={(e) => updateField('showProfessionalCard', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showProfessionalCard', 'Mostrar tarjeta profesional en la hoja de vida')}</label>
+      </div>
 
       {/* Birth Date */}
       <FormField
@@ -599,7 +641,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
 
       {/* Contact Information */}
       <div className="space-y-6">
-        <h4 className="text-md font-medium text-slate-900 border-b border-slate-200 pb-2">
+        <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">
           {t('editor.personal.contactInfo')}
         </h4>
 
@@ -915,7 +957,7 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
       </FormField>
-      <section className="space-y-4 border-t border-slate-200 pt-5">
+      <section className="space-y-4">
         <div><h4 className="text-sm font-semibold text-slate-900">{tx('editor.ui.references', 'Referencias')}</h4><p className="text-xs text-slate-500">{tx('editor.ui.referencesHint', 'Se mostrarán al final del contenido principal de la hoja de vida.')}</p></div>
         <div className="space-y-2">
           <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.includeReferences', 'Incluir referencias directas')}</label>

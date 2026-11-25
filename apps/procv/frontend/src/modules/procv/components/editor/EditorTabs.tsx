@@ -1,4 +1,5 @@
 import React from 'react';
+import { Eye, EyeOff, Plus } from 'lucide-react';
 import { tx } from '../../uiText';
 import { useTranslation } from 'react-i18next';
 import { SectionType } from "../../../../shared/types";
@@ -95,20 +96,22 @@ function SectionToggle({ section, status, onToggle }: { section: { id: SectionTy
     : mode === 'show'
       ? t('editor.sectionToggle.showAria', { section: name, defaultValue: `Volver a mostrar ${name} en el CV` })
       : t('editor.sectionToggle.addAria', { section: name, defaultValue: `Agregar ${name} al CV` });
+  const Icon = mode === 'hide' ? EyeOff : mode === 'show' ? Eye : Plus;
+  // Part of the tab pill (to its right), so it reads as the same element.
   return (
     <button
       type="button"
       onClick={() => onToggle(section.id)}
       aria-label={aria}
       title={aria}
-      className={`mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${
+      data-label={label}
+      className={`mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${
         mode === 'hide'
-          ? 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          : 'border-brand-300 text-brand-800 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-950/40'
+          ? 'text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-200'
+          : 'text-brand-700 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-950/60'
       }`}
     >
-      <span aria-hidden="true" className="text-sm leading-none">{mode === 'hide' ? '−' : '+'}</span>
-      {label}
+      <Icon className="h-4 w-4" aria-hidden="true" />
     </button>
   );
 }
@@ -137,17 +140,24 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
             const errorCount = errorCounts?.[section.id] ?? 0;
 
             return (
-              <div key={section.id} className="flex shrink-0 flex-col items-center">
-              {/* The active section is a filled pill: the old underline sat right
-                  above the "− Ocultar" chip and read as a strike-through. */}
+              <div
+                key={section.id}
+                className={`my-2 inline-flex shrink-0 items-center rounded-lg transition-colors duration-200 ${
+                  isActive
+                    ? 'bg-brand-50 ring-1 ring-inset ring-brand-200 dark:bg-brand-950/50 dark:ring-brand-800'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+              {/* One pill per section: the tab and, on its right, the hide /
+                  show / add toggle (it used to sit below and look separate). */}
               <button
                 onClick={() => onSectionChange(section.id)}
                 aria-current={isActive ? 'step' : undefined}
                 aria-describedby={errorCount ? `tab-errors-${section.id}` : undefined}
-                className={`my-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isHidden ? 'opacity-60 ' : ''}${errorCount ? 'text-red-700 dark:text-red-400 ' : ''}${
+                className={`whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isHidden ? 'opacity-60 ' : ''}${errorCount ? 'text-red-700 dark:text-red-400 ' : ''}${
                   isActive
-                    ? 'bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-brand-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-300'
+                    ? 'text-brand-800 dark:text-brand-300'
+                    : 'text-slate-500 hover:text-brand-800 dark:text-slate-400 dark:hover:text-brand-300'
                 }`}
               >
                 <div className="flex items-center space-x-2">

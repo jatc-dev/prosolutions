@@ -555,9 +555,9 @@
     }
   }
 
-/* PDF export (html2pdf clone of the preview): the page fills the A4 width
-   instead of being a centred card, so the side margin is the template's own
-   padding. Covers the CV templates, the supplemental block and the letter. */
+/* PDF export (html2pdf clone of the preview): the page fills the printable
+   width (A4 minus PDF_MARGIN_MM) instead of being a centred card. Covers the
+   CV templates, the supplemental block and the letter. */
 .cv-pdf-export .cv-custom-wrapper > * {
   max-width: none !important;
   width: 100% !important;
@@ -565,6 +565,19 @@
   margin-right: 0 !important;
   border-width: 0 !important;
   box-shadow: none !important;
+}
+
+/* Page-break spacers inserted by html2pdf (a classless div with only an
+   inline "display: block; height: …px"). The extra space is the top gap of
+   the next page: content moved to a new page would otherwise sit right at the
+   6 mm margin while page 1 also has the template's own top padding. It also
+   avoids a 1 px sliver of a moved box's border on the previous page.
+   padding, not margin: a margin would collapse with the next box's. */
+.cv-pdf-export div[style^="display: block; height:"] {
+  /* content-box: with Tailwind's border-box the padding stayed inside the
+     fixed height and pushed nothing. */
+  box-sizing: content-box !important;
+  padding-bottom: var(--pdf-page-top-gap, 32px) !important;
 }
 
 /* Contact icons: keep the icon and its value together (the space between
@@ -591,4 +604,51 @@
 /* Photo framing chosen in the editor (centred by default). */
 .cv-custom-wrapper .cv-photo {
   object-position: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}
+/* Zoom chosen in the editor (1 = no zoom), around the framing point; the
+   frame (.cv-photo-frame) keeps the shape and clips the enlarged photo. */
+.cv-custom-wrapper .cv-photo-frame .cv-photo {
+  transform: scale(var(--cv-photo-zoom, 1));
+  transform-origin: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}
+
+/* Form groups: each datum (field, its options and help) is a card, so it is
+   clear where one ends and the next begins. Neutral greys: a light grey in
+   light mode, a dark grey (no blue cast) in dark mode; fields stay white /
+   darker so they stand out inside the card. */
+.cv-form-groups > * {
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  background: #f7f7f8;
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .cv-form-groups > * {
+    padding: 1.25rem;
+  }
+}
+/* Nested boxes (each e-mail / phone) on the grey card: white, with a border. */
+.cv-form-groups > * .bg-slate-50 {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+}
+.dark .cv-form-groups > *,
+[data-theme="dark"] .cv-form-groups > * {
+  border-color: #3f3f46;
+  background: #27272a;
+}
+.dark .cv-form-groups > * .bg-slate-50,
+[data-theme="dark"] .cv-form-groups > * .bg-slate-50 {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+
+/* Save status under the document title: a smaller line. */
+.cv-editor-save-status span {
+  font-size: 0.75rem;
+}
+.cv-editor-save-status svg,
+.cv-editor-save-status .animate-spin {
+  width: 0.875rem;
+  height: 0.875rem;
 }

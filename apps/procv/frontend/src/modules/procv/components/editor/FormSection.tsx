@@ -10,6 +10,8 @@ interface FormSectionProps {
   errors?: ValidationErrors;
   isLoading?: boolean;
   className?: string;
+  /** Shows each direct child (one datum with its options) as its own card. */
+  grouped?: boolean;
 }
 
 interface FormFieldProps {
@@ -39,6 +41,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   errors = {},
   isLoading = false,
   className = '',
+  grouped = false,
 }) => {
   const { t } = useTranslation();
   const hasErrors = Object.keys(errors).length > 0;
@@ -46,7 +49,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="border-b border-slate-200 pb-4 dark:border-slate-700">
+      <div>
         <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{title}</h3>
         {description && (
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{description}</p>
@@ -59,7 +62,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
       </div>
 
       {/* Content */}
-      <div className={`space-y-6 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`${grouped ? 'cv-form-groups space-y-4' : 'space-y-6'} ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
         {children}
       </div>
 

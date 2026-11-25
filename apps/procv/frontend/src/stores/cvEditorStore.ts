@@ -335,6 +335,9 @@ export const normalizeLoadedCVData = (rawData: any): CVData => {
     experience: Array.isArray(safe.experience)
       ? safe.experience.map((item: any, index: number) => ({
           ...item,
+          // Older or imported entries may lack these lists; the form maps them.
+          achievements: Array.isArray(item?.achievements) ? item.achievements : [],
+          technologies: Array.isArray(item?.technologies) ? item.technologies : [],
           isCurrentPosition: toBoolean(item?.isCurrentPosition),
           order: typeof item?.order === 'number' ? item.order : index,
         }))

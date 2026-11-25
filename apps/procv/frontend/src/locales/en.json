@@ -953,7 +953,7 @@
       "photoSize": "Photo size",
       "photoSizeHelp": "Adjust how large it appears in the template.",
       "photoFrame": "Photo framing",
-      "photoFrameHelp": "Drag the photo in the thumbnail or use the controls if it is off-centre.",
+      "photoFrameHelp": "Drag the photo in the thumbnail or use the controls to centre and zoom it.",
       "photoFrameX": "Horizontal photo framing",
       "photoFrameY": "Vertical photo framing",
       "showName": "Show name",

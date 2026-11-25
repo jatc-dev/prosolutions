@@ -49,7 +49,10 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
-import { History } from "lucide-react";
+import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Upload } from "lucide-react";
+import { ActionMenu } from "./components/ActionMenu";
+import { DownloadMenu } from "./components/DownloadMenu";
+import { professionalCardText } from "../../professionalCard";
 
 // Import custom styles
 import "../../styles/cv-editor.css";
@@ -63,6 +66,25 @@ interface CompleteCVEditorProps {
 /** True when the user hid this section from the CV (+/− under the section tabs). */
 const hiddenIn = (cv: any, section: string): boolean =>
   Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
+
+/**
+ * PDF page margin in mm (top, left, bottom, right). Printers cannot print to
+ * the edge and the page breaks need a top/bottom margin, so the same margin on
+ * every side frames coloured panels (sidebar, header band, dark pages)
+ * symmetrically instead of touching the side edges only.
+ */
+export const PDF_MARGIN_MM: [number, number, number, number] = [6, 6, 6, 6];
+
+/** Elements the PDF export never splits across two pages. */
+export const PDF_AVOID_BREAK = [
+  // A whole entry (job, degree, certificate) when it fits on one page.
+  "[data-cv-item]",
+  // Invisible block before each section title (see handleExportPdf).
+  "[data-pdf-keep-with-next]",
+  "p", "li", "h1", "h2", "h3", "h4", "img", "tr", "[role='img']",
+  // Leaf text boxes (dates, contact rows, labels): divs with no block children.
+  "div:not(:has(div, p, ul, ol, section, table))",
+];
 
 function EditorBrandGlyph() {
   return (
@@ -284,6 +306,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       documentType: cvData.personal?.showDocumentType === false ? '' : (cvData.personal?.documentType || ''),
       documentNumber: cvData.personal?.showDocumentNumber === false ? '' : (cvData.personal?.documentNumber || ''),
       showDocumentIdentity: Boolean(cvData.personal?.showDocumentIdentity),
+      professionalCard: professionalCardText(cvData.personal),
       sidebarIntroMode: cvData.personal?.sidebarIntroMode || 'valueProposition',
       references: cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
       showReferences: cvData.personal?.showReferences !== false,
@@ -298,6 +321,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       profileImageStyle: cvData.personal?.profileImageStyle || 'round',
       profileImageSize: cvData.personal?.profileImageSize || 'md',
       profileImagePositionX: cvData.personal?.profileImagePositionX,
+      profileImageZoom: cvData.personal?.profileImageZoom,
       profileImagePositionY: cvData.personal?.profileImagePositionY,
       profileImageBorder: cvData.personal?.profileImageBorder,
       showProfileImage: cvData.personal?.showProfileImage !== false,
@@ -749,9 +773,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       }
 
       // The preview page is narrower than A4 and centred, which html2pdf turned
-      // into wide side margins. Export a copy that fills the page width; the
-      // template's own padding (~8 mm) is the side margin. Top/bottom keep a
-      // small margin so text never touches the edge after a page break.
+      // into wide side margins. Export a copy that fills the printable width
+      // inside the same small margin on every side (PDF_MARGIN_MM).
       const exportNode = element.cloneNode(true) as HTMLElement;
       exportNode.classList.add("cv-pdf-export");
       // html2canvas ignores object-fit, so cropped photos (portrait, oval,
@@ -772,12 +795,35 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         box.style.backgroundRepeat = "no-repeat";
         img.replaceWith(box);
       });
+      // Keep section titles with what follows: an invisible block before each
+      // title covers the title and the first lines under it without taking
+      // space (negative margin). When that block does not fit at the bottom
+      // of a page, the title moves to the next page instead of being left alone.
+      const liveHeadings = Array.from(element.querySelectorAll("h2, h3"));
+      Array.from(exportNode.querySelectorAll("h2, h3")).forEach((heading, index) => {
+        if (heading.closest("[data-cv-item]")) return;
+        const parent = liveHeadings[index]?.parentElement;
+        const style = parent ? getComputedStyle(parent) : null;
+        if (style && style.display.includes("flex") && !style.flexDirection.startsWith("column")) return;
+        const probe = document.createElement("div");
+        probe.setAttribute("data-pdf-keep-with-next", "");
+        probe.setAttribute("aria-hidden", "true");
+        probe.style.height = "6em";
+        probe.style.marginBottom = "-6em";
+        probe.style.pointerEvents = "none";
+        heading.before(probe);
+      });
       const options = {
-        margin: [6, 0, 6, 0] as [number, number, number, number], // mm: top, left, bottom, right
+        margin: PDF_MARGIN_MM,
         filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        // html2pdf slices one long image every A4 page, which cut lines of
+        // text in half. Blocks that would cross a page edge (paragraphs,
+        // bullets, titles, photos and small text boxes) move whole to the
+        // next page instead.
+        pagebreak: { mode: ["css", "legacy"], avoid: PDF_AVOID_BREAK },
       };
 
       const html2pdf = (await import("html2pdf.js")).default;
@@ -1079,93 +1125,61 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
           {isGuest && <GuestBanner />}
 
-          {/* Header */}
+          {/* Header: one row of actions. Frequent ones are buttons; occasional
+              ones live in "Más"; Descargar and Guardar close the row. Secondary
+              buttons show only their icon on medium screens (name in title/aria). */}
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+            <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleBack}
                 disabled={isLeaving}
+                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
                 className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
                 title={isAuthenticated ? t('editor.back.toListHint', 'Guarda los cambios y vuelve a tus hojas de vida') : t('editor.back.toHomeHint', 'Tu borrador queda guardado en este navegador')}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                {isLeaving
-                  ? t('dashboard.saving', 'Guardando…')
-                  : isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+                {isLeaving ? <span className="text-xs">{t('dashboard.saving', 'Guardando…')}</span> : null}
               </button>
-              <button
-                type="button"
-                onClick={handleBack}
-                disabled={isLeaving}
-                className="flex min-w-0 items-center gap-3 rounded-md text-left focus:outline-none focus:ring-2 focus:ring-brand-700"
-                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
+
+              {/* Title, with the save status under it (as in most editors). */}
+              {/* min width: on narrow screens the buttons wrap to a second line instead of hiding the title. */}
+              <div className="flex min-w-[11rem] flex-1 items-center gap-3">
+                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950 sm:flex">
                   <EditorBrandGlyph />
                 </span>
-                <span className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
-                  <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
-                  <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
-                </span>
-              </button>
-
-              {/* Save stays at the end of the top bar, next to its status:
-                  always visible and in the same place (also Ctrl/Cmd+S). */}
-              <div className="ml-auto flex shrink-0 items-center gap-3">
-              <AutoSaveIndicator
-                isSaving={isSaving}
-                lastSaved={lastSaved}
-                hasUnsavedChanges={hasUnsavedChanges}
-              />
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                aria-label={t('editor.actions.save')}
-                title={`${t('editor.actions.save')} (Ctrl+S)`}
-                aria-keyshortcuts="Control+S Meta+S"
-                className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                {isSaving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {t('dashboard.saving')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {t('editor.actions.save')}
-                  </>
-                )}
-              </button>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
+                    <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
+                  </p>
+                  <div className="cv-editor-save-status">
+                    <AutoSaveIndicator
+                      isSaving={isSaving}
+                      lastSaved={lastSaved}
+                      hasUnsavedChanges={hasUnsavedChanges}
+                    />
+                  </div>
+                </div>
               </div>
 
-            </div>
-
-            <div className="flex w-full flex-wrap items-center justify-end gap-2">
-              {/* Document switch (CV or cover letter): part of the toolbar, so it
-                  no longer takes a full row of screen height. */}
-              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="mr-auto inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                {([['cv', 'Hoja de vida', 'CV'], ['letter', 'Carta de presentación', 'Carta']] as const).map(([mode, label, short]) => (
+              {/* Document switch (CV or cover letter), same look as the toolbar buttons. */}
+              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="inline-flex min-h-10 items-stretch rounded-md border border-brand-300 bg-white p-0.5 dark:border-brand-900 dark:bg-slate-900">
+                {([['cv', 'Hoja de vida', 'Hoja de vida', FileText], ['letter', 'Carta de presentación', 'Carta', Mail]] as const).map(([mode, label, short, Icon]) => (
                   <button
                     key={mode}
                     type="button"
                     role="tab"
                     aria-selected={docMode === mode}
                     aria-label={label}
+                    title={label}
                     onClick={() => setDocMode(mode)}
-                    className={`min-h-8 rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-950 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`}
+                    className={`inline-flex items-center gap-2 rounded px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-brand-800 text-white shadow-sm dark:bg-brand-500 dark:text-slate-950' : 'text-brand-900 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/40'}`}
                   >
-                    <span className="sm:hidden" aria-hidden="true">{short}</span>
-                    <span className="hidden sm:inline" aria-hidden="true">{label}</span>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <span className="hidden sm:inline" aria-hidden="true">{short}</span>
                   </button>
                 ))}
               </div>
@@ -1178,127 +1192,85 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
 
               <button
+                type="button"
                 onClick={togglePreview}
+                aria-pressed={showPreview}
                 aria-label={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
                 title={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
-                className="cv-editor-preview-toggle inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                className="cv-editor-preview-toggle inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
               >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="hidden sm:inline">{showPreview ? t('editor.actions.hide') : t('editor.actions.show')} {t('editor.actions.preview')}</span>
+                {showPreview ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                <span className="hidden 2xl:inline">{tx('editor.ui.previewShort', 'Vista previa')}</span>
               </button>
-
-              <button
-                onClick={handleImportClick}
-                disabled={isImporting}
-                aria-label={t('editor.importer.button')}
-                title={t('editor.importer.button')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
-              >
-                {isImporting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-900" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {t('editor.importer.loading')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                    </svg>
-                    <span className="hidden sm:inline">{t('editor.importer.button')}</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={handleReset}
-                aria-label={t('editor.actions.reset')}
-                title={t('editor.actions.reset')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-4"
-              >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="hidden sm:inline">{t('editor.actions.reset')}</span>
-              </button>
-
-              {isAuthenticated && cvId ? (
-                <button
-                  type="button"
-                  onClick={() => setShowHistory(true)}
-                  aria-haspopup="dialog"
-                  title={tx('editor.history.hint', 'Ver y restaurar versiones anteriores')}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
-                >
-                  <History className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">{tx('editor.history.button', 'Historial')}</span>
-                </button>
-              ) : null}
 
               {docMode === 'cv' ? (
                 <button
                   type="button"
                   onClick={() => setShowAtsDialog(true)}
                   aria-haspopup="dialog"
+                  aria-label={t('editor.ats.openButton', 'Comparar con vacante')}
                   title={t('editor.ats.openHint', 'Compara tu hoja de vida con una oferta de empleo (ATS)')}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
                 >
-                  <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" strokeWidth={2} />
-                    <circle cx="12" cy="12" r="5" strokeWidth={2} />
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                  </svg>
-                  <span className="hidden sm:inline">{t('editor.ats.openButton', 'Comparar con vacante')}</span>
+                  <Target className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden xl:inline">{t('editor.ats.openButton', 'Comparar con vacante')}</span>
                 </button>
               ) : null}
 
-              <button
-                onClick={handleExportPdf}
-                disabled={isExportingPdf}
-                aria-label={`${t('editor.actions.export', 'Export')} PDF`}
-                title={`${t('editor.actions.export', 'Export')} PDF`}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-transparent bg-brand-600 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                {isExportingPdf ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {t('dashboard.saving')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span className="hidden sm:inline">PDF</span>
-                    </>
-                  )}
-                </button>
+              {/* Occasional actions: history, importing a file and starting over. */}
+              <ActionMenu
+                label={isImporting ? t('editor.importer.loading') : tx('editor.ui.more', 'Más')}
+                ariaLabel={tx('editor.ui.moreActions', 'Más opciones')}
+                icon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
+                menuLabel={tx('editor.ui.moreActions', 'Más opciones')}
+                disabled={isImporting}
+                buttonClassName="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 disabled:cursor-wait disabled:opacity-60"
+                items={[
+                  ...(isAuthenticated && cvId ? [{
+                    label: tx('editor.history.button', 'Historial'),
+                    description: tx('editor.history.menuHint', 'Ver y restaurar versiones anteriores (una cada 30 minutos de edición).'),
+                    icon: <History className="h-5 w-5 text-brand-700" />,
+                    onSelect: () => setShowHistory(true),
+                  }] : []),
+                  {
+                    label: t('editor.importer.button'),
+                    description: tx('editor.ui.importHint', 'Rellena el formulario desde un PDF, Word o texto. Revisas los datos antes de aplicarlos.'),
+                    icon: <Upload className="h-5 w-5 text-brand-700" />,
+                    onSelect: handleImportClick,
+                  },
+                  {
+                    label: t('editor.actions.reset'),
+                    description: tx('editor.ui.resetHint', 'Borra el contenido y empieza de cero. Pide confirmación.'),
+                    icon: <RotateCcw className="h-5 w-5 text-red-600" />,
+                    onSelect: handleReset,
+                    tone: 'danger' as const,
+                  },
+                ]}
+              />
 
+              <DownloadMenu
+                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
+                onPdf={() => void handleExportPdf()}
+                onWord={() => void handleExportDocx()}
+                busy={isExportingPdf || isExportingDocx}
+              />
+              {/* Guardar closes the row: always visible, same place (also Ctrl/Cmd+S).
+                  The status under the title says "Guardando…", so the button only gets disabled. */}
               <button
                 type="button"
-                onClick={handleExportDocx}
-                disabled={isExportingDocx}
-                aria-label={docMode === 'letter' ? 'Descargar la carta en Word' : 'Descargar la hoja de vida en Word'}
-                title={tx('editor.ui.wordHint', 'Word (.docx): editable, con el estilo de tu plantilla')}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-600 bg-white px-2 py-2 text-sm font-medium text-brand-800 shadow-sm hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-slate-800"
+                onClick={handleSave}
+                disabled={isSaving}
+                aria-busy={isSaving}
+                aria-label={t('editor.actions.save')}
+                title={`${t('editor.actions.save')} (Ctrl+S)`}
+                aria-keyshortcuts="Control+S Meta+S"
+                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
               >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="hidden sm:inline">{isExportingDocx ? 'Generando…' : 'Word'}</span>
+                <Save className="h-4 w-4" aria-hidden="true" />
+                {t('editor.actions.save')}
               </button>
-
-              </div>
             </div>
-        </div>
+          </div>
 
         {showHistory && cvId ? (
           <VersionHistoryDialog

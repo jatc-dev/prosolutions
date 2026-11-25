@@ -38,6 +38,8 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait" | "oval" | "arch";
     profileImagePositionX?: number;
+    /** 1 = no zoom, up to PHOTO_ZOOM_MAX. */
+    profileImageZoom?: number;
     profileImagePositionY?: number;
     profileImageBorder?: boolean;
     profileImageSize?: "sm" | "md" | "lg" | "xl";
@@ -45,6 +47,8 @@ export interface CVData {
     documentType?: string;
     documentNumber?: string;
     showDocumentIdentity?: boolean;
+    /** Tarjeta profesional, already formatted (empty when hidden). */
+    professionalCard?: string;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
     references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
@@ -431,10 +435,20 @@ function getProfileImageClass(personal: CVData["personal"], size: "small" | "med
     : style === "oval" ? "rounded-[50%]"
     : style === "arch" ? "rounded-t-full rounded-b-md"
     : "rounded-xl";
-  // cv-photo: framing via --cv-photo-x/y (set by CustomStylesWrapper). "!border-0"
-  // overrides each template's own border when the user turns it off.
+  // The frame keeps size, shape and border; the photo inside is framed with
+  // --cv-photo-x/y and zoomed with --cv-photo-zoom (set by CustomStylesWrapper).
+  // "!border-0" overrides each template's own border when the user turns it off.
   const borderClass = personal?.profileImageBorder === false ? " !border-0" : "";
-  return `${sizeClass} ${shapeClass} object-cover cv-photo${borderClass}`;
+  return `${sizeClass} ${shapeClass} block overflow-hidden cv-photo-frame${borderClass}`;
+}
+
+/** Profile photo: a frame with the template's shape and border, the image zoomed and framed inside. */
+function ProfilePhoto({ personal, size = "medium", alt = "Foto de perfil", className = "" }: { personal: CVData["personal"]; size?: "small" | "medium"; alt?: string; className?: string }) {
+  return (
+    <span className={`${getProfileImageClass(personal, size)} ${className}`.trim()}>
+      <img src={personal?.profileImage} alt={alt} className="cv-photo block h-full w-full object-cover" />
+    </span>
+  );
 }
 
 function calculateAge(value?: string) {
@@ -502,8 +516,10 @@ function renderValuePropositionBlock({
 
   const showTitle = personal?.showValuePropositionTitle !== false;
 
+  // data-cv-item: the PDF export keeps the title, the text and the box
+  // together on one page (it was split when it crossed a page edge).
   return (
-    <section className={containerClassName}>
+    <section data-cv-item className={containerClassName}>
       {showTitle ? <h2 className={titleClassName}>{titleText}</h2> : null}
       <p className={textClassName}>{content}</p>
     </section>
@@ -816,7 +832,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-3 space-y-4">
             {data.experience.map((item, index) => (
-              <div
+              <div data-cv-item
                 key={item.id}
                 className="ats-experience-item"
                 itemProp="hasOccupation"
@@ -871,7 +887,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
           <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-3 space-y-4">
             {data.education.map((item) => (
-              <div
+              <div data-cv-item
                 key={item.id}
                 className="ats-education-item"
                 itemScope
@@ -927,7 +943,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                 <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "skills")}</h2>
                 <div className="mt-3 space-y-2">
                   {skills.map((skill) => (
-                    <div key={skill.id} className="ats-skill-item">
+                    <div key={skill.id} data-cv-item className="ats-skill-item">
                       <span className="text-sm font-medium text-slate-700 ats-skill-name">
                         {skill.name}
                       </span>
@@ -950,7 +966,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                   <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "languages")}</h2>
                   <div className="mt-3 space-y-2">
                     {languages.map((lang) => (
-                      <div key={lang.id} className="ats-language-item">
+                      <div key={lang.id} data-cv-item className="ats-language-item">
                         <span className="text-sm font-medium text-slate-700 ats-language-name">
                           {lang.name}
                         </span>
@@ -979,7 +995,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
                   <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "certificates")}</h2>
                   <div className="mt-3 space-y-3">
                     {certificates.map((cert) => (
-                      <div key={cert.id} className="ats-certificate-item">
+                      <div key={cert.id} data-cv-item className="ats-certificate-item">
                         <h3 className="text-sm font-semibold text-slate-800 ats-certificate-title">
                           {cert.title}
                         </h3>
@@ -1054,11 +1070,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         </div>
         {shouldRenderProfileImage(personal) && (
           <div className="flex-shrink-0">
-            <img
-              src={personal.profileImage}
-              alt="Profile"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-slate-200`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Profile" className="border-2 border-slate-200" />
           </div>
         )}
         <div className="text-xs text-slate-500 space-y-1">
@@ -1098,7 +1110,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
-                <div key={item.id} className="">
+                <div key={item.id} data-cv-item className="">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{item.role || "Rol"}</p>
@@ -1118,7 +1130,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "education")}</h2>
             <div className="mt-3 space-y-4">
               {data.education.map((item) => (
-                <div key={item.id} className="">
+                <div key={item.id} data-cv-item className="">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1167,7 +1179,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-2 space-y-2 text-sm text-slate-700">
             {certificates.map((cert) => (
-              <div key={cert.id}>
+              <div key={cert.id} data-cv-item>
                 <p className="font-semibold">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1226,11 +1238,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {shouldRenderProfileImage(personal) && (
-            <img
-              src={personal.profileImage}
-              alt="Foto de perfil"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-slate-700 mb-3`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-slate-700 mb-3" />
           )}
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || ""}</h1>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || ""}</p>
@@ -1274,7 +1282,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id} className="bg-slate-900 p-4 rounded-lg">
+              <div key={item.id} data-cv-item className="bg-slate-900 p-4 rounded-lg">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{item.role || "Rol"}</p>
@@ -1322,7 +1330,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
+              <div key={cert.id} data-cv-item className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
                 <p className="text-sm font-semibold text-slate-100">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-400">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1384,11 +1392,7 @@ function TemplateCreative({ data }: { data: CVData }) {
     >
       <header className="space-y-2">
         {shouldRenderProfileImage(personal) && (
-          <img
-            src={personal.profileImage}
-            alt="Foto de perfil"
-            className={`${getProfileImageClass(personal, "medium")} border-2 border-white/30 mb-3`}
-          />
+          <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/30 mb-3" />
         )}
         <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: creativeTextColor }}>{personal.name || ""}</h1>
         <p className="text-sm" style={{ color: creativeMutedColor }}>{personal.role || "Profesional Creativo"}</p>
@@ -1433,7 +1437,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id} className="bg-white/10 p-4 rounded-xl">
+              <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{item.role || "Rol"}</p>
@@ -1453,7 +1457,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
-              <div key={item.id} className="bg-white/10 p-4 rounded-xl">
+              <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1490,7 +1494,7 @@ function TemplateCreative({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id} className="rounded-xl bg-white/10 px-3 py-2">
+              <div key={cert.id} data-cv-item className="rounded-xl bg-white/10 px-3 py-2">
                 <p className="text-sm font-semibold text-white">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-200">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1519,11 +1523,7 @@ function TemplateClassic({ data }: { data: CVData }) {
     <div className="max-w-2xl mx-auto bg-white p-9 text-slate-900 font-serif border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="border-b border-slate-200 pb-6">
         {shouldRenderProfileImage(personal) && (
-          <img
-            src={personal.profileImage}
-            alt="Foto de perfil"
-            className={`${getProfileImageClass(personal, "small")} border border-slate-200 mb-3`}
-          />
+          <ProfilePhoto personal={personal} size="small" alt="Foto de perfil" className="border border-slate-200 mb-3" />
         )}
         <h1 className="text-4xl font-bold tracking-tight">{personal.name || ""}</h1>
         <p className="mt-2 text-sm text-slate-500">{personal.role || ""}</p>
@@ -1572,7 +1572,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
-              <div key={item.id}>
+              <div key={item.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
                     <p className="text-xs text-slate-500">
                       {item.company || "Empresa"}
@@ -1591,7 +1591,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
-              <div key={item.id}>
+              <div key={item.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                 <p className="text-xs text-slate-500">{item.institution || "Institución"} • {formatRange(item.from, item.to)}</p>
               </div>
@@ -1623,7 +1623,7 @@ function TemplateClassic({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
-              <div key={cert.id}>
+              <div key={cert.id} data-cv-item>
                 <p className="text-sm font-semibold text-slate-900">{cert.title}</p>
                 {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                 {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1666,7 +1666,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 lg:grid-cols-3">
         <aside className="relative px-7 py-9 text-white" style={{ backgroundColor: sidebarBg }}>
           <div className="space-y-4">
-            {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
+            {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border border-white/30" /> : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || ""}</p>
             {renderNationality(personal, mutedColor)}
@@ -1720,6 +1720,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
 
         <main className="col-span-2 p-8">
           {personal.showDocumentIdentity && (personal.documentType || personal.documentNumber) ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Documento de identidad</h2><p className="mt-2 text-sm text-slate-700">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p></section> : null}
+          {personal.professionalCard ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Tarjeta profesional</h2><p className="mt-2 text-sm text-slate-700">{personal.professionalCard}</p></section> : null}
           {personal.summary?.trim() && personal.showSummaryContent !== false ? (
             <section className="mb-8">
               {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
@@ -1731,7 +1732,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
               <div className="mt-3 space-y-4">
                 {data.experience.map((item) => (
-                  <div key={item.id} className="">
+                  <div key={item.id} data-cv-item className="">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{item.role || "Rol"}</p>
@@ -1754,7 +1755,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
               <div className="mt-3 space-y-4">
                 {data.education.map((item) => (
-                  <div key={item.id} className="">
+                  <div key={item.id} data-cv-item className="">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{getLocalizedDegreeLabel(item.degree)}</p>
@@ -1802,7 +1803,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-2">
                 {certificates.map((cert) => (
-                  <div key={cert.id}>
+                  <div key={cert.id} data-cv-item>
                     <p className="text-sm font-semibold text-slate-800">{cert.title}</p>
                     {cert.issuingOrganization ? <p className="text-xs text-slate-500">{cert.issuingOrganization}</p> : null}
                     {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -1838,7 +1839,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
           {(personal.showReferences !== false && (personal.references || []).some((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship))) || personal.referencesAvailableOnRequest ? (
             <section className="mt-8 border-t border-slate-200 pt-5">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h3>
-              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
+              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} data-cv-item className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
               {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
             </section>
           ) : null}
@@ -1868,7 +1869,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="relative px-8 py-8 border-b border-slate-200 text-white" style={{ backgroundColor: executiveTop }}>
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="float-right ml-5  border border-white/30" /> : null}
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || ""}</p>
         {renderNationality(personal, subtitleColor)}
@@ -1902,7 +1903,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
             <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
-                <div key={item.id} className="border-l-2 border-slate-300 pl-4 py-0.5">
+                <div key={item.id} data-cv-item className="border-l-2 border-slate-300 pl-4 py-0.5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
@@ -1926,7 +1927,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
               <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className="mt-3 space-y-3">
                 {data.education.map((item) => (
-                  <div key={item.id}>
+                  <div key={item.id} data-cv-item>
                     <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                     <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                     <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -1968,7 +1969,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className="mt-2 space-y-2 text-xs text-slate-700">
                   {certificates.map((cert) => (
-                    <div key={cert.id}>
+                    <div key={cert.id} data-cv-item>
                       <p className="font-semibold text-slate-800">{cert.title}</p>
                       {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                       {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2020,7 +2021,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
   return (
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="pb-6 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="float-right ml-5  border border-slate-200" /> : null}
         <h1 className="text-3xl font-bold text-slate-900">{personal.name || ""}</h1>
         <p className="text-slate-600 mt-1">{personal.role || ""}</p>
         {renderNationality(personal)}
@@ -2052,7 +2053,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
           <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-5">
             {data.experience.map((item, index) => (
-              <div key={item.id} className="relative pl-6">
+              <div key={item.id} data-cv-item className="relative pl-6">
                 <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-brand-700" />
                 {index < data.experience!.length - 1 ? (
                   <span className="absolute left-[4px] top-5 bottom-[-22px] w-px bg-slate-200" />
@@ -2078,7 +2079,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-3 space-y-3">
               {data.education.map((item) => (
-                <div key={item.id}>
+                <div key={item.id} data-cv-item>
                   <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                   <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                   <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -2093,7 +2094,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
             <div className="mt-3 space-y-2">
               {data.skills.map((skill) => (
-                <div key={skill.id}>
+                <div key={skill.id} data-cv-item>
                   <div className="flex justify-between text-xs text-slate-700 mb-1">
                     <span>{skill.name}</span>
                     <span>{Math.round(skillLevelPercent(skill.level))}%</span>
@@ -2110,7 +2111,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
             <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
             <div className="mt-3 space-y-2 text-xs text-slate-700">
               {certificates.map((cert) => (
-                <div key={cert.id}>
+                <div key={cert.id} data-cv-item>
                   <p className="font-semibold text-slate-800">{cert.title}</p>
                   {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                   {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2159,7 +2160,7 @@ function TemplateCompact({ data }: { data: CVData }) {
   return (
     <article className="max-w-2xl mx-auto bg-white border border-slate-200 p-8 text-slate-900 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="text-center pb-4 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`mx-auto mb-3 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="mx-auto mb-3  border border-slate-200" /> : null}
         <h1 className="text-2xl font-bold">{personal.name || ""}</h1>
         <p className="text-sm text-slate-600">{personal.role || ""}</p>
         {renderNationality(personal)}
@@ -2184,7 +2185,7 @@ function TemplateCompact({ data }: { data: CVData }) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-2 space-y-3">
             {data.experience.map((item) => (
-              <div key={item.id} className="text-sm">
+              <div key={item.id} data-cv-item className="text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-semibold text-slate-900">{item.role || "Rol"}</p>
                   <p className="text-xs text-slate-500 whitespace-nowrap">{formatRange(item.from, item.to)}</p>
@@ -2203,7 +2204,7 @@ function TemplateCompact({ data }: { data: CVData }) {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-2 space-y-2 text-sm">
               {data.education.map((item) => (
-                <div key={item.id}>
+                <div key={item.id} data-cv-item>
                   <p className="font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                   <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                 </div>
@@ -2244,7 +2245,7 @@ function TemplateCompact({ data }: { data: CVData }) {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-1 text-xs text-slate-700">
                 {certificates.map((cert) => (
-                  <div key={cert.id}>
+                  <div key={cert.id} data-cv-item>
                     <p className="font-semibold text-slate-800">{cert.title}</p>
                     {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                     {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2315,11 +2316,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           </div>
 
           {shouldRenderProfileImage(personal) ? (
-            <img
-              src={personal.profileImage}
-              alt="Foto de perfil"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-white/40`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/40" />
           ) : null}
         </div>
 
@@ -2361,7 +2358,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
             <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className={`${dense ? "mt-2 space-y-3" : "mt-3 space-y-4"}`}>
               {data.experience.map((item) => (
-                <div key={item.id} className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
+                <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.role || "Rol"}</p>
@@ -2385,7 +2382,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
               <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className={`${dense ? "mt-2 space-y-2" : "mt-3 space-y-3"}`}>
                 {data.education.map((item) => (
-                  <div key={item.id} className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
+                  <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
                     <p className="text-sm font-semibold text-slate-900">{getLocalizedDegreeLabel(item.degree)}</p>
                     <p className="text-xs text-slate-600">{item.institution || "Institución"}</p>
                     <p className="text-xs text-slate-500">{formatRange(item.from, item.to)}</p>
@@ -2401,7 +2398,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {skills.map((skill) => (
-                    <div key={skill.id}>
+                    <div key={skill.id} data-cv-item>
                       <div className="mb-1 flex justify-between text-xs text-slate-700">
                         <span>{skill.name}</span>
                         <span>{Math.round(skillLevelPercent(skill.level))}%</span>
@@ -2418,7 +2415,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {languages.map((lang) => (
-                    <div key={lang.id} className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
+                    <div key={lang.id} data-cv-item className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
                       <span className="font-semibold">{lang.name}</span>
                       {lang.level ? <span className="ml-2">• {lang.level.toUpperCase()}</span> : null}
                       {lang.certificateUrl ? (
@@ -2437,7 +2434,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
                 <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"} text-xs text-slate-700`}>
                   {certificates.map((cert) => (
-                    <div key={cert.id} className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
+                    <div key={cert.id} data-cv-item className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
                       <p className="font-semibold text-slate-800">{cert.title}</p>
                       {cert.issuingOrganization ? <p className="text-slate-600">{cert.issuingOrganization}</p> : null}
                       {formatCertificatePeriod(cert.issueDate, cert.expiryDate) ? (
@@ -2556,7 +2553,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
           {value("applicationDate") ? <p className="mt-1 text-[11px] text-slate-500">Fecha de diligenciamiento: {value("applicationDate")}</p> : null}
         </div>
         {shouldRenderProfileImage(personal) ? (
-          <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-slate-400`} />
+          <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border border-slate-400" />
         ) : null}
       </header>
 
@@ -2609,7 +2606,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
         <Section title="III. Experiencia laboral">
           {experience.length
             ? experience.map((item, index) => (
-                <div key={item.id} className="break-inside-avoid border-x border-b border-slate-300">
+                <div key={item.id} data-cv-item className="break-inside-avoid border-x border-b border-slate-300">
                   <div className="flex flex-wrap items-baseline justify-between gap-2 bg-slate-50 px-2 py-1 text-[11px]">
                     <span className="font-bold">{index + 1}. {item.company}</span>
                     <span className="text-slate-600">
@@ -2843,7 +2840,7 @@ function TemplateDafp({ data }: { data: CVData }) {
             </tbody>
           </table>
         ) : null}
-        {value("dafpProfessionalCard") ? <Grid><Row label="Tarjeta o matrícula profesional" wide>{value("dafpProfessionalCard")}</Row></Grid> : null}
+        {value("dafpProfessionalCard") || personal.professionalCard ? <Grid><Row label="Tarjeta o matrícula profesional" wide>{value("dafpProfessionalCard") || personal.professionalCard}</Row></Grid> : null}
         {languages.length ? (
           <table className="mt-2 w-full border-collapse text-[11px]">
             <thead>
@@ -2950,7 +2947,8 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
   const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => { if (!item || item.isVisible === false) return false; const hidden = item.hiddenFields || []; return (item.name && !hidden.includes("name")) || (item.phone && !hidden.includes("phone")) || (item.email && !hidden.includes("email")) || (item.company && !hidden.includes("company")) || (item.position && !hidden.includes("position")) || (item.relationship && !hidden.includes("relationship")); });
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
-  if (!showDocument && references.length === 0 && !showRequestText) return null;
+  const professionalCard = includeDocument ? personal.professionalCard || "" : "";
+  if (!showDocument && !professionalCard && references.length === 0 && !showRequestText) return null;
   const width = TEMPLATE_PAGE_WIDTH[template] ?? "max-w-2xl";
   const surface = supplementalSurface(template, data);
   const border = surface.dark ? "border-white/10" : "border-slate-200 bg-white text-slate-800";
@@ -2964,6 +2962,12 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
           <p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p>
         </div>
       ) : null}
+      {professionalCard ? (
+        <div className="mb-4">
+          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Tarjeta profesional</h2>
+          <p className="mt-1 text-sm">{professionalCard}</p>
+        </div>
+      ) : null}
       {references.length ? (
         <div>
           <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Referencias laborales y personales</h2>
@@ -2973,7 +2977,7 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
               const show = (field: string) => !hidden.includes(field);
               const details = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean);
               return (
-                <div key={reference.id} className="min-w-0 text-sm">
+                <div key={reference.id} data-cv-item className="min-w-0 text-sm">
                   {show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}
                   {details.length ? <p className={`text-xs ${meta}`}>{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {details.join(" · ")}</p> : null}
                   {show("phone") && reference.phone ? <p className={`text-xs ${meta}`}>{reference.phone}</p> : null}

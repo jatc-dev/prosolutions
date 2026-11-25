@@ -41,7 +41,12 @@ export function isCustomColor(key: ColorKey, value?: string): boolean {
 /** Keeps a framing percentage within 0–100. */
 const clampPercent = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : null);
 
-export function CustomStylesWrapper({ settings, photo, children }: { settings: unknown; photo?: { x?: number; y?: number }; children: React.ReactNode }) {
+/** Photo zoom limits (1 = the photo fills its frame, no zoom). */
+export const PHOTO_ZOOM_MIN = 1;
+export const PHOTO_ZOOM_MAX = 2.5;
+const clampZoom = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, value)) : null);
+
+export function CustomStylesWrapper({ settings, photo, children }: { settings: unknown; photo?: { x?: number; y?: number; zoom?: number }; children: React.ReactNode }) {
   const s: Record<string, string | number | undefined> = (settings as Record<string, string | number | undefined>) || {};
 
   const bodyFont = cvFontFamily(s.fontBody as string | undefined);
@@ -86,6 +91,8 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
   const photoY = clampPercent(photo?.y);
   if (photoX !== null) cssVars["--cv-photo-x"] = `${photoX}%`;
   if (photoY !== null) cssVars["--cv-photo-y"] = `${photoY}%`;
+  const photoZoom = clampZoom(photo?.zoom);
+  if (photoZoom !== null && photoZoom !== 1) cssVars["--cv-photo-zoom"] = String(photoZoom);
 
   return (
     <div className={classes.join(" ")} style={cssVars as React.CSSProperties}>
@@ -96,7 +103,7 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
 
 export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
   return (
-    <CustomStylesWrapper settings={data.settings} photo={{ x: data.personal?.profileImagePositionX, y: data.personal?.profileImagePositionY }}>
+    <CustomStylesWrapper settings={data.settings} photo={{ x: data.personal?.profileImagePositionX, y: data.personal?.profileImagePositionY, zoom: data.personal?.profileImageZoom }}>
       <TemplateRenderer template={template} data={data} />
     </CustomStylesWrapper>
   );

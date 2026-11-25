@@ -72,6 +72,8 @@ export interface PersonalData {
   profileImageSize?: ProfileImageSize;
   /** Photo framing inside its shape, 0–100 % (50 = centred). */
   profileImagePositionX?: number;
+  /** Photo zoom inside its frame: 1 = none, up to 2.5. */
+  profileImageZoom?: number;
   profileImagePositionY?: number;
   /** false removes the template's photo border. */
   profileImageBorder?: boolean;
@@ -79,6 +81,13 @@ export interface PersonalData {
   documentType?: string;
   documentNumber?: string;
   showDocumentIdentity?: boolean;
+  /** Tarjeta o matrícula profesional (see modules/procv/professionalCard.ts). */
+  professionalCardNumber?: string;
+  professionalCardIssuer?: string;
+  professionalCardDate?: string;
+  showProfessionalCard?: boolean;
+  showProfessionalCardIssuer?: boolean;
+  showProfessionalCardDate?: boolean;
   showFullName?: boolean;
   showProfessionalTitle?: boolean;
   showNationality?: boolean;
