@@ -568,14 +568,16 @@
 }
 
 /* Page-break spacers inserted by html2pdf (a classless div with only an
-   inline "display: block; height: …px"): 3 px more, so a moved box does not
-   leave a 1 px sliver of its border at the bottom of the previous page.
+   inline "display: block; height: …px"). The extra space is the top gap of
+   the next page: content moved to a new page would otherwise sit right at the
+   6 mm margin while page 1 also has the template's own top padding. It also
+   avoids a 1 px sliver of a moved box's border on the previous page.
    padding, not margin: a margin would collapse with the next box's. */
 .cv-pdf-export div[style^="display: block; height:"] {
   /* content-box: with Tailwind's border-box the padding stayed inside the
      fixed height and pushed nothing. */
   box-sizing: content-box !important;
-  padding-bottom: 3px !important;
+  padding-bottom: var(--pdf-page-top-gap, 32px) !important;
 }
 
 /* Contact icons: keep the icon and its value together (the space between
