@@ -72,6 +72,8 @@ export interface PersonalData {
   profileImageSize?: ProfileImageSize;
   /** Photo framing inside its shape, 0–100 % (50 = centred). */
   profileImagePositionX?: number;
+  /** Photo zoom inside its frame: 1 = none, up to 2.5. */
+  profileImageZoom?: number;
   profileImagePositionY?: number;
   /** false removes the template's photo border. */
   profileImageBorder?: boolean;

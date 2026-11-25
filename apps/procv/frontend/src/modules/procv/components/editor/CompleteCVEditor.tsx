@@ -49,7 +49,7 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
-import { FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Upload } from "lucide-react";
+import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
 import { DownloadMenu } from "./components/DownloadMenu";
 import { professionalCardText } from "../../professionalCard";
@@ -321,6 +321,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       profileImageStyle: cvData.personal?.profileImageStyle || 'round',
       profileImageSize: cvData.personal?.profileImageSize || 'md',
       profileImagePositionX: cvData.personal?.profileImagePositionX,
+      profileImageZoom: cvData.personal?.profileImageZoom,
       profileImagePositionY: cvData.personal?.profileImagePositionY,
       profileImageBorder: cvData.personal?.profileImageBorder,
       showProfileImage: cvData.personal?.showProfileImage !== false,
@@ -1124,90 +1125,61 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
           {isGuest && <GuestBanner />}
 
-          {/* Header */}
+          {/* Header: one row of actions. Frequent ones are buttons; occasional
+              ones live in "Más"; Descargar and Guardar close the row. Secondary
+              buttons show only their icon on medium screens (name in title/aria). */}
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-4">
+            <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleBack}
                 disabled={isLeaving}
+                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
                 className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
                 title={isAuthenticated ? t('editor.back.toListHint', 'Guarda los cambios y vuelve a tus hojas de vida') : t('editor.back.toHomeHint', 'Tu borrador queda guardado en este navegador')}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                {isLeaving
-                  ? t('dashboard.saving', 'Guardando…')
-                  : isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
+                {isLeaving ? <span className="text-xs">{t('dashboard.saving', 'Guardando…')}</span> : null}
               </button>
-              <button
-                type="button"
-                onClick={handleBack}
-                disabled={isLeaving}
-                className="flex min-w-0 items-center gap-3 rounded-md text-left focus:outline-none focus:ring-2 focus:ring-brand-700"
-                aria-label={isAuthenticated ? t('editor.back.toList', 'Mis hojas de vida') : t('editor.back.toHome', 'Inicio')}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950">
+
+              {/* Title, with the save status under it (as in most editors). */}
+              {/* min width: on narrow screens the buttons wrap to a second line instead of hiding the title. */}
+              <div className="flex min-w-[11rem] flex-1 items-center gap-3">
+                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 dark:bg-brand-950 sm:flex">
                   <EditorBrandGlyph />
                 </span>
-                <span className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
-                  <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
-                  <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
-                </span>
-              </button>
-
-              {/* Save stays at the end of the top bar, next to its status:
-                  always visible and in the same place (also Ctrl/Cmd+S). */}
-              <div className="ml-auto flex shrink-0 items-center gap-3">
-              <AutoSaveIndicator
-                isSaving={isSaving}
-                lastSaved={lastSaved}
-                hasUnsavedChanges={hasUnsavedChanges}
-              />
-              <DownloadMenu
-                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
-                onPdf={() => void handleExportPdf()}
-                onWord={() => void handleExportDocx()}
-                busy={isExportingPdf || isExportingDocx}
-              />
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                aria-busy={isSaving}
-                aria-label={t('editor.actions.save')}
-                title={`${t('editor.actions.save')} (Ctrl+S)`}
-                aria-keyshortcuts="Control+S Meta+S"
-                className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
-              >
-                {/* The status next to it already says "Guardando…": the button
-                    only gets disabled, so the message is not shown twice. */}
-                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-                {t('editor.actions.save')}
-              </button>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <span className="text-brand-800 dark:text-brand-300">{t("procv.name", "ProCV")}</span>
+                    <span className="ml-2 font-normal text-slate-600 dark:text-slate-300">- {cvData.title}</span>
+                  </p>
+                  <div className="cv-editor-save-status">
+                    <AutoSaveIndicator
+                      isSaving={isSaving}
+                      lastSaved={lastSaved}
+                      hasUnsavedChanges={hasUnsavedChanges}
+                    />
+                  </div>
+                </div>
               </div>
 
-            </div>
-
-            <div className="flex w-full flex-wrap items-center justify-end gap-2">
-              {/* Document switch (CV or cover letter): part of the toolbar, so it
-                  no longer takes a full row of screen height. */}
-              {/* Same height, border and colours as the other toolbar buttons. */}
-              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="mr-auto inline-flex min-h-10 items-stretch rounded-md border border-brand-300 bg-white p-0.5 dark:border-brand-900 dark:bg-slate-900">
-                {([['cv', 'Hoja de vida', 'CV', FileText], ['letter', 'Carta de presentación', 'Carta', Mail]] as const).map(([mode, label, short, Icon]) => (
+              {/* Document switch (CV or cover letter), same look as the toolbar buttons. */}
+              <div role="tablist" aria-label={tx('editor.ui.documentKind', 'Documento')} className="inline-flex min-h-10 items-stretch rounded-md border border-brand-300 bg-white p-0.5 dark:border-brand-900 dark:bg-slate-900">
+                {([['cv', 'Hoja de vida', 'Hoja de vida', FileText], ['letter', 'Carta de presentación', 'Carta', Mail]] as const).map(([mode, label, short, Icon]) => (
                   <button
                     key={mode}
                     type="button"
                     role="tab"
                     aria-selected={docMode === mode}
                     aria-label={label}
+                    title={label}
                     onClick={() => setDocMode(mode)}
                     className={`inline-flex items-center gap-2 rounded px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${docMode === mode ? 'bg-brand-800 text-white shadow-sm dark:bg-brand-500 dark:text-slate-950' : 'text-brand-900 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/40'}`}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span className="sm:hidden" aria-hidden="true">{short}</span>
-                    <span className="hidden sm:inline" aria-hidden="true">{label}</span>
+                    <span className="hidden sm:inline" aria-hidden="true">{short}</span>
                   </button>
                 ))}
               </div>
@@ -1220,59 +1192,46 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               />
 
               <button
+                type="button"
                 onClick={togglePreview}
+                aria-pressed={showPreview}
                 aria-label={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
                 title={`${showPreview ? t('editor.actions.hide') : t('editor.actions.show')} ${t('editor.actions.preview')}`}
-                className="cv-editor-preview-toggle inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                className="cv-editor-preview-toggle inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
               >
-                <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="hidden sm:inline">{showPreview ? t('editor.actions.hide') : t('editor.actions.show')} {t('editor.actions.preview')}</span>
+                {showPreview ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                <span className="hidden 2xl:inline">{tx('editor.ui.previewShort', 'Vista previa')}</span>
               </button>
-
-
-
-              {isAuthenticated && cvId ? (
-                <button
-                  type="button"
-                  onClick={() => setShowHistory(true)}
-                  aria-haspopup="dialog"
-                  title={tx('editor.history.hint', 'Ver y restaurar versiones anteriores')}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
-                >
-                  <History className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">{tx('editor.history.button', 'Historial')}</span>
-                </button>
-              ) : null}
 
               {docMode === 'cv' ? (
                 <button
                   type="button"
                   onClick={() => setShowAtsDialog(true)}
                   aria-haspopup="dialog"
+                  aria-label={t('editor.ats.openButton', 'Comparar con vacante')}
                   title={t('editor.ats.openHint', 'Compara tu hoja de vida con una oferta de empleo (ATS)')}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40"
                 >
-                  <svg className="h-4 w-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" strokeWidth={2} />
-                    <circle cx="12" cy="12" r="5" strokeWidth={2} />
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                  </svg>
-                  <span className="hidden sm:inline">{t('editor.ats.openButton', 'Comparar con vacante')}</span>
+                  <Target className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden xl:inline">{t('editor.ats.openButton', 'Comparar con vacante')}</span>
                 </button>
               ) : null}
 
-              {/* Less frequent actions: importing a file and starting over. */}
+              {/* Occasional actions: history, importing a file and starting over. */}
               <ActionMenu
                 label={isImporting ? t('editor.importer.loading') : tx('editor.ui.more', 'Más')}
                 ariaLabel={tx('editor.ui.moreActions', 'Más opciones')}
                 icon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
                 menuLabel={tx('editor.ui.moreActions', 'Más opciones')}
                 disabled={isImporting}
-                buttonClassName="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                buttonClassName="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-brand-300 bg-white px-2.5 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 disabled:cursor-wait disabled:opacity-60"
                 items={[
+                  ...(isAuthenticated && cvId ? [{
+                    label: tx('editor.history.button', 'Historial'),
+                    description: tx('editor.history.menuHint', 'Ver y restaurar versiones anteriores (una cada 30 minutos de edición).'),
+                    icon: <History className="h-5 w-5 text-brand-700" />,
+                    onSelect: () => setShowHistory(true),
+                  }] : []),
                   {
                     label: t('editor.importer.button'),
                     description: tx('editor.ui.importHint', 'Rellena el formulario desde un PDF, Word o texto. Revisas los datos antes de aplicarlos.'),
@@ -1284,15 +1243,34 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     description: tx('editor.ui.resetHint', 'Borra el contenido y empieza de cero. Pide confirmación.'),
                     icon: <RotateCcw className="h-5 w-5 text-red-600" />,
                     onSelect: handleReset,
-                    tone: 'danger',
+                    tone: 'danger' as const,
                   },
                 ]}
               />
 
-
-              </div>
+              <DownloadMenu
+                documentLabel={docMode === 'letter' ? 'la carta' : 'la hoja de vida'}
+                onPdf={() => void handleExportPdf()}
+                onWord={() => void handleExportDocx()}
+                busy={isExportingPdf || isExportingDocx}
+              />
+              {/* Guardar closes the row: always visible, same place (also Ctrl/Cmd+S).
+                  The status under the title says "Guardando…", so the button only gets disabled. */}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                aria-busy={isSaving}
+                aria-label={t('editor.actions.save')}
+                title={`${t('editor.actions.save')} (Ctrl+S)`}
+                aria-keyshortcuts="Control+S Meta+S"
+                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-transparent bg-brand-800 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
+              >
+                <Save className="h-4 w-4" aria-hidden="true" />
+                {t('editor.actions.save')}
+              </button>
             </div>
-        </div>
+          </div>
 
         {showHistory && cvId ? (
           <VersionHistoryDialog

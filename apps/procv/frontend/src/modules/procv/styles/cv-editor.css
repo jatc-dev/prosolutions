@@ -603,6 +603,12 @@
 .cv-custom-wrapper .cv-photo {
   object-position: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
 }
+/* Zoom chosen in the editor (1 = no zoom), around the framing point; the
+   frame (.cv-photo-frame) keeps the shape and clips the enlarged photo. */
+.cv-custom-wrapper .cv-photo-frame .cv-photo {
+  transform: scale(var(--cv-photo-zoom, 1));
+  transform-origin: var(--cv-photo-x, 50%) var(--cv-photo-y, 50%);
+}
 
 /* Form groups: each datum (field, its options and help) is a card, so it is
    clear where one ends and the next begins. Neutral greys: a light grey in
@@ -633,4 +639,14 @@
 [data-theme="dark"] .cv-form-groups > * .bg-slate-50 {
   background: #18181b;
   border-color: #3f3f46;
+}
+
+/* Save status under the document title: a smaller line. */
+.cv-editor-save-status span {
+  font-size: 0.75rem;
+}
+.cv-editor-save-status svg,
+.cv-editor-save-status .animate-spin {
+  width: 0.875rem;
+  height: 0.875rem;
 }

@@ -38,6 +38,8 @@ export interface CVData {
     profileImage?: string;
     profileImageStyle?: "round" | "square" | "portrait" | "oval" | "arch";
     profileImagePositionX?: number;
+    /** 1 = no zoom, up to PHOTO_ZOOM_MAX. */
+    profileImageZoom?: number;
     profileImagePositionY?: number;
     profileImageBorder?: boolean;
     profileImageSize?: "sm" | "md" | "lg" | "xl";
@@ -433,10 +435,20 @@ function getProfileImageClass(personal: CVData["personal"], size: "small" | "med
     : style === "oval" ? "rounded-[50%]"
     : style === "arch" ? "rounded-t-full rounded-b-md"
     : "rounded-xl";
-  // cv-photo: framing via --cv-photo-x/y (set by CustomStylesWrapper). "!border-0"
-  // overrides each template's own border when the user turns it off.
+  // The frame keeps size, shape and border; the photo inside is framed with
+  // --cv-photo-x/y and zoomed with --cv-photo-zoom (set by CustomStylesWrapper).
+  // "!border-0" overrides each template's own border when the user turns it off.
   const borderClass = personal?.profileImageBorder === false ? " !border-0" : "";
-  return `${sizeClass} ${shapeClass} object-cover cv-photo${borderClass}`;
+  return `${sizeClass} ${shapeClass} block overflow-hidden cv-photo-frame${borderClass}`;
+}
+
+/** Profile photo: a frame with the template's shape and border, the image zoomed and framed inside. */
+function ProfilePhoto({ personal, size = "medium", alt = "Foto de perfil", className = "" }: { personal: CVData["personal"]; size?: "small" | "medium"; alt?: string; className?: string }) {
+  return (
+    <span className={`${getProfileImageClass(personal, size)} ${className}`.trim()}>
+      <img src={personal?.profileImage} alt={alt} className="cv-photo block h-full w-full object-cover" />
+    </span>
+  );
 }
 
 function calculateAge(value?: string) {
@@ -1058,11 +1070,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         </div>
         {shouldRenderProfileImage(personal) && (
           <div className="flex-shrink-0">
-            <img
-              src={personal.profileImage}
-              alt="Profile"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-slate-200`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Profile" className="border-2 border-slate-200" />
           </div>
         )}
         <div className="text-xs text-slate-500 space-y-1">
@@ -1230,11 +1238,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {shouldRenderProfileImage(personal) && (
-            <img
-              src={personal.profileImage}
-              alt="Foto de perfil"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-slate-700 mb-3`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-slate-700 mb-3" />
           )}
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || ""}</h1>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || ""}</p>
@@ -1388,11 +1392,7 @@ function TemplateCreative({ data }: { data: CVData }) {
     >
       <header className="space-y-2">
         {shouldRenderProfileImage(personal) && (
-          <img
-            src={personal.profileImage}
-            alt="Foto de perfil"
-            className={`${getProfileImageClass(personal, "medium")} border-2 border-white/30 mb-3`}
-          />
+          <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/30 mb-3" />
         )}
         <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: creativeTextColor }}>{personal.name || ""}</h1>
         <p className="text-sm" style={{ color: creativeMutedColor }}>{personal.role || "Profesional Creativo"}</p>
@@ -1523,11 +1523,7 @@ function TemplateClassic({ data }: { data: CVData }) {
     <div className="max-w-2xl mx-auto bg-white p-9 text-slate-900 font-serif border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="border-b border-slate-200 pb-6">
         {shouldRenderProfileImage(personal) && (
-          <img
-            src={personal.profileImage}
-            alt="Foto de perfil"
-            className={`${getProfileImageClass(personal, "small")} border border-slate-200 mb-3`}
-          />
+          <ProfilePhoto personal={personal} size="small" alt="Foto de perfil" className="border border-slate-200 mb-3" />
         )}
         <h1 className="text-4xl font-bold tracking-tight">{personal.name || ""}</h1>
         <p className="mt-2 text-sm text-slate-500">{personal.role || ""}</p>
@@ -1670,7 +1666,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
       <div className="grid grid-cols-1 lg:grid-cols-3">
         <aside className="relative px-7 py-9 text-white" style={{ backgroundColor: sidebarBg }}>
           <div className="space-y-4">
-            {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
+            {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border border-white/30" /> : null}
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
             <p className="text-sm" style={{ color: mutedColor }}>{personal.role || ""}</p>
             {renderNationality(personal, mutedColor)}
@@ -1873,7 +1869,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="relative px-8 py-8 border-b border-slate-200 text-white" style={{ backgroundColor: executiveTop }}>
         <span className="absolute left-8 top-0 h-1 w-16" style={{ backgroundColor: executiveAccent }} aria-hidden="true" />
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-white/30`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="float-right ml-5  border border-white/30" /> : null}
         <h1 className="text-3xl font-bold tracking-tight" style={{ color: headingColor }}>{personal.name || ""}</h1>
         <p className="mt-1" style={{ color: subtitleColor }}>{personal.role || ""}</p>
         {renderNationality(personal, subtitleColor)}
@@ -2025,7 +2021,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
   return (
     <article className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm p-8 [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="pb-6 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`float-right ml-5 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="float-right ml-5  border border-slate-200" /> : null}
         <h1 className="text-3xl font-bold text-slate-900">{personal.name || ""}</h1>
         <p className="text-slate-600 mt-1">{personal.role || ""}</p>
         {renderNationality(personal)}
@@ -2164,7 +2160,7 @@ function TemplateCompact({ data }: { data: CVData }) {
   return (
     <article className="max-w-2xl mx-auto bg-white border border-slate-200 p-8 text-slate-900 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className="text-center pb-4 border-b border-slate-200">
-        {shouldRenderProfileImage(personal) ? <img src={personal.profileImage} alt="Foto de perfil" className={`mx-auto mb-3 ${getProfileImageClass(personal, "medium")} border border-slate-200`} /> : null}
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="mx-auto mb-3  border border-slate-200" /> : null}
         <h1 className="text-2xl font-bold">{personal.name || ""}</h1>
         <p className="text-sm text-slate-600">{personal.role || ""}</p>
         {renderNationality(personal)}
@@ -2320,11 +2316,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           </div>
 
           {shouldRenderProfileImage(personal) ? (
-            <img
-              src={personal.profileImage}
-              alt="Foto de perfil"
-              className={`${getProfileImageClass(personal, "medium")} border-2 border-white/40`}
-            />
+            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/40" />
           ) : null}
         </div>
 
@@ -2561,7 +2553,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
           {value("applicationDate") ? <p className="mt-1 text-[11px] text-slate-500">Fecha de diligenciamiento: {value("applicationDate")}</p> : null}
         </div>
         {shouldRenderProfileImage(personal) ? (
-          <img src={personal.profileImage} alt="Foto de perfil" className={`${getProfileImageClass(personal, "medium")} border border-slate-400`} />
+          <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border border-slate-400" />
         ) : null}
       </header>
 

@@ -256,3 +256,36 @@ describe("professional card", () => {
     expect(screen.getByText("N.º 123 · COPNIA")).toBeTruthy();
   });
 });
+
+describe("photo zoom", () => {
+  it("zooms the photo inside a frame that keeps the shape", () => {
+    const { container } = render(
+      <CustomStylesWrapper settings={{}} photo={{ x: 40, y: 30, zoom: 1.8 }}>
+        <p>CV</p>
+      </CustomStylesWrapper>,
+    );
+    const wrapper = container.querySelector(".cv-custom-wrapper") as HTMLElement;
+    expect(wrapper.style.getPropertyValue("--cv-photo-zoom")).toBe("1.8");
+    expect(wrapper.style.getPropertyValue("--cv-photo-x")).toBe("40%");
+  });
+
+  it("clamps the zoom and leaves it out when there is none", () => {
+    const zoomOf = (zoom: number) => {
+      const { container, unmount } = render(<CustomStylesWrapper settings={{}} photo={{ zoom }}><p>CV</p></CustomStylesWrapper>);
+      const value = (container.querySelector(".cv-custom-wrapper") as HTMLElement).style.getPropertyValue("--cv-photo-zoom");
+      unmount();
+      return value;
+    };
+    expect(zoomOf(9)).toBe("2.5");
+    expect(zoomOf(1)).toBe("");
+  });
+
+  it("templates wrap the photo in a clipping frame", () => {
+    const cv = { personal: { name: "Ana", profileImage: "data:image/png;base64,AAAA", showProfileImage: true } } as unknown as RendererCVData;
+    const { container } = render(<TemplateRenderer template="sidebar" data={cv} />);
+    const img = container.querySelector("img.cv-photo") as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.parentElement?.className).toContain("cv-photo-frame");
+    expect(img.parentElement?.className).toContain("overflow-hidden");
+  });
+});
