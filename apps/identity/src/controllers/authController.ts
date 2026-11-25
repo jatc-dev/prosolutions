@@ -30,6 +30,7 @@ import { createTokenPair, hashRefreshToken, revokeSession } from '../services/to
 import { recordConsent } from '../services/consentService';
 import { ensureDefaultModuleAccess, getDefaultModules, isEffectiveModule } from '../services/moduleAccessService';
 import { getUserPermissionSets, getUserAdminAssignments } from '../services/adminAuthorization';
+import { CHALLENGE_TTL_MS, sealChallenge } from '../services/mfa';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Internal server error';
@@ -138,6 +139,66 @@ export async function register(req: Request, res: Response) {
   }
 }
 
+/** Issues the session for a fully authenticated sign-in (password, plus MFA when enabled). */
+export async function issuePasswordSession(
+  req: Request,
+  res: Response,
+  user: { id: string; email: string; name: string | null; role: string; emailVerified: boolean },
+  rememberMe: boolean,
+) {
+  const modules = await ensureDefaultModuleAccess(user.id, user.role);
+
+  const { accessToken, refreshToken } = await createTokenPair({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    modules,
+  }, {
+    rememberMe,
+    deviceName: req.get("sec-ch-ua-platform") || req.get("user-agent")?.split(" ")[0] || "Dispositivo desconocido",
+    userAgent: req.get("user-agent") || null,
+    ipAddress: req.ip || null,
+  });
+
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      }),
+      prisma.session.update({
+        where: { refreshTokenHash: hashRefreshToken(refreshToken) },
+        data: { lastAccessedAt: new Date() },
+      }),
+    ]);
+  } catch (txError: unknown) {
+    logger.warn('Session update after login failed, token still valid', {
+      userId: user.id,
+      error: txError instanceof Error ? txError.message : String(txError),
+    });
+  }
+
+  setRefreshTokenCookie(res, refreshToken, rememberMe);
+
+  auditLog('authentication.login_success', {
+    userId: user.id,
+    email: user.email,
+    ...extractRequestInfo(req),
+  });
+  logger.info('Login successful', { userId: user.id, modules });
+  return res.json({
+    accessToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      modules,
+    },
+  });
+}
+
 export async function login(req: Request, res: Response) {
   try {
     const { error, value } = loginSchema.validate(req.body);
@@ -204,57 +265,16 @@ export async function login(req: Request, res: Response) {
       });
     }
 
-    const modules = await ensureDefaultModuleAccess(user.id, user.role);
-
-    const { accessToken, refreshToken } = await createTokenPair({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      modules,
-    }, {
-      rememberMe,
-      deviceName: req.get("sec-ch-ua-platform") || req.get("user-agent")?.split(" ")[0] || "Dispositivo desconocido",
-      userAgent: req.get("user-agent") || null,
-      ipAddress: req.ip || null,
-    });
-
-    try {
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        }),
-        prisma.session.update({
-          where: { refreshTokenHash: hashRefreshToken(refreshToken) },
-          data: { lastAccessedAt: new Date() },
-        }),
-      ]);
-    } catch (txError: unknown) {
-      logger.warn('Session update after login failed, token still valid', {
-        userId: user.id,
-        error: txError instanceof Error ? txError.message : String(txError),
+    if (user.mfaEnabledAt) {
+      // Second step required: no session until the code is verified.
+      auditLog('authentication.mfa_challenge', { userId: user.id, ...extractRequestInfo(req) });
+      return res.json({
+        mfaRequired: true,
+        challenge: sealChallenge({ userId: user.id, rememberMe: Boolean(rememberMe), exp: Date.now() + CHALLENGE_TTL_MS }, config.jwtSecret),
       });
     }
 
-    setRefreshTokenCookie(res, refreshToken, rememberMe);
-
-    auditLog('authentication.login_success', {
-      userId: user.id,
-      email: user.email,
-      ...extractRequestInfo(req),
-    });
-    logger.info('Login successful', { userId: user.id, modules });
-    return res.json({
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        modules,
-      },
-    });
+    return await issuePasswordSession(req, res, user, Boolean(rememberMe));
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     const bodyEmail = (req.body as { email?: string })?.email;
@@ -519,6 +539,11 @@ export async function verifyEmail(req: Request, res: Response) {
       email: verificationToken.user.email,
       ...extractRequestInfo(req),
     });
+
+    // Accounts with two-step verification never get a session without the second factor.
+    if (verificationToken.user.mfaEnabledAt) {
+      return res.json({ message: 'Email verified successfully', mfaRequired: true });
+    }
 
     const modules = await ensureDefaultModuleAccess(verificationToken.userId, verificationToken.user.role);
 

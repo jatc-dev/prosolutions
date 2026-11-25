@@ -1,6 +1,6 @@
 import React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { render, screen, within } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { identityRequestMock } = vi.hoisted(() => ({
@@ -16,14 +16,18 @@ vi.mock("../src/i18n", () => ({
 }));
 
 import { AdminConsolePage } from "../src/pages/AdminConsolePage";
+import { resetAdminPermissionsCache } from "../src/admin/AdminLayout";
 
 const USERS_READ = "identity.users.read";
 const ROLES_READ = "identity.roles.read";
 
-function renderConsole() {
+function renderConsole(path = "/admin") {
   return render(
-    <MemoryRouter initialEntries={["/admin"]}>
-      <AdminConsolePage />
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/admin" element={<AdminConsolePage />} />
+        <Route path="/admin/usuarios" element={<p>Directorio de usuarios</p>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -36,25 +40,43 @@ function respondWithPermissions(role: string, permissions: string[]) {
   });
 }
 
-describe("AdminConsolePage navigation permissions", () => {
-  beforeEach(() => identityRequestMock.mockReset());
+describe("Administration navigation", () => {
+  beforeEach(() => {
+    identityRequestMock.mockReset();
+    resetAdminPermissionsCache();
+  });
 
-  it("shows and opens users navigation for a non-admin with identity.users.read", async () => {
+  it("links straight to the users page for an account with identity.users.read", async () => {
     respondWithPermissions("member", [USERS_READ]);
     renderConsole();
 
-    const navigation = await screen.findByRole("navigation", { name: "Administración de la plataforma" });
-    fireEvent.click(within(navigation).getByRole("button", { name: "Usuarios y accesos" }));
-
-    expect(await screen.findByText("Usuarios y accesos a módulos")).toBeInTheDocument();
+    const navigation = await screen.findByRole("navigation", { name: "Administración" });
+    expect(await within(navigation).findByRole("link", { name: "Usuarios" })).toHaveAttribute("href", "/admin/usuarios");
   });
 
-  it("does not grant users navigation from the admin role without identity.users.read", async () => {
+  it("hides users from an admin without identity.users.read", async () => {
     respondWithPermissions("admin", [ROLES_READ]);
     renderConsole();
 
-    const navigation = await screen.findByRole("navigation", { name: "Administración de la plataforma" });
-    expect(within(navigation).getByRole("button", { name: "Roles y permisos" })).toBeInTheDocument();
-    expect(within(navigation).queryByRole("button", { name: "Usuarios y accesos" })).not.toBeInTheDocument();
+    const navigation = await screen.findByRole("navigation", { name: "Administración" });
+    expect(await within(navigation).findByRole("link", { name: "Roles y permisos" })).toBeInTheDocument();
+    expect(within(navigation).queryByRole("link", { name: "Usuarios" })).not.toBeInTheDocument();
+  });
+
+  it("keeps personal account links out of the administration sidebar", async () => {
+    respondWithPermissions("admin", [USERS_READ, ROLES_READ]);
+    renderConsole();
+
+    const navigation = await screen.findByRole("navigation", { name: "Administración" });
+    await within(navigation).findByRole("link", { name: "Usuarios" });
+    const hrefs = within(navigation).getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(hrefs).not.toContain("/settings");
+    expect(hrefs).not.toContain("/security/sessions");
+  });
+
+  it("redirects the old users section to the users page", async () => {
+    respondWithPermissions("admin", [USERS_READ]);
+    renderConsole("/admin?section=users");
+    expect(await screen.findByText("Directorio de usuarios")).toBeInTheDocument();
   });
 });

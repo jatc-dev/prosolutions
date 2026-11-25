@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCoreLocale } from "../i18n";
 import { identityAuthApiUrl } from "../identityApi";
 import { saveUserPreferences } from "../preferencesApi";
+import { MfaSettings } from "../components/MfaSettings";
 
 const API = identityAuthApiUrl();
 const TOKEN_KEY = "pro_identity_token";
@@ -166,6 +167,7 @@ export function SecuritySessionsPage() {
         <button onClick={closeOthers} disabled={busy !== null || sessions.filter(s => !s.current).length === 0} className="rounded-xl border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/40">{busy === "others" ? copy.closing : copy.closeOthers}</button>
       </div>
       {error && <p role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">{error}</p>}
+      <MfaSettings english={language === "en"} />
       {idleExpiredSessions.length > 0 && !loading && <details className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><summary className="cursor-pointer text-sm font-semibold">{copy.idleSummary(idleExpiredSessions.length, idleTimeoutMinutes)}</summary><ul className="mt-3 space-y-2">{idleExpiredSessions.map(session => <li key={session.id} className="border-t border-slate-100 pt-2 text-sm dark:border-slate-800"><strong>{session.deviceName || copy.device}</strong><span className="ml-2 text-slate-500">{copy.lastActivity}: {new Date(session.lastAccessedAt).toLocaleString()}</span></li>)}</ul><p className="mt-3 text-xs text-slate-500">{copy.idleNote}</p></details>}
       {loading ? <p className="py-16 text-center text-slate-500">{copy.loading}</p> : sessions.length === 0 ? <p className="mt-8 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">{copy.empty}</p> :
         <div className="mt-8 space-y-4">{sessions.map(session => <article key={session.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">

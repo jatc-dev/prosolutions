@@ -6,6 +6,14 @@ import { UUID } from '../repositories/jobs.js';
 import { listEvents } from '../repositories/outbox.js';
 import type { AppDeps } from './context.js';
 
+/** ProIdentity user ids (cuid-like): letters, digits, "_" and "-". */
+const USER_ID = /^[A-Za-z0-9_-]{3,64}$/;
+function parseUserIds(raw: unknown): string[] {
+  const ids = String(raw ?? '').split(',').map((id) => id.trim()).filter(Boolean);
+  if (!ids.length || ids.length > 100 || !ids.every((id) => USER_ID.test(id))) throw notFound('Invalid user ids');
+  return [...new Set(ids)];
+}
+
 function sameSecret(provided: string, expected: string): boolean {
   const a = Buffer.from(provided);
   const b = Buffer.from(expected);
@@ -169,6 +177,51 @@ export function internalRouter({ db, config }: AppDeps): Router {
       });
       if (!result) throw notFound('Job not found');
       res.json({ job: { id: jobId, moderationStatus: result.moderation_status } });
+    }),
+  );
+
+  /**
+   * Per-user content counts for the ProSolutions admin console (users page).
+   *   GET /internal/users/summary?ids=<id>,<id>…   (max 100)
+   * Each user is read inside their own RLS context, exactly like GET /api/me.
+   */
+  router.get(
+    '/users/summary',
+    asyncHandler(async (req, res) => {
+      const ids = parseUserIds(req.query.ids);
+      const users: Record<string, Record<string, number>> = {};
+      for (const userId of ids) {
+        users[userId] = await db.withContext({ userId }, async (tx) => {
+          const count = async (sql: string) => Number((await tx.query<{ n: number }>(sql, [userId])).rows[0]?.n ?? 0);
+          return {
+            applications: await count('SELECT count(*)::int AS n FROM public.applications WHERE candidate_id = $1'),
+            savedJobs: await count('SELECT count(*)::int AS n FROM public.saved_jobs WHERE user_id = $1'),
+            alerts: await count('SELECT count(*)::int AS n FROM public.job_alerts WHERE user_id = $1'),
+            companyMemberships: await count('SELECT count(*)::int AS n FROM public.company_members WHERE user_id = $1'),
+          };
+        });
+      }
+      res.set('Cache-Control', 'no-store');
+      res.json({ users });
+    }),
+  );
+
+  /**
+   * Erase a user's ProJobs data when ProIdentity deletes the account (same
+   * scope as DELETE /api/me, run in the user's RLS context).
+   */
+  router.delete(
+    '/users/:userId',
+    asyncHandler(async (req, res) => {
+      const [userId] = parseUserIds(req.params.userId);
+      if (!userId) throw notFound('User not found');
+      const deleted = await db.withContext({ userId }, async (tx) => ({
+        applications: (await tx.query('DELETE FROM public.applications WHERE candidate_id = $1 RETURNING id', [userId])).rows.length,
+        savedJobs: (await tx.query('DELETE FROM public.saved_jobs WHERE user_id = $1 RETURNING job_id', [userId])).rows.length,
+        alerts: (await tx.query('DELETE FROM public.job_alerts WHERE user_id = $1 RETURNING id', [userId])).rows.length,
+        companyMemberships: (await tx.query('DELETE FROM public.company_members WHERE user_id = $1 RETURNING company_id', [userId])).rows.length,
+      }));
+      res.json({ message: 'ProJobs data deleted', deleted });
     }),
   );
 

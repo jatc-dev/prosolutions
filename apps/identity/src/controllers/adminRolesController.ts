@@ -5,6 +5,8 @@ import { IdentityRequest } from '../middleware/auth';
 import { userHasPermission } from '../services/adminAuthorization';
 
 const MODULES = new Set<string>(Object.values(Module));
+/** Roles that always apply to one module: administrator, moderator and viewer. */
+export const MODULE_ROLES = new Set(['module_admin', 'module_moderator', 'module_viewer']);
 
 function actor(req: Request) {
   const identityReq = req as IdentityRequest;
@@ -95,11 +97,11 @@ export async function assignAdminRole(req: Request, res: Response) {
 
   const role = await prisma.adminRole.findUnique({ where: { key: roleKey } });
   if (!role) return res.status(404).json({ message: 'Administrative role not found' });
-  if (role.key === 'module_admin' && !moduleValue) {
-    return res.status(400).json({ message: 'module_admin assignments require an explicit module scope' });
+  if (MODULE_ROLES.has(role.key) && !moduleValue) {
+    return res.status(400).json({ message: `${role.key} assignments require an explicit module scope` });
   }
-  if (role.key !== 'module_admin' && moduleValue) {
-    return res.status(400).json({ message: 'Only module_admin assignments may have a module scope' });
+  if (!MODULE_ROLES.has(role.key) && moduleValue) {
+    return res.status(400).json({ message: 'Only module roles (administrator, moderator, viewer) may have a module scope' });
   }
   if (role.key === 'platform_owner') {
     const allowed = await userHasPermission(actor(req).id, 'identity.roles.owner_manage');

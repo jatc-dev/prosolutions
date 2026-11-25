@@ -90,6 +90,7 @@ export async function exportAccount(req: Request, res: Response) {
       role: user.role,
       emailVerified: user.emailVerified,
       signInWithGoogle: Boolean(user.googleSub),
+      twoStepVerification: Boolean(user.mfaEnabledAt),
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
       preferences: user.preferences,

@@ -1,11 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { PortalPage } from "./pages/PortalPage";
-import { AdminAccessPage } from "./pages/AdminAccessPage";
+import { UsersAdminPage } from "./admin/UsersAdminPage";
+import { AuditAdminPage } from "./admin/AuditAdminPage";
 import { AdminConsolePage } from "./pages/AdminConsolePage";
 import { ProAdminPage } from "./pages/ProAdminPage";
 import { LandingPage } from "./pages/LandingPage";
@@ -30,7 +31,9 @@ export function AppRoutes() {
       <Route path="/settings" element={<PreferencesPage />} />
       <Route path="/modules" element={<PortalPage />} />
       <Route path="/admin" element={<AdminConsolePage />} />
-      <Route path="/admin/access" element={<AdminAccessPage />} />
+      <Route path="/admin/usuarios" element={<UsersAdminPage />} />
+      <Route path="/admin/auditoria" element={<AuditAdminPage />} />
+      <Route path="/admin/access" element={<Navigate to="/admin/usuarios" replace />} />
       <Route path="/admin/empresas" element={<ProAdminPage section="empresas" />} />
       <Route path="/admin/vacantes" element={<ProAdminPage section="vacantes" />} />
       <Route path="/admin/publicidad" element={<ProAdminPage section="publicidad" />} />

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import internalRoutes from './routes/internal';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -113,6 +114,9 @@ export function createApp() {
   );
   app.use(express.json({ limit: '10mb' }));
   app.use(morgan('tiny'));
+
+  // Service-to-service API (ProIdentity): bearer service token, no browser CSRF.
+  app.use('/api/internal', internalRoutes);
 
   app.use(generateCSRFMid);
   app.get('/api/csrf-token', getCSRFToken);

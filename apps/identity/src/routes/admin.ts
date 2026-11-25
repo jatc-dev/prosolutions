@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import { Module } from '@prisma/client';
 import {
+  deleteIdentityUser,
+  getIdentityUser,
+  listIdentityAudit,
   listIdentityUsers,
+  restoreIdentityUser,
+  revokeIdentityUserSessions,
+  updateIdentityUser,
 } from '../controllers/adminController';
 import {
   listAdminRoles,
@@ -19,6 +25,7 @@ import {
   deleteProcvSetting,
 } from '../controllers/procvAdminProxyController';
 import { identityMiddleware, requirePermission } from '../middleware/auth';
+import { adminResetMfa } from '../controllers/mfaController';
 import { getAdminAdsSettings, updateAdminAdsSettings } from '../controllers/platformController';
 import {
   listCompaniesForReview,
@@ -33,6 +40,14 @@ router.use(identityMiddleware);
 
 // Identity administration
 router.get('/users', requirePermission('identity.users.read'), listIdentityUsers);
+router.get('/users/:userId', requirePermission('identity.users.read'), getIdentityUser);
+router.patch('/users/:userId', requirePermission('identity.users.manage'), updateIdentityUser);
+router.post('/users/:userId/sessions/revoke', requirePermission('identity.sessions.revoke'), revokeIdentityUserSessions);
+// Owner only (identity.users.delete): erase now or on a scheduled date; restore cancels a schedule.
+router.delete('/users/:userId', requirePermission('identity.users.delete'), deleteIdentityUser);
+router.post('/users/:userId/restore', requirePermission('identity.users.delete'), restoreIdentityUser);
+router.post('/users/:userId/mfa/reset', requirePermission('identity.security.manage'), adminResetMfa);
+router.get('/audit-logs', requirePermission('identity.audit.read'), listIdentityAudit);
 router.get('/roles', requirePermission('identity.roles.read'), listAdminRoles);
 router.get('/role-assignments', requirePermission('identity.roles.read'), listAdminAssignments);
 router.post('/role-assignments', requirePermission('identity.roles.manage'), assignAdminRole);

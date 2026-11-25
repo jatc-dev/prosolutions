@@ -23,14 +23,12 @@ const COPY = {
     eyebrow: "ProSolutions · Portal de trabajo",
     greeting: (name?: string | null) => `Hola${name ? `, ${name}` : ""}. ¿Qué quieres hacer hoy?`,
     intro: "Tu cuenta, tus herramientas profesionales. Elige uno de los módulos disponibles; podrás volver aquí cuando quieras.",
-    manageAccess: "Administrar accesos",
     procvText: "Crea, edita y mejora tu hoja de vida profesional con herramientas optimizadas para filtros ATS.",
     procvCta: "Entrar a ProCV",
     projobsText: "Descubre oportunidades profesionales y explora vacantes de todos los sectores para tu próximo paso laboral.",
     projobsCta: "Entrar a ProJobs",
     noModules: "Tu cuenta no tiene módulos habilitados. Contacta con soporte para revisar tus permisos.",
     signedInAs: (email?: string) => `Sesión iniciada como ${email ?? ""}. La sesión se comparte de forma segura entre los módulos.`,
-    security: "Seguridad y dispositivos",
   },
   en: {
     refreshFailed: "Your session could not be renewed.",
@@ -43,14 +41,12 @@ const COPY = {
     eyebrow: "ProSolutions · Work portal",
     greeting: (name?: string | null) => `Hi${name ? `, ${name}` : ""}. What would you like to do today?`,
     intro: "Your account, your career tools. Choose one of the available modules; you can come back here at any time.",
-    manageAccess: "Manage access",
     procvText: "Create, edit and improve your CV with tools optimized for applicant tracking systems (ATS).",
     procvCta: "Open ProCV",
     projobsText: "Discover opportunities and browse job openings in every sector for your next career step.",
     projobsCta: "Open ProJobs",
     noModules: "Your account has no modules enabled. Contact support to review your permissions.",
     signedInAs: (email?: string) => `Signed in as ${email ?? ""}. Your session is shared securely across modules.`,
-    security: "Security and devices",
   },
 } as const;
 
@@ -134,10 +130,6 @@ export function PortalPage() {
                 <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{copy.greeting(user?.name)}</h1>
                 <p className="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">{copy.intro}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {user?.role === "admin" && <a href="/admin" className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-50 dark:border-brand-950 dark:text-brand-200 dark:hover:bg-brand-950/40">{copy.manageAccess}</a>}
-
-              </div>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               {user?.modules?.includes("PROCV") && (<a href={PROCV_APP_URL} className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
@@ -160,7 +152,7 @@ export function PortalPage() {
             {(!user?.modules?.includes("PROCV") && !user?.modules?.includes("PROJOBS")) && (
               <p role="status" className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">{copy.noModules}</p>
             )}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400"><span>{copy.signedInAs(user?.email)}</span><a href="/security/sessions" className="font-semibold text-brand-900 underline underline-offset-4 dark:text-brand-300">{copy.security}</a></div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400"><span>{copy.signedInAs(user?.email)}</span></div>
           </>
         )}
       </main>

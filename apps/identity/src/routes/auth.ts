@@ -22,6 +22,7 @@ import {
 import { identityMiddleware } from '../middleware/auth';
 import { listSessions, revokeSessionById, revokeOtherSessions } from '../controllers/sessionController';
 import { googleCallback, listProviders, startGoogleLogin } from '../controllers/googleAuthController';
+import { disableMfa, enableMfa, getMfaStatus, regenerateRecoveryCodes, startMfaSetup, verifyMfaChallenge } from '../controllers/mfaController';
 
 const router = Router();
 
@@ -30,6 +31,13 @@ router.get('/google/start', authLimiter, startGoogleLogin);
 router.get('/google/callback', authLimiter, googleCallback);
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
+// Two-step verification (optional, TOTP + recovery codes).
+router.post('/mfa/verify', authLimiter, verifyMfaChallenge);
+router.get('/mfa', identityMiddleware, getMfaStatus);
+router.post('/mfa/setup', identityMiddleware, startMfaSetup);
+router.post('/mfa/enable', authLimiter, identityMiddleware, enableMfa);
+router.post('/mfa/disable', authLimiter, identityMiddleware, disableMfa);
+router.post('/mfa/recovery-codes', authLimiter, identityMiddleware, regenerateRecoveryCodes);
 router.post('/refresh', refreshLimiter, refreshToken);
 router.post('/logout', logout);
 router.post('/introspect', introspectLimiter, introspectToken);

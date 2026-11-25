@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { identityRequest } from "../preferencesApi";
+import { MODULE_ROLES, ROLE_LABELS } from "../admin/UsersAdminPage";
 
 type Role = {
   key: string;
@@ -79,7 +80,7 @@ export function AdminRolesPanel({
         body: JSON.stringify({
           userId,
           roleKey,
-          ...(roleKey === "module_admin" ? { module } : {}),
+          ...(MODULE_ROLES.has(roleKey) ? { module } : {}),
           ...(expiresAt ? { expiresAt: new Date(expiresAt).toISOString() } : {}),
         }),
       });
@@ -123,7 +124,7 @@ export function AdminRolesPanel({
         <>
           {canManage && <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <h3 className="font-semibold">{english ? "Assign an administrative role" : "Asignar un rol administrativo"}</h3>
-            <p className="mt-1 text-sm text-slate-500">{english ? "Grant only the minimum access required. Module administrator assignments must be scoped to one module." : "Concede únicamente el acceso mínimo necesario. Las asignaciones de administrador de módulo deben limitarse a un módulo."}</p>
+            <p className="mt-1 text-sm text-slate-500">{english ? "Grant only the minimum access required. Module roles (administrator, moderator, viewer) must be scoped to one module." : "Concede únicamente el acceso mínimo necesario. Los roles de módulo (administrador, moderador, lector) deben limitarse a un módulo."}</p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <label className="text-sm font-medium">{english ? "User account" : "Cuenta de usuario"}
                 <select value={userId} onChange={(event) => setUserId(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
@@ -133,10 +134,10 @@ export function AdminRolesPanel({
               </label>
               <label className="text-sm font-medium">{english ? "Role" : "Rol"}
                 <select value={roleKey} onChange={(event) => setRoleKey(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
-                  {availableRoles.filter((role) => role.key !== "user").map((role) => <option key={role.key} value={role.key}>{role.name} ({role.key})</option>)}
+                  {availableRoles.filter((role) => role.key !== "user").map((role) => <option key={role.key} value={role.key}>{ROLE_LABELS[role.key]?.[english ? "en" : "es"] ?? role.name} ({role.key})</option>)}
                 </select>
               </label>
-              {roleKey === "module_admin" && <label className="text-sm font-medium">{english ? "Module scope" : "Módulo autorizado"}
+              {MODULE_ROLES.has(roleKey) && <label className="text-sm font-medium">{english ? "Module scope" : "Módulo autorizado"}
                 <select value={module} onChange={(event) => setModule(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-950">
                   {MODULES.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
@@ -153,7 +154,7 @@ export function AdminRolesPanel({
             <h3 className="font-semibold">{english ? "Current assignments" : "Asignaciones actuales"}</h3>
             {assignments.length ? <div className="mt-4 space-y-2">{assignments.map((assignment) => <div key={assignment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
               <div className="min-w-0">
-                <p className="font-medium">{assignment.role.name} <span className="font-mono text-xs text-slate-500">({assignment.role.key})</span></p>
+                <p className="font-medium">{ROLE_LABELS[assignment.role.key]?.[english ? "en" : "es"] ?? assignment.role.name} <span className="font-mono text-xs text-slate-500">({assignment.role.key})</span></p>
                 <p className="mt-1 break-all text-sm text-slate-600 dark:text-slate-300">{assignment.user.email} · {assignment.module || (english ? "Platform-wide" : "Toda la plataforma")}</p>
                 <p className="mt-1 text-xs text-slate-500">{assignment.expiresAt ? (english ? `Expires ${new Date(assignment.expiresAt).toLocaleString()}` : `Vence ${new Date(assignment.expiresAt).toLocaleString()}`) : (english ? "No expiry" : "Sin vencimiento")}</p>
               </div>
@@ -162,7 +163,7 @@ export function AdminRolesPanel({
           </article>
           <div className="grid gap-3 md:grid-cols-2">
             {roles.map((role) => <article key={role.key} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{role.name}</h3><span className="font-mono text-xs text-slate-500">{role.key}</span></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{ROLE_LABELS[role.key]?.[english ? "en" : "es"] ?? role.name}</h3><span className="font-mono text-xs text-slate-500">{role.key}</span></div>
               {role.description && <p className="mt-1 text-sm text-slate-500">{role.description}</p>}
               <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{english ? "Permissions" : "Permisos"} · {role.permissions.length}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">{role.permissions.map((permission) => <span key={permission.key} title={permission.description || undefined} className="rounded-md bg-slate-100 px-2 py-1 font-mono text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">{permission.key}</span>)}</div>

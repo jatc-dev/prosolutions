@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { NoAds, ProFooter, ProHeader, resetAdsConfigCache } from "@prosolutions/ui";
-import { useCoreLocale } from "../i18n";
+import { useNavigate } from "react-router-dom";
+import { NoAds, resetAdsConfigCache } from "@prosolutions/ui";
 import { identityRequest } from "../preferencesApi";
+import { AdminShell, loadAdminPermissions } from "../admin/AdminLayout";
 
 export type ProAdminSection = "empresas" | "vacantes" | "publicidad";
 
@@ -438,80 +438,39 @@ function AdsPanel({ call }: { call: Call }) {
 }
 
 export function ProAdminPage({ section }: { section: ProAdminSection }) {
-  const { locale, setLocale } = useCoreLocale();
   const call = useAdminCall();
   const [permissions, setPermissions] = useState<string[] | null>(null);
-  const [account, setAccount] = useState<{ name?: string | null; email: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = `${SECTION_LABELS[section]} | ProAdmin`;
   }, [section]);
 
-  useEffect(() => {
-    call<{ user?: { name?: string | null; email: string; permissions?: string[]; modulePermissions?: Record<string, string[]> } }>("/api/auth/me")
-      .then((me) => {
-        const user = me.user;
-        if (!user) throw new Error("No se pudo cargar tu cuenta.");
-        setAccount({ name: user.name, email: user.email });
-        setPermissions([...(user.permissions ?? []), ...(user.modulePermissions?.PROJOBS ?? [])]);
-      })
-      .catch((caught) => setError(caught instanceof Error ? caught.message : "No se pudo cargar tu cuenta."));
-  }, [call]);
+  useEffect(() => { void loadAdminPermissions().then(setPermissions); }, []);
 
   const has = (permission: string) => permissions?.includes(permission) ?? false;
-  const allowed = (Object.keys(SECTION_LABELS) as ProAdminSection[]).filter((key) => has(SECTION_PERMISSIONS[key]));
 
   return (
     <NoAds>
-      <div className="ui-page flex min-h-screen flex-col">
-        <ProHeader
-          activeApp="core"
-          locale={locale}
-          onLocaleChange={() => setLocale(locale === "es" ? "en" : "es")}
-          profile={account}
-          profileHref="/dashboard"
-          securityHref="/security/sessions"
-          loginHref="/login?returnTo=%2Fadmin"
-        />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-          <p className="text-sm">
-            <Link to="/admin" className="text-ui-muted hover:underline">← Consola administrativa</Link>
-          </p>
-          <h1 className="mt-2 text-2xl font-bold text-ui-text">ProAdmin</h1>
-          {error ? (
-            <p role="alert" className="mt-6 rounded-ui-md border border-ui-danger p-4 text-sm text-ui-danger">{error}</p>
-          ) : permissions === null ? (
-            <p className="mt-6 text-sm text-ui-muted">Verificando permisos…</p>
-          ) : !has(SECTION_PERMISSIONS[section]) ? (
-            <p role="alert" className="mt-6 rounded-ui-md border border-ui-border p-4 text-sm text-ui-text">
-              Tu cuenta no tiene el permiso necesario para esta sección ({SECTION_PERMISSIONS[section]}).
-            </p>
-          ) : (
-            <>
-              <nav aria-label="Secciones de ProAdmin" className="mt-4 flex flex-wrap gap-2 border-b border-ui-border pb-3">
-                {allowed.map((key) => (
-                  <NavLink
-                    key={key}
-                    to={`/admin/${key}`}
-                    className={({ isActive }) =>
-                      `rounded-ui-md px-3 py-1.5 text-sm font-semibold ${isActive ? "bg-ui-accent text-ui-on-accent" : "text-ui-muted hover:bg-ui-soft"}`
-                    }
-                  >
-                    {SECTION_LABELS[key]}
-                  </NavLink>
-                ))}
-              </nav>
+      <AdminShell>
+        {() => (
+          <>
+            <h1 className="text-2xl font-bold text-ui-text">{SECTION_LABELS[section]}</h1>
+            {permissions === null ? (
+              <p className="mt-6 text-sm text-ui-muted">Verificando permisos…</p>
+            ) : !has(SECTION_PERMISSIONS[section]) ? (
+              <p role="alert" className="mt-6 rounded-ui-md border border-ui-border p-4 text-sm text-ui-text">
+                Tu cuenta no tiene el permiso necesario para esta sección ({SECTION_PERMISSIONS[section]}).
+              </p>
+            ) : (
               <div className="mt-6">
                 {section === "empresas" && <CompaniesPanel call={call} canModerate={has("projobs.catalog.moderate")} />}
                 {section === "vacantes" && <JobsPanel call={call} canModerate={has("projobs.catalog.moderate")} />}
                 {section === "publicidad" && <AdsPanel call={call} />}
               </div>
-            </>
-          )}
-        </main>
-        <ProFooter locale={locale} />
-      </div>
+            )}
+          </>
+        )}
+      </AdminShell>
     </NoAds>
   );
 }

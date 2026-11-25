@@ -9,6 +9,7 @@ import { setRefreshTokenCookie } from '../utils/cookies';
 import { createTokenPair } from '../services/tokenService';
 import { ensureDefaultModuleAccess, getDefaultModules } from '../services/moduleAccessService';
 import { recordConsent } from '../services/consentService';
+import { CHALLENGE_TTL_MS, sealChallenge } from '../services/mfa';
 import {
   buildAuthorizationUrl,
   createPkcePair,
@@ -146,6 +147,15 @@ export async function googleCallback(req: Request, res: Response) {
     }
 
     if (!user.isActive) return failureRedirect(res, 'account_inactive');
+
+    if (user.mfaEnabledAt) {
+      // Second step on the login page; the challenge travels in the fragment (never sent to servers or logs).
+      auditLog('authentication.mfa_challenge', { userId: user.id, ...info, details: { provider: 'google' } });
+      const challenge = sealChallenge({ userId: user.id, rememberMe: false, next: transaction.next, exp: Date.now() + CHALLENGE_TTL_MS }, config.jwtSecret);
+      const url = new URL(coreLoginUrl());
+      url.hash = `mfa=${encodeURIComponent(challenge)}`;
+      return res.redirect(302, url.toString());
+    }
 
     const modules = await ensureDefaultModuleAccess(user.id, user.role);
     const { refreshToken } = await createTokenPair(
