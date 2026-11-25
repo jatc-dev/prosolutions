@@ -31,7 +31,7 @@ export function DownloadMenu({ documentLabel, onPdf, onWord, busy }: DownloadMen
         {
           label: "Word (.docx)",
           description: "Editable, con el estilo de tu plantilla.",
-          icon: <FileType2 className="h-5 w-5 text-blue-600" />,
+          icon: <FileType2 className="h-5 w-5 text-brand-700" />,
           onSelect: onWord,
         },
       ]}
