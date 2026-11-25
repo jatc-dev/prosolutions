@@ -1,7 +1,7 @@
 import React from "react";
 import { TemplateRenderer } from "./TemplateRenderer";
 import { CVData as RendererCVData } from "./TemplateRenderer";
-import { cvFontFamily } from "../fonts";
+import { cvFontFamily, normalizeFontScale } from "../fonts";
 
 interface WithCustomStylesProps {
   template: string;
@@ -67,6 +67,15 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
       cssVars[setting.cssVar] = value!;
       classes.push(setting.className);
     }
+  }
+  // Font sizes: templates size text with Tailwind classes (rem), so the CSS
+  // rescales those classes; headings and body text have their own factor.
+  const bodyScale = normalizeFontScale(s.fontScaleBody);
+  const headingScale = normalizeFontScale(s.fontScaleHeading);
+  if (bodyScale !== 1 || headingScale !== 1) {
+    cssVars["--cv-body-scale"] = String(bodyScale);
+    cssVars["--cv-heading-scale"] = String(headingScale);
+    classes.push("cv-size-custom");
   }
   if (spacing !== DEFAULT_SECTION_SPACING) {
     cssVars["--section-spacing"] = String(spacing);

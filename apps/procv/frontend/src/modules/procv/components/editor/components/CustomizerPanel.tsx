@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LayoutPanelLeft, Palette, Type, type LucideIcon } from "lucide-react";
-import { FontSelector } from "./FontSelector";
+import { FontSelector, FontSizeStepper } from "./FontSelector";
 import { ColorCustomizer } from "./ColorCustomizer";
 import { LayoutCustomizer } from "./LayoutCustomizer";
+import { SectionTitlesEditor } from "./SectionTitlesEditor";
 import { CVData } from "../../../../../shared/types";
 
 interface CustomizerPanelProps {
@@ -57,16 +58,25 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
       <div>
         {activeTab === "fonts" && (
           <div className="space-y-4">
+            {/* One typeface for titles and text, like most CV builders; the
+                two stored keys are kept so older CVs render unchanged. */}
             <FontSelector
-              label={t("customizer.fontBody", "Fuente del cuerpo")}
+              label={t("customizer.font", "Tipografía")}
               value={settings.fontBody || "template"}
-              onChange={(v) => update({ fontBody: v })}
+              onChange={(v) => update({ fontBody: v, fontHeading: v })}
             />
-            <FontSelector
-              label={t("customizer.fontHeading", "Fuente de títulos")}
-              value={settings.fontHeading || "template"}
-              onChange={(v) => update({ fontHeading: v })}
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <FontSizeStepper
+                label={t("customizer.headingSize", "Tamaño de títulos")}
+                value={settings.fontScaleHeading}
+                onChange={(v) => update({ fontScaleHeading: v })}
+              />
+              <FontSizeStepper
+                label={t("customizer.bodySize", "Tamaño del texto")}
+                value={settings.fontScaleBody}
+                onChange={(v) => update({ fontScaleBody: v })}
+              />
+            </div>
           </div>
         )}
 
@@ -78,10 +88,18 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
         )}
 
         {activeTab === "layout" && (
-          <LayoutCustomizer
-            settings={settings}
-            onChange={update}
-          />
+          <div className="space-y-5">
+            <LayoutCustomizer
+              settings={settings}
+              onChange={update}
+            />
+            <div className="border-t border-slate-200 pt-4 dark:border-slate-700">
+              <SectionTitlesEditor
+                value={settings.sectionTitles}
+                onChange={(sectionTitles) => update({ sectionTitles })}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

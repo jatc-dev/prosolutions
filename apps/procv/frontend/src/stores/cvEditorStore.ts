@@ -83,7 +83,6 @@ export const createInitialCVData = (): CVData => ({
     fontHeading: 'template',
     density: 'balanced',
     sectionSpacing: 2,
-    showSectionIcons: true,
     accentColor: '#3b82f6',
     headingColor: '#0f172a',
     textColor: '#1e293b',
@@ -148,7 +147,8 @@ const toBoolean = (value: unknown): boolean => {
   return false;
 };
 
-const normalizeLoadedCVData = (rawData: any): CVData => {
+/** Exported for tests. */
+export const normalizeLoadedCVData = (rawData: any): CVData => {
   const initial = createInitialCVData();
   const safe = rawData || {};
   const safePersonal = safe.personal || {};
@@ -173,7 +173,11 @@ const normalizeLoadedCVData = (rawData: any): CVData => {
         credentialId: item?.credentialId || '',
         verificationUrl: item?.verificationUrl || '',
         description: item?.description || '',
-        fileUrl: item?.fileUrl || '',
+        // Attached files were removed: they were stored inline (base64) in the
+        // CV and every version, and never shown anywhere. The verification URL
+        // covers it; dropping the value here clears old files on the next save.
+        fileUrl: '',
+        ...(item?.isVisible === false ? { isVisible: false } : {}),
         order: typeof item?.order === 'number' ? item.order : index,
       })).filter((item: CertificateItem) => item.title.length > 0)
     : [];

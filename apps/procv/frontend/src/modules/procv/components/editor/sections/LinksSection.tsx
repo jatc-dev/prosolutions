@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { tx } from '../../../uiText';
 import { LinkItem, LinkType, ValidationErrors } from "../../../../../shared/types";
 import {
   FormSection,
@@ -17,6 +18,15 @@ interface LinksSectionProps {
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const isValidUrl = (value: string) => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const getIconSvg = (iconName: string) => {
   const icons: Record<string, string> = {
@@ -131,6 +141,12 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
     return 'website';
   };
 
+  /** Editing a saved link only switches its type when the URL clearly names a platform. */
+  const refineLinkType = (current: LinkType, url: string): LinkType => {
+    const detected = detectLinkType(url);
+    return detected === 'linkedin' || detected === 'github' || detected === 'twitter' ? detected : current;
+  };
+
   const handleUrlChange = (url: string) => {
     setNewUrl(url);
     // Auto-detect link type based on URL
@@ -237,61 +253,46 @@ export const LinksSection: React.FC<LinksSectionProps> = ({
                       </div>
                     </div>
 
-                    {/* Link details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-medium text-slate-900">{link.label}</h4>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          link.isVisible
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-slate-100 text-slate-800'
-                        }`}>
-                          {link.isVisible ? t('editor.links.visible') : t('editor.links.hidden')}
+                    {/* Link details: editable in place, like the other sections. */}
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <FormField label={t('editor.links.fields.label')}>
+                          <InputField
+                            value={link.label}
+                            onChange={(value) => updateLink(link.id, { label: value })}
+                            placeholder={t('editor.links.placeholders.label')}
+                          />
+                        </FormField>
+                        <FormField
+                          label={t('editor.links.fields.url')}
+                          error={isValidUrl(link.url) ? undefined : t('editor.links.alerts.invalidUrl')}
+                        >
+                          <InputField
+                            type="url"
+                            value={link.url}
+                            onChange={(value) => updateLink(link.id, { url: value, type: refineLinkType(link.type, value) })}
+                            placeholder={linkTypeInfo?.placeholder}
+                          />
+                        </FormField>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <label className="inline-flex items-center gap-1 text-xs text-slate-500">
+                          <input
+                            type="checkbox"
+                            checked={link.isVisible !== false}
+                            onChange={(event) => updateLink(link.id, { isVisible: event.target.checked })}
+                          />
+                          {tx('editor.ui.showInCv', 'Mostrar en el CV')}
+                        </label>
+                        <span className="text-xs text-slate-500">
+                          {t('editor.links.typePrefix')}: {linkTypeInfo?.label}
                         </span>
                       </div>
-
-                      <p className="text-sm text-brand-700 hover:text-brand-900 mt-1">
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate block"
-                        >
-                          {link.url}
-                        </a>
-                      </p>
-
-                      <p className="text-xs text-slate-500 mt-1">
-                        {t('editor.links.typePrefix')}: {linkTypeInfo?.label}
-                      </p>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2 ml-4">
-                    {/* Visibility toggle */}
-                    <button
-                      type="button"
-                      onClick={() => updateLink(link.id, { isVisible: !link.isVisible })}
-                      className={`p-1 rounded ${
-                        link.isVisible
-                          ? 'text-green-600 hover:text-green-800'
-                          : 'text-slate-400 hover:text-slate-600'
-                      }`}
-                      title={link.isVisible ? t('editor.actions.hide') : t('editor.actions.show')}
-                    >
-                      {link.isVisible ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                        </svg>
-                      )}
-                    </button>
-
                     {/* Move up/down buttons */}
                     <div className="flex flex-col space-y-1">
                       <button

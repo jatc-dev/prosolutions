@@ -1,6 +1,7 @@
 import { withUserContext } from '../dbContext';
 import { cache } from '../utils/cache';
 import { writeAuditLog } from '../utils/auditLogger';
+import { resolveVersionPhotos, versionSnapshot } from './cvVersionPhotos';
 
 // Retry a single time only for transient PostgreSQL connection closures.
 // This helper is used only by idempotent, read-only queries.
@@ -20,6 +21,37 @@ async function retryTransientRead<T>(operation: () => Promise<T>): Promise<T> {
 
     await new Promise(resolve => setTimeout(resolve, 200));
     return operation();
+  }
+}
+
+/**
+ * Versions kept per CV. Every save stores a full copy of the CV (photo
+ * included), so without a limit they grow with each autosave.
+ */
+export const MAX_CV_VERSIONS = 20;
+
+type VersionTx = {
+  cVVersion: {
+    findMany(args: {
+      where: { cvId: string };
+      orderBy: { createdAt: 'desc' };
+      skip: number;
+      select: { id: true };
+    }): Promise<Array<{ id: string }>>;
+    deleteMany(args: { where: { id: { in: string[] } } }): Promise<unknown>;
+  };
+};
+
+/** Deletes the versions of a CV beyond the newest MAX_CV_VERSIONS. */
+export async function pruneCvVersions(tx: VersionTx, cvId: string): Promise<void> {
+  const stale = await tx.cVVersion.findMany({
+    where: { cvId },
+    orderBy: { createdAt: 'desc' },
+    skip: MAX_CV_VERSIONS,
+    select: { id: true },
+  });
+  if (stale.length) {
+    await tx.cVVersion.deleteMany({ where: { id: { in: stale.map(version => version.id) } } });
   }
 }
 
@@ -180,21 +212,24 @@ export class CVService {
         throw new Error('CV not found');
       }
 
+      const nextData = data ?? JSON.parse(existing.data ?? '{}');
       const saved = await tx.cV.update({
         where: { id: cvId },
         data: {
           title: title ?? existing.title,
           template: template ?? existing.template,
-          data: JSON.stringify(data ?? JSON.parse(existing.data ?? '{}')),
+          data: JSON.stringify(nextData),
         },
       });
 
       await tx.cVVersion.create({
         data: {
           cvId: saved.id,
-          snapshot: JSON.stringify(JSON.parse(existing.data ?? '{}')),
+          // The photo is only copied into the version when this save changes it.
+          snapshot: versionSnapshot(existing.data, nextData),
         },
       });
+      await pruneCvVersions(tx, saved.id);
       await writeAuditLog(tx, {
         actorId: userId,
         action: 'update',
@@ -260,10 +295,11 @@ export class CVService {
       if (!cv) {
         throw new Error('CV not found');
       }
-      return tx.cVVersion.findMany({
+      const stored = await tx.cVVersion.findMany({
         where: { cvId },
         orderBy: { createdAt: 'desc' },
       });
+      return resolveVersionPhotos(cv.data, stored);
     });
 
     // Store in cache for 60 seconds
@@ -282,14 +318,20 @@ export class CVService {
         throw new Error('CV not found');
       }
 
-      const version = await tx.cVVersion.findFirst({ where: { id: versionId, cvId } });
+      // Newer versions are needed to resolve a photo stored as "unchanged".
+      const stored = await tx.cVVersion.findMany({
+        where: { cvId },
+        orderBy: { createdAt: 'desc' },
+      });
+      const version = resolveVersionPhotos(cv.data, stored).find(item => item.id === versionId);
       if (!version) {
         throw new Error('Version not found');
       }
 
       await tx.cVVersion.create({
-        data: { cvId, snapshot: JSON.stringify(JSON.parse(cv.data ?? '{}')) },
+        data: { cvId, snapshot: versionSnapshot(cv.data, JSON.parse(version.snapshot)) },
       });
+      await pruneCvVersions(tx, cvId);
       const restored = await tx.cV.update({
         where: { id: cvId },
         data: { data: version.snapshot },

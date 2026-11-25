@@ -202,13 +202,13 @@
     "title": "Título del CV",
     "template": "Plantilla",
     "personal": "Información Personal",
-    "experience": "Experiencia Laboral",
+    "experience": "Experiencia laboral",
     "education": "Educación",
     "skills": "Habilidades",
     "languages": "Idiomas",
     "certificates": "Certificaciones",
     "links": "Enlaces",
-    "summary": "Resumen Profesional",
+    "summary": "Perfil profesional",
     "fullName": "Nombre Completo",
     "professionalTitle": "Título Profesional",
     "email": "Correo Electrónico",
@@ -318,7 +318,7 @@
       "creative": "Creativo",
       "general": "General"
     },
-    "summary": "Resumen profesional",
+    "summary": "Perfil profesional",
     "experience": "Experiencia laboral",
     "skills": "Habilidades",
     "result": "Resultado de IA",
@@ -603,12 +603,12 @@
         "github": "GitHub",
         "twitter": "Twitter",
         "valueProposition": "Propuesta de valor",
-        "summary": "Resumen Profesional",
+        "summary": "Perfil profesional",
         "nationality": "Nacionalidad (país)"
       },
       "help": {
         "professionalTitle": "Ej: Asesor Comercial, Auxiliar Contable, Enfermera",
-        "profileImage": "Imagen cuadrada, máximo 5MB. Formatos: JPG, PNG. Puedes decidir si mostrarla en el CV.",
+        "profileImage": "Imagen cuadrada, máximo 15 MB (JPG o PNG). La reducimos automáticamente para que pese poco. Puedes decidir si mostrarla en el CV.",
         "birthDate": "Edad calculada automáticamente en función de la fecha seleccionada",
         "address": "Opcional - Direccion de residencia",
         "website": "Tu portfolio, blog o sitio web personal",
@@ -634,11 +634,11 @@
       },
       "alerts": {
         "invalidImage": "Por favor selecciona un archivo de imagen válido.",
-        "imageTooLarge": "La imagen no puede ser mayor a 5MB."
+        "imageTooLarge": "La imagen no puede ser mayor a 15 MB."
       }
     },
     "experience": {
-      "title": "Experiencia Laboral",
+      "title": "Experiencia laboral",
       "description": "Tu historial profesional y logros laborales",
       "emptyTitle": "No hay experiencias laborales",
       "emptyDescription": "Agrega tu primera experiencia laboral para comenzar.",
@@ -851,9 +851,6 @@
       "expired": "Expirado",
       "expiresSoon": "Expira pronto",
       "verifiable": "Verificable",
-      "fileUploaded": "Archivo subido",
-      "removeFile": "Remover",
-      "uploadFile": "Subir Archivo",
       "fields": {
         "title": "Título de la Certificación",
         "issuer": "Organización Emisora",
@@ -861,14 +858,12 @@
         "issueDate": "Fecha de Emisión",
         "expiryDate": "Fecha de Expiración",
         "verificationUrl": "URL de Verificación",
-        "file": "Archivo del Certificado",
         "description": "Descripción"
       },
       "help": {
         "credentialId": "Número de identificación único del certificado",
         "expiryDate": "Opcional - Algunos certificados no expiran",
         "verificationUrl": "Enlace para verificar la autenticidad del certificado",
-        "file": "Sube el PDF o imagen del certificado (máx. 10MB)",
         "description": "Detalles adicionales sobre el certificado o cómo lo obtuviste"
       },
       "placeholders": {
@@ -877,10 +872,6 @@
         "credentialId": "Ej: AWS-123456789",
         "verificationUrl": "https://verify.certification.com/...",
         "description": "Describe los conocimientos adquiridos, el proceso de certificación..."
-      },
-      "alerts": {
-        "invalidFileType": "Solo se permiten archivos PDF, JPG o PNG.",
-        "fileTooLarge": "El archivo no puede ser mayor a 10MB."
       }
     },
     "links": {
