@@ -266,6 +266,34 @@ export async function listCVVersions(req: AuthRequest, res: Response) {
   }
 }
 
+export async function getCVVersion(req: AuthRequest, res: Response) {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const { id, versionId } = req.params;
+    const version = await CVService.getCVVersion(id, userId, versionId);
+    return res.json({
+      version: {
+        id: version.id,
+        createdAt: version.createdAt,
+        data: parseStoredCvData(version.snapshot),
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message === 'CV not found' || error.message === 'Version not found')
+    ) {
+      return res.status(404).json({ message: error.message });
+    }
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return res.status(500).json({ message });
+  }
+}
+
 export async function restoreVersion(req: AuthRequest, res: Response) {
   const userId = req.userId;
   if (!userId) {

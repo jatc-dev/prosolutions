@@ -1,7 +1,7 @@
 import { withUserContext } from '../dbContext';
 import { cache } from '../utils/cache';
 import { writeAuditLog } from '../utils/auditLogger';
-import { resolveVersionPhotos, versionSnapshot } from './cvVersionPhotos';
+import { photoChanged, resolveVersionPhotos, versionSnapshot } from './cvVersionPhotos';
 
 // Retry a single time only for transient PostgreSQL connection closures.
 // This helper is used only by idempotent, read-only queries.
@@ -25,10 +25,23 @@ async function retryTransientRead<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 /**
- * Versions kept per CV. Every save stores a full copy of the CV (photo
- * included), so without a limit they grow with each autosave.
+ * Version history: at most one version every VERSION_INTERVAL_MS of editing
+ * (autosave runs every 30 s, so one per save only covered a few minutes) and
+ * the newest MAX_CV_VERSIONS are kept. A save that changes the photo always
+ * writes a version (see cvVersionPhotos).
  */
-export const MAX_CV_VERSIONS = 20;
+export const MAX_CV_VERSIONS = 10;
+export const VERSION_INTERVAL_MS = 30 * 60 * 1000;
+
+/** Whether a save should keep the previous content as a new version. */
+export function shouldCreateVersion(
+  lastVersionAt: Date | null | undefined,
+  now: Date,
+  changesPhoto: boolean,
+): boolean {
+  if (changesPhoto || !lastVersionAt) return true;
+  return now.getTime() - lastVersionAt.getTime() >= VERSION_INTERVAL_MS;
+}
 
 type VersionTx = {
   cVVersion: {
@@ -222,14 +235,23 @@ export class CVService {
         },
       });
 
-      await tx.cVVersion.create({
-        data: {
-          cvId: saved.id,
-          // The photo is only copied into the version when this save changes it.
-          snapshot: versionSnapshot(existing.data, nextData),
-        },
+      const latest = await tx.cVVersion.findFirst({
+        where: { cvId: saved.id },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
       });
-      await pruneCvVersions(tx, saved.id);
+      if (
+        shouldCreateVersion(latest?.createdAt, new Date(), photoChanged(existing.data, nextData))
+      ) {
+        await tx.cVVersion.create({
+          data: {
+            cvId: saved.id,
+            // The photo is only copied into the version when this save changes it.
+            snapshot: versionSnapshot(existing.data, nextData),
+          },
+        });
+        await pruneCvVersions(tx, saved.id);
+      }
       await writeAuditLog(tx, {
         actorId: userId,
         action: 'update',
@@ -273,24 +295,35 @@ export class CVService {
   }
 
   /**
-   * Get CV versions with caching
+   * Version list for the history panel: dates only (snapshots can carry the
+   * photo; one version is fetched with getCVVersion).
    */
   static async getCVVersions(cvId: string, userId: string) {
-    // Try to get from cache first
     const cacheKey = `cv_versions_${cvId}_user_${userId}`;
-    const cached = cache.get<
-      Array<{
-        id: string;
-        createdAt: Date;
-        snapshot: string;
-        cvId: string;
-      }>
-    >(cacheKey);
+    const cached = cache.get<Array<{ id: string; createdAt: Date }>>(cacheKey);
     if (cached) {
       return cached;
     }
 
     const versions = await withUserContext(userId, async tx => {
+      const cv = await tx.cV.findFirst({ where: { id: cvId, userId }, select: { id: true } });
+      if (!cv) {
+        throw new Error('CV not found');
+      }
+      return tx.cVVersion.findMany({
+        where: { cvId },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, createdAt: true },
+      });
+    });
+
+    cache.set(cacheKey, versions, 60);
+    return versions;
+  }
+
+  /** One version with its real photo (markers resolved against newer versions). */
+  static async getCVVersion(cvId: string, userId: string, versionId: string) {
+    return withUserContext(userId, async tx => {
       const cv = await tx.cV.findFirst({ where: { id: cvId, userId } });
       if (!cv) {
         throw new Error('CV not found');
@@ -299,12 +332,12 @@ export class CVService {
         where: { cvId },
         orderBy: { createdAt: 'desc' },
       });
-      return resolveVersionPhotos(cv.data, stored);
+      const version = resolveVersionPhotos(cv.data, stored).find(item => item.id === versionId);
+      if (!version) {
+        throw new Error('Version not found');
+      }
+      return version;
     });
-
-    // Store in cache for 60 seconds
-    cache.set(cacheKey, versions, 60);
-    return versions;
   }
 
   /**

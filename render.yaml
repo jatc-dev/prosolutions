@@ -27,6 +27,8 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     autoDeploy: true
+    buildFilter:  # rootDir alone missed packages/ui and ProCV phrases.ts
+      paths: ["apps/core/**", "packages/ui/**", "apps/procv/frontend/src/modules/procv/phrases.ts", "package.json", "package-lock.json"]
     routes:
       # Prerendered pages are files; everything else gets the noindex SPA shell.
       - type: rewrite
@@ -50,6 +52,8 @@ services:
     buildCommand: npm install && npm run build:core
     staticPublishPath: apps/core/dist
     autoDeploy: true
+    buildFilter:  # only rebuild when Core (or code it imports) changes
+      paths: ["apps/core/**", "packages/ui/**", "apps/procv/frontend/src/modules/procv/phrases.ts", "package.json", "package-lock.json"]
     routes:
       - type: rewrite
         source: /*
@@ -70,9 +74,11 @@ services:
     name: ProCVFrontEnd           # https://procv.prosolutions.page
     repo: https://github.com/jatc-dev/prosolutions
     branch: main
-    buildCommand: npm install && npm run build:procv
+    buildCommand: npm install && npm run build:ui && npm --prefix apps/procv/frontend run build  # frontend only
     staticPublishPath: apps/procv/frontend/dist
     autoDeploy: true
+    buildFilter:
+      paths: ["apps/procv/frontend/**", "apps/procv/package.json", "packages/ui/**", "package.json", "package-lock.json"]
     routes:
       - type: rewrite
         source: /*
@@ -91,9 +97,11 @@ services:
     name: ProCVFrontEnd-QA        # https://procv-qa.prosolutions.page (Cloudflare Worker)
     repo: https://github.com/jatc-dev/prosolutions
     branch: qa
-    buildCommand: npm install && npm run build:procv
+    buildCommand: npm install && npm run build:ui && npm --prefix apps/procv/frontend run build  # frontend only
     staticPublishPath: apps/procv/frontend/dist
     autoDeploy: true
+    buildFilter:
+      paths: ["apps/procv/frontend/**", "apps/procv/package.json", "packages/ui/**", "package.json", "package-lock.json"]
     routes:
       - type: rewrite
         source: /*
@@ -125,6 +133,8 @@ services:
     dockerContext: .
     healthCheckPath: /health
     autoDeploy: true
+    buildFilter:
+      paths: ["apps/procv/backend/**", "package.json", "package-lock.json"]
     envVars:
       - { key: NODE_ENV, sync: false }
       - { key: DATABASE_URL, sync: false }
@@ -168,6 +178,8 @@ services:
     dockerfilePath: ./apps/procv/backend/Dockerfile
     dockerContext: .
     autoDeploy: true
+    buildFilter:
+      paths: ["apps/procv/backend/**", "package.json", "package-lock.json"]
     envVars:
       - { key: NODE_ENV, sync: false }
       - { key: DATABASE_URL, sync: false }

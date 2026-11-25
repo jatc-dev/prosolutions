@@ -10,6 +10,9 @@
  * itself for the newest one". When the photo changes, the version written by
  * that save holds the old photo in full, so older markers resolve to it.
  * Pruning only removes the oldest versions, which never breaks the chain.
+ * Versions are spaced out in time, so a save that changes the photo always
+ * writes a version (see photoChanged): otherwise the newest marker would
+ * start pointing at the new photo.
  */
 export const PHOTO_UNCHANGED = 'procv:photo-unchanged';
 
@@ -67,4 +70,11 @@ export function resolveVersionPhotos<T extends { snapshot: string }>(
     newerPhoto = photo;
     return version;
   });
+}
+
+/** True when the save replaces or removes the stored photo. */
+export function photoChanged(previousRaw: string | null | undefined, next: unknown): boolean {
+  const before = photoOf(parseObject(previousRaw));
+  const after = next && typeof next === 'object' ? photoOf(next as Json) : undefined;
+  return (before ?? '') !== (after ?? '');
 }
