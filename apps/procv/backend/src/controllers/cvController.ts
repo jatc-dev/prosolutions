@@ -189,14 +189,17 @@ export async function updateCV(req: AuthRequest, res: Response) {
     }
 
     const { title, template, data } = value;
-    const normalizedData = normalizeCvDataInput(data);
+    // A title- or template-only update (e.g. renaming from the dashboard) must
+    // keep the stored content: only normalise data when the client sent it.
+    const normalizedData =
+      data === undefined || data === null ? undefined : normalizeCvDataInput(data);
 
     logger.info('Updating CV', {
       userId,
       cvId: id,
       hasTitleUpdate: typeof title === 'string',
       hasTemplateUpdate: typeof template === 'string',
-      dataShape: summarizeCvDataShape(normalizedData),
+      dataShape: normalizedData ? summarizeCvDataShape(normalizedData) : 'unchanged',
     });
 
     const updated = await CVService.updateCV(id, userId, title, template, normalizedData);
