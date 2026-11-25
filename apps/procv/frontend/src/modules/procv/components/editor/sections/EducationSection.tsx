@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { EducationItem, ValidationErrors } from "../../../../../shared/types";
@@ -477,7 +478,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               {/* Expanded content */}
               {expandedItems.includes(education.id) && (
                 <div className="editor-item-scroll px-6 py-6 space-y-6">
-                  <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" checked={education.isVisible !== false} onChange={(event) => updateEducation(education.id, { isVisible: event.target.checked })} />Mostrar esta formación en el CV</label>
+                  <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" checked={education.isVisible !== false} onChange={(event) => updateEducation(education.id, { isVisible: event.target.checked })} />{tx('editor.ui.showEducation', 'Mostrar esta formación en el CV')}</label>
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <FormField

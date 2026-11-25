@@ -1,4 +1,5 @@
 import React from 'react';
+import { tx } from '../../uiText';
 import { useTranslation } from 'react-i18next';
 import { SectionType } from "../../../../shared/types";
 
@@ -86,7 +87,7 @@ const getIconPath = (iconName: string) => {
 function SectionToggle({ section, status, onToggle }: { section: { id: SectionType; label: string }; status?: SectionStatus; onToggle?: (section: SectionType) => void }) {
   const { t } = useTranslation();
   if (!onToggle || !status || section.id === 'personal') return null;
-  const name = section.label.toLowerCase();
+  const name = tx(`editor.tabs.${section.id}`, section.label).toLowerCase();
   const mode = status.hidden ? 'show' : status.count === 0 ? 'add' : 'hide';
   const label = mode === 'hide' ? t('editor.sectionToggle.hide', 'Ocultar') : mode === 'show' ? t('editor.sectionToggle.show', 'Mostrar') : t('editor.sectionToggle.add', 'Agregar');
   const aria = mode === 'hide'
@@ -186,7 +187,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                   </div>
 
                   {/* Section label */}
-                  <span className={isHidden ? 'line-through' : undefined}>{section.label}</span>
+                  <span className={isHidden ? 'line-through' : undefined}>{tx(`editor.tabs.${section.id}`, section.label)}</span>
                   {errorCount ? (
                     <span id={`tab-errors-${section.id}`} title={t('editor.tabs.errorsTitle', { count: errorCount, defaultValue: `${errorCount} campo(s) por corregir` })} className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white">
                       {errorCount}
@@ -207,7 +208,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
 
                 {/* Description tooltip on hover */}
                 <div className="hidden group-hover:block absolute z-10 bg-slate-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap">
-                  {section.description}
+                  {tx(`editor.tabs.${section.id}Desc`, section.description)}
                 </div>
               </button>
               <SectionToggle section={section} status={sectionStatus?.[section.id]} onToggle={onSectionToggle} />
@@ -227,9 +228,9 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
             ></div>
           </div>
           <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
-            <span>Progreso del CV</span>
+            <span>{tx('editor.tabs.progress', 'Progreso del CV')}</span>
             <span>
-              {completed} de {counted.length} secciones completadas
+              {tx('editor.tabs.completed', '{{done}} de {{total}} secciones completadas', { done: completed, total: counted.length })}
             </span>
           </div>
           {withErrors.length ? (
@@ -239,7 +240,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                 <React.Fragment key={section.id}>
                   {index ? ', ' : ''}
                   <button type="button" onClick={() => onSectionChange(section.id)} className="underline underline-offset-2 hover:no-underline">
-                    {section.label} ({errorCounts?.[section.id]})
+                    {tx(`editor.tabs.${section.id}`, section.label)} ({errorCounts?.[section.id]})
                   </button>
                 </React.Fragment>
               ))}

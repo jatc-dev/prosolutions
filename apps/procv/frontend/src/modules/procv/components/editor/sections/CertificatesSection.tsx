@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { CertificateItem, ValidationErrors } from "../../../../../shared/types";
@@ -429,7 +430,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-slate-900">{certificate.title}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={certificate.isVisible !== false} onChange={(event) => updateCertificate(certificate.id, { isVisible: event.target.checked })} />Mostrar en el CV</label>
+                      <h4 className="text-sm font-medium text-slate-900">{certificate.title}</h4><label className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" checked={certificate.isVisible !== false} onChange={(event) => updateCertificate(certificate.id, { isVisible: event.target.checked })} />{tx('editor.ui.showInCv', 'Mostrar en el CV')}</label>
                       <p className="text-sm text-slate-600">
                         {certificate.issuingOrganization}
                         {certificate.issueDate && ` • ${t('editor.certificates.issuedOn')}: ${new Date(certificate.issueDate).toLocaleDateString()}`}

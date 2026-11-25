@@ -194,6 +194,47 @@
   border-color: var(--cv-brand-primary-focus);
 }
 
+/* Editor layout. Wide screens (>= 1024 px): form and preview side by side.
+   Narrow screens ("single" mode): one view at a time, switched with the
+   floating button; the form is the default view. */
+.cv-editor .cv-editor-hidden {
+  display: none !important;
+}
+
+.cv-editor.cv-editor-single .cv-editor-workspace {
+  height: auto !important;
+  min-height: 0;
+  flex-direction: column;
+  /* Room for the floating view switch so it never covers the last field. */
+  padding-bottom: 5.5rem;
+}
+
+.cv-editor.cv-editor-single .cv-editor-panel,
+.cv-editor.cv-editor-single .cv-editor-preview {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: 100%;
+  overflow: visible;
+  border-right: 0;
+}
+
+.cv-editor.cv-editor-single .cv-editor-preview {
+  min-height: 60vh;
+  overflow-x: auto;
+}
+
+.cv-editor.cv-editor-single .cv-editor-resize-handle,
+.cv-editor.cv-editor-single .cv-editor-preview-toggle,
+.cv-editor.cv-editor-single.cv-editor-preview-open .cv-editor-tabs {
+  display: none !important;
+}
+
+@media print {
+  .cv-editor .cv-editor-view-switch {
+    display: none;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .cv-editor {
@@ -204,48 +245,10 @@
     margin-bottom: 1rem;
   }
 
-  /* Stack the editor and preview on phones instead of squeezing both columns. */
-  .cv-editor .cv-editor-workspace {
-    height: auto !important;
-    min-height: 0;
-    flex-direction: column;
-  }
-
   .cv-editor .cv-editor-header-bar {
     position: sticky;
     top: 0;
     z-index: 30;
-  }
-
-  .cv-editor .cv-editor-panel,
-  .cv-editor .cv-editor-preview {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100%;
-    overflow: visible;
-  }
-
-  .cv-editor .cv-editor-panel {
-    border-right: 0;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .cv-editor .cv-editor-resize-handle {
-    display: none;
-  }
-
-  .cv-editor .cv-editor-preview {
-    min-height: 50vh;
-    overflow-x: auto;
-  }
-
-  /* The preview toggle becomes a view switch on narrow screens. */
-  .cv-editor.cv-editor-preview-open .cv-editor-panel {
-    display: none;
-  }
-
-  .cv-editor.cv-editor-preview-open .cv-editor-tabs {
-    display: none;
   }
 
   .cv-editor-panel .grid[class*="grid-cols-"] {
