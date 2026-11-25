@@ -608,7 +608,7 @@
       },
       "help": {
         "professionalTitle": "Ej: Asesor Comercial, Auxiliar Contable, Enfermera",
-        "profileImage": "Imagen cuadrada, máximo 5MB. Formatos: JPG, PNG. Puedes decidir si mostrarla en el CV.",
+        "profileImage": "Imagen cuadrada, máximo 15 MB (JPG o PNG). La reducimos automáticamente para que pese poco. Puedes decidir si mostrarla en el CV.",
         "birthDate": "Edad calculada automáticamente en función de la fecha seleccionada",
         "address": "Opcional - Direccion de residencia",
         "website": "Tu portfolio, blog o sitio web personal",
@@ -634,7 +634,7 @@
       },
       "alerts": {
         "invalidImage": "Por favor selecciona un archivo de imagen válido.",
-        "imageTooLarge": "La imagen no puede ser mayor a 5MB."
+        "imageTooLarge": "La imagen no puede ser mayor a 15 MB."
       }
     },
     "experience": {

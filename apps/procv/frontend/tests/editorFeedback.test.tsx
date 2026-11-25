@@ -13,6 +13,7 @@ import type { CertificateItem, LinkItem } from "../src/types";
 import { TemplateRenderer, type CVData as RendererCVData } from "../src/modules/procv/components/TemplateRenderer";
 import { SectionTitlesEditor } from "../src/modules/procv/components/editor/components/SectionTitlesEditor";
 import { sectionTitle } from "../src/modules/procv/sectionTitles";
+import { fitWithin } from "../src/modules/procv/photo";
 
 vi.mock("../src/services/api", () => ({ api: {} }));
 
@@ -162,5 +163,13 @@ describe("section titles", () => {
     expect(onChange).toHaveBeenLastCalledWith({ summary: "Sobre mí", experience: "Trayectoria" });
     fireEvent.click(screen.getByRole("button", { name: 'Restaurar el título "Perfil profesional"' }));
     expect(onChange).toHaveBeenLastCalledWith({});
+  });
+});
+
+describe("profile photo size", () => {
+  it("shrinks to at most 640 px on the longest side, never enlarges", () => {
+    expect(fitWithin(4000, 3000)).toEqual({ width: 640, height: 480 });
+    expect(fitWithin(1080, 1920)).toEqual({ width: 360, height: 640 });
+    expect(fitWithin(300, 300)).toEqual({ width: 300, height: 300 });
   });
 });

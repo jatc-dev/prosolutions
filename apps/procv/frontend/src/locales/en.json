@@ -593,7 +593,7 @@
       },
       "help": {
         "professionalTitle": "e.g. Sales Associate, Accounting Assistant, Nurse",
-        "profileImage": "Square image, max 5MB. Formats: JPG, PNG. You can choose whether to show it.",
+        "profileImage": "Square image, up to 15 MB (JPG or PNG). We shrink it automatically. You choose whether it appears on the CV.",
         "birthDate": "Age is calculated automatically from the selected date",
         "address": "Optional - Street or full address",
         "website": "Your portfolio, blog, or personal website",
@@ -619,7 +619,7 @@
       },
       "alerts": {
         "invalidImage": "Please select a valid image file.",
-        "imageTooLarge": "The image cannot be larger than 5MB."
+        "imageTooLarge": "The image cannot be larger than 15 MB."
       }
     },
     "experience": {

@@ -1,6 +1,7 @@
 import { withUserContext } from '../dbContext';
 import { cache } from '../utils/cache';
 import { writeAuditLog } from '../utils/auditLogger';
+import { resolveVersionPhotos, versionSnapshot } from './cvVersionPhotos';
 
 // Retry a single time only for transient PostgreSQL connection closures.
 // This helper is used only by idempotent, read-only queries.
@@ -211,19 +212,21 @@ export class CVService {
         throw new Error('CV not found');
       }
 
+      const nextData = data ?? JSON.parse(existing.data ?? '{}');
       const saved = await tx.cV.update({
         where: { id: cvId },
         data: {
           title: title ?? existing.title,
           template: template ?? existing.template,
-          data: JSON.stringify(data ?? JSON.parse(existing.data ?? '{}')),
+          data: JSON.stringify(nextData),
         },
       });
 
       await tx.cVVersion.create({
         data: {
           cvId: saved.id,
-          snapshot: JSON.stringify(JSON.parse(existing.data ?? '{}')),
+          // The photo is only copied into the version when this save changes it.
+          snapshot: versionSnapshot(existing.data, nextData),
         },
       });
       await pruneCvVersions(tx, saved.id);
@@ -292,10 +295,11 @@ export class CVService {
       if (!cv) {
         throw new Error('CV not found');
       }
-      return tx.cVVersion.findMany({
+      const stored = await tx.cVVersion.findMany({
         where: { cvId },
         orderBy: { createdAt: 'desc' },
       });
+      return resolveVersionPhotos(cv.data, stored);
     });
 
     // Store in cache for 60 seconds
@@ -314,13 +318,18 @@ export class CVService {
         throw new Error('CV not found');
       }
 
-      const version = await tx.cVVersion.findFirst({ where: { id: versionId, cvId } });
+      // Newer versions are needed to resolve a photo stored as "unchanged".
+      const stored = await tx.cVVersion.findMany({
+        where: { cvId },
+        orderBy: { createdAt: 'desc' },
+      });
+      const version = resolveVersionPhotos(cv.data, stored).find(item => item.id === versionId);
       if (!version) {
         throw new Error('Version not found');
       }
 
       await tx.cVVersion.create({
-        data: { cvId, snapshot: JSON.stringify(JSON.parse(cv.data ?? '{}')) },
+        data: { cvId, snapshot: versionSnapshot(cv.data, JSON.parse(version.snapshot)) },
       });
       await pruneCvVersions(tx, cvId);
       const restored = await tx.cV.update({

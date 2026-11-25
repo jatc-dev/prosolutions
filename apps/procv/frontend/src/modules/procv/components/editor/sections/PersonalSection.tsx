@@ -13,6 +13,7 @@ import {
 } from "../FormSection";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
 import { appendPhrase } from "../../../phrases";
+import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
 
 interface PersonalSectionProps {
   data: PersonalData;
@@ -318,18 +319,18 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > PHOTO_MAX_UPLOAD_BYTES) {
         toast.error(t('editor.personal.alerts.imageTooLarge'));
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImagePreview(result);
-        updateField('profileImage', result);
-      };
-      reader.readAsDataURL(file);
+      // Shrunk before it is stored: the photo lives inside the CV data.
+      void shrinkPhoto(file)
+        .then((result) => {
+          setImagePreview(result);
+          updateField('profileImage', result);
+        })
+        .catch(() => toast.error(t('editor.personal.alerts.invalidImage')));
     }
   };
 
