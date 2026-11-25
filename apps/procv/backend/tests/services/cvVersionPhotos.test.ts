@@ -1,6 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   PHOTO_UNCHANGED,
+  photoChanged,
   resolveVersionPhotos,
   versionSnapshot,
 } from '../../src/services/cvVersionPhotos';
@@ -44,5 +45,15 @@ describe('version snapshots without repeated photos', () => {
       { summary: 'v2', profileImage: 'A' },
       { summary: 'v1', profileImage: 'A' },
     ]);
+  });
+});
+
+describe('photoChanged', () => {
+  it('detects a new, removed or added photo, not other edits', () => {
+    expect(photoChanged(cv('a', 'A'), JSON.parse(cv('b', 'A')))).toBe(false);
+    expect(photoChanged(cv('a', 'A'), JSON.parse(cv('a', 'B')))).toBe(true);
+    expect(photoChanged(cv('a', 'A'), JSON.parse(cv('a')))).toBe(true);
+    expect(photoChanged(cv('a'), JSON.parse(cv('a', 'A')))).toBe(true);
+    expect(photoChanged(cv('a'), JSON.parse(cv('b')))).toBe(false);
   });
 });

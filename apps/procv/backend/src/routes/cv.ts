@@ -12,6 +12,7 @@ import {
   listCVs,
   parseCVUpload,
   listCVVersions,
+  getCVVersion,
   restoreVersion,
   tailorCVATS,
   tailorDraftATS,
@@ -41,6 +42,7 @@ router.get('/:id/ats-history', listCVATSHistory);
 router.put('/:id', updateCV);
 router.delete('/:id', deleteCV);
 router.get('/:id/versions', listCVVersions);
+router.get('/:id/versions/:versionId', getCVVersion);
 router.post('/:id/versions/:versionId/restore', restoreVersion);
 
 export default router;

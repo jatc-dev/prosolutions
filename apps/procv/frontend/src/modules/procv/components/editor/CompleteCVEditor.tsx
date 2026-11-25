@@ -48,6 +48,8 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
+import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
+import { History } from "lucide-react";
 
 // Import custom styles
 import "../../styles/cv-editor.css";
@@ -914,6 +916,17 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     window.history.replaceState(window.history.state, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
   }, [authLoading, cvId, isGuest, setTemplate]);
 
+  // Version history (signed-in users with a saved CV).
+  const [showHistory, setShowHistory] = useState(false);
+  const handleRestoreVersion = useCallback(async (versionId: string) => {
+    if (!cvId) return;
+    // Pending edits are saved first, so the restore keeps them as a version too.
+    if (hasUnsavedChanges) await saveCV();
+    await api.post(`/cvs/${cvId}/versions/${versionId}/restore`);
+    await loadCV(cvId);
+    toast.success(tx('editor.history.restored', 'Versión restaurada'));
+  }, [cvId, hasUnsavedChanges, saveCV, loadCV]);
+
   // The ATS match lives in its own dialog (header button), not in the form.
   const [showAtsDialog, setShowAtsDialog] = useState(false);
   useEffect(() => {
@@ -1214,6 +1227,19 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 <span className="hidden sm:inline">{t('editor.actions.reset')}</span>
               </button>
 
+              {isAuthenticated && cvId ? (
+                <button
+                  type="button"
+                  onClick={() => setShowHistory(true)}
+                  aria-haspopup="dialog"
+                  title={tx('editor.history.hint', 'Ver y restaurar versiones anteriores')}
+                  className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-300 bg-white px-2 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 dark:border-brand-900 dark:bg-slate-900 dark:text-brand-300 dark:hover:bg-brand-950/40 sm:px-3"
+                >
+                  <History className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+                  <span className="hidden sm:inline">{tx('editor.history.button', 'Historial')}</span>
+                </button>
+              ) : null}
+
               {docMode === 'cv' ? (
                 <button
                   type="button"
@@ -1273,6 +1299,15 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               </div>
             </div>
         </div>
+
+        {showHistory && cvId ? (
+          <VersionHistoryDialog
+            cvId={cvId}
+            onClose={() => setShowHistory(false)}
+            onRestore={handleRestoreVersion}
+            renderPreview={(data) => <WithCustomStyles template={data.template} data={transformCVDataForRenderer(data)} />}
+          />
+        ) : null}
 
         {showAtsDialog ? (
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/60 p-4 sm:p-8" onClick={() => setShowAtsDialog(false)}>
