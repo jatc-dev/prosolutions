@@ -2,6 +2,7 @@ import type { CVData } from "../../types";
 import { defaultGreeting, formatLetterDate, letterParagraphs } from "./coverLetter";
 import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
 import { sectionTitle } from "./sectionTitles";
+import { pageColorFor } from "./pageColor";
 import { groupReferences, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences } from "./references";
 
 /**
@@ -141,7 +142,10 @@ export interface DocxTheme {
   heading: string;
   accent: string;
   /** Page colour for the dark templates. */
+  /** Dark page (text switches to light colours). */
   pageColor?: string;
+  /** Light paper colour chosen by the user (text keeps its colours). */
+  paperColor?: string;
   header: "left" | "centered" | "band";
   bandColor?: string;
   layout: "single" | "sidebar";
@@ -247,6 +251,8 @@ export function docxTheme(template: string | undefined, rawSettings?: unknown): 
   theme.headingScale = normalizeFontScale(s.fontScaleHeading);
   theme.bodySize = Math.round(theme.bodySize * bodyScale);
   theme.nameSize = Math.round(theme.nameSize * theme.headingScale);
+  const paper = pageColorFor(template, s);
+  if (paper && !theme.pageColor) theme.paperColor = hex(paper, "FFFFFF");
   // Custom colours only apply on light pages; dark templates keep legible text.
   if (!theme.pageColor) {
     const text = customColor(s, "textColor");
@@ -396,7 +402,7 @@ export async function buildCvDocument(cv: CVData, docx: Docx) {
   return new Document({
     creator: "ProCV · ProSolutions",
     title: content.name ? `Hoja de vida - ${content.name}` : "Hoja de vida",
-    ...(theme.pageColor ? { background: { color: theme.pageColor } } : {}),
+    ...(theme.pageColor || theme.paperColor ? { background: { color: theme.pageColor ?? theme.paperColor! } } : {}),
     styles: { default: { document: { run: { font: theme.bodyFont, size: theme.bodySize, color: pageColors.text } } } },
     sections: [{ properties: { page: { margin: { top: margin, bottom: margin, left: margin, right: margin } } }, children }],
   });

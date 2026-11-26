@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -159,9 +160,12 @@ export function UnifiedWorkspacePage() {
         {error ? <div role="alert" className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-800">{error}</div> : null}
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map((item) => <div key={item} className="h-44 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />)}
-          </div>
+          <>
+            <LoadingNotice />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+              {[0, 1, 2].map((item) => <div key={item} className="h-44 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />)}
+            </div>
+          </>
         ) : cvs.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{t("workspace.empty.title")}</h2>
@@ -221,6 +225,34 @@ export function UnifiedWorkspacePage() {
         )}
       </main>
 
+    </div>
+  );
+}
+
+/** How long before the loading message explains that the server is waking up. */
+export const SLOW_LOAD_MS = 6000;
+
+/**
+ * Shown while the saved CVs load (the cards alone gave no clue). The server
+ * sleeps when unused, so a slow first load gets an explanation.
+ */
+function LoadingNotice() {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), SLOW_LOAD_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="mb-5 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900 dark:border-brand-900 dark:bg-brand-950/40 dark:text-brand-200">
+      <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+      <div>
+        <p className="font-medium">Cargando tus hojas de vida…</p>
+        {slow ? (
+          <p className="mt-0.5 text-brand-800 dark:text-brand-300">
+            Está tardando un poco más de lo normal: el servidor se está activando y puede tardar hasta un minuto. No cierres la página.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

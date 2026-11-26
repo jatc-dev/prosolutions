@@ -101,9 +101,7 @@ export const FORMAT_DAFP_GROUPS: FieldGroup[] = [
   {
     title: "Datos personales",
     fields: [
-      { key: "dafpFirstSurname", label: "Primer apellido" },
-      { key: "dafpSecondSurname", label: "Segundo apellido" },
-      { key: "dafpGivenNames", label: "Nombres" },
+      // Names and surnames come from "Nombres" and "Apellidos" in Personal.
       { key: "dafpSex", label: "Sexo (F/M)", placeholder: "F o M" },
       { key: "dafpBirthPlace", label: "Lugar de nacimiento (municipio, departamento, país)" },
       { key: "dafpMilitaryCard", label: "Libreta militar: clase, número y distrito (si aplica)" },

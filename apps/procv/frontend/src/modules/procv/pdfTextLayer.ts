@@ -143,3 +143,37 @@ export function addPdfTextLayer(pdf: PdfWriter, items: PdfTextItem[]): void {
   }
   pdf.setPage(pages);
 }
+
+/** Minimal part of jsPDF used to colour the page around the content. */
+export interface PdfPainter {
+  setPage(page: number): unknown;
+  getNumberOfPages(): number;
+  setFillColor(color: string): unknown;
+  rect(x: number, y: number, width: number, height: number, style: string): unknown;
+}
+
+/**
+ * With a page colour, the PDF margins (and the space under the content on
+ * the last page) would stay white: fill them with the same colour. Only the
+ * areas around the drawn content are painted, never over it.
+ */
+export function fillPdfPageColor(
+  pdf: PdfPainter,
+  color: string,
+  page: { width: number; height: number; innerWidth: number; innerHeight: number; margin: [number, number, number, number]; lastContentHeight: number },
+): void {
+  const pages = pdf.getNumberOfPages();
+  const [top, left] = page.margin;
+  for (let index = 1; index <= pages; index++) {
+    pdf.setPage(index);
+    // jsPDF keeps the fill colour per page: set it on every page.
+    pdf.setFillColor(color);
+    const contentHeight = index === pages ? page.lastContentHeight : page.innerHeight;
+    const bottom = top + contentHeight;
+    pdf.rect(0, 0, page.width, top, "F");
+    pdf.rect(0, bottom, page.width, Math.max(0, page.height - bottom), "F");
+    pdf.rect(0, top, left, contentHeight, "F");
+    pdf.rect(left + page.innerWidth, top, Math.max(0, page.width - left - page.innerWidth), contentHeight, "F");
+  }
+  pdf.setPage(pages);
+}
