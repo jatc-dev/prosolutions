@@ -13,6 +13,7 @@ import {
   DateField
 } from "../FormSection";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
+import { AiImproveField } from "../components/AiImproveField";
 import { appendPhrase } from "../../../phrases";
 import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
 import { PROFESSIONAL_CARD_ISSUERS } from "../../../professionalCard";
@@ -913,6 +914,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.valueProposition')}
             rows={4}
           />
+          <AiImproveField
+            section="valueProposition"
+            text={data.valueProposition || ''}
+            onApply={(value) => onChange({ ...data, valueProposition: value })}
+            fieldLabel="la propuesta de valor"
+          />
 
           <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
             <label className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -938,6 +945,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             onChange={(value) => updateField('summary', value)}
             placeholder={t('editor.personal.placeholders.summary')}
             rows={6}
+          />
+          <AiImproveField
+            section="summary"
+            text={data.summary || ''}
+            onApply={(value) => updateField('summary', value)}
+            fieldLabel="el perfil profesional"
           />
           <PhraseSuggestions
             title={data.professionalTitle}

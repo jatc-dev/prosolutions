@@ -12,6 +12,7 @@ import {
 } from "../FormSection";
 import { getPrefixMatches } from "../utils/suggestions";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
+import { AiImproveField } from "../components/AiImproveField";
 import { appendPhrase } from "../../../phrases";
 
 interface ExperienceSectionProps {
@@ -550,6 +551,15 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       placeholder={t('editor.experience.placeholders.jobDescription')}
                       rows={4}
                     />
+                    <div className="mt-2">
+                      <AiImproveField
+                        section="experience"
+                        text={experience.description || ''}
+                        context={[experience.position && `Cargo: ${experience.position}`, experience.company && `Empresa: ${experience.company}`].filter(Boolean).join('. ')}
+                        onApply={(value) => updateExperience(experience.id, { description: value })}
+                        fieldLabel={`la descripción de ${experience.position || 'esta experiencia'}`}
+                      />
+                    </div>
                     <PhraseSuggestions
                       title={experience.position}
                       kind="duties"

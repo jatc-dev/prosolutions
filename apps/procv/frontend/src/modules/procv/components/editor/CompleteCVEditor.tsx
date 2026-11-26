@@ -32,7 +32,6 @@ import { TemplateSelector } from "./components/TemplateSelector";
 import { createEmptyItem } from "./components/DraggableBlock";
 import { CustomizerPanel } from "./components/CustomizerPanel";
 import { EditorDisclosure } from "./components/EditorDisclosure";
-import { AIPanel } from "./components/AIPanel";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
 
@@ -464,7 +463,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [pendingImportData, setPendingImportData] = useState<ParsedCvDraft | null>(null);
   const [pendingMergedData, setPendingMergedData] = useState<Partial<CVData> | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const showAIPanel = false;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -1339,48 +1337,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             style={{ width: isSplit && showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
             <div className="p-4 sm:p-6">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => undefined}
-                  className="hidden"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 6.364m-.707 7.507a4 4 0 11-5.656-5.656 4 4 0 015.656 5.656m-5.656-5.656a4 4 0 10-5.656 5.656 4 4 0 005.656-5.656" />
-                  </svg>
-                  {showAIPanel ? t('editor.ai.hide', 'Ocultar IA') : t('editor.ai.show', 'Asistente IA')}
-                </button>
-              </div>
-
-              {showAIPanel && (
-                <div className="mt-4">
-                  <AIPanel
-                    cvData={cvData}
-                    onApply={(section, content) => {
-                      if (section === 'summary') {
-                        updatePersonal({ ...cvData.personal, summary: content });
-                      } else if (section === 'experience' && cvData.experience.length > 0) {
-                        const [latest, ...rest] = cvData.experience;
-                        updateExperience([{ ...latest, description: content }, ...rest]);
-                      } else if (section === 'skills') {
-                        const newSkills = content.split(',').map((name, index) => ({
-                          id: `ai-skill-${Date.now()}-${index}`,
-                          name: name.trim(),
-                          category: 'technical' as const,
-                          level: 'intermediate' as const,
-                          yearsOfExperience: undefined,
-                          isCertified: false,
-                          certificationName: '',
-                          order: cvData.skills.length + index,
-                        }));
-                        updateSkills([...cvData.skills, ...newSkills]);
-                      }
-                      toast.success(t('editor.ai.applied', 'Contenido de IA aplicado'));
-                    }}
-                  />
-                </div>
-              )}
-
               {docMode === 'letter' ? (
                 <div className="mt-4 rounded-lg border border-slate-200 p-4 sm:p-6 dark:border-slate-700">
                   <CoverLetterSection cv={cvData} onChange={(coverLetter) => updateCvData({ coverLetter })} />
