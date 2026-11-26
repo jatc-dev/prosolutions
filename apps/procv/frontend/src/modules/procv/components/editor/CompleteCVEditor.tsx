@@ -48,6 +48,7 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
+import { GuestBanner } from "./components/GuestBanner";
 import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
 import { DownloadMenu } from "./components/DownloadMenu";
@@ -1080,31 +1081,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       </div>
     );
   }
-
-  // Guest banner component - only rendered when isGuest === true
-  const GuestBanner = () => (
-    <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 dark:bg-amber-950/30 dark:border-amber-800">
-      <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center space-x-2">
-          <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
-          </svg>
-          <span className="text-sm text-amber-800 dark:text-amber-200">
-            Estás en Modo Invitado. Tus cambios se guardan automáticamente en tu navegador.
-          </span>
-        </div>
-        <a
-          href="/auth"
-          className="inline-flex items-center px-3 py-1 text-xs font-medium text-amber-900 bg-amber-100 rounded-md hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-100 dark:hover:bg-amber-900/70 transition-colors"
-        >
-          Guardar en la nube (Gratis)
-          <svg className="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  );
 
   return (
     <>

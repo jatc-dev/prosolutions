@@ -209,7 +209,7 @@ test.describe('PDF import flow (ProCV QA)', () => {
       page.url().includes('/dashboard');
     if (isEditorOrDashboard) {
       const unauthNotice = page
-        .locator('text=Guardar en la nube requiere autenticación')
+        .locator('[data-testid="guest-banner"]')
         .first();
       expect(
         await unauthNotice.isVisible().catch(() => false),
@@ -218,9 +218,9 @@ test.describe('PDF import flow (ProCV QA)', () => {
       return;
     }
 
-    // 3. Detectar si hay aviso de "requiere autenticación" o redirección a login.
+    // 3. Detectar si hay aviso de modo invitado o redirección a login.
     const unauthNotice = page
-      .locator('text=Guardar en la nube requiere autenticación')
+      .locator('[data-testid="guest-banner"]')
       .first();
     const needsAuth = await unauthNotice.isVisible().catch(() => false);
     const isLoginPage = page.url().includes('/login');
@@ -297,9 +297,9 @@ test.describe('PDF import flow (ProCV QA)', () => {
         )}`,
       ).toEqual([]);
 
-      // 10. Verificar ausencia del aviso de "requiere autenticación".
+      // 10. Verificar ausencia del aviso de modo invitado.
       const unauthNotice2 = page
-        .locator('text=Guardar en la nube requiere autenticación')
+        .locator('[data-testid="guest-banner"]')
         .first();
       expect(
         await unauthNotice2.isVisible().catch(() => false),
