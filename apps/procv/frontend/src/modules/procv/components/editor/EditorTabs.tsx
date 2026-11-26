@@ -138,8 +138,9 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
   const completed = counted.filter((section) => completionStatus[section.id]).length;
   return (
     <div className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex gap-2 overflow-x-auto sm:gap-4" aria-label="Tabs">
+      {/* Wide enough for all eight tabs on large screens; narrower screens scroll. */}
+      <div className="mx-auto max-w-[90rem] px-3 sm:px-4">
+        <nav className="flex gap-2 overflow-x-auto" aria-label="Tabs">
           {sections.map((section) => {
             const isActive = activeSection === section.id;
             const isCompleted = completionStatus[section.id];
