@@ -41,6 +41,8 @@ interface Look {
   title: string;
   /** Optional style of the section title. */
   titleStyle?: React.CSSProperties;
+  /** Title with a background, bar or borders: the room above it is a margin, not padding. */
+  boxedTitle?: boolean;
   itemTitle: string;
   itemMeta: string;
   body: string;
@@ -50,6 +52,8 @@ interface Look {
   orgFirst?: boolean;
   /** Skills as a bulleted list (functional) instead of one line. */
   skillsList?: boolean;
+  /** Extra classes around the skills list (a highlighted box). */
+  skillsBox?: string;
 }
 
 function prepare(data: CVData) {
@@ -72,7 +76,7 @@ type Prepared = ReturnType<typeof prepare>;
 function SectionBlock({ data, look, keyName, children }: { data: CVData; look: Look; keyName: SectionTitleKey; children: React.ReactNode }) {
   return (
     <section className={look.section}>
-      <h2 data-cv-section-title className={look.title} style={look.titleStyle}>{sectionTitle(data.settings, keyName)}</h2>
+      <h2 data-cv-section-title={look.boxedTitle ? "box" : ""} className={look.title} style={look.titleStyle}>{sectionTitle(data.settings, keyName)}</h2>
       {children}
     </section>
   );
@@ -160,7 +164,7 @@ function renderSection(key: SectionKey, data: CVData, prepared: Prepared, look: 
       if (!personal.summary || personal.showSummaryContent === false) return null;
       return (
         <section className={look.section}>
-          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className={look.title} style={look.titleStyle}>{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title={look.boxedTitle ? "box" : ""} className={look.title} style={look.titleStyle}>{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className={`mt-2 whitespace-pre-line ${look.body}`}>{personal.summary}</p>
         </section>
       );
@@ -205,7 +209,7 @@ function renderSection(key: SectionKey, data: CVData, prepared: Prepared, look: 
       return (
         <SectionBlock data={data} look={look} keyName="skills">
           {look.skillsList ? (
-            <ul className={`mt-2 grid list-disc grid-cols-2 gap-x-8 gap-y-1 pl-5 ${look.body}`}>
+            <ul className={`mt-2 grid list-disc grid-cols-2 gap-x-8 gap-y-1 pl-5 ${look.skillsBox ?? ""} ${look.body}`}>
               {prepared.skills.map((skill) => <li key={skill.id}>{skill.name}</li>)}
             </ul>
           ) : (
@@ -335,10 +339,12 @@ export function TemplateFunctional({ data }: { data: CVData }) {
     itemMeta: "text-xs text-slate-500",
     body: "text-sm leading-relaxed text-slate-700",
     skillsList: true,
+    // The key skills are the core of this format: a highlighted box.
+    skillsBox: "rounded-md border border-brand-200 bg-brand-50 py-3 pl-8 pr-4",
   };
   return (
     <div className={`${PAGE} p-9`}>
-      <header className="flex items-start justify-between gap-6">
+      <header className="flex items-start justify-between gap-6 border-l-4 border-brand-700 pl-4">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold text-slate-900">{personal.name || ""}</h1>
           {personal.role ? <p className="mt-1 text-base text-slate-700">{personal.role}</p> : null}
@@ -359,6 +365,7 @@ export function TemplateModern({ data }: { data: CVData }) {
   const look: Look = {
     section: "mt-7",
     title: "border-l-4 border-brand-700 pl-2.5 text-sm font-bold uppercase tracking-wide text-slate-800",
+    boxedTitle: true,
     itemTitle: "text-sm font-semibold text-slate-900",
     itemMeta: "text-xs text-slate-500",
     body: "text-sm leading-relaxed text-slate-700",
@@ -386,6 +393,7 @@ export function TemplateElegant({ data }: { data: CVData }) {
   const look: Look = {
     section: "mt-7",
     title: "border-y border-slate-300 py-1 text-center text-xs font-semibold uppercase tracking-[0.3em] text-slate-700",
+    boxedTitle: true,
     itemTitle: "text-sm font-semibold text-slate-900",
     itemMeta: "text-xs italic text-slate-500",
     body: "text-sm leading-relaxed text-slate-700",
@@ -489,6 +497,42 @@ export function TemplateChronological({ data }: { data: CVData }) {
           {personal.role ? <p className="mt-1 text-base text-slate-600">{personal.role}</p> : null}
           <ContactLine prepared={prepared} className="mt-2 text-xs text-slate-600" />
           <MetaLines prepared={prepared} className="mt-1 text-xs text-slate-500" />
+        </div>
+      </header>
+      <Sections order={STANDARD_ORDER} data={data} prepared={prepared} look={look} />
+    </div>
+  );
+}
+
+/** Estándar: the classic word-processor CV. Photo on the left, contact in two columns, titles on a grey band. */
+export function TemplateStandard({ data }: { data: CVData }) {
+  const prepared = prepare(data);
+  const { personal } = prepared;
+  const look: Look = {
+    section: "mt-6",
+    title: "bg-slate-100 px-2 py-1 text-sm font-bold uppercase tracking-wide text-slate-800",
+    boxedTitle: true,
+    itemTitle: "text-sm font-bold text-slate-900",
+    itemMeta: "text-xs text-slate-600",
+    body: "text-sm leading-relaxed text-slate-700",
+  };
+  const contactRows: React.ReactNode[] = [
+    ...(prepared.location ? [<span key="loc">{prepared.location}</span>] : []),
+    ...prepared.contacts.map((contact, index) => <span key={`c${index}`}><ContactPrefix item={contact} /> {contact.value}</span>),
+  ];
+  return (
+    <div className={`${PAGE} p-9`}>
+      <header className="flex items-start gap-6">
+        {shouldRenderProfileImage(personal) ? <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border border-slate-300" /> : null}
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl font-bold uppercase tracking-wide text-slate-900">{personal.name || ""}</h1>
+          {personal.role ? <p className="mt-1 text-base font-medium text-slate-700">{personal.role}</p> : null}
+          {contactRows.length ? (
+            <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs text-slate-700">
+              {contactRows.map((row, index) => <p key={index} className="min-w-0 break-words">{row}</p>)}
+            </div>
+          ) : null}
+          <MetaLines prepared={prepared} className="mt-1 text-xs text-slate-600" />
         </div>
       </header>
       <Sections order={STANDARD_ORDER} data={data} prepared={prepared} look={look} />

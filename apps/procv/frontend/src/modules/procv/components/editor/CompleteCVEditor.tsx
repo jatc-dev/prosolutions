@@ -28,9 +28,8 @@ import {
   ATSTailoringResult,
 } from "./ATSOptimizationPanel";
 import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
-import { TemplateSelector } from "./components/TemplateSelector";
 import { createEmptyItem } from "./components/DraggableBlock";
-import { CustomizerPanel } from "./components/CustomizerPanel";
+import { PreviewDesignBar } from "./components/PreviewDesignBar";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
@@ -1475,31 +1474,20 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               style={{ width: isSplit ? `${panelSizes.preview}%` : '100%' }}
             >
               <div className="p-4 sm:p-6">
-                {/* Template and design sit above the preview they change. */}
-                <div className="mb-4">
-                  <EditorDisclosure
-                    storageKey="procv.editor.template-selector"
-                    title={t("editor.templateDesign.title", "Plantilla y diseño")}
-                    description={t("editor.templateDesign.hint", "Elige la plantilla y ajusta tipografía, colores y espaciado")}
-                    closeSignal={designCloseSignal}
-                  >
-                    <TemplateSelector
-                      templates={CURATED_CV_TEMPLATES}
-                      currentTemplate={cvData.template}
-                      onTemplateSelect={setTemplate}
-                    />
-                    <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-700">
-                      <CustomizerPanel
-                        settings={cvData.settings || {}}
-                        onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
-                      />
-                    </div>
-                  </EditorDisclosure>
-                </div>
-                <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900">
-                  <h3 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
-                    {docMode === 'letter' ? 'Vista previa de la carta' : t('editor.cvPreview')}
-                  </h3>
+                {/* Template and customization above the preview they change: a
+                    slim sticky bar with two separate panels (see PreviewDesignBar). */}
+                <PreviewDesignBar
+                  templates={CURATED_CV_TEMPLATES}
+                  currentTemplate={cvData.template}
+                  onTemplateSelect={setTemplate}
+                  settings={cvData.settings || {}}
+                  onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
+                  closeSignal={designCloseSignal}
+                />
+                {/* No heading: the design bar above already names this area,
+                    and every line of height goes to the document. */}
+                <div className="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900 sm:p-6">
+                  <h3 className="sr-only">{docMode === 'letter' ? 'Vista previa de la carta' : t('editor.cvPreview')}</h3>
 
                   <div className="origin-top" ref={previewRef}>
                     {docMode === 'letter' ? (

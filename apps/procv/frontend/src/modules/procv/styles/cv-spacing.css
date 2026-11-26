@@ -130,7 +130,12 @@
 }
 
 /* Room above each section title ("Espaciado entre secciones" × density). */
-.cv-custom-wrapper [data-cv-section-title] {
+.cv-custom-wrapper [data-cv-section-title]:not([data-cv-section-title="box"]) {
   padding-top: var(--cv-title-gap, 0.75rem);
+}
+/* Titles with a background, bar or borders: padding would stretch the box,
+   so the room goes outside it. */
+.cv-custom-wrapper [data-cv-section-title="box"] {
+  margin-top: var(--cv-title-gap, 0.75rem);
 }
 

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CV_TEMPLATE_GROUPS, type CVTemplateOption } from "../../../../../shared/utils/templateCatalog";
+import { CV_TEMPLATE_GROUPS, type CVTemplateGroup, type CVTemplateOption } from "../../../../../shared/utils/templateCatalog";
 
 interface TemplateSelectorProps {
   templates: CVTemplateOption[];
@@ -8,34 +8,61 @@ interface TemplateSelectorProps {
   onTemplateSelect: (templateKey: string) => void;
 }
 
-/** Template picker grouped by functional design family. */
+type Filter = CVTemplateGroup | "all";
+
+/**
+ * Template picker. One group at a time (tabs) so it takes two or three rows
+ * instead of the whole height above the preview; it opens on the group of the
+ * current template. "Todas" lists every group.
+ */
 export function TemplateSelector({ templates, currentTemplate, onTemplateSelect }: TemplateSelectorProps) {
   const { t } = useTranslation();
+  const currentGroup = templates.find((template) => template.key === currentTemplate)?.group;
+  const [filter, setFilter] = useState<Filter>(currentGroup ?? "all");
+  const groups = CV_TEMPLATE_GROUPS.filter((group) => templates.some((template) => template.group === group.id));
+  const tabs: Array<{ id: Filter; label: string }> = [{ id: "all", label: "Todas" }, ...groups.map((group) => ({ id: group.id as Filter, label: group.label }))];
+  const shownGroups = filter === "all" ? groups : groups.filter((group) => group.id === filter);
+  const label = (template: CVTemplateOption) => t(`workspace.templates.${template.key}`, { defaultValue: template.label });
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-3" role="group" aria-label={t("editor.templateSelector.title", "Plantillas de CV")}>
-      {/* Every template is ATS-readable (PDF text layer), so no per-template badge. */}
-      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-        Todas las plantillas son legibles por los sistemas de selección (ATS) que usan las empresas: el PDF incluye tu texto real.
-      </p>
-      {CV_TEMPLATE_GROUPS.map((group) => {
+    <div className="flex w-full min-w-0 flex-col gap-3" aria-label={t("editor.templateSelector.title", "Plantillas de CV")}>
+      <div role="tablist" aria-label="Tipo de plantilla" className="flex flex-wrap gap-1.5">
+        {tabs.map((tab) => {
+          const active = filter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setFilter(tab.id)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${active ? "bg-brand-800 text-white dark:bg-brand-500 dark:text-slate-950" : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"}`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {shownGroups.map((group) => {
         const groupTemplates = templates.filter((template) => template.group === group.id);
-        if (!groupTemplates.length) return null;
         return (
           <section key={group.id} className="min-w-0" aria-label={group.label}>
-            <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{group.label}</h3>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">{group.description}</p>
-            </div>
+            {filter === "all" ? <h3 className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{group.label}</h3> : null}
+            <p className="mb-1.5 text-[11px] text-slate-500 dark:text-slate-400">{group.description}</p>
             <div className="flex w-full min-w-0 flex-wrap gap-2">
               {groupTemplates.map((template) => {
                 const selected = currentTemplate === template.key;
                 return (
-                  <button key={template.key} type="button" onClick={() => onTemplateSelect(template.key)} aria-pressed={selected}
-                    title={template.hint ?? t(`workspace.templates.${template.key}`, { defaultValue: template.label })}
-                    className={`relative inline-flex min-h-9 max-w-full shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-left text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${selected ? "border-brand-800 bg-brand-50 text-brand-950 shadow-sm dark:border-brand-400 dark:bg-brand-950/50 dark:text-brand-200" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-800 dark:hover:bg-slate-800"}`}>
-                    <svg className={`h-4 w-4 shrink-0 ${selected ? "text-brand-800 dark:text-brand-300" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 3.75h7l5 5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1zM14 4v5h5M9 13h6M9 16.5h6" /></svg>
-                    <span className="whitespace-nowrap">{t(`workspace.templates.${template.key}`, { defaultValue: template.label })}</span>
+                  <button
+                    key={template.key}
+                    type="button"
+                    onClick={() => onTemplateSelect(template.key)}
+                    aria-pressed={selected}
+                    title={template.hint ?? label(template)}
+                    className={`inline-flex min-h-8 max-w-full shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-left text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${selected ? "border-brand-800 bg-brand-50 text-brand-950 shadow-sm dark:border-brand-400 dark:bg-brand-950/50 dark:text-brand-200" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-800 dark:hover:bg-slate-800"}`}
+                  >
+                    <span className="whitespace-nowrap">{label(template)}</span>
                     {selected ? <span className="h-1.5 w-1.5 rounded-full bg-brand-800 dark:bg-brand-400" aria-hidden="true" /> : null}
                   </button>
                 );
@@ -44,6 +71,10 @@ export function TemplateSelector({ templates, currentTemplate, onTemplateSelect 
           </section>
         );
       })}
+
+      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        Todas son legibles por los sistemas de selección (ATS): el PDF incluye tu texto real.
+      </p>
     </div>
   );
 }
