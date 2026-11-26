@@ -2,6 +2,7 @@ import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./stores/authStore";
 import { ThemeProvider } from "./components/ThemeProvider";
 import React, { Suspense, lazy, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "react-hot-toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -38,18 +39,20 @@ function RedirectToCentralLogin() {
   return null;
 }
 
-function RouteFallback() {
+/** Full-page wait (loading a page, or checking the session) with a visible spinner. */
+function RouteFallback({ message }: { message?: string }) {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-      {t("common.loading")}
+    <div role="status" aria-live="polite" className="min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+      <Loader2 className="h-7 w-7 animate-spin text-brand-700 dark:text-brand-400" aria-hidden="true" />
+      <p className="text-sm font-medium">{message ?? t("common.loading")}</p>
     </div>
   );
 }
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <RouteFallback />;
+  if (loading) return <RouteFallback message="Verificando tu sesión…" />;
   if (!isAuthenticated) {
     const redirectUri = encodeURIComponent(window.location.href);
     window.location.href = `${PROSOLUTIONS_URL}/login?redirect_uri=${redirectUri}`;
