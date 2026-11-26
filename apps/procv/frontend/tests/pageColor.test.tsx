@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { luminance, pageColorFor } from "../src/modules/procv/pageColor";
 import { CustomStylesWrapper } from "../src/modules/procv/components/withCustomStyles";
@@ -58,5 +58,26 @@ describe("page colour", () => {
     expect(screen.getByRole("alert").textContent).toContain("oscuro");
     rerender(<ColorCustomizer template="dafp" settings={{}} onChange={onChange} />);
     expect(screen.queryByRole("radio", { name: "Crema" })).toBeNull();
+  });
+});
+
+describe("unified colour swatches", () => {
+  it("shows every colour as swatches, in two columns, with the template's own colour first", () => {
+    const onChange = vi.fn();
+    const { container } = render(<ColorCustomizer template="moderna" settings={{ accentColor: "#3b82f6" }} onChange={onChange} />);
+    const accent = screen.getByRole("radiogroup", { name: "Color de acento" });
+    // The old stored default means "template colour".
+    expect(within(accent).getByRole("radio", { name: "Color de la plantilla" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(within(accent).getByRole("radio", { name: "Morado" }));
+    expect(onChange).toHaveBeenCalledWith({ accentColor: "#7c3aed" });
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: "Títulos" })).getByRole("radio", { name: "Color de la plantilla" }));
+    expect(onChange).toHaveBeenCalledWith({ headingColor: undefined });
+    expect(container.querySelector("[class*='sm:grid-cols-2']")).not.toBeNull();
+    expect(screen.queryByRole("radiogroup", { name: "Texto del panel" })).toBeNull();
+  });
+
+  it("shows the side-panel colours only for Panel lateral", () => {
+    render(<ColorCustomizer template="sidebar" settings={{}} onChange={vi.fn()} />);
+    expect(screen.getByRole("radiogroup", { name: "Texto del panel" })).toBeTruthy();
   });
 });
