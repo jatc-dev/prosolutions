@@ -62,7 +62,8 @@ describe("markdown renderer", () => {
 describe("SEO and prerender", () => {
   it("lists every public page with head metadata and no private areas", () => {
     const routes = publicRoutes();
-    expect(routes.length).toBe(1 + 3 + 1 + 13 + 1 + 1 + 12 + 1 + 7 + 4 + 2);
+    // + 5 template landing pages (/plantillas-hoja-de-vida/<slug>).
+    expect(routes.length).toBe(1 + 3 + 5 + 1 + 13 + 1 + 1 + 12 + 1 + 7 + 4 + 2);
     for (const route of routes) {
       const head = headForPath(route.path);
       expect(head, route.path).not.toBeNull();

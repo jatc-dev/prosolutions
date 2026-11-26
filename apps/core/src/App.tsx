@@ -14,7 +14,7 @@ import { SecuritySessionsPage } from "./pages/SecuritySessionsPage";
 import { PreferencesPage } from "./pages/PreferencesPage";
 import { AcademyIndexPage, ArticlePage } from "./public/pages/AcademyPages";
 import { CvCheckToolPage, NetSalaryToolPage, OpsToolPage, PrimaToolPage, SettlementToolPage, SeveranceToolPage, ToolsIndexPage, VacationToolPage } from "./public/pages/ToolsPages";
-import { DafpFormatPage, Format1003Page, TemplatesGalleryPage } from "./public/pages/FormatPages";
+import { DafpFormatPage, Format1003Page, TemplatesGalleryPage, TemplateLandingPage } from "./public/pages/FormatPages";
 import { ExampleDetailPage, ExamplesIndexPage, MinimumWagePage } from "./public/pages/ExamplePages";
 import { CreateCvPage } from "./public/pages/CreateCvPage";
 import { AboutPage, ContactPage, LegalPage, NotFoundPage } from "./public/pages/InfoPages";
@@ -45,6 +45,7 @@ export function AppRoutes() {
       {/* Public, prerendered pages */}
       <Route path="/crear-hoja-de-vida" element={<CreateCvPage />} />
       <Route path="/plantillas-hoja-de-vida" element={<TemplatesGalleryPage />} />
+      <Route path="/plantillas-hoja-de-vida/:slug" element={<TemplateLandingPage />} />
       <Route path="/formato-unico-hoja-de-vida" element={<DafpFormatPage />} />
       <Route path="/hoja-de-vida-formato-1003" element={<Format1003Page />} />
       <Route path="/ejemplos-hoja-de-vida" element={<ExamplesIndexPage />} />

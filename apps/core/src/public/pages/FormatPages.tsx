@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, FileText } from "lucide-react";
 import { APP_URLS } from "@prosolutions/ui";
 import { DAFP_FAQ, FORMAT_1003_FAQ, TEMPLATE_CARDS, type FaqItem, type TemplateCard } from "../../content/formats";
 import { PublicLayout } from "../PublicLayout";
+import { getTemplateLanding, landingForTemplate } from "../../content/templateLandings";
 import { headForPath, useDocumentHead } from "../seo";
 
 export const DAFP_PATH = "/formato-unico-hoja-de-vida";
@@ -315,9 +316,16 @@ function TemplateTile({ template }: { template: TemplateCard }) {
           {template.ats ? <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-900 dark:bg-brand-950/50 dark:text-brand-300">Compatible con ATS</span> : null}
           <span className="rounded-full bg-ui-soft px-2 py-0.5 text-ui-muted">{template.photo ? "Con foto opcional" : "Sin foto"}</span>
         </p>
-        <a href={editorUrl(template.key)} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-800 hover:underline dark:text-brand-300">
-          Usar esta plantilla <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </a>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <a href={editorUrl(template.key)} className="inline-flex items-center gap-1 text-sm font-semibold text-brand-800 hover:underline dark:text-brand-300">
+            Usar esta plantilla <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+          {landingForTemplate(template.key) ? (
+            <Link to={`${TEMPLATES_PATH}/${landingForTemplate(template.key)!.slug}/`} className="text-sm font-medium text-ui-muted underline hover:text-ui-text">
+              Guía de este formato
+            </Link>
+          ) : null}
+        </div>
       </div>
     </article>
   );
@@ -363,6 +371,73 @@ export function TemplatesGalleryPage() {
         </ul>
       </section>
       <Related />
+    </PublicLayout>
+  );
+}
+
+/** /plantillas-hoja-de-vida/<slug>/: one of the most searched CV formats, with its template. */
+export function TemplateLandingPage() {
+  const { slug = "" } = useParams<{ slug: string }>();
+  const landing = getTemplateLanding(slug);
+  useDocumentHead(headForPath(`${TEMPLATES_PATH}/${slug}`));
+  if (!landing) {
+    return (
+      <PublicLayout breadcrumbs={[{ name: "Plantillas", path: TEMPLATES_PATH }]}>
+        <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+          <h1 className="text-2xl font-bold text-ui-text">No encontramos esta plantilla</h1>
+          <Link to={`${TEMPLATES_PATH}/`} className="mt-4 inline-block font-semibold text-brand-800 underline dark:text-brand-300">Ver todas las plantillas</Link>
+        </section>
+      </PublicLayout>
+    );
+  }
+  const card = TEMPLATE_CARDS.find((item) => item.key === landing.template);
+  return (
+    <PublicLayout breadcrumbs={[{ name: "Plantillas", path: TEMPLATES_PATH }, { name: landing.name, path: `${TEMPLATES_PATH}/${landing.slug}` }]}>
+      <Hero
+        eyebrow="Plantilla gratis · Sin registro"
+        title={landing.h1}
+        intro={<>{landing.intro.map((paragraph) => <p key={paragraph} className="mb-3 last:mb-0">{paragraph}</p>)}</>}
+        template={landing.template}
+        cta={`Usar la plantilla ${card?.name ?? landing.name}`}
+        image={`/plantillas/${landing.template}.webp`}
+        imageAlt={`Vista previa de la plantilla de hoja de vida ${card?.name ?? landing.name}`}
+        points={["Gratis y sin registro", "Descarga en PDF y Word", "Compatible con filtros ATS", card?.photo ? "Foto opcional" : "Sin foto"]}
+      />
+
+      <section aria-labelledby="para-quien" className="mx-auto max-w-4xl px-4 pb-12 sm:px-6">
+        <h2 id="para-quien" className="text-2xl font-bold text-ui-text">¿Para quién es este formato?</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-7 text-ui-text">
+          {landing.forWhom.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      </section>
+
+      <Steps id="estructura" title="Cómo se organiza" steps={landing.structure} />
+
+      <section aria-labelledby="consejos" className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+        <h2 id="consejos" className="text-2xl font-bold text-ui-text">Consejos para llenarla</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-7 text-ui-text">
+          {landing.tips.map((tip) => <li key={tip}>{tip}</li>)}
+        </ul>
+        <div className="mt-8 flex flex-col items-start gap-4 rounded-2xl border border-ui-border bg-ui-surface p-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[15px] leading-7 text-ui-text">Llénala en línea: en unos minutos tienes tu hoja de vida lista en PDF o Word.</p>
+          <CtaButton template={landing.template}>Usar esta plantilla</CtaButton>
+        </div>
+      </section>
+
+      <Faq items={landing.faq} />
+
+      <section aria-labelledby="relacionado" className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
+        <h2 id="relacionado" className="text-xl font-bold text-ui-text">También te puede servir</h2>
+        <ul className="mt-4 grid gap-3 md:grid-cols-3">
+          {[...landing.related, { to: `${TEMPLATES_PATH}/`, title: "Ver las 21 plantillas" }].map((item) => (
+            <li key={item.to}>
+              <Link to={item.to} className="block h-full rounded-2xl border border-ui-border bg-ui-surface p-5 text-sm font-semibold text-ui-text hover:border-ui-accent">
+                {item.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </PublicLayout>
   );
 }
