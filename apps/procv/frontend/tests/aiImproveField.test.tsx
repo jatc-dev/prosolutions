@@ -7,6 +7,8 @@ const post = vi.fn();
 vi.mock("../src/services/api", () => ({
   api: { get: (...args: unknown[]) => get(...args), post: (...args: unknown[]) => post(...args) },
 }));
+const { trackEvent } = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+vi.mock("@prosolutions/ui", async (original) => ({ ...(await original<typeof import("@prosolutions/ui")>()), trackEvent }));
 let signedIn = true;
 vi.mock("../src/stores/authStore", () => ({ useAuth: () => ({ isAuthenticated: signedIn }) }));
 vi.mock("../src/stores/cvEditorStore", () => ({
@@ -55,6 +57,10 @@ describe("Mejorar con IA in the CV form", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Usar esta versión" }));
     expect(onApply).toHaveBeenCalledWith("Vendedora con tres años de experiencia.");
+    // Analytics: which action and section, never the text the person wrote.
+    expect(trackEvent).toHaveBeenCalledWith("ai_improve", { section: "summary", action: "shorter", result: "success" });
+    expect(trackEvent).toHaveBeenCalledWith("ai_improve_applied", { section: "summary" });
+    expect(JSON.stringify(trackEvent.mock.calls)).not.toContain("Vendedora");
   });
 
   it("adds the job as context for an experience", async () => {

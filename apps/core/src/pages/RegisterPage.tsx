@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, ProHeader } from "@prosolutions/ui";
+import { Button, ProHeader, trackEvent } from "@prosolutions/ui";
 import { useCoreLocale } from "../i18n";
 import { SlowConnectionNotice } from "../components/SlowConnectionNotice";
 import { identityAuthApiUrl } from "../identityApi";
@@ -44,6 +44,7 @@ export function RegisterPage() {
       const data = await response.json().catch(() => ({}));
       setVerificationEmailSent(data.verificationEmailSent !== false);
       setIsSuccess(true);
+      trackEvent("sign_up", { method: "email" });
     } catch {
       setError('No se pudo crear la cuenta. Intenta de nuevo.');
     } finally {

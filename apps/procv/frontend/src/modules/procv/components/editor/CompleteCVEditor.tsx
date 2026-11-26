@@ -96,6 +96,12 @@ export function pdfRenderScale(element: Pick<HTMLElement, 'scrollWidth' | 'scrol
  * symmetrically instead of touching the side edges only.
  */
 export const PDF_MARGIN_MM: [number, number, number, number] = [6, 6, 6, 6];
+/** Kind of imported file for analytics: the extension only, never the file name. */
+const fileKind = (name: string): string => {
+  const extension = name.toLowerCase().split('.').pop() || '';
+  return ['pdf', 'docx', 'doc', 'txt'].includes(extension) ? extension : 'other';
+};
+
 /** A last page with less than this (mm) and no text is only spilled padding. */
 const BLANK_TAIL_MM = 25;
 
@@ -584,6 +590,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
   const clearGuestCv = useCallback((thenLeave: boolean) => {
     discardGuestData();
+    trackEvent("guest_data_cleared", { leaving: thenLeave });
     setGuestDialog(null);
     toast.success(tx('editor.guest.cleared', 'Borramos tu hoja de vida de este navegador.'));
     if (thenLeave) navigate('/');
@@ -619,6 +626,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     try {
       await saveCV();
       // One toast per manual save; errors are reported by saveCV itself.
+      trackEvent("cv_saved", { mode: isGuest ? "guest" : "account" });
       toast.success(isGuest ? t('cv.saveLocalSuccess', 'CV guardado en este navegador') : t('cv.saveSuccess'));
     } catch (error) {
       // Server and storage errors were reported by saveCV; validation is not.
@@ -649,12 +657,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         data: cvData,
       });
       setAtsResult(response.data.analysis || null);
+      trackEvent("job_match", { kind: "analysis", result: "success" });
       if (response.data?.history) {
         setAtsHistory(response.data.history.history || []);
         setAtsComparison(response.data.history.comparison || null);
       }
       toast.success(t("workspace.toast.atsAnalysisCompleted"));
     } catch (error: any) {
+      trackEvent("job_match", { kind: "analysis", result: "error" });
       toast.error(error?.response?.data?.message || t("workspace.toast.atsAnalysisError"));
     } finally {
       setAtsLoading(false);
@@ -670,8 +680,10 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         data: cvData,
       });
       setTailoringResult(response.data.tailoring || null);
+      trackEvent("job_match", { kind: "tailoring", result: "success" });
       toast.success(t("workspace.toast.tailoringCompleted"));
     } catch (error: any) {
+      trackEvent("job_match", { kind: "tailoring", result: "error" });
       toast.error(error?.response?.data?.message || t("workspace.toast.tailoringError"));
     } finally {
       setTailoringLoading(false);
@@ -777,12 +789,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     try {
       setIsImporting(true);
       const { parsedData } = await importCvFromFile(file);
+      trackEvent("cv_imported", { result: "success", file_type: fileKind(file.name) });
       const merged = mergeCvDataWithParsed(cvData, parsedData);
       setPendingImportFileName(file.name);
       setPendingImportData(parsedData);
       setPendingMergedData(merged);
       setImportReviewOpen(true);
     } catch (error) {
+      trackEvent("cv_imported", { result: "error", file_type: fileKind(file.name) });
       toast.error(t('editor.importer.error'));
     } finally {
       setIsImporting(false);
@@ -820,6 +834,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'docx', template: cvData.template });
     } catch (error) {
       console.error("DOCX export error:", error);
+      trackEvent("export_error", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'docx', template: cvData.template });
       toast.error(t("editor.export.docxError", "No se pudo generar el documento de Word. Inténtalo de nuevo."));
     } finally {
       setIsExportingDocx(false);
@@ -944,6 +959,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         })
         .catch((error: any) => {
           console.error("PDF export error:", error);
+          trackEvent("export_error", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'pdf', template: cvData.template });
           toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
         })
         .finally(() => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import type { JobSummary } from "../../server/src/contracts";
 import { useSession } from "./session";
 
@@ -46,6 +47,7 @@ export function useSaveToggle() {
     apply({ ...job, viewer: { applied: Boolean(job.viewer?.applied), saved } });
     try {
       await request(`/api/me/saved-jobs/${job.id}`, { method: saved ? "PUT" : "DELETE" });
+      trackEvent(saved ? "job_save" : "job_unsave");
     } catch {
       apply(job);
     }

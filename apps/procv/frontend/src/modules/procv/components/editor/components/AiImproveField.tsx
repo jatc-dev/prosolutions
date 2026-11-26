@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import { Wand2 } from "lucide-react";
 import { useAuth } from "../../../../../stores/authStore";
 import { useCVEditorStore } from "../../../../../stores/cvEditorStore";
@@ -72,7 +73,7 @@ export function AiImproveField({ section, text, onApply, fieldLabel, minLength =
 
   if (!isAuthenticated || !available) return null;
 
-  const run = async (instruction: string) => {
+  const run = async (instruction: string, actionKey: string) => {
     if (text.trim().length < minLength) {
       setError("Escribe un poco más antes de pedir una mejora: la IA trabaja con lo que ya escribiste.");
       return;
@@ -85,8 +86,10 @@ export function AiImproveField({ section, text, onApply, fieldLabel, minLength =
       const extra = context ? ` Contexto: ${context.slice(0, 300)}.` : "";
       const result = await improveText({ section, text, instruction: `${instruction}${extra}`, cvId });
       setProposal({ text: result.suggestion, changes: result.changes, needsUserInput: result.needsUserInput });
+      trackEvent("ai_improve", { section, action: actionKey, result: "success" });
     } catch (caught) {
       setError(caught instanceof AIGenerationError ? caught.message : "No se pudo generar la sugerencia. Inténtalo de nuevo.");
+      trackEvent("ai_improve", { section, action: actionKey, result: "error", error_code: caught instanceof AIGenerationError ? caught.code : "unknown" });
     } finally {
       setLoading(false);
     }
@@ -108,7 +111,7 @@ export function AiImproveField({ section, text, onApply, fieldLabel, minLength =
           label: action.label,
           description: action.description,
           icon: <Wand2 className="h-4 w-4 text-brand-700" />,
-          onSelect: () => void run(action.instruction),
+          onSelect: () => void run(action.instruction, action.key),
         }))}
       />
 
@@ -142,6 +145,7 @@ export function AiImproveField({ section, text, onApply, fieldLabel, minLength =
               type="button"
               onClick={() => {
                 onApply(proposal.text);
+                trackEvent("ai_improve_applied", { section });
                 setProposal(null);
               }}
               className="rounded-md bg-brand-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-900"
