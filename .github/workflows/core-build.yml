@@ -80,8 +80,13 @@ jobs:
           }
 
           const robots = readFileSync(`${dist}/robots.txt`, "utf8");
-          for (const rule of ["Disallow: /admin", "Disallow: /settings", "Disallow: /auth", "Disallow: /dashboard", "Sitemap: https://prosolutions.page/sitemap.xml"]) {
+          for (const rule of ["Disallow: /admin", "Disallow: /settings", "Disallow: /dashboard", "Sitemap: https://prosolutions.page/sitemap.xml"]) {
             if (!robots.includes(rule)) throw new Error(`robots.txt is missing "${rule}"`);
+          }
+          // Sign-in screens must stay crawlable so Google reads their noindex
+          // (blocking them got them indexed from links; see scripts/prerender.mjs).
+          for (const path of ["/auth", "/login", "/register", "/forgot-password"]) {
+            if (robots.includes(`Disallow: ${path}\n`)) throw new Error(`robots.txt must not block ${path}`);
           }
           const pages = readFileSync(`${dist}/sitemap-pages.xml`, "utf8");
           if (!pages.includes("/academy/hoja-de-vida-ats-2026") || /prosolutions\.page\/admin(\/|<)/.test(pages)) throw new Error("sitemap-pages.xml is wrong");
