@@ -820,7 +820,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
       {/* Professional Summary - ATS Critical */}
       {personal.summary && personal.showSummaryContent !== false && (
         <section className="mb-6" itemProp="description">
-          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className="mt-2 text-sm leading-relaxed text-slate-700 ats-summary whitespace-pre-line">
             {personal.summary}
           </p>
@@ -830,7 +830,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
       {/* Work Experience - ATS Priority Section */}
       {data.experience?.length ? (
         <section className="mb-6" itemProp="workExperience" itemScope itemType="https://schema.org/WorkExperience">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-600 ats-section-header">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-3 space-y-4">
             {data.experience.map((item, index) => (
               <div data-cv-item
@@ -885,7 +885,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
       {/* Education - ATS Important Section */}
       {data.education?.length ? (
         <section className="mb-6" itemProp="alumniOf">
-          <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "education")}</h2>
+          <h2 data-cv-section-title className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-3 space-y-4">
             {data.education.map((item) => (
               <div data-cv-item
@@ -941,7 +941,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
             {/* Skills Section - ATS Optimized */}
             {skills.length ? (
               <section className="mb-6" itemProp="knowsAbout">
-                <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "skills")}</h2>
+                <h2 data-cv-section-title className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "skills")}</h2>
                 <div className="mt-3 space-y-2">
                   {skills.map((skill) => (
                     <div key={skill.id} data-cv-item className="ats-skill-item">
@@ -964,7 +964,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
               const languages = normalizeLanguages(data.languages);
               return languages.length ? (
                 <section className="mb-6" itemProp="knowsLanguage">
-                  <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "languages")}</h2>
+                  <h2 data-cv-section-title className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "languages")}</h2>
                   <div className="mt-3 space-y-2">
                     {languages.map((lang) => (
                       <div key={lang.id} data-cv-item className="ats-language-item">
@@ -993,7 +993,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
               const certificates = normalizeCertificates(data.certificates);
               return certificates.length ? (
                 <section className="mb-6" itemProp="hasCredential">
-                  <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "certificates")}</h2>
+                  <h2 data-cv-section-title className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "certificates")}</h2>
                   <div className="mt-3 space-y-3">
                     {certificates.map((cert) => (
                       <div key={cert.id} data-cv-item className="ats-certificate-item">
@@ -1026,7 +1026,7 @@ function TemplateMinimal({ data }: { data: CVData }) {
               const links = Object.keys(data.links || {});
               return links.length ? (
                 <section className="mb-6" itemProp="sameAs">
-                  <h2 className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "links")}</h2>
+                  <h2 data-cv-section-title className="text-lg font-semibold text-slate-800 ats-section-header">{sectionTitle(data.settings, "links")}</h2>
                   <div className="mt-3 space-y-2">
                     {Object.entries(data.links || {}).map(([label, url]) => (
                       <div key={label} className="ats-link-item">
@@ -1100,7 +1100,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
 
       {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-6 border-l-4 border-brand-700 pl-4 py-1">
-          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className="mt-2 text-sm text-slate-700">{personal.summary}</p>
         </section>
       )}
@@ -1108,7 +1108,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {data.experience?.length ? (
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
+            <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
                 <div key={item.id} data-cv-item className="">
@@ -1128,7 +1128,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
 
         {data.education?.length ? (
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "education")}</h2>
+            <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "education")}</h2>
             <div className="mt-3 space-y-4">
               {data.education.map((item) => (
                 <div key={item.id} data-cv-item className="">
@@ -1150,7 +1150,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           {data.skills?.length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
               <div className="mt-2 flex flex-wrap gap-2">
                 {data.skills.map((skill) => (
                   <span key={skill.id} className="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-lg">
@@ -1162,7 +1162,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
           ) : null}
           {data.languages?.length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
               <div className="mt-2 flex flex-wrap gap-2">
                 {data.languages.map((lang) => (
                   <span key={lang.id} className="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-lg">
@@ -1177,7 +1177,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
 
       {certificates.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "certificates")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-2 space-y-2 text-sm text-slate-700">
             {certificates.map((cert) => (
               <div key={cert.id} data-cv-item>
@@ -1200,7 +1200,7 @@ function TemplateCorporate({ data }: { data: CVData }) {
 
       {Object.keys(data.links || {}).length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "links")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-500">{sectionTitle(data.settings, "links")}</h2>
           <div className="mt-2 text-xs text-slate-700 space-y-1">
             {Object.entries(data.links || {}).map(([label, url]) => (
               <div key={label}>
@@ -1279,14 +1279,14 @@ function TemplateDeveloper({ data }: { data: CVData }) {
 
       {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className="mt-2 text-sm leading-relaxed text-slate-200">{personal.summary}</p>
         </section>
       )}
 
       {data.experience?.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
               <div key={item.id} data-cv-item className="bg-slate-900 p-4 rounded-lg">
@@ -1307,7 +1307,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {data.skills?.length ? (
           <div className="bg-slate-900 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "skills")}</h3>
+            <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "skills")}</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {data.skills.map((skill) => (
                 <span key={skill.id} className="px-2 py-1 text-xs font-semibold bg-slate-800 text-slate-200 rounded-lg">
@@ -1320,7 +1320,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
 
         {data.languages?.length ? (
           <div className="bg-slate-900 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "languages")}</h3>
+            <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "languages")}</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {data.languages.map((lang) => (
                 <span key={lang.id} className="px-2 py-1 text-xs font-semibold bg-slate-800 text-slate-200 rounded-lg">
@@ -1334,7 +1334,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
 
       {certificates.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "certificates")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
               <div key={cert.id} data-cv-item className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
@@ -1357,7 +1357,7 @@ function TemplateDeveloper({ data }: { data: CVData }) {
 
       {Object.keys(data.links || {}).length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "links")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "links")}</h2>
           <div className="mt-2 text-xs text-slate-200 space-y-1">
             {Object.entries(data.links || {}).map(([label, url]) => (
               <div key={label}>
@@ -1434,14 +1434,14 @@ function TemplateCreative({ data }: { data: CVData }) {
 
       {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: creativeMutedColor }}>{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide" style={{ color: creativeMutedColor }}>{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className="mt-2 text-sm" style={{ color: creativeTextColor }}>{personal.summary}</p>
         </section>
       )}
 
       {data.experience?.length ? (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
               <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
@@ -1461,7 +1461,7 @@ function TemplateCreative({ data }: { data: CVData }) {
 
       {data.education?.length ? (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "education")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
               <div key={item.id} data-cv-item className="bg-white/10 p-4 rounded-xl">
@@ -1480,7 +1480,7 @@ function TemplateCreative({ data }: { data: CVData }) {
 
       {Boolean(data.skills?.length || data.languages?.length) && (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "skills")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "skills")}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {data.skills?.map((skill) => (
               <span key={skill.id} className="px-3 py-1 text-xs font-semibold bg-white/15 rounded-full">
@@ -1498,7 +1498,7 @@ function TemplateCreative({ data }: { data: CVData }) {
 
       {certificates.length ? (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "certificates")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-300">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
               <div key={cert.id} data-cv-item className="rounded-xl bg-white/10 px-3 py-2">
@@ -1569,14 +1569,14 @@ function TemplateClassic({ data }: { data: CVData }) {
 
       {personal.summary && personal.showSummaryContent !== false && (
         <section className="mt-8">
-          {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
+          {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
           <p className="mt-2 text-sm text-slate-700">{personal.summary}</p>
         </section>
       )}
 
       {data.experience?.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-4">
             {data.experience.map((item) => (
               <div key={item.id} data-cv-item>
@@ -1595,7 +1595,7 @@ function TemplateClassic({ data }: { data: CVData }) {
 
       {data.education?.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
           <div className="mt-4 space-y-4">
             {data.education.map((item) => (
               <div key={item.id} data-cv-item>
@@ -1609,7 +1609,7 @@ function TemplateClassic({ data }: { data: CVData }) {
 
       {Boolean(data.skills?.length || data.languages?.length) && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {data.skills?.map((skill) => (
               <span key={skill.id} className="px-3 py-1 text-xs font-semibold bg-slate-100 rounded-full">
@@ -1627,7 +1627,7 @@ function TemplateClassic({ data }: { data: CVData }) {
 
       {certificates.length ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h2>
           <div className="mt-3 space-y-2">
             {certificates.map((cert) => (
               <div key={cert.id} data-cv-item>
@@ -1730,13 +1730,13 @@ function TemplateSidebar({ data }: { data: CVData }) {
           {personal.professionalCard ? <section className="mb-6"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Tarjeta profesional</h2><p className="mt-2 text-sm text-slate-700">{personal.professionalCard}</p></section> : null}
           {personal.summary?.trim() && personal.showSummaryContent !== false ? (
             <section className="mb-8">
-              {personal.showSummaryTitle !== false ? <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
+              {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "summary")}</h2> : null}
               <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-700">{personal.summary}</p>
             </section>
           ) : null}
           {data.experience?.length ? (
             <section className="mb-8">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
+              <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
               <div className="mt-3 space-y-4">
                 {data.experience.map((item) => (
                   <div key={item.id} data-cv-item className="">
@@ -1759,7 +1759,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
 
           {data.education?.length ? (
             <section className="mb-8">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
+              <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h2>
               <div className="mt-3 space-y-4">
                 {data.education.map((item) => (
                   <div key={item.id} data-cv-item className="">
@@ -1780,7 +1780,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.skills?.length ? (
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h3>
+                  <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h3>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {data.skills.map((skill) => (
                       <span key={skill.id} className="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-lg">
@@ -1792,7 +1792,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               ) : null}
               {data.languages?.length ? (
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "languages")}</h3>
+                  <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "languages")}</h3>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {data.languages.map((lang) => (
                       <span key={lang.id} className="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-lg">
@@ -1807,7 +1807,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
 
           {certificates.length ? (
             <section className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-2">
                 {certificates.map((cert) => (
                   <div key={cert.id} data-cv-item>
@@ -1828,24 +1828,10 @@ function TemplateSidebar({ data }: { data: CVData }) {
             </section>
           ) : null}
 
-          {Object.keys(data.links || {}).length ? (
-            <section className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "links")}</h3>
-              <div className="mt-2 text-xs text-slate-700 space-y-1">
-                {Object.entries(data.links || {}).map(([label, url]) => (
-                  <div key={label}>
-                    <span className="font-semibold">{label}:</span>{" "}
-                    <a href={url} target="_blank" rel="noreferrer" className="text-brand-800 hover:underline">
-                      {url}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          {/* Links are already listed with the contact details in the side panel. */}
           {personal.showReferences !== false && (visibleReferences(personal.references).length || personal.referencesAvailableOnRequest) ? (
-            <section className="mt-8 border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "references")}</h3>
+            <section className="mt-8">
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "references")}</h3>
               <ReferenceGroups references={personal.references} nameClass="text-slate-800" metaClass="text-slate-500" />
               {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">{REFERENCES_ON_REQUEST_TEXT}</p> : null}
             </section>
@@ -1900,14 +1886,14 @@ function TemplateExecutive({ data }: { data: CVData }) {
 
         {personal.summary && personal.showSummaryContent !== false ? (
           <section>
-            {personal.showSummaryTitle !== false ? <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
+            {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
             <p className="mt-2 text-sm text-slate-700 leading-relaxed whitespace-pre-line">{personal.summary}</p>
           </section>
         ) : null}
 
         {data.experience?.length ? (
           <section>
-            <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
+            <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className="mt-3 space-y-4">
               {data.experience.map((item) => (
                 <div key={item.id} data-cv-item className="border-l-2 border-slate-300 pl-4 py-0.5">
@@ -1931,7 +1917,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {data.education?.length ? (
             <section>
-              <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
+              <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className="mt-3 space-y-3">
                 {data.education.map((item) => (
                   <div key={item.id} data-cv-item>
@@ -1947,7 +1933,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
           <section className="space-y-5">
             {data.skills?.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {data.skills.map((skill) => (
                     <span key={skill.id} className="px-2 py-1 rounded bg-slate-100 text-xs text-slate-700">
@@ -1960,7 +1946,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
 
             {data.languages?.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {data.languages.map((lang) => (
                     <span key={lang.id} className="px-2 py-1 rounded bg-slate-100 text-xs text-slate-700">
@@ -1973,7 +1959,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
 
             {certificates.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className="mt-2 space-y-2 text-xs text-slate-700">
                   {certificates.map((cert) => (
                     <div key={cert.id} data-cv-item>
@@ -1996,7 +1982,7 @@ function TemplateExecutive({ data }: { data: CVData }) {
 
             {Object.keys(links).length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
                 <div className="mt-2 space-y-1 text-xs text-slate-700">
                   {Object.entries(links).map(([label, url]) => (
                     <div key={label}>
@@ -2057,7 +2043,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
 
       {data.experience?.length ? (
         <section className="mt-8">
-          <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-4 space-y-5">
             {data.experience.map((item, index) => (
               <div key={item.id} data-cv-item className="relative pl-6">
@@ -2083,7 +2069,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
         {data.education?.length ? (
           <section>
-            <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
+            <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-3 space-y-3">
               {data.education.map((item) => (
                 <div key={item.id} data-cv-item>
@@ -2098,7 +2084,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
 
         {data.skills?.length ? (
           <section>
-            <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
+            <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
             <div className="mt-3 space-y-2">
               {data.skills.map((skill) => (
                 <div key={skill.id} data-cv-item>
@@ -2115,7 +2101,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
 
         {certificates.length ? (
           <section>
-            <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
+            <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
             <div className="mt-3 space-y-2 text-xs text-slate-700">
               {certificates.map((cert) => (
                 <div key={cert.id} data-cv-item>
@@ -2138,7 +2124,7 @@ function TemplateTimeline({ data }: { data: CVData }) {
 
         {Object.keys(links).length ? (
           <section>
-            <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
+            <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
             <div className="mt-3 space-y-1 text-xs text-slate-700">
               {Object.entries(links).map(([label, url]) => (
                 <p key={label}>
@@ -2189,7 +2175,7 @@ function TemplateCompact({ data }: { data: CVData }) {
 
       {data.experience?.length ? (
         <section className="mt-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "experience")}</h2>
           <div className="mt-2 space-y-3">
             {data.experience.map((item) => (
               <div key={item.id} data-cv-item className="text-sm">
@@ -2208,7 +2194,7 @@ function TemplateCompact({ data }: { data: CVData }) {
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
         {data.education?.length ? (
           <section>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h3>
+            <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "education")}</h3>
             <div className="mt-2 space-y-2 text-sm">
               {data.education.map((item) => (
                 <div key={item.id} data-cv-item>
@@ -2223,7 +2209,7 @@ function TemplateCompact({ data }: { data: CVData }) {
         <section className="space-y-4">
           {data.skills?.length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "skills")}</h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {data.skills.map((skill) => (
                   <span key={skill.id} className="px-2 py-0.5 rounded border border-slate-300 text-xs">
@@ -2236,7 +2222,7 @@ function TemplateCompact({ data }: { data: CVData }) {
 
           {data.languages?.length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "languages")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "languages")}</h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {data.languages.map((lang) => (
                   <span key={lang.id} className="px-2 py-0.5 rounded border border-slate-300 text-xs">
@@ -2249,7 +2235,7 @@ function TemplateCompact({ data }: { data: CVData }) {
 
           {certificates.length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "certificates")}</h3>
               <div className="mt-2 space-y-1 text-xs text-slate-700">
                 {certificates.map((cert) => (
                   <div key={cert.id} data-cv-item>
@@ -2272,7 +2258,7 @@ function TemplateCompact({ data }: { data: CVData }) {
 
           {Object.keys(links).length ? (
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "links")}</h3>
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "links")}</h3>
               <div className="mt-1 text-xs text-slate-700 space-y-1">
                 {Object.entries(links).map(([label, url]) => (
                   <p key={label}>
@@ -2355,14 +2341,14 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
         {personal.summary && personal.showSummaryContent !== false ? (
           <section>
-            {personal.showSummaryTitle !== false ? <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
+            {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
             <p className={`${dense ? "mt-1" : "mt-2"} text-sm text-slate-700 leading-relaxed whitespace-pre-line`}>{personal.summary}</p>
           </section>
         ) : null}
 
         {data.experience?.length ? (
           <section>
-            <h2 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
+            <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
             <div className={`${dense ? "mt-2 space-y-3" : "mt-3 space-y-4"}`}>
               {data.experience.map((item) => (
                 <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
@@ -2386,7 +2372,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
         <div className={`grid grid-cols-1 lg:grid-cols-2 ${dense ? "gap-5" : "gap-8"}`}>
           {data.education?.length ? (
             <section>
-              <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
+              <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
               <div className={`${dense ? "mt-2 space-y-2" : "mt-3 space-y-3"}`}>
                 {data.education.map((item) => (
                   <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
@@ -2402,7 +2388,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           <section className={dense ? "space-y-4" : "space-y-6"}>
             {skills.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {skills.map((skill) => (
                     <div key={skill.id} data-cv-item>
@@ -2419,7 +2405,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {languages.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {languages.map((lang) => (
                     <div key={lang.id} data-cv-item className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
@@ -2438,7 +2424,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {certificates.length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"} text-xs text-slate-700`}>
                   {certificates.map((cert) => (
                     <div key={cert.id} data-cv-item className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
@@ -2461,7 +2447,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {Object.keys(links).length ? (
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
+                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
                 <div className={`${dense ? "mt-1.5" : "mt-2"} space-y-1 text-xs text-slate-700`}>
                   {Object.entries(links).map(([label, url]) => (
                     <p key={label}>
@@ -2926,6 +2912,14 @@ const TEMPLATE_PAGE_WIDTH: Record<string, string> = {
   extensive: "max-w-4xl",
 };
 
+/** Side padding of each page, so the block below lines up with the template. */
+const TEMPLATE_PAGE_PADDING_X: Record<string, string> = {
+  corporate: "px-9",
+  developer: "px-9",
+  creative: "px-9",
+  classic: "px-9",
+};
+
 /** Background and text colours of the dark templates, so the block continues the page. */
 function supplementalSurface(template: string, data: CVData): { style?: React.CSSProperties; dark: boolean } {
   if (template === "developer") {
@@ -2984,22 +2978,24 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
   const label = surface.dark ? "opacity-70" : "text-slate-600";
   const meta = surface.dark ? "opacity-70" : "text-slate-500";
   return (
-    <section className={`mx-auto -mt-px w-full ${width} break-words border-x border-b ${border} px-8 pb-7 pt-5 shadow-sm`} style={surface.style}>
+    // No top padding: it continues the page right after the template's own
+    // bottom padding, with the same gap above its titles as any section.
+    <section data-cv-supplemental className={`mx-auto -mt-px w-full ${width} break-words border-x border-b ${border} ${TEMPLATE_PAGE_PADDING_X[template] ?? "px-8"} pb-7 shadow-sm`} style={surface.style}>
       {showDocument ? (
         <div className="mb-4">
-          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Documento de identidad</h2>
+          <h2 data-cv-section-title className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Documento de identidad</h2>
           <p className="mt-1 text-sm">{[personal.documentType, personal.documentNumber].filter(Boolean).join(" · ")}</p>
         </div>
       ) : null}
       {professionalCard ? (
         <div className="mb-4">
-          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Tarjeta profesional</h2>
+          <h2 data-cv-section-title className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Tarjeta profesional</h2>
           <p className="mt-1 text-sm">{professionalCard}</p>
         </div>
       ) : null}
       {references.length || showRequestText ? (
         <div>
-          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>{sectionTitle(data.settings, "references")}</h2>
+          <h2 data-cv-section-title className={`text-sm font-semibold uppercase tracking-wide ${label}`}>{sectionTitle(data.settings, "references")}</h2>
           <ReferenceGroups references={references} metaClass={meta} />
           {showRequestText ? <p className={`text-sm ${references.length ? "mt-3" : "mt-1"}`}>{REFERENCES_ON_REQUEST_TEXT}</p> : null}
         </div>

@@ -555,6 +555,20 @@
     }
   }
 
+/* Section titles: extra room above, so each title clearly opens a new section
+   instead of reading as one more line of the previous one. Padding, not
+   margin: a margin would collapse with the section's own top margin. */
+.cv-custom-wrapper [data-cv-section-title] {
+  padding-top: 0.75rem;
+}
+
+/* The block after the template (references, document, professional card)
+   continues the same page: no border or shadow line between the two. */
+.cv-custom-wrapper > :has(+ [data-cv-supplemental]) {
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+
 /* PDF export (html2pdf clone of the preview): the page fills the printable
    width (A4 minus PDF_MARGIN_MM) instead of being a centred card. Covers the
    CV templates, the supplemental block and the letter. */
@@ -586,6 +600,13 @@
 .cv-pdf-export .cv-dev-chip {
   padding-top: 0.125rem !important;
   padding-bottom: 0.75rem !important;
+}
+
+/* Minimal/ATS section titles: html2canvas draws the text lower than the
+   browser, so in the PDF it sat on its underline. Same compensation as the
+   developer contact boxes. */
+.cv-pdf-export .ats-section-header {
+  padding-bottom: 0.6rem !important;
 }
 
 /* Contact icons: keep the icon and its value together (the space between
