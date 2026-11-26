@@ -43,7 +43,7 @@ export interface CVTemplateOption {
 export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   // Clásicas y sencillas
   { key: "minimal", label: "Minimalista", category: "modern", group: "simple", supportsPhoto: false, atsFriendly: true, hint: "Lo esencial, sin adornos." },
-  { key: "ats", label: "Estándar", category: "ats", group: "simple", supportsPhoto: true, atsFriendly: true, hint: "El formato más usado, con foto opcional." },
+  { key: "ats", label: "Estándar", category: "ats", group: "simple", supportsPhoto: true, atsFriendly: true, hint: "El formato clásico de procesador de texto: foto, contacto en dos columnas y títulos en franja gris." },
   { key: "cronologica", label: "Cronológica", category: "traditional", group: "simple", supportsPhoto: true, atsFriendly: true, hint: "Fechas en su propia columna; la más común en Latinoamérica." },
   { key: "harvard", label: "Harvard", category: "traditional", group: "simple", supportsPhoto: false, atsFriendly: true, hint: "Académica y sobria; educación primero." },
   { key: "classic", label: "Clásica", category: "traditional", group: "simple", supportsPhoto: false, atsFriendly: true, hint: "Tipografía con serifa, estilo tradicional." },
@@ -57,10 +57,10 @@ export const CURATED_CV_TEMPLATES: CVTemplateOption[] = [
   { key: "europea", label: "Europea", category: "corporate", group: "professional", supportsPhoto: true, atsFriendly: true, hint: "Títulos en una columna a la izquierda, estilo europeo." },
   { key: "dos-columnas", label: "Dos columnas", category: "modern", group: "professional", supportsPhoto: true, atsFriendly: true, hint: "Experiencia a la izquierda; habilidades e idiomas al lado." },
   { key: "timeline", label: "Timeline", category: "modern", group: "professional", supportsPhoto: false, atsFriendly: true, hint: "Experiencia en línea de tiempo." },
-  { key: "extensa", label: "Extensa", category: "traditional", group: "professional", supportsPhoto: true, atsFriendly: true, hint: "Para trayectorias largas." },
   // Diseños visuales
   { key: "sidebar", label: "Panel lateral", category: "modern", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Panel de color con tus datos de contacto." },
-  { key: "executive", label: "Ejecutiva", category: "corporate", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Banda superior de color." },
+  { key: "executive", label: "Ejecutiva", category: "corporate", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Banda superior de color y datos alineados a la izquierda." },
+  { key: "extensa", label: "Extensa", category: "design", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Encabezado centrado y títulos en etiquetas de color; para trayectorias largas." },
   { key: "developer", label: "Contraste", category: "modern", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Fondo oscuro de alto contraste." },
   { key: "creative", label: "Creativa", category: "design", group: "design", supportsPhoto: true, atsFriendly: true, hint: "Degradado y estilo llamativo." },
   // Formatos oficiales

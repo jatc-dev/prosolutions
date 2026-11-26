@@ -25,6 +25,9 @@ describe("public editor template selection", () => {
       />,
     );
 
+    // Opens on the group of the current template; "Todas" lists every group.
+    expect(screen.getAllByRole("button").length).toBeLessThan(CURATED_CV_TEMPLATES.length);
+    fireEvent.click(screen.getByRole("tab", { name: "Todas" }));
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(CURATED_CV_TEMPLATES.length);
 

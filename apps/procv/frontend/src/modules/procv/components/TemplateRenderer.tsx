@@ -2,7 +2,7 @@ import React from "react";
 import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
-import { TemplateChronological, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
+import { TemplateChronological, TemplateStandard, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
 import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
 /** Label shown before the value, e.g. "Correo personal" or "WhatsApp". */
@@ -2310,12 +2310,19 @@ function TemplateExtensa({ data }: { data: CVData }) {
   const headingColor = isLight ? "#0f172a" : "#ffffff";
   const subtitleColor = isLight ? "#334155" : rgbaFromHex("#ffffff", 0.84);
   const badgeBg = isLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.14)";
+  // Section titles are labels filled with the accent colour (this is what
+  // sets Extensa apart from Ejecutiva, which shares the coloured header).
+  const sectionLabelStyle = { backgroundColor: accentColor, color: getContrastMode(accentColor) === "dark" ? "#0f172a" : "#ffffff" };
 
   return (
     <article className="max-w-4xl mx-auto bg-white border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
       <header className={`${dense ? "px-6 py-5" : "px-8 py-7"} border-b border-slate-200`} style={{ backgroundColor: topColor }}>
-        <div className={`flex flex-col md:flex-row md:items-start md:justify-between ${dense ? "gap-3" : "gap-5"}`}>
-          <div className="flex-1 min-w-0">
+        {/* Centred header, photo on top. */}
+        <div className={`flex flex-col items-center text-center ${dense ? "gap-3" : "gap-4"}`}>
+          {shouldRenderProfileImage(personal) ? (
+            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/40" />
+          ) : null}
+          <div className="min-w-0">
             <h1 className={`${dense ? "text-2xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: headingColor }}>{personal.name || ""}</h1>
             <p className="mt-1 text-sm" style={{ color: subtitleColor }}>{personal.role || ""}</p>
             {renderNationality(personal, subtitleColor)}
@@ -2323,13 +2330,9 @@ function TemplateExtensa({ data }: { data: CVData }) {
               <p className={`${dense ? "mt-1" : "mt-2"} text-sm`} style={{ color: subtitleColor }}>{formatPersonalLocation(personal)}</p>
             ) : null}
           </div>
-
-          {shouldRenderProfileImage(personal) ? (
-            <ProfilePhoto personal={personal} size="medium" alt="Foto de perfil" className="border-2 border-white/40" />
-          ) : null}
         </div>
 
-        <div className={`${dense ? "mt-3" : "mt-4"} flex flex-wrap gap-2 text-xs`} style={{ color: subtitleColor }}>
+        <div className={`${dense ? "mt-3" : "mt-4"} flex flex-wrap justify-center gap-2 text-xs`} style={{ color: subtitleColor }}>
           {emails.map((email, idx) => (
             <span key={`email-${idx}`} className="rounded-full px-2 py-1" style={{ backgroundColor: badgeBg }}>
               <ContactPrefix item={email} /> {email.value}
@@ -2344,7 +2347,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
             <span key={line} className="rounded-full px-2 py-1" style={{ backgroundColor: badgeBg }}>{line}</span>
           ))}
         </div>
-        <div className={`${dense ? "mt-3 w-20" : "mt-4 w-24"} h-1.5 rounded-full`} style={{ backgroundColor: accentColor }} />
+        <div className={`${dense ? "mt-3 w-20" : "mt-4 w-24"} mx-auto h-1.5 rounded-full`} style={{ backgroundColor: accentColor }} />
       </header>
 
       <div className={`${dense ? "px-6 py-5 space-y-6" : "px-8 py-7 space-y-8"}`}>
@@ -2357,14 +2360,14 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
         {personal.summary && personal.showSummaryContent !== false ? (
           <section>
-            {personal.showSummaryTitle !== false ? <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "summary")}</h2> : null}
+            {personal.showSummaryTitle !== false ? <h2 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "summary")}</h2> : null}
             <p className={`${dense ? "mt-1" : "mt-2"} text-sm text-slate-700 leading-relaxed whitespace-pre-line`}>{personal.summary}</p>
           </section>
         ) : null}
 
         {data.experience?.length ? (
           <section>
-            <h2 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "experience")}</h2>
+            <h2 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "experience")}</h2>
             <div className={`${dense ? "mt-2 space-y-3" : "mt-3 space-y-4"}`}>
               {data.experience.map((item) => (
                 <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-3" : "p-4"}`}>
@@ -2388,7 +2391,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
         <div className={`grid grid-cols-1 lg:grid-cols-2 ${dense ? "gap-5" : "gap-8"}`}>
           {data.education?.length ? (
             <section>
-              <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "education")}</h3>
+              <h3 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "education")}</h3>
               <div className={`${dense ? "mt-2 space-y-2" : "mt-3 space-y-3"}`}>
                 {data.education.map((item) => (
                   <div key={item.id} data-cv-item className={`rounded-lg border border-slate-200 ${dense ? "p-2.5" : "p-3"}`}>
@@ -2404,7 +2407,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
           <section className={dense ? "space-y-4" : "space-y-6"}>
             {skills.length ? (
               <div>
-                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "skills")}</h3>
+                <h3 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "skills")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {skills.map((skill) => (
                     <div key={skill.id} data-cv-item>
@@ -2421,7 +2424,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {languages.length ? (
               <div>
-                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "languages")}</h3>
+                <h3 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "languages")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"}`}>
                   {languages.map((lang) => (
                     <div key={lang.id} data-cv-item className={`rounded border border-slate-200 text-xs text-slate-700 ${dense ? "px-2 py-1" : "px-2.5 py-1.5"}`}>
@@ -2440,7 +2443,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {certificates.length ? (
               <div>
-                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "certificates")}</h3>
+                <h3 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "certificates")}</h3>
                 <div className={`${dense ? "mt-2 space-y-1.5" : "mt-3 space-y-2"} text-xs text-slate-700`}>
                   {certificates.map((cert) => (
                     <div key={cert.id} data-cv-item className={`rounded border border-slate-200 ${dense ? "px-2.5 py-1.5" : "px-3 py-2"}`}>
@@ -2463,7 +2466,7 @@ function TemplateExtensa({ data }: { data: CVData }) {
 
             {Object.keys(links).length ? (
               <div>
-                <h3 data-cv-section-title className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">{sectionTitle(data.settings, "links")}</h3>
+                <h3 data-cv-section-title="box" className="inline-block rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" style={sectionLabelStyle}>{sectionTitle(data.settings, "links")}</h3>
                 <div className={`${dense ? "mt-1.5" : "mt-2"} space-y-1 text-xs text-slate-700`}>
                   {Object.entries(links).map(([label, url]) => (
                     <p key={label}>
@@ -2942,6 +2945,7 @@ const TEMPLATE_PAGE_PADDING_X: Record<string, string> = {
   "primer-empleo": "px-9",
   "dos-columnas": "px-9",
   cronologica: "px-9",
+  ats: "px-9",
 };
 
 /** Background and text colours of the dark templates, so the block continues the page. */
@@ -3038,7 +3042,7 @@ const TEMPLATE_COMPONENTS: Record<string, (props: { data: CVData }) => JSX.Eleme
   extensa: TemplateExtensa,
   timeline: TemplateTimeline,
   compact: TemplateCompact,
-  ats: TemplateMinimal,
+  ats: TemplateStandard,
   minimal: TemplateMinimal,
   employment: TemplateEmploymentApplication,
   dafp: TemplateDafp,
