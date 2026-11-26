@@ -2,6 +2,7 @@ import React from "react";
 import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
+import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
 /** Label shown before the value, e.g. "Correo personal" or "WhatsApp". */
 export type ContactType = string;
@@ -50,7 +51,7 @@ export interface CVData {
     /** Tarjeta profesional, already formatted (empty when hidden). */
     professionalCard?: string;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
-    references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "personal" | "laboral"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
+    references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "laboral" | "personal" | "familiar"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
     referencesAvailableOnRequest?: boolean;
     birthDate?: string;
@@ -1836,11 +1837,11 @@ function TemplateSidebar({ data }: { data: CVData }) {
               </div>
             </section>
           ) : null}
-          {(personal.showReferences !== false && (personal.references || []).some((item) => item && (item.name || item.phone || item.email || item.position || item.company || item.relationship))) || personal.referencesAvailableOnRequest ? (
+          {personal.showReferences !== false && (visibleReferences(personal.references).length || personal.referencesAvailableOnRequest) ? (
             <section className="mt-8 border-t border-slate-200 pt-5">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Referencias laborales y personales</h3>
-              {personal.showReferences !== false ? <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">{(personal.references || []).filter((item) => item && item.isVisible !== false && (item.name || item.phone || item.email || item.position || item.company || item.relationship)).map((item) => <div key={item.id} data-cv-item className="text-sm"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.type === "laboral" ? "Laboral" : "Familiar / personal"}{item.type === "laboral" && item.position ? " · " + item.position : ""}{item.type === "laboral" && item.company ? " · " + item.company : ""}{item.type === "personal" && (item.relationship || item.position) ? " · " + (item.relationship || item.position) : ""}</p>{item.phone ? <p className="text-xs text-slate-600">{item.phone}</p> : null}{item.email ? <p className="text-xs text-slate-600">{item.email}</p> : null}</div>)}</div> : null}
-              {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">Referencias laborales y personales: Disponibles a solicitud.</p> : null}
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "references")}</h3>
+              <ReferenceGroups references={personal.references} nameClass="text-slate-800" metaClass="text-slate-500" />
+              {personal.referencesAvailableOnRequest ? <p className="mt-2 text-sm text-slate-700">{REFERENCES_ON_REQUEST_TEXT}</p> : null}
             </section>
           ) : null}
                 </main>
@@ -2517,7 +2518,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
   const skills = normalizeSkills(data.skills).filter((item) => item.name);
   const languages = normalizeLanguages(data.languages).filter((item) => item.name);
   const certificates = normalizeCertificates(data.certificates).filter((item) => item.title);
-  const references = (personal.references || []).filter((item) => item && item.isVisible !== false && item.name);
+  const references = visibleReferences(personal.references);
   const age = calculateAge(personal.birthDate);
   const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
   const Row = Format1003Row;
@@ -2690,25 +2691,18 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
             <table className="w-full border-collapse text-[11px]">
               <thead>
                 <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
-                  <th className={CELL}>Nombre</th><th className={CELL}>Tipo</th><th className={CELL}>Cargo / parentesco</th><th className={CELL}>Contacto</th>
+                  <th className={CELL}>Nombre</th><th className={CELL}>Tipo</th><th className={CELL}>Cargo / ocupación / parentesco</th><th className={CELL}>Contacto</th>
                 </tr>
               </thead>
               <tbody>
-                {references.map((item) => {
-                  const hidden = item.hiddenFields || [];
-                  const show = (field: string) => !hidden.includes(field);
-                  const detail = item.type === "laboral"
-                    ? [show("position") ? item.position : "", show("company") ? item.company : ""].filter(Boolean).join(" · ")
-                    : show("relationship") ? item.relationship || item.position : "";
-                  return (
-                    <tr key={item.id}>
-                      <td className={`${CELL} font-semibold`}>{show("name") ? item.name : ""}</td>
-                      <td className={CELL}>{item.type === "laboral" ? "Laboral" : "Personal"}</td>
-                      <td className={CELL}>{detail}</td>
-                      <td className={`${CELL} break-words`}>{[show("phone") ? item.phone : "", show("email") ? item.email : ""].filter(Boolean).join(" · ")}</td>
-                    </tr>
-                  );
-                })}
+                {references.map((item) => (
+                  <tr key={item.id}>
+                    <td className={`${CELL} font-semibold`}>{referenceName(item)}</td>
+                    <td className={CELL}>{REFERENCE_TYPE_LABELS[normalizeReferenceType(item.type)].one}</td>
+                    <td className={CELL}>{referenceDetails(item).join(" · ")}</td>
+                    <td className={`${CELL} break-words`}>{referenceContact(item).join(" · ")}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           ) : has("reference1", "reference2") ? (
@@ -2718,7 +2712,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
             </Grid>
           ) : null}
           {personal.referencesAvailableOnRequest ? (
-            <p className="border-x border-b border-slate-300 px-2 py-1.5 text-[11px]">Referencias laborales y personales: disponibles a solicitud.</p>
+            <p className="border-x border-b border-slate-300 px-2 py-1.5 text-[11px]">{REFERENCES_ON_REQUEST_TEXT}</p>
           ) : null}
           {value("emergencyContact") ? (
             <Grid>
@@ -2942,9 +2936,38 @@ function supplementalSurface(template: string, data: CVData): { style?: React.CS
   return { dark: false };
 }
 
+/** References grouped by type (laborales, personales, familiares). */
+function ReferenceGroups({ references, nameClass = "", metaClass }: { references?: ReferenceLike[]; nameClass?: string; metaClass: string }) {
+  const groups = groupReferences(references);
+  if (!groups.length) return null;
+  return (
+    <div className="mt-3 space-y-3">
+      {groups.map((group) => (
+        <div key={group.type}>
+          {/* The group name is only needed when several kinds are listed. */}
+          {groups.length > 1 ? <h3 className={`text-xs font-semibold ${metaClass}`}>{group.label}</h3> : null}
+          <div className={`${groups.length > 1 ? "mt-1.5 " : ""}grid grid-cols-1 gap-3 sm:grid-cols-2`}>
+            {group.items.map((item) => {
+              const name = referenceName(item);
+              const details = referenceDetails(item);
+              return (
+                <div key={item.id} data-cv-item className="min-w-0 text-sm">
+                  {name ? <p className={`font-semibold ${nameClass}`}>{name}</p> : null}
+                  <p className={`text-xs ${metaClass}`}>{[groups.length > 1 ? "" : REFERENCE_TYPE_LABELS[group.type].one, ...details].filter(Boolean).join(" · ")}</p>
+                  {referenceContact(item).map((value) => <p key={value} className={`text-xs ${metaClass}`}>{value}</p>)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SupplementalPersonalSections({ data, template, includeReferences = true, includeRequestText = true, includeDocument = true }: { data: CVData; template: string; includeReferences?: boolean; includeRequestText?: boolean; includeDocument?: boolean }) {
   const personal = data.personal ?? {};
-  const references = !includeReferences || personal.showReferences === false ? [] : (personal.references || []).filter((item) => { if (!item || item.isVisible === false) return false; const hidden = item.hiddenFields || []; return (item.name && !hidden.includes("name")) || (item.phone && !hidden.includes("phone")) || (item.email && !hidden.includes("email")) || (item.company && !hidden.includes("company")) || (item.position && !hidden.includes("position")) || (item.relationship && !hidden.includes("relationship")); });
+  const references = !includeReferences || personal.showReferences === false ? [] : visibleReferences(personal.references);
   const showRequestText = includeRequestText && Boolean(personal.referencesAvailableOnRequest);
   const showDocument = Boolean(includeDocument && personal.showDocumentIdentity && (personal.documentType || personal.documentNumber));
   const professionalCard = includeDocument ? personal.professionalCard || "" : "";
@@ -2968,27 +2991,13 @@ function SupplementalPersonalSections({ data, template, includeReferences = true
           <p className="mt-1 text-sm">{professionalCard}</p>
         </div>
       ) : null}
-      {references.length ? (
+      {references.length || showRequestText ? (
         <div>
-          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>Referencias laborales y personales</h2>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {references.map((reference) => {
-              const hidden = reference.hiddenFields || [];
-              const show = (field: string) => !hidden.includes(field);
-              const details = [reference.type === "laboral" && show("position") ? reference.position : "", reference.type === "laboral" && show("company") ? reference.company : "", reference.type === "personal" && show("relationship") ? (reference.relationship || reference.position) : ""].filter(Boolean);
-              return (
-                <div key={reference.id} data-cv-item className="min-w-0 text-sm">
-                  {show("name") && reference.name ? <p className="font-semibold">{reference.name}</p> : null}
-                  {details.length ? <p className={`text-xs ${meta}`}>{reference.type === "laboral" ? "Laboral" : "Familiar / personal"} · {details.join(" · ")}</p> : null}
-                  {show("phone") && reference.phone ? <p className={`text-xs ${meta}`}>{reference.phone}</p> : null}
-                  {show("email") && reference.email ? <p className={`text-xs ${meta}`}>{reference.email}</p> : null}
-                </div>
-              );
-            })}
-          </div>
+          <h2 className={`text-sm font-semibold uppercase tracking-wide ${label}`}>{sectionTitle(data.settings, "references")}</h2>
+          <ReferenceGroups references={references} metaClass={meta} />
+          {showRequestText ? <p className={`text-sm ${references.length ? "mt-3" : "mt-1"}`}>{REFERENCES_ON_REQUEST_TEXT}</p> : null}
         </div>
       ) : null}
-      {showRequestText ? <p className={`text-sm ${references.length ? "mt-3" : ""}`}>Referencias laborales y personales: disponibles a solicitud.</p> : null}
     </section>
   );
 }

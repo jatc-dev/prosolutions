@@ -313,7 +313,7 @@ export const normalizeLoadedCVData = (rawData: any): CVData => {
       documentNumber: String(safePersonal.documentNumber || ''),
       showDocumentIdentity: toBoolean(safePersonal.showDocumentIdentity),
       sidebarIntroMode: ['valueProposition', 'summary', 'none'].includes(String(safePersonal.sidebarIntroMode)) ? safePersonal.sidebarIntroMode : initial.personal.sidebarIntroMode,
-      references: Array.isArray(safePersonal.references) ? safePersonal.references.map((item: any, index: number) => ({ ...item, id: item?.id || 'reference-' + index, type: item?.type === 'laboral' ? 'laboral' : 'personal' })) : [],
+      references: Array.isArray(safePersonal.references) ? safePersonal.references.map((item: any, index: number) => ({ ...item, id: item?.id || 'reference-' + index, type: item?.type === 'laboral' || item?.type === 'familiar' ? item.type : 'personal' })) : [],
       showBirthDate: toBoolean(safePersonal.showBirthDate),
       showAge: toBoolean(safePersonal.showAge),
       showAddress: safePersonal.showAddress === undefined ? true : toBoolean(safePersonal.showAddress),
@@ -722,6 +722,8 @@ export const useCVEditorStore = create<CVEditorState>()(
               return Array.isArray(sectionData) && sectionData.length > 0;
             case 'links':
               return Array.isArray(sectionData) && sectionData.length > 0;
+            case 'references':
+              return Boolean(state.cvData.personal?.references?.length || state.cvData.personal?.referencesAvailableOnRequest);
             default:
               return false;
           }

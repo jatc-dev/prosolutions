@@ -10,6 +10,7 @@ export type SectionType =
   | 'languages'
   | 'certificates'
   | 'links'
+  | 'references'
   | 'application';
 
 export type ContactType = 'personal' | 'work' | 'education' | 'other';
@@ -49,7 +50,7 @@ export interface PhoneItem {
 export interface ReferenceItem {
   id: string;
   isVisible?: boolean;
-  type: 'personal' | 'laboral';
+  type: 'laboral' | 'personal' | 'familiar';
   name: string;
   position?: string;
   company?: string;

@@ -43,6 +43,7 @@ import { SkillsSection } from "./sections/SkillsSection";
 import { LanguagesSection } from "./sections/LanguagesSection";
 import { CertificatesSection } from "./sections/CertificatesSection";
 import { LinksSection } from "./sections/LinksSection";
+import { ReferencesSection, createReference } from "./sections/ReferencesSection";
 import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
@@ -68,6 +69,8 @@ interface CompleteCVEditorProps {
 /** True when the user hid this section from the CV (+/− under the section tabs). */
 const hiddenIn = (cv: any, section: string): boolean =>
   Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
+/** References used to be hidden with a switch in "Personal" (showReferences). */
+const referencesHidden = (cv: any): boolean => hiddenIn(cv, 'references') || cv?.personal?.showReferences === false;
 
 /**
  * PDF page margin in mm (top, left, bottom, right). Printers cannot print to
@@ -310,9 +313,10 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       showDocumentIdentity: Boolean(cvData.personal?.showDocumentIdentity),
       professionalCard: professionalCardText(cvData.personal),
       sidebarIntroMode: cvData.personal?.sidebarIntroMode || 'valueProposition',
-      references: cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
-      showReferences: cvData.personal?.showReferences !== false,
-      referencesAvailableOnRequest: Boolean(cvData.personal?.referencesAvailableOnRequest),
+      // Hidden "Referencias" tab (or the old "Incluir referencias" switch): nothing is printed.
+      references: referencesHidden(cvData) ? [] : cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
+      showReferences: !referencesHidden(cvData),
+      referencesAvailableOnRequest: !referencesHidden(cvData) && Boolean(cvData.personal?.referencesAvailableOnRequest),
       valueProposition: cvData.personal?.valueProposition,
       showValuePropositionTitle: cvData.personal?.showValuePropositionTitle !== false,
       showValuePropositionContent: cvData.personal?.showValuePropositionContent !== false,
@@ -898,6 +902,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     languages: getSectionCompletion('languages'),
     certificates: getSectionCompletion('certificates'),
     links: getSectionCompletion('links'),
+    references: getSectionCompletion('references'),
     application: Boolean(cvData.application && Object.values(cvData.application).some((value) => String(value || '').trim())),
   };
 
@@ -935,10 +940,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   };
 
   // +/- under each section tab: add the first item, hide (data kept) or show again.
-  const OPTIONAL_SECTIONS = ['experience', 'education', 'skills', 'languages', 'certificates', 'links'] as const;
+  const OPTIONAL_SECTIONS = ['experience', 'education', 'skills', 'languages', 'certificates', 'links', 'references'] as const;
   type OptionalSection = typeof OPTIONAL_SECTIONS[number];
   const hiddenSections: string[] = Array.isArray(cvData.settings?.hiddenSections) ? cvData.settings.hiddenSections : [];
-  const sectionStatus = Object.fromEntries(OPTIONAL_SECTIONS.map((section) => [section, {
+  const sectionStatus = Object.fromEntries(OPTIONAL_SECTIONS.map((section) => [section, section === 'references' ? {
+    // References live in personal data; "disponibles a solicitud" alone also counts.
+    count: (cvData.personal?.references?.length ?? 0) + (cvData.personal?.referencesAvailableOnRequest ? 1 : 0),
+    hidden: referencesHidden(cvData),
+  } : {
     count: Array.isArray(cvData[section]) ? cvData[section].length : 0,
     hidden: hiddenSections.includes(section),
   }])) as Record<OptionalSection, { count: number; hidden: boolean }>;
@@ -948,8 +957,15 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     const setHidden = (next: string[]) => updateCvData({ settings: { ...(cvData.settings || {}), hiddenSections: next } });
     if (sectionStatus[key].hidden) {
       setHidden(hiddenSections.filter((item) => item !== key));
+      // Clear the old switch too, or the section would stay hidden.
+      if (key === 'references' && cvData.personal?.showReferences === false) updatePersonal({ ...cvData.personal, showReferences: true });
     } else if (sectionStatus[key].count === 0) {
-      handleAddBlock(key);
+      if (key === 'references') {
+        updatePersonal({ ...cvData.personal, references: [createReference('laboral')] });
+        setActiveSection('references');
+      } else {
+        handleAddBlock(key);
+      }
     } else {
       setHidden([...hiddenSections, key]);
       toast(t('editor.sectionToggle.hiddenToast', 'Sección oculta en la hoja de vida. Tus datos se conservan.'));
@@ -1092,6 +1108,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             data={cvData.links}
             onChange={updateLinks}
             {...commonProps}
+          />
+        );
+      case 'references':
+        return (
+          <ReferencesSection
+            personal={cvData.personal}
+            onChange={(changes) => updatePersonal({ ...cvData.personal, ...changes })}
+            isLoading={isLoading}
           />
         );
       default:

@@ -5,9 +5,9 @@
  * (settings.sectionTitles). The official forms (1003, DAFP) keep their
  * fixed headings.
  */
-export type SectionTitleKey = "summary" | "experience" | "education" | "skills" | "languages" | "certificates" | "links";
+export type SectionTitleKey = "summary" | "experience" | "education" | "skills" | "languages" | "certificates" | "links" | "references";
 
-export const SECTION_TITLE_KEYS: SectionTitleKey[] = ["summary", "experience", "education", "skills", "languages", "certificates", "links"];
+export const SECTION_TITLE_KEYS: SectionTitleKey[] = ["summary", "experience", "education", "skills", "languages", "certificates", "links", "references"];
 
 export const DEFAULT_SECTION_TITLES: Record<SectionTitleKey, string> = {
   summary: "Perfil profesional",
@@ -17,6 +17,7 @@ export const DEFAULT_SECTION_TITLES: Record<SectionTitleKey, string> = {
   languages: "Idiomas",
   certificates: "Certificaciones",
   links: "Enlaces",
+  references: "Referencias",
 };
 
 export const SECTION_TITLE_MAX_LENGTH = 40;

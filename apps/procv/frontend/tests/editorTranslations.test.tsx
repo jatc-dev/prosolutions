@@ -16,7 +16,7 @@ describe("editor UI follows the selected language", () => {
     render(<EditorTabs activeSection="personal" onSectionChange={() => undefined} completionStatus={status} />);
     expect(screen.getByRole("button", { name: /Experience/ })).toBeTruthy();
     expect(screen.getByText("CV progress")).toBeTruthy();
-    expect(screen.getByText("0 of 7 sections completed")).toBeTruthy();
+    expect(screen.getByText("0 of 8 sections completed")).toBeTruthy();
     render(<AutoSaveIndicator isSaving={false} hasUnsavedChanges lastSaved={null} />);
     expect(screen.getByText("Unsaved changes")).toBeTruthy();
   });
