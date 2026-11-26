@@ -127,7 +127,7 @@ export function CreateCvPage() {
           </p>
         </div>
         <ul className="grid gap-3 rounded-2xl border border-ui-border bg-ui-surface p-6 text-sm text-ui-text shadow-sm">
-          {["13 plantillas, 11 compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF y Word", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
+          {["21 plantillas, todas compatibles con ATS", "Importa PDF, Word o texto", "Descarga en PDF y Word", "Guardado automático", "Sin costo, sin tarjeta"].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-700 dark:text-brand-300" aria-hidden="true" />
               {item}

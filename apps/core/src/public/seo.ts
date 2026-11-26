@@ -111,7 +111,7 @@ export const FORMAT_HEADS: Record<string, PageHead> = {
   "/plantillas-hoja-de-vida": {
     title: "Plantillas de hoja de vida gratis para descargar en Word y PDF | ProSolutions",
     description:
-      "13 plantillas de hoja de vida gratis, 11 compatibles con ATS, más el formato único de Función Pública y el formato 1003. Llénalas en línea y descárgalas en Word o PDF.",
+      "21 plantillas de hoja de vida gratis, todas compatibles con ATS, incluidos el formato único de Función Pública y el formato 1003. Llénalas en línea y descárgalas en Word o PDF.",
     path: "/plantillas-hoja-de-vida",
   },
 };
