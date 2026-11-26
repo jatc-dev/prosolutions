@@ -1,72 +1,84 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import {
+  CV_DENSITIES,
+  MAX_SECTION_SPACING,
+  normalizeDensity,
+  normalizeSectionSpacing,
+  type CvDensity,
+} from "../../../cvSpacing";
 
 interface LayoutCustomizerProps {
   settings: {
-    density?: "compact" | "balanced" | "spacious";
+    density?: CvDensity;
     sectionSpacing?: number;
   };
   onChange: (settings: Partial<LayoutCustomizerProps["settings"]>) => void;
 }
 
-export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) {
-  const { t } = useTranslation();
+const SPACING_LABELS = ["Sin espacio extra", "Muy poco", "Normal", "Algo más", "Amplio", "Muy amplio", "Máximo"];
 
-  const densities = [
-    { value: "compact", label: t("layout.compact", "Compacto"), desc: t("layout.compactDesc", "Máximo espacio") },
-    { value: "balanced", label: t("layout.balanced", "Equilibrado"), desc: t("layout.balancedDesc", "Estándar") },
-    { value: "spacious", label: t("layout.spacious", "Espacioso"), desc: t("layout.spaciousDesc", "Más aire") },
-  ];
+/** Density (all vertical spacing) and the room above section titles. */
+export function LayoutCustomizer({ settings, onChange }: LayoutCustomizerProps) {
+  const density = normalizeDensity(settings.density);
+  const densityIndex = CV_DENSITIES.findIndex((item) => item.value === density);
+  const current = CV_DENSITIES[densityIndex];
+  const spacing = normalizeSectionSpacing(settings.sectionSpacing);
 
   return (
-    <div className="space-y-4">
-      {/* Densidad */}
+    <div className="space-y-5">
       <div>
-        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-          {t("layout.density", "Densidad del CV")}
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {densities.map((d) => (
-            <button
-              key={d.value}
-              type="button"
-              onClick={() => onChange({ density: d.value as "compact" | "balanced" | "spacious" })}
-              className={`p-2 rounded-lg border-2 text-left transition-all duration-150 ${
-                settings.density === d.value
-                  ? "border-brand-700 bg-brand-50 dark:border-brand-400 dark:bg-brand-950/40"
-                  : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
-              }`}
-            >
-              <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
-                {d.label}
-              </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {d.desc}
-              </div>
-            </button>
-          ))}
+        <div className="mb-1 flex items-baseline justify-between gap-2">
+          <label htmlFor="cv-density" className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+            Densidad del CV
+          </label>
+          <span className="text-xs font-semibold text-brand-800 dark:text-brand-300">{current.label}</span>
+        </div>
+        <input
+          id="cv-density"
+          type="range"
+          min={0}
+          max={CV_DENSITIES.length - 1}
+          step={1}
+          value={densityIndex}
+          aria-valuetext={current.label}
+          onChange={(event) => onChange({ density: CV_DENSITIES[Number(event.target.value)].value })}
+          className="w-full accent-brand-700"
+        />
+        <div className="mt-1 flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
+          <span>Muy compacto</span>
+          <span>Normal</span>
+          <span>Muy amplio</span>
+        </div>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{current.hint}. Ajusta el espacio entre todos los bloques y, en los extremos, el interlineado.</p>
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-baseline justify-between gap-2">
+          <label htmlFor="cv-section-spacing" className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+            Espacio antes de cada sección
+          </label>
+          <span className="text-xs font-semibold text-brand-800 dark:text-brand-300">{SPACING_LABELS[spacing]}</span>
+        </div>
+        <input
+          id="cv-section-spacing"
+          type="range"
+          min={0}
+          max={MAX_SECTION_SPACING}
+          step={1}
+          value={spacing}
+          aria-valuetext={SPACING_LABELS[spacing]}
+          onChange={(event) => onChange({ sectionSpacing: Number(event.target.value) })}
+          className="w-full accent-brand-700"
+        />
+        <div className="mt-1 flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
+          <span>Cerrado</span>
+          <span>Ancho</span>
         </div>
       </div>
 
-      {/* Espaciado de secciones */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-          {t("layout.sectionSpacing", "Espaciado entre secciones")}: {settings.sectionSpacing || 2}
-        </label>
-        <input
-          type="range"
-          min={0}
-          max={4}
-          step={1}
-          value={settings.sectionSpacing ?? 2}
-          onChange={(e) => onChange({ sectionSpacing: Number(e.target.value) })}
-          className="w-full accent-brand-700"
-        />
-        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-          <span>{t("layout.tight", "Cerrado")}</span>
-          <span>{t("layout.wide", "Ancho")}</span>
-        </div>
-      </div>
+      <p className="rounded-md bg-brand-50 px-3 py-2 text-xs text-slate-700 dark:bg-brand-950/40 dark:text-slate-200">
+        ¿Una sección quedó sola en otra página? Prueba «Compacto» o «Muy compacto», reduce el espacio antes de cada sección y, si aún no cabe, baja un paso el tamaño de letra.
+      </p>
     </div>
   );
 }

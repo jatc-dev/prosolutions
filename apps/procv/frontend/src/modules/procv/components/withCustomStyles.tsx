@@ -1,4 +1,6 @@
 import React from "react";
+import { densityConfig, sectionTitleGap } from "../cvSpacing";
+import "../styles/cv-spacing.css";
 import { TemplateRenderer } from "./TemplateRenderer";
 import { CVData as RendererCVData } from "./TemplateRenderer";
 import { cvFontFamily, normalizeFontScale } from "../fonts";
@@ -25,7 +27,6 @@ const COLOR_SETTINGS: Array<{ key: ColorKey; cssVar: string; className: string; 
   { key: "sidebarSectionTitleColor", cssVar: "--color-sidebar-section", className: "cv-c-sidebar-section", legacyDefault: "#f1f5f9" },
 ];
 
-const DEFAULT_SECTION_SPACING = 2;
 
 /** True when a colour setting was changed by the user. */
 export function isCustomColor(key: ColorKey, value?: string): boolean {
@@ -51,7 +52,7 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
 
   const bodyFont = cvFontFamily(s.fontBody as string | undefined);
   const headingFont = cvFontFamily(s.fontHeading as string | undefined);
-  const spacing = typeof s.sectionSpacing === "number" ? s.sectionSpacing : DEFAULT_SECTION_SPACING;
+  const density = densityConfig(s.density);
 
   const cssVars: Record<string, string> = {};
   // ui-print: the CV is a printed page, so it keeps the standard neutral
@@ -82,11 +83,17 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
     cssVars["--cv-heading-scale"] = String(headingScale);
     classes.push("cv-size-custom");
   }
-  if (spacing !== DEFAULT_SECTION_SPACING) {
-    cssVars["--section-spacing"] = String(spacing);
-    classes.push("cv-spacing-custom");
+  // Density scales all vertical spacing (and, at its ends, the line height);
+  // section spacing is the room above section titles. See cvSpacing.ts.
+  if (density.space !== 1) {
+    cssVars["--cv-vspace"] = String(density.space);
+    classes.push("cv-vspace");
   }
-  classes.push(s.density === "compact" ? "density-compact" : s.density === "spacious" ? "density-spacious" : "density-balanced");
+  if (density.leading) {
+    cssVars["--cv-leading"] = String(density.leading);
+    classes.push("cv-leading");
+  }
+  cssVars["--cv-title-gap"] = sectionTitleGap(s.sectionSpacing, s.density);
   const photoX = clampPercent(photo?.x);
   const photoY = clampPercent(photo?.y);
   if (photoX !== null) cssVars["--cv-photo-x"] = `${photoX}%`;

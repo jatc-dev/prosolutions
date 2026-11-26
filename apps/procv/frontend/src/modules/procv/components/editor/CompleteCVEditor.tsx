@@ -51,6 +51,7 @@ import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./compo
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
 import { GuestBanner } from "./components/GuestBanner";
 import { GuestDataDialog, type GuestDataDialogMode } from "./components/GuestDataDialog";
+import { addPdfTextLayer, collectPdfText } from "../../pdfTextLayer";
 import { hasCvContent, isGuestDataExpired } from "../../../../shared/stores/cvEditorStore";
 import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Trash2, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
@@ -71,6 +72,21 @@ const hiddenIn = (cv: any, section: string): boolean =>
   Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
 /** References used to be hidden with a switch in "Personal" (showReferences). */
 const referencesHidden = (cv: any): boolean => hiddenIn(cv, 'references') || cv?.personal?.showReferences === false;
+
+/**
+ * The PDF is a picture of the page, drawn at this many pixels per CSS pixel.
+ * 3× (about 290 dpi) keeps photos and small text sharp; long documents use
+ * less so the canvas stays under ~14 million pixels (mobile browsers fail
+ * above ~16.7 million). Never below the previous 2×.
+ */
+const PDF_MAX_SCALE = 3;
+const PDF_MIN_SCALE = 2;
+const PDF_PIXEL_BUDGET = 14_000_000;
+export function pdfRenderScale(element: Pick<HTMLElement, 'scrollWidth' | 'scrollHeight'>): number {
+  const area = Math.max(1, element.scrollWidth * element.scrollHeight);
+  const fit = Math.sqrt(PDF_PIXEL_BUDGET / area);
+  return Math.round(Math.min(PDF_MAX_SCALE, Math.max(PDF_MIN_SCALE, fit)) * 100) / 100;
+}
 
 /**
  * PDF page margin in mm (top, left, bottom, right). Printers cannot print to
@@ -360,7 +376,8 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       institution: edu.institution,
       degree: edu.degree,
       from: edu.startDate,
-      to: edu.isCurrentlyStudying ? undefined : edu.endDate,
+      // Ongoing studies without a start date still say so.
+      to: edu.isCurrentlyStudying ? (edu.startDate ? undefined : 'En curso') : edu.endDate,
       city: edu.location?.split(',')[0]?.trim() || '',
       country: edu.location?.split(',')[1]?.trim() || '',
     })) || [],
@@ -858,8 +875,11 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       const options = {
         margin: PDF_MARGIN_MM,
         filename: `${docMode === 'letter' ? 'carta_' : ''}${(cvData.title || 'cv').replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
-        image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        // 0.88 at 3x keeps a typical CV about the size it had at 0.98 and 2x
+        // (~1.6 MB for two pages, under the usual 2 MB upload limits) while
+        // photos and small text come out noticeably sharper.
+        image: { type: "jpeg" as const, quality: 0.88 },
+        html2canvas: { scale: pdfRenderScale(element), useCORS: true, letterRendering: true },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
         // html2pdf slices one long image every A4 page, which cut lines of
         // text in half. Blocks that would cross a page edge (paragraphs,
@@ -870,10 +890,19 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
 
       const html2pdf = (await import("html2pdf.js")).default;
 
-      html2pdf()
-        .set(options)
-        .from(exportNode)
-        .save()
+      // Prepare the page (with its page breaks), read its text, draw it, then
+      // add that text as an invisible layer: without it the PDF is only
+      // images and an ATS reads nothing (see pdfTextLayer.ts).
+      const worker = html2pdf().set(options).from(exportNode);
+      const exportWithText = async () => {
+        await worker.toContainer();
+        const prop = (worker as unknown as { prop: { container: HTMLElement; pageSize: { k: number; inner: { height: number } } } }).prop;
+        const text = collectPdfText(prop.container, { k: prop.pageSize.k, innerHeight: prop.pageSize.inner.height, margin: PDF_MARGIN_MM });
+        await worker.toPdf();
+        addPdfTextLayer(await worker.get("pdf"), text);
+        await worker.save();
+      };
+      exportWithText()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
           remindGuestAfterDownload();

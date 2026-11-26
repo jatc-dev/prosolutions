@@ -2,6 +2,7 @@ import React from "react";
 import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
+import { TemplateChronological, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
 import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
 /** Label shown before the value, e.g. "Correo personal" or "WhatsApp". */
@@ -74,7 +75,7 @@ export interface CVData {
     fontScaleBody?: number;
     fontScaleHeading?: number;
     sectionTitles?: Partial<Record<SectionTitleKey, string>>;
-    density?: "compact" | "balanced" | "spacious";
+    density?: "tight" | "compact" | "balanced" | "spacious" | "airy";
     sectionSpacing?: number;
     accentColor?: string;
     headingColor?: string;
@@ -194,7 +195,7 @@ const EDUCATION_DEGREE_TRANSLATION_KEYS: Record<string, string> = {
   other: "other",
 };
 
-function getLocalizedDegreeLabel(rawDegree?: string): string {
+export function getLocalizedDegreeLabel(rawDegree?: string): string {
   const degree = String(rawDegree || "").trim();
   if (!degree) {
     return "Título";
@@ -312,7 +313,7 @@ function parseMonthYear(value?: string) {
   return { month: "", year: "" };
 }
 
-function formatMonthYear(value?: string) {
+export function formatMonthYear(value?: string) {
   if (!value) return "";
   if (value === "Actualmente") return "Actualmente";
 
@@ -336,7 +337,7 @@ function formatMonthYear(value?: string) {
   return `${monthNames[idx] ?? month} de ${year}`;
 }
 
-function formatCertificatePeriod(issueDate?: string, expiryDate?: string) {
+export function formatCertificatePeriod(issueDate?: string, expiryDate?: string) {
   const issued = formatMonthYear(issueDate);
   const expires = formatMonthYear(expiryDate);
 
@@ -346,8 +347,9 @@ function formatCertificatePeriod(issueDate?: string, expiryDate?: string) {
   return "";
 }
 
-function formatRange(from?: string, to?: string) {
-  if (!from) return "";
+export function formatRange(from?: string, to?: string) {
+  // Studies may have only an end (graduation) date.
+  if (!from) return to ? formatMonthYear(to) : "";
   if (!to) return formatMonthYear(from);
   return `${formatMonthYear(from)} – ${formatMonthYear(to)}`;
 }
@@ -365,12 +367,12 @@ function formatCountry(value?: string) {
   return country;
 }
 
-function formatLocation(city?: string, country?: string) {
+export function formatLocation(city?: string, country?: string) {
   const parts = [city?.trim(), formatCountry(country)].filter(Boolean);
   return parts.join(", ");
 }
 
-function formatPersonalLocation(personal: CVData["personal"]) {
+export function formatPersonalLocation(personal: CVData["personal"]) {
   const parts = [
     personal?.showAddress === false ? "" : personal?.address,
     personal?.showCity === false ? "" : personal?.city,
@@ -382,7 +384,7 @@ function formatPersonalLocation(personal: CVData["personal"]) {
   return parts.join(", ");
 }
 
-function renderNationality(personal: CVData["personal"], textColor?: string) {
+export function renderNationality(personal: CVData["personal"], textColor?: string) {
   const nationality = formatCountry(personal?.nationality);
   if (!nationality) return null;
   return (
@@ -413,7 +415,7 @@ function formatBirthDate(value?: string) {
   });
 }
 
-function shouldRenderProfileImage(personal: CVData["personal"]) {
+export function shouldRenderProfileImage(personal: CVData["personal"]) {
   return Boolean(personal?.profileImage) && personal?.showProfileImage !== false;
 }
 
@@ -444,7 +446,7 @@ function getProfileImageClass(personal: CVData["personal"], size: "small" | "med
 }
 
 /** Profile photo: a frame with the template's shape and border, the image zoomed and framed inside. */
-function ProfilePhoto({ personal, size = "medium", alt = "Foto de perfil", className = "" }: { personal: CVData["personal"]; size?: "small" | "medium"; alt?: string; className?: string }) {
+export function ProfilePhoto({ personal, size = "medium", alt = "Foto de perfil", className = "" }: { personal: CVData["personal"]; size?: "small" | "medium"; alt?: string; className?: string }) {
   return (
     <span className={`${getProfileImageClass(personal, size)} ${className}`.trim()}>
       <img src={personal?.profileImage} alt={alt} className="cv-photo block h-full w-full object-cover" />
@@ -477,7 +479,7 @@ function calculateAge(value?: string) {
   return age >= 0 ? age : null;
 }
 
-function getPersonalMetaLines(personal: CVData["personal"]) {
+export function getPersonalMetaLines(personal: CVData["personal"]) {
   const lines: string[] = [];
 
   if (personal?.showBirthDate && personal?.birthDate) {
@@ -505,7 +507,7 @@ interface ValuePropositionBlockOptions {
   titleText?: string;
 }
 
-function renderValuePropositionBlock({
+export function renderValuePropositionBlock({
   personal,
   containerClassName,
   titleClassName,
@@ -527,7 +529,7 @@ function renderValuePropositionBlock({
   );
 }
 
-function normalizeSkills(value: any) {
+export function normalizeSkills(value: any) {
   if (!value) return [] as Array<{ id: string; name: string; level?: number }>;
   if (Array.isArray(value)) {
     return value.map((item) => {
@@ -543,7 +545,7 @@ function normalizeSkills(value: any) {
   return [];
 }
 
-function normalizeLanguages(value: any) {
+export function normalizeLanguages(value: any) {
   if (!value) return [] as Array<{ id: string; name: string; level?: string; certificateUrl?: string }>;
   if (Array.isArray(value)) {
     return value.map((item) => {
@@ -560,7 +562,7 @@ function normalizeLanguages(value: any) {
   return [];
 }
 
-function normalizeCertificates(value: any) {
+export function normalizeCertificates(value: any) {
   if (!value) {
     return [] as Array<{
       id: string;
@@ -663,7 +665,7 @@ function ProgressBar({ percent }: { percent: number }) {
   );
 }
 
-function normalizeContactItems(value: unknown): ContactItem[] {
+export function normalizeContactItems(value: unknown): ContactItem[] {
   return toContactItems(value).filter((item) => item.value.trim() !== "");
 }
 
@@ -708,7 +710,7 @@ function ContactIcon({ item }: { item: ContactItem }) {
 }
 
 /** "Correo personal:", an icon, or nothing, as chosen in the editor. */
-function ContactPrefix({ item, className = "font-semibold" }: { item: ContactItem; className?: string }) {
+export function ContactPrefix({ item, className = "font-semibold" }: { item: ContactItem; className?: string }) {
   const style = React.useContext(ContactStyleContext);
   if (style === "none") return null;
   if (style === "icon") return <ContactIcon item={item} />;
@@ -1298,6 +1300,26 @@ function TemplateDeveloper({ data }: { data: CVData }) {
                   <p className="text-xs text-slate-400">{formatRange(item.from, item.to)}</p>
                 </div>
                 {item.description && <p className="mt-2 text-sm text-slate-300 whitespace-pre-line">{item.description}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Education was missing from this template (studies never showed). */}
+      {data.education?.length ? (
+        <section className="mt-8">
+          <h2 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-400">{sectionTitle(data.settings, "education")}</h2>
+          <div className="mt-4 space-y-3">
+            {data.education.map((item) => (
+              <div key={item.id} data-cv-item className="bg-slate-900 p-4 rounded-lg">
+                <div className="flex flex-wrap items-start justify-between gap-x-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{getLocalizedDegreeLabel(item.degree)}</p>
+                    <p className="text-xs text-slate-400">{[item.institution, formatLocation(item.city, item.country)].filter(Boolean).join(" · ")}</p>
+                  </div>
+                  <p className="text-xs text-slate-400">{formatRange(item.from, item.to)}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -2912,6 +2934,14 @@ const TEMPLATE_PAGE_PADDING_X: Record<string, string> = {
   developer: "px-9",
   creative: "px-9",
   classic: "px-9",
+  harvard: "px-10",
+  elegante: "px-10",
+  europea: "px-9",
+  competencias: "px-9",
+  moderna: "px-9",
+  "primer-empleo": "px-9",
+  "dos-columnas": "px-9",
+  cronologica: "px-9",
 };
 
 /** Background and text colours of the dark templates, so the block continues the page. */
@@ -3012,6 +3042,15 @@ const TEMPLATE_COMPONENTS: Record<string, (props: { data: CVData }) => JSX.Eleme
   minimal: TemplateMinimal,
   employment: TemplateEmploymentApplication,
   dafp: TemplateDafp,
+  // Catalog expansion (extraTemplates.tsx).
+  harvard: TemplateHarvard,
+  europea: TemplateEuropean,
+  competencias: TemplateFunctional,
+  moderna: TemplateModern,
+  elegante: TemplateElegant,
+  "primer-empleo": TemplateFirstJob,
+  "dos-columnas": TemplateTwoColumn,
+  cronologica: TemplateChronological,
   // Legacy aliases kept for backward compatibility with existing CVs
   "ats-optimized": TemplateMinimal,
   "photo-professional": TemplateExecutive,

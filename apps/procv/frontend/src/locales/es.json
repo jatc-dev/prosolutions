@@ -728,6 +728,7 @@
         "gpa": "Promedio Académico"
       },
       "help": {
+        "startDateOptional": "Opcional",
         "degree": "Selecciona el tipo de formacion academica",
         "fieldOfStudy": "Ej: Administración de Empresas, Enfermería",
         "location": "Ciudad, País (opcional)",
@@ -1344,6 +1345,15 @@
       "cvTitlePlaceholder": "Mi CV Profesional"
     },
     "templates": {
+      "ats": "Estándar",
+      "harvard": "Harvard",
+      "europea": "Europea",
+      "competencias": "Por competencias",
+      "moderna": "Moderna",
+      "elegante": "Elegante",
+      "primer-empleo": "Primer empleo",
+      "dos-columnas": "Dos columnas",
+      "cronologica": "Cronológica",
       "sidebar": "Panel lateral",
       "minimal": "Minimalista",
       "corporate": "Profesional",

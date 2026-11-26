@@ -23,7 +23,8 @@ export function monthYear(value?: string): string {
 
 export function period(start?: string, end?: string, current?: boolean): string {
   const from = monthYear(start);
-  const to = current ? "actualidad" : monthYear(end);
+  // Ongoing studies without a start date: "en curso" alone, not "actualidad".
+  const to = current ? (from ? "actualidad" : "en curso") : monthYear(end);
   return [from, to].filter(Boolean).join(" – ");
 }
 
@@ -213,6 +214,25 @@ export function docxTheme(template: string | undefined, rawSettings?: unknown): 
       break;
     case "dafp":
       theme = { ...base, bodyFont: "Arial", headingFont: "Arial", headingStyle: "bar", header: "centered", nameSize: 30, bodySize: 19, formTitle: "FORMATO ÚNICO · HOJA DE VIDA · PERSONA NATURAL" };
+      break;
+    // Catalog expansion: the Word file keeps each design's character.
+    case "harvard":
+      theme = { ...base, bodyFont: "Georgia", headingFont: "Georgia", header: "centered", nameSize: 36 };
+      break;
+    case "elegante":
+      theme = { ...base, bodyFont: "Georgia", headingFont: "Georgia", header: "centered", nameSize: 44, photo: true };
+      break;
+    case "moderna":
+      theme = { ...base, headingStyle: "bar", nameSize: 48, photo: true };
+      break;
+    case "europea":
+    case "dos-columnas":
+    case "primer-empleo":
+    case "competencias":
+      theme = { ...base, headingStyle: "plain", nameSize: 40, photo: true };
+      break;
+    case "cronologica":
+      theme = { ...base, nameSize: 40, photo: true };
       break;
     default:
       theme = base;

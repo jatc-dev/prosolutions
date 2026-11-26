@@ -560,15 +560,15 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
 
                   {/* Dates */}
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    {/* Optional: for studies the end (graduation) date is what matters. */}
                     <FormField
                       label={t('editor.education.fields.startDate')}
-                      required
+                      help={t('editor.education.help.startDateOptional', 'Opcional')}
                       error={errors[`education.${education.id}.startDate`]?.[0]}
                     >
                       <DateField
                         value={education.startDate}
                         onChange={(value) => updateEducation(education.id, { startDate: value })}
-                        required
                        allowPartial/>
                     </FormField>
 
