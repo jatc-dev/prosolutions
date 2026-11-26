@@ -24,10 +24,12 @@ interface ActionMenuProps {
   disabled?: boolean;
   /** Show the label on narrow screens too. */
   alwaysShowLabel?: boolean;
+  /** Side the menu opens towards (default: aligned to the button's right edge). */
+  align?: "left" | "right";
 }
 
 /** Toolbar button that opens a small menu (keyboard: arrows, Escape). */
-export function ActionMenu({ label, ariaLabel, title, icon, items, menuLabel, buttonClassName, disabled, alwaysShowLabel }: ActionMenuProps) {
+export function ActionMenu({ label, ariaLabel, title, icon, items, menuLabel, buttonClassName, disabled, alwaysShowLabel, align = "right" }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -59,7 +61,7 @@ export function ActionMenu({ label, ariaLabel, title, icon, items, menuLabel, bu
   };
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative inline-block">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -81,7 +83,7 @@ export function ActionMenu({ label, ariaLabel, title, icon, items, menuLabel, bu
           role="menu"
           aria-label={menuLabel}
           onKeyDown={onMenuKey}
-          className="absolute right-0 z-40 mt-2 w-72 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className={`absolute ${align === "left" ? "left-0" : "right-0"} z-40 mt-2 w-72 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900`}
         >
           {items.map((item) => (
             <button

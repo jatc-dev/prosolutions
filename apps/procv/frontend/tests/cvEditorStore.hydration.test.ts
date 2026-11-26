@@ -11,7 +11,7 @@ vi.mock('react-hot-toast', () => ({
 const STORAGE_KEY = 'cv-editor-storage';
 
 function persistState(state: Record<string, unknown>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, version: 0 }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { persistedAt: Date.now(), ...state }, version: 0 }));
 }
 
 function clearStorage() {

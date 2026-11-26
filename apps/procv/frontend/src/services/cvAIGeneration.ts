@@ -1,7 +1,7 @@
 import type { CVData } from "../types";
 import { api } from "./api";
 
-export type AISection = "summary" | "experience" | "skills" | "coverLetter";
+export type AISection = "summary" | "experience" | "skills" | "valueProposition" | "coverLetter";
 
 export interface AIGenerationRequest {
   /** What the user wants (e.g. "hazlo más conciso"). */
@@ -30,6 +30,7 @@ export function sectionText(cv: CVData, section: AISection): string {
   if (section === "summary") return cv.personal?.summary ?? "";
   if (section === "skills") return (cv.skills ?? []).map((skill) => skill.name).filter(Boolean).join(", ");
   if (section === "coverLetter") return cv.coverLetter?.body ?? "";
+  if (section === "valueProposition") return cv.personal?.valueProposition ?? "";
   const latest = cv.experience?.[0];
   if (!latest) return "";
   return [
@@ -41,24 +42,39 @@ export function sectionText(cv: CVData, section: AISection): string {
     .join("\n");
 }
 
-/** Whether the server has the AI assistant configured (it needs a signed-in user to be used). */
-export async function isAiAvailable(): Promise<boolean> {
-  try {
-    const { data } = await api.get("/ai/status");
-    return Boolean(data?.available);
-  } catch {
-    return false;
-  }
+/**
+ * Whether the server has the AI assistant configured (it needs a signed-in
+ * user to be used). Several fields ask at once, so the answer is shared for a
+ * few minutes; a failed check is retried on the next call.
+ */
+let availability: { at: number; value: Promise<boolean> } | null = null;
+const AVAILABILITY_TTL_MS = 5 * 60 * 1000;
+export function isAiAvailable(): Promise<boolean> {
+  if (availability && Date.now() - availability.at < AVAILABILITY_TTL_MS) return availability.value;
+  const value = api
+    .get("/ai/status")
+    .then(({ data }) => Boolean(data?.available))
+    .catch(() => {
+      availability = null;
+      return false;
+    });
+  availability = { at: Date.now(), value };
+  return value;
 }
 
-/** Ask the ProCV AI assistant (Claude, server-side) to improve a CV section. */
-export async function generateCVContent(request: AIGenerationRequest): Promise<AIGenerationResponse> {
+/** Test hook. */
+export function resetAiAvailabilityForTests(): void {
+  availability = null;
+}
+
+/** Improves one piece of CV text (a field), with the saved CV as context. */
+export async function improveText(request: { section: AISection; text: string; instruction: string; cvId?: string }): Promise<AIGenerationResponse> {
   try {
     const { data } = await api.post("/ai/improve", {
       section: request.section,
-      instruction: request.prompt,
-      text: sectionText(request.currentCV, request.section),
-      ...(request.currentCV.id ? { cvId: request.currentCV.id } : {}),
+      instruction: request.instruction,
+      text: request.text,
+      ...(request.cvId ? { cvId: request.cvId } : {}),
     });
     return {
       suggestion: data.suggestion,
@@ -73,4 +89,14 @@ export async function generateCVContent(request: AIGenerationRequest): Promise<A
       response?.data?.code || "ai_error",
     );
   }
+}
+
+/** Ask the ProCV AI assistant (server-side) to improve a whole CV section. */
+export function generateCVContent(request: AIGenerationRequest): Promise<AIGenerationResponse> {
+  return improveText({
+    section: request.section,
+    instruction: request.prompt,
+    text: sectionText(request.currentCV, request.section),
+    cvId: request.currentCV.id,
+  });
 }

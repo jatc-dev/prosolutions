@@ -32,7 +32,6 @@ import { TemplateSelector } from "./components/TemplateSelector";
 import { createEmptyItem } from "./components/DraggableBlock";
 import { CustomizerPanel } from "./components/CustomizerPanel";
 import { EditorDisclosure } from "./components/EditorDisclosure";
-import { AIPanel } from "./components/AIPanel";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
 
@@ -44,12 +43,16 @@ import { SkillsSection } from "./sections/SkillsSection";
 import { LanguagesSection } from "./sections/LanguagesSection";
 import { CertificatesSection } from "./sections/CertificatesSection";
 import { LinksSection } from "./sections/LinksSection";
+import { ReferencesSection, createReference } from "./sections/ReferencesSection";
 import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplicationSection";
 
 // Templates and Suggestions Components
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
-import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Upload } from "lucide-react";
+import { GuestBanner } from "./components/GuestBanner";
+import { GuestDataDialog, type GuestDataDialogMode } from "./components/GuestDataDialog";
+import { hasCvContent, isGuestDataExpired } from "../../../../shared/stores/cvEditorStore";
+import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Trash2, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
 import { DownloadMenu } from "./components/DownloadMenu";
 import { professionalCardText } from "../../professionalCard";
@@ -66,6 +69,8 @@ interface CompleteCVEditorProps {
 /** True when the user hid this section from the CV (+/− under the section tabs). */
 const hiddenIn = (cv: any, section: string): boolean =>
   Array.isArray(cv?.settings?.hiddenSections) && cv.settings.hiddenSections.includes(section);
+/** References used to be hidden with a switch in "Personal" (showReferences). */
+const referencesHidden = (cv: any): boolean => hiddenIn(cv, 'references') || cv?.personal?.showReferences === false;
 
 /**
  * PDF page margin in mm (top, left, bottom, right). Printers cannot print to
@@ -308,9 +313,10 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       showDocumentIdentity: Boolean(cvData.personal?.showDocumentIdentity),
       professionalCard: professionalCardText(cvData.personal),
       sidebarIntroMode: cvData.personal?.sidebarIntroMode || 'valueProposition',
-      references: cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
-      showReferences: cvData.personal?.showReferences !== false,
-      referencesAvailableOnRequest: Boolean(cvData.personal?.referencesAvailableOnRequest),
+      // Hidden "Referencias" tab (or the old "Incluir referencias" switch): nothing is printed.
+      references: referencesHidden(cvData) ? [] : cvData.personal?.references?.filter((item: any) => item.isVisible !== false) || [],
+      showReferences: !referencesHidden(cvData),
+      referencesAvailableOnRequest: !referencesHidden(cvData) && Boolean(cvData.personal?.referencesAvailableOnRequest),
       valueProposition: cvData.personal?.valueProposition,
       showValuePropositionTitle: cvData.personal?.showValuePropositionTitle !== false,
       showValuePropositionContent: cvData.personal?.showValuePropositionContent !== false,
@@ -431,6 +437,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     getSectionCompletion,
     setTemplate,
     setIsGuest,
+    discardGuestData,
   } = useCVEditorStore();
 
   // Which document is being edited: the CV or its cover letter (remembered per browser).
@@ -464,7 +471,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   const [pendingImportData, setPendingImportData] = useState<ParsedCvDraft | null>(null);
   const [pendingMergedData, setPendingMergedData] = useState<Partial<CVData> | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const showAIPanel = false;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -525,9 +531,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   // A guest draft already lives in this browser (persisted editor store).
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
+  const [guestDialog, setGuestDialog] = useState<GuestDataDialogMode | null>(null);
   const handleBack = useCallback(async () => {
     if (!isAuthenticated) {
-      navigate('/');
+      // Guests are reminded that the CV only lives in this browser.
+      if (hasCvContent(useCVEditorStore.getState().cvData)) setGuestDialog('leave');
+      else navigate('/');
       return;
     }
     if (hasUnsavedChanges) {
@@ -541,6 +550,38 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     }
     navigate('/dashboard');
   }, [isAuthenticated, hasUnsavedChanges, saveCV, navigate, t]);
+
+  const clearGuestCv = useCallback((thenLeave: boolean) => {
+    discardGuestData();
+    setGuestDialog(null);
+    toast.success(tx('editor.guest.cleared', 'Borramos tu hoja de vida de este navegador.'));
+    if (thenLeave) navigate('/');
+  }, [discardGuestData, navigate]);
+
+  // Public computers: a guest CV is deleted 2 hours after its last change,
+  // also while the tab stays open.
+  useEffect(() => {
+    if (!isGuest) return;
+    const check = () => {
+      if (!isGuestDataExpired()) return;
+      const hadContent = hasCvContent(useCVEditorStore.getState().cvData);
+      discardGuestData();
+      if (hadContent) toast(tx('editor.guest.expired', 'Por seguridad borramos tu hoja de vida de este navegador tras 2 horas sin cambios.'), { duration: 8000 });
+    };
+    check();
+    const timer = window.setInterval(check, 60_000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [isGuest, discardGuestData]);
+
+  // After a guest downloads, remind them where the CV lives.
+  const remindGuestAfterDownload = useCallback(() => {
+    if (!useCVEditorStore.getState().isGuest) return;
+    toast(tx('editor.guest.afterDownload', 'Listo. En este equipo tu hoja de vida se borra tras 2 horas sin cambios: crea una cuenta gratis para guardarla en la nube.'), { duration: 9000, icon: '☁️' });
+  }, []);
 
   // Handle manual save
   const handleSave = useCallback(async () => {
@@ -744,6 +785,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       if (docMode === 'letter') await exportCoverLetterDocx(cvData);
       else await exportCvDocx(cvData);
       toast.success(t("editor.export.docxSuccess", "Documento de Word descargado"));
+      remindGuestAfterDownload();
       trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'docx', template: cvData.template });
     } catch (error) {
       console.error("DOCX export error:", error);
@@ -751,7 +793,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     } finally {
       setIsExportingDocx(false);
     }
-  }, [cvData, docMode, t]);
+  }, [cvData, docMode, t, remindGuestAfterDownload]);
 
   // Export PDF using html2pdf.js - works with local guest state (no cvId required)
   const handleExportPdf = useCallback(async () => {
@@ -834,6 +876,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
+          remindGuestAfterDownload();
           trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'pdf', template: cvData.template });
         })
         .catch((error: any) => {
@@ -848,7 +891,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t]);
+  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t, remindGuestAfterDownload]);
 
   // Get completion status for all sections
   const completionStatus = {
@@ -859,6 +902,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     languages: getSectionCompletion('languages'),
     certificates: getSectionCompletion('certificates'),
     links: getSectionCompletion('links'),
+    references: getSectionCompletion('references'),
     application: Boolean(cvData.application && Object.values(cvData.application).some((value) => String(value || '').trim())),
   };
 
@@ -896,10 +940,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   };
 
   // +/- under each section tab: add the first item, hide (data kept) or show again.
-  const OPTIONAL_SECTIONS = ['experience', 'education', 'skills', 'languages', 'certificates', 'links'] as const;
+  const OPTIONAL_SECTIONS = ['experience', 'education', 'skills', 'languages', 'certificates', 'links', 'references'] as const;
   type OptionalSection = typeof OPTIONAL_SECTIONS[number];
   const hiddenSections: string[] = Array.isArray(cvData.settings?.hiddenSections) ? cvData.settings.hiddenSections : [];
-  const sectionStatus = Object.fromEntries(OPTIONAL_SECTIONS.map((section) => [section, {
+  const sectionStatus = Object.fromEntries(OPTIONAL_SECTIONS.map((section) => [section, section === 'references' ? {
+    // References live in personal data; "disponibles a solicitud" alone also counts.
+    count: (cvData.personal?.references?.length ?? 0) + (cvData.personal?.referencesAvailableOnRequest ? 1 : 0),
+    hidden: referencesHidden(cvData),
+  } : {
     count: Array.isArray(cvData[section]) ? cvData[section].length : 0,
     hidden: hiddenSections.includes(section),
   }])) as Record<OptionalSection, { count: number; hidden: boolean }>;
@@ -909,8 +957,15 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     const setHidden = (next: string[]) => updateCvData({ settings: { ...(cvData.settings || {}), hiddenSections: next } });
     if (sectionStatus[key].hidden) {
       setHidden(hiddenSections.filter((item) => item !== key));
+      // Clear the old switch too, or the section would stay hidden.
+      if (key === 'references' && cvData.personal?.showReferences === false) updatePersonal({ ...cvData.personal, showReferences: true });
     } else if (sectionStatus[key].count === 0) {
-      handleAddBlock(key);
+      if (key === 'references') {
+        updatePersonal({ ...cvData.personal, references: [createReference('laboral')] });
+        setActiveSection('references');
+      } else {
+        handleAddBlock(key);
+      }
     } else {
       setHidden([...hiddenSections, key]);
       toast(t('editor.sectionToggle.hiddenToast', 'Sección oculta en la hoja de vida. Tus datos se conservan.'));
@@ -1055,6 +1110,14 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             {...commonProps}
           />
         );
+      case 'references':
+        return (
+          <ReferencesSection
+            personal={cvData.personal}
+            onChange={(changes) => updatePersonal({ ...cvData.personal, ...changes })}
+            isLoading={isLoading}
+          />
+        );
       default:
         return null;
     }
@@ -1083,31 +1146,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     );
   }
 
-  // Guest banner component - only rendered when isGuest === true
-  const GuestBanner = () => (
-    <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 dark:bg-amber-950/30 dark:border-amber-800">
-      <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center space-x-2">
-          <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
-          </svg>
-          <span className="text-sm text-amber-800 dark:text-amber-200">
-            Estás en Modo Invitado. Tus cambios se guardan automáticamente en tu navegador.
-          </span>
-        </div>
-        <a
-          href="/auth"
-          className="inline-flex items-center px-3 py-1 text-xs font-medium text-amber-900 bg-amber-100 rounded-md hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-100 dark:hover:bg-amber-900/70 transition-colors"
-        >
-          Guardar en la nube (Gratis)
-          <svg className="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  );
-
   return (
     <>
       <DndContext
@@ -1123,7 +1161,22 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             onApply={handleApplyImportReview}
           />
 
-          {isGuest && <GuestBanner />}
+          {isGuest && <GuestBanner onClearData={() => setGuestDialog('clear')} />}
+          {guestDialog ? (
+            <GuestDataDialog
+              mode={guestDialog}
+              onClose={() => setGuestDialog(null)}
+              onDownload={() => {
+                setGuestDialog(null);
+                void handleExportPdf();
+              }}
+              onLeave={() => {
+                setGuestDialog(null);
+                navigate('/');
+              }}
+              onClear={() => clearGuestCv(guestDialog === 'leave')}
+            />
+          ) : null}
 
           {/* Header: one row of actions. Frequent ones are buttons; occasional
               ones live in "Más"; Descargar and Guardar close the row. Secondary
@@ -1238,6 +1291,13 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     icon: <Upload className="h-5 w-5 text-brand-700" />,
                     onSelect: handleImportClick,
                   },
+                  ...(isGuest ? [{
+                    label: tx('editor.guest.clearData', 'Borrar mis datos de este navegador'),
+                    description: tx('editor.guest.clearDataHint', 'Para computadores públicos. Se borran solos tras 2 horas sin cambios.'),
+                    icon: <Trash2 className="h-5 w-5 text-red-600" />,
+                    onSelect: () => setGuestDialog('clear'),
+                    tone: 'danger' as const,
+                  }] : []),
                   {
                     label: t('editor.actions.reset'),
                     description: tx('editor.ui.resetHint', 'Borra el contenido y empieza de cero. Pide confirmación.'),
@@ -1339,48 +1399,6 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             style={{ width: isSplit && showPreview ? `${panelSizes.editor}%` : '100%' }}
           >
             <div className="p-4 sm:p-6">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => undefined}
-                  className="hidden"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 6.364m-.707 7.507a4 4 0 11-5.656-5.656 4 4 0 015.656 5.656m-5.656-5.656a4 4 0 10-5.656 5.656 4 4 0 005.656-5.656" />
-                  </svg>
-                  {showAIPanel ? t('editor.ai.hide', 'Ocultar IA') : t('editor.ai.show', 'Asistente IA')}
-                </button>
-              </div>
-
-              {showAIPanel && (
-                <div className="mt-4">
-                  <AIPanel
-                    cvData={cvData}
-                    onApply={(section, content) => {
-                      if (section === 'summary') {
-                        updatePersonal({ ...cvData.personal, summary: content });
-                      } else if (section === 'experience' && cvData.experience.length > 0) {
-                        const [latest, ...rest] = cvData.experience;
-                        updateExperience([{ ...latest, description: content }, ...rest]);
-                      } else if (section === 'skills') {
-                        const newSkills = content.split(',').map((name, index) => ({
-                          id: `ai-skill-${Date.now()}-${index}`,
-                          name: name.trim(),
-                          category: 'technical' as const,
-                          level: 'intermediate' as const,
-                          yearsOfExperience: undefined,
-                          isCertified: false,
-                          certificationName: '',
-                          order: cvData.skills.length + index,
-                        }));
-                        updateSkills([...cvData.skills, ...newSkills]);
-                      }
-                      toast.success(t('editor.ai.applied', 'Contenido de IA aplicado'));
-                    }}
-                  />
-                </div>
-              )}
-
               {docMode === 'letter' ? (
                 <div className="mt-4 rounded-lg border border-slate-200 p-4 sm:p-6 dark:border-slate-700">
                   <CoverLetterSection cv={cvData} onChange={(coverLetter) => updateCvData({ coverLetter })} />

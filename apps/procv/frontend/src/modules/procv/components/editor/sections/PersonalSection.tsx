@@ -13,6 +13,7 @@ import {
   DateField
 } from "../FormSection";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
+import { AiImproveField } from "../components/AiImproveField";
 import { appendPhrase } from "../../../phrases";
 import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
 import { PROFESSIONAL_CARD_ISSUERS } from "../../../professionalCard";
@@ -178,20 +179,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
     } catch (err) {
       toast.error(t('editor.personal.alerts.updateError', 'Error actualizando el campo'));
     }
-  };
-
-  const toggleReferenceField = (index: number, field: string, visible: boolean) => {
-    const references = [...(data.references || [])];
-    const reference = references[index];
-    if (!reference) return;
-    const hiddenFields = reference.hiddenFields || [];
-    references[index] = {
-      ...reference,
-      hiddenFields: visible
-        ? hiddenFields.filter((item) => item !== field)
-        : [...hiddenFields.filter((item) => item !== field), field],
-    };
-    updateField('references', references);
   };
 
   // Photo framing (0–100 %, 50 = centred) and border, shared with the templates.
@@ -913,6 +900,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.valueProposition')}
             rows={4}
           />
+          <AiImproveField
+            section="valueProposition"
+            text={data.valueProposition || ''}
+            onApply={(value) => onChange({ ...data, valueProposition: value })}
+            fieldLabel="la propuesta de valor"
+          />
 
           <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
             <label className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -939,6 +932,12 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
             placeholder={t('editor.personal.placeholders.summary')}
             rows={6}
           />
+          <AiImproveField
+            section="summary"
+            text={data.summary || ''}
+            onApply={(value) => updateField('summary', value)}
+            fieldLabel="el perfil profesional"
+          />
           <PhraseSuggestions
             title={data.professionalTitle}
             kind="summaries"
@@ -957,24 +956,6 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
           </div>
         </div>
       </FormField>
-      <section className="space-y-4">
-        <div><h4 className="text-sm font-semibold text-slate-900">{tx('editor.ui.references', 'Referencias')}</h4><p className="text-xs text-slate-500">{tx('editor.ui.referencesHint', 'Se mostrarán al final del contenido principal de la hoja de vida.')}</p></div>
-        <div className="space-y-2">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={data.showReferences !== false} onChange={(e) => updateField('showReferences', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.includeReferences', 'Incluir referencias directas')}</label>
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.referencesAvailableOnRequest)} onChange={(e) => updateField('referencesAvailableOnRequest', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.referencesOnRequest', 'Mostrar «Referencias laborales y personales: Disponibles a solicitud.»')}</label>
-        </div>
-        {data.showReferences !== false ? <>
-          <div className="flex justify-end"><button type="button" onClick={() => updateField('references', [...(data.references || []), { id: generateId(), type: 'laboral', isVisible: true, name: '', position: '', company: '', relationship: '', phone: '', email: '' }])} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">{tx('editor.ui.addReference', 'Agregar referencia')}</button></div>
-          {(data.references || []).map((reference, index) => <div key={reference.id} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
-            <div className="sm:col-span-2"><VisibilityToggle checked={reference.isVisible !== false} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, isVisible: value } : item))} label={tx('editor.ui.showThisReference', 'Mostrar esta referencia')} /></div><FormField label={tx('editor.ui.referenceType', 'Tipo de referencia')}><select value={reference.type} onChange={(e) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, type: e.target.value as 'personal' | 'laboral' } : item))} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"><option value="laboral">{tx('editor.ui.professional', 'Laboral')}</option><option value="personal">{tx('editor.ui.personalFamily', 'Familiar / personal')}</option></select></FormField>
-            <FormField label={tx('editor.ui.fullName', 'Nombre y apellido')}><InputField value={reference.name} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, name: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('name')} onChange={(value) => toggleReferenceField(index, 'name', value)} label={tx('editor.ui.showName', 'Mostrar nombre')} />
-            {reference.type === 'laboral' ? <><FormField label={tx('editor.ui.currentPosition', 'Cargo actual')}><InputField value={reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('position')} onChange={(value) => toggleReferenceField(index, 'position', value)} label={tx('editor.ui.showPosition', 'Mostrar cargo')} /><FormField label={tx('editor.ui.company', 'Empresa')}><InputField value={reference.company || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, company: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('company')} onChange={(value) => toggleReferenceField(index, 'company', value)} label={tx('editor.ui.showCompany', 'Mostrar empresa')} /></> : <><FormField label={tx('editor.ui.relationship', 'Parentesco')}><InputField value={reference.relationship || reference.position || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, relationship: value, position: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('relationship')} onChange={(value) => toggleReferenceField(index, 'relationship', value)} label={tx('editor.ui.showRelationship', 'Mostrar parentesco')} /></>}
-            <FormField label={tx('editor.ui.contactPhone', 'Teléfono de contacto')}><InputField type="tel" value={reference.phone || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, phone: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('phone')} onChange={(value) => toggleReferenceField(index, 'phone', value)} label={tx('editor.ui.showPhone', 'Mostrar teléfono')} />
-            <FormField label={tx('editor.ui.email', 'Correo electrónico')}><InputField type="email" value={reference.email || ''} onChange={(value) => updateField('references', (data.references || []).map((item, i) => i === index ? { ...item, email: value } : item))} /></FormField><VisibilityToggle checked={!(reference.hiddenFields || []).includes('email')} onChange={(value) => toggleReferenceField(index, 'email', value)} label={tx('editor.ui.showEmail', 'Mostrar correo')} />
-            <div className="sm:col-span-2 flex justify-end"><button type="button" onClick={() => updateField('references', (data.references || []).filter((_, i) => i !== index))} className="text-xs font-medium text-red-600 hover:text-red-700">{tx('editor.ui.removeReference', 'Eliminar referencia')}</button></div>
-          </div>)}
-        </> : null}
-      </section>
 
     </FormSection>
   );

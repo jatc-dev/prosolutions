@@ -48,7 +48,7 @@ describe("Word export", () => {
     expect(experience[0]).toMatchObject({ title: "Auxiliar contable — Andina", subtitle: "marzo 2021 – actualidad · Bogotá", bullets: ["Reduje el cierre a 3 días."] });
     expect(content.sections[3]!.blocks[0]!.bullets).toEqual(["Inglés: intermedio (B1)"]);
     const references = content.sections[4]!.blocks;
-    expect(references[0]!.subtitle).toBe("Laboral · Jefe, Andina");
+    expect(references[0]!.subtitle).toBe("Laboral · Jefe · Andina");
     expect(references[1]!.text).toContain("disponibles a solicitud");
   });
 

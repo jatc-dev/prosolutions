@@ -2,6 +2,7 @@ import type { CVData } from "../../types";
 import { defaultGreeting, formatLetterDate, letterParagraphs } from "./coverLetter";
 import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
 import { sectionTitle } from "./sectionTitles";
+import { groupReferences, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences } from "./references";
 
 /**
  * Word (.docx) export. The text comes from the CV data (real, editable text
@@ -86,24 +87,21 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
       blocks: certificates.map((item) => ({ title: item.title, subtitle: [item.issuingOrganization, monthYear(item.issueDate)].filter(Boolean).join(" · ") })),
     });
   }
-  const references = personal?.showReferences === false ? [] : visible(personal?.references).filter((item) => item.name);
+  const references = personal?.showReferences === false ? [] : visibleReferences(personal?.references);
   if (references.length || personal?.referencesAvailableOnRequest) {
+    const groups = groupReferences(references);
     sections.push({
       key: "references",
-      heading: "Referencias",
+      heading: sectionTitle(cv.settings, "references"),
       blocks: [
-        ...references.map((item) => {
-          const hidden = item.hiddenFields ?? [];
-          const show = (field: string) => !hidden.includes(field);
-          const role = item.type === "laboral"
-            ? [show("position") ? item.position : "", show("company") ? item.company : ""].filter(Boolean).join(", ")
-            : show("relationship") ? item.relationship || item.position || "" : "";
-          return {
-            title: show("name") ? item.name : undefined,
-            subtitle: [item.type === "laboral" ? "Laboral" : "Personal", role, show("phone") ? item.phone : "", show("email") ? item.email : ""].filter(Boolean).join(" · "),
-          };
-        }),
-        ...(personal?.referencesAvailableOnRequest ? [{ text: "Referencias laborales y personales: disponibles a solicitud." }] : []),
+        ...groups.flatMap((group) => [
+          ...(groups.length > 1 ? [{ text: group.label }] : []),
+          ...group.items.map((item) => ({
+            title: referenceName(item) || undefined,
+            subtitle: [groups.length > 1 ? "" : REFERENCE_TYPE_LABELS[group.type].one, ...referenceDetails(item), ...referenceContact(item)].filter(Boolean).join(" · "),
+          })),
+        ]),
+        ...(personal?.referencesAvailableOnRequest ? [{ text: REFERENCES_ON_REQUEST_TEXT }] : []),
       ],
     });
   }
