@@ -1,4 +1,5 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
+import { toolGuide } from "../../content/toolGuides";
 import { Link } from "react-router-dom";
 import { AdSlot, APP_URLS } from "@prosolutions/ui";
 import { TOOLS, getTool, type ToolSlug } from "../../content/tools";
@@ -120,6 +121,7 @@ interface ToolShellProps {
  */
 function ToolShell({ slug, form, results, formula, disclaimer }: ToolShellProps) {
   const tool = getTool(slug)!;
+  const guide = toolGuide(slug);
   useDocumentHead(headForPath(`/tools/${slug}`));
   return (
     <PublicLayout breadcrumbs={[{ name: "Herramientas", path: "/tools" }, { name: tool.shortTitle, path: `/tools/${slug}` }]}>
@@ -152,6 +154,56 @@ function ToolShell({ slug, form, results, formula, disclaimer }: ToolShellProps)
           <h2 id="formula" className="text-xl font-semibold text-ui-text">Cómo se calcula</h2>
           <div className="mt-3 space-y-3 text-[15px] leading-7 text-ui-text">{formula}</div>
         </section>
+
+        {guide ? (
+          <>
+            <section aria-labelledby="ejemplo" className="mt-10 max-w-3xl">
+              <h2 id="ejemplo" className="text-xl font-semibold text-ui-text">Ejemplo con cifras {PARAMS.year}</h2>
+              <p className="mt-3 text-[15px] leading-7 text-ui-text">{guide.example.intro}</p>
+              <dl className="mt-3 divide-y divide-ui-border rounded-ui-lg border border-ui-border bg-ui-surface text-sm">
+                {guide.example.rows.map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-4 px-4 py-2">
+                    <dt className="text-ui-muted">{label}</dt>
+                    <dd className="shrink-0 tabular-nums text-ui-text">{value}</dd>
+                  </div>
+                ))}
+                <div className="flex items-baseline justify-between gap-4 bg-ui-soft px-4 py-2.5">
+                  <dt className="font-semibold text-ui-text">{guide.example.result[0]}</dt>
+                  <dd className="shrink-0 text-base font-bold tabular-nums text-ui-text">{guide.example.result[1]}</dd>
+                </div>
+              </dl>
+              {guide.example.note ? <p className="mt-2 text-sm text-ui-muted">{guide.example.note}</p> : null}
+            </section>
+
+            <section aria-labelledby="preguntas" className="mt-10 max-w-3xl">
+              <h2 id="preguntas" className="text-xl font-semibold text-ui-text">Preguntas frecuentes</h2>
+              <div className="mt-3 divide-y divide-ui-border rounded-ui-lg border border-ui-border bg-ui-surface">
+                {guide.faq.map((item) => (
+                  <details key={item.q} className="px-4 py-3">
+                    <summary className="cursor-pointer font-semibold text-ui-text">{item.q}</summary>
+                    <p className="mt-2 text-sm leading-6 text-ui-muted">{item.a}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            <nav aria-labelledby="otras" className="mt-10 max-w-3xl">
+              <h2 id="otras" className="text-xl font-semibold text-ui-text">Otras calculadoras</h2>
+              <ul className="mt-3 grid gap-3 sm:grid-cols-3">
+                {guide.related.map((related) => {
+                  const info = getTool(related)!;
+                  return (
+                    <li key={related}>
+                      <Link to={`/tools/${related}/`} className="block h-full rounded-ui-lg border border-ui-border bg-ui-surface p-4 text-sm font-semibold text-ui-text hover:border-ui-accent">
+                        {info.shortTitle}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </>
+        ) : null}
 
         <aside className="mt-8 max-w-3xl rounded-ui-lg border border-ui-border bg-ui-soft p-4 text-sm leading-6 text-ui-muted">
           <strong className="text-ui-text">Aviso legal.</strong>{" "}

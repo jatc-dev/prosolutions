@@ -3,6 +3,7 @@ import { ARTICLES, AUTHORS, CATEGORIES, getArticle } from "../content/academy";
 import { ABOUT_PAGE, LEGAL_DOCUMENTS } from "../content/legal";
 import { SITE, absoluteUrl } from "../content/site";
 import { TOOLS, getTool } from "../content/tools";
+import { toolGuide } from "../content/toolGuides";
 import { DAFP_FAQ, FORMAT_1003_FAQ, FORMAT_PAGES_UPDATED, TEMPLATE_CARDS, type FaqItem } from "../content/formats";
 import { PHRASE_FAMILIES as ALL_PHRASE_FAMILIES } from "../../../procv/frontend/src/modules/procv/phrases";
 /** Example pages exist for job families only ("general" is the editor catch-all). */
@@ -307,6 +308,7 @@ export function headForPath(rawPath: string): PageHead | null {
       modifiedAt: tool.updatedAt,
       jsonLd: [
         webPage("WebPage", tool.title, tool.description, path, { dateModified: tool.updatedAt }),
+        ...(toolGuide(tool.slug) ? [faqPage(toolGuide(tool.slug)!.faq)] : []),
         breadcrumb([
           { name: "Herramientas", path: "/tools" },
           { name: tool.shortTitle, path },
