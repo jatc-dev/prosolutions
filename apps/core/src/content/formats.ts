@@ -4,7 +4,7 @@
  * Each one links to the ProCV editor with the template already selected.
  */
 
-export const FORMAT_PAGES_UPDATED = "2026-11-21";
+export const FORMAT_PAGES_UPDATED = "2026-11-26";
 
 export interface FaqItem {
   q: string;
@@ -52,6 +52,22 @@ export const TEMPLATE_CARDS: TemplateCard[] = [
 ];
 
 export const DAFP_FAQ: FaqItem[] = [
+  {
+    q: "¿Dónde descargo el formato único de hoja de vida en blanco?",
+    a: "El Departamento Administrativo de la Función Pública publica el formato oficial en su sitio web. Aquí no necesitas descargarlo en blanco: lo llenas en línea, con tus datos ordenados por secciones, y descargas el resultado en PDF para imprimir y firmar, o en Word si la entidad te pide un archivo editable.",
+  },
+  {
+    q: "¿El formato único de hoja de vida lleva foto?",
+    a: "No. El Formato Único de Hoja de Vida – Persona Natural no tiene casilla para foto. Si una entidad te pide una hoja de vida con foto además del formato, puedes hacerla con cualquiera de las otras plantillas.",
+  },
+  {
+    q: "¿Cuál es la diferencia entre persona natural y persona jurídica?",
+    a: "El formato de persona natural es el que llenas tú como individuo, para un empleo público o un contrato de prestación de servicios. Las empresas y entidades que contratan con el Estado usan el formato de persona jurídica, que pide los datos de la organización y de su representante legal. Esta guía y la plantilla son para persona natural.",
+  },
+  {
+    q: "¿En qué orden se registra la experiencia laboral?",
+    a: "Empezando por el empleo o contrato actual (o el último) y siguiendo hacia atrás, con fechas de ingreso y retiro que coincidan con tus certificados laborales.",
+  },
   {
     q: "¿El Formato Único de Hoja de Vida es obligatorio?",
     a: "Lo exigen las entidades públicas para vincular servidores públicos y para celebrar contratos de prestación de servicios con el Estado (Ley 190 de 1995). Cada entidad indica si debes entregarlo firmado en papel o en PDF, o registrar la misma información en el SIGEP II.",

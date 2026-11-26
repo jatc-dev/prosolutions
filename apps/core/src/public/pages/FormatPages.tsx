@@ -155,7 +155,82 @@ export function DafpFormatPage() {
         ]}
       />
 
-      <section aria-labelledby="errores" className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      <section aria-labelledby="campos" className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+        <h2 id="campos" className="text-2xl font-bold text-ui-text">Guía campo por campo</h2>
+        <p className="mt-3 text-[15px] leading-7 text-ui-muted">El formato oficial tiene cinco secciones. ProCV las arma en ese orden con los datos que llenas en el editor; abajo te indicamos qué casillas debes completar tú si la entidad pide el formato oficial con todo su detalle.</p>
+        <div className="mt-6 space-y-6 text-[15px] leading-7 text-ui-text">
+          <div>
+            <h3 className="text-lg font-semibold">1. Datos personales</h3>
+            <p className="mt-1 text-ui-muted">Primer apellido, segundo apellido y nombres por separado; tipo y número de documento; sexo; nacionalidad; libreta militar si aplica (clase, número y distrito); fecha y lugar de nacimiento; dirección de correspondencia, teléfono y correo electrónico.</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">2. Formación académica</h3>
+            <p className="mt-1 text-ui-muted">Educación básica y media (último grado aprobado, título de bachiller y fecha de grado), educación superior e idiomas. En el formato oficial, cada estudio superior lleva un código de modalidad académica:</p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[22rem] border-collapse text-sm">
+                <caption className="sr-only">Códigos de modalidad académica del formato único</caption>
+                <thead>
+                  <tr className="bg-ui-soft text-left"><th className="border border-ui-border px-3 py-2">Código</th><th className="border border-ui-border px-3 py-2">Modalidad</th></tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["TC", "Técnica"], ["TL", "Tecnológica"], ["TE", "Tecnológica especializada"], ["UN", "Universitaria"],
+                    ["ES", "Especialización"], ["MG", "Maestría o magíster"], ["DOC", "Doctorado"],
+                  ].map(([code, name]) => (
+                    <tr key={code}><td className="border border-ui-border px-3 py-1.5 font-semibold">{code}</td><td className="border border-ui-border px-3 py-1.5">{name}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-ui-muted">También se anotan los semestres aprobados, si te graduaste, el título obtenido, la fecha de terminación y la tarjeta o matrícula profesional si tu profesión la exige; en idiomas, tu nivel para hablarlo, leerlo y escribirlo. ProCV incluye el título, la institución, la fecha de terminación, la tarjeta profesional y los idiomas; la modalidad y los semestres complétalos a mano si la entidad los exige.</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">3. Experiencia laboral</h3>
+            <p className="mt-1 text-ui-muted">Cada empleo o contrato, empezando por el actual: empresa o entidad, cargo o contrato, ciudad y fechas de ingreso y retiro, que ProCV toma de tu experiencia. El formato oficial también pide si la entidad es pública o privada, la dependencia y sus datos de contacto.</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">4. Tiempo total de experiencia</h3>
+            <p className="mt-1 text-ui-muted">El resumen del tiempo trabajado como servidor público, como empleado del sector privado y como trabajador independiente, y el total. Sale de las fechas de la sección anterior, así que revisa que coincidan con tus certificados.</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">5. Firma del servidor público o contratista</h3>
+            <p className="mt-1 text-ui-muted">Declaras, bajo la gravedad del juramento, si estás o no dentro de alguna causal de inhabilidad o incompatibilidad; anotas el lugar y la fecha de diligenciamiento y firmas.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="diferencias" className="border-y border-ui-border bg-ui-soft/60">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <h2 id="diferencias" className="text-2xl font-bold text-ui-text">Formato único, SIGEP II y declaración de bienes y rentas</h2>
+          <p className="mt-3 max-w-3xl text-[15px] leading-7 text-ui-muted">Se confunden con frecuencia, pero son tres cosas distintas; la entidad te dirá cuáles necesitas.</p>
+          <ul className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              { title: "Formato único de hoja de vida", text: "El documento con tu formación y experiencia, para un empleo público o un contrato de prestación de servicios. Es el que llenas en esta página." },
+              { title: "SIGEP II", text: "El sistema en línea de la Función Pública donde muchas entidades piden registrar la misma información de la hoja de vida. Tener el formato llenado te sirve de borrador ordenado." },
+              { title: "Declaración de bienes y rentas", text: "Otro formulario, con tu patrimonio y actividad económica, que se presenta antes de posesionarse en un empleo público (Decreto 1083 de 2015). No hace parte de la hoja de vida." },
+            ].map((item) => (
+              <li key={item.title} className="rounded-2xl border border-ui-border bg-ui-surface p-6">
+                <h3 className="text-lg font-semibold text-ui-text">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-ui-muted">{item.text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="soportes" className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+        <h2 id="soportes" className="text-2xl font-bold text-ui-text">Documentos que suelen pedir junto al formato</h2>
+        <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-7 text-ui-text">
+          <li>Copia del documento de identidad.</li>
+          <li>Diplomas o actas de grado de los estudios que declaras.</li>
+          <li>Tarjeta o matrícula profesional, si tu profesión la exige.</li>
+          <li>Certificados laborales o de contratos con fechas de ingreso y retiro y, cuando la entidad lo pide, las funciones.</li>
+          <li>Libreta militar, cuando aplica.</li>
+        </ul>
+        <p className="mt-3 text-sm text-ui-muted">La lista exacta depende de la entidad y de la convocatoria o el contrato: revísala siempre allí.</p>
+      </section>
+
+      <section aria-labelledby="errores" className="mx-auto max-w-4xl px-4 pb-12 sm:px-6">
         <h2 id="errores" className="text-2xl font-bold text-ui-text">Errores comunes que conviene evitar</h2>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-7 text-ui-text">
           <li>Fechas de experiencia que no coinciden con los certificados laborales que vas a adjuntar.</li>
@@ -163,6 +238,13 @@ export function DafpFormatPage() {
           <li>Mezclar formación en curso con títulos obtenidos: anota la fecha de terminación solo si ya te graduaste.</li>
           <li>Olvidar la firma cuando la entidad pide el formato impreso.</li>
         </ul>
+      </section>
+
+      <section className="mx-auto max-w-4xl px-4 pb-4 sm:px-6">
+        <div className="flex flex-col items-start gap-4 rounded-2xl border border-ui-border bg-ui-surface p-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[15px] leading-7 text-ui-text">Llénalo ahora: en unos minutos tienes el formato listo en PDF para imprimir y firmar, o en Word.</p>
+          <CtaButton template="dafp">Llenar el formato único</CtaButton>
+        </div>
       </section>
 
       <Faq items={DAFP_FAQ} />

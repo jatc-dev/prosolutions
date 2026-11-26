@@ -97,9 +97,9 @@ const CREATE_CV_UPDATED = "2026-11-19";
 /** Landing pages for the CV formats people search for, and the template gallery. */
 export const FORMAT_HEADS: Record<string, PageHead> = {
   "/formato-unico-hoja-de-vida": {
-    title: "Formato único de hoja de vida Función Pública: llénalo en línea gratis | ProSolutions",
+    title: "Formato único de hoja de vida Función Pública 2026: llénalo en línea en PDF o Word | ProSolutions",
     description:
-      "Diligencia el Formato Único de Hoja de Vida (Función Pública, Ley 190 de 1995) en línea y descárgalo en PDF o Word. Gratis, sin registro y con guía paso a paso.",
+      "Llena el Formato Único de Hoja de Vida – Persona Natural de la Función Pública (Ley 190 de 1995) en línea y descárgalo en PDF o Word. Gratis, sin registro, con guía campo por campo.",
     path: "/formato-unico-hoja-de-vida",
   },
   "/hoja-de-vida-formato-1003": {
