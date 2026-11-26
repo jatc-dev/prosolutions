@@ -29,7 +29,8 @@ import {
 } from "./ATSOptimizationPanel";
 import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
 import { createEmptyItem } from "./components/DraggableBlock";
-import { PreviewDesignBar } from "./components/PreviewDesignBar";
+import { OPEN_CUSTOMIZER_EVENT, PreviewDesignBar } from "./components/PreviewDesignBar";
+import { personNames } from "../../personName";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
@@ -50,7 +51,8 @@ import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./compo
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
 import { GuestBanner } from "./components/GuestBanner";
 import { GuestDataDialog, type GuestDataDialogMode } from "./components/GuestDataDialog";
-import { addPdfTextLayer, collectPdfText } from "../../pdfTextLayer";
+import { addPdfTextLayer, collectPdfText, fillPdfPageColor } from "../../pdfTextLayer";
+import { pageColorFor } from "../../pageColor";
 import { hasCvContent, isGuestDataExpired } from "../../../../shared/stores/cvEditorStore";
 import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Trash2, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
@@ -94,6 +96,8 @@ export function pdfRenderScale(element: Pick<HTMLElement, 'scrollWidth' | 'scrol
  * symmetrically instead of touching the side edges only.
  */
 export const PDF_MARGIN_MM: [number, number, number, number] = [6, 6, 6, 6];
+/** A last page with less than this (mm) and no text is only spilled padding. */
+const BLANK_TAIL_MM = 25;
 
 /** Elements the PDF export never splits across two pages. */
 export const PDF_AVOID_BREAK = [
@@ -295,6 +299,7 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
         density: cvData.settings?.density,
         sectionSpacing: cvData.settings?.sectionSpacing,
         accentColor: cvData.settings?.accentColor,
+        pageColor: cvData.settings?.pageColor,
         headingColor: cvData.settings?.headingColor,
         textColor: cvData.settings?.textColor,
         mutedTextColor: cvData.settings?.mutedTextColor,
@@ -304,6 +309,9 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       },
     personal: {
       name: cvData.personal?.showFullName === false ? '' : (cvData.personal?.fullName || ''),
+      // The DAFP form prints names and surnames apart.
+      firstName: cvData.personal?.showFullName === false ? '' : personNames(cvData.personal).firstName,
+      lastName: cvData.personal?.showFullName === false ? '' : personNames(cvData.personal).lastName,
       role: cvData.personal?.showProfessionalTitle === false ? '' : (cvData.personal?.professionalTitle || ''),
       email: cvData.personal?.emails?.find((e: any) => e.isPrimary && e.isVisible !== false)?.value || '',
       phone: cvData.personal?.phones?.find((p: any) => p.isPrimary && p.isVisible !== false)?.number || '',
@@ -473,6 +481,13 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   }, [docMode]);
 
   const { isSplit, previewVisible: showPreview, formVisible, togglePreview } = useEditorLayout();
+  // "Ajustar foto" (and similar) open Personalizar above the preview: make
+  // sure the preview is on screen (phones show one view at a time).
+  useEffect(() => {
+    const onOpen = () => { if (!showPreview) togglePreview(); };
+    window.addEventListener(OPEN_CUSTOMIZER_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_CUSTOMIZER_EVENT, onOpen);
+  }, [showPreview, togglePreview]);
   const [panelSizes, setPanelSizes] = useState({ editor: 50, preview: 50 });
   const [isImporting, setIsImporting] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
@@ -895,10 +910,30 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       const worker = html2pdf().set(options).from(exportNode);
       const exportWithText = async () => {
         await worker.toContainer();
-        const prop = (worker as unknown as { prop: { container: HTMLElement; pageSize: { k: number; inner: { height: number } } } }).prop;
+        const prop = (worker as unknown as { prop: { container: HTMLElement; canvas?: HTMLCanvasElement; pageSize: { k: number; width: number; height: number; inner: { width: number; height: number; ratio: number } } } }).prop;
         const text = collectPdfText(prop.container, { k: prop.pageSize.k, innerHeight: prop.pageSize.inner.height, margin: PDF_MARGIN_MM });
         await worker.toPdf();
-        addPdfTextLayer(await worker.get("pdf"), text);
+        const pdf = await worker.get("pdf");
+        const { width, height, inner } = prop.pageSize;
+        let lastContentHeight = inner.height;
+        if (prop.canvas) {
+          const pxPage = Math.floor(prop.canvas.width * inner.ratio);
+          const rest = prop.canvas.height % pxPage;
+          if (rest) lastContentHeight = (rest * inner.width) / prop.canvas.width;
+        }
+        // The page's bottom padding could spill a few millimetres onto an
+        // extra page with nothing on it: drop that blank last page.
+        const pages = pdf.getNumberOfPages();
+        if (pages > 1 && lastContentHeight < BLANK_TAIL_MM && !text.some((item) => item.page === pages)) {
+          pdf.deletePage(pages);
+          lastContentHeight = inner.height;
+        }
+        // A page colour also covers the margins (see pageColor.ts).
+        const paper = pageColorFor(docMode === 'letter' ? undefined : cvData.template, cvData.settings);
+        if (paper) {
+          fillPdfPageColor(pdf, paper, { width, height, innerWidth: inner.width, innerHeight: inner.height, margin: PDF_MARGIN_MM, lastContentHeight });
+        }
+        addPdfTextLayer(pdf, text);
         await worker.save();
       };
       exportWithText()
@@ -919,7 +954,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t, remindGuestAfterDownload]);
+  }, [cvData.title, cvData.coverLetter?.body, cvData.template, cvData.settings, docMode, t, remindGuestAfterDownload]);
 
   // Get completion status for all sections
   const completionStatus = {
@@ -1438,7 +1473,9 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                 description={t("editor.form.description", "Completa cada sección; los cambios se reflejan inmediatamente en la vista previa")}
                 defaultOpen
               >
-              <div onFocusCapture={foldDesign}>
+              {/* Going back to the form folds the design panels, except for
+                  buttons that open them ("Ajustar foto"). */}
+              <div onFocusCapture={(event) => { if (!(event.target as HTMLElement).closest('[data-opens-design]')) foldDesign(); }}>
               {/* Validation Summary */}
               <ValidationSummary errors={validationErrors} section={activeSection} />
 
@@ -1483,6 +1520,8 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                   settings={cvData.settings || {}}
                   onSettingsChange={(nextSettings) => updateCvData({ settings: nextSettings })}
                   closeSignal={designCloseSignal}
+                  personal={cvData.personal}
+                  onPersonalChange={(updates) => updatePersonal({ ...cvData.personal, ...updates })}
                 />
                 {/* No heading: the design bar above already names this area,
                     and every line of height goes to the document. */}

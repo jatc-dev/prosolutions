@@ -26,9 +26,12 @@ describe("editor navigation validation", () => {
     const onValidateField = vi.fn();
     render(<PersonalSection data={data} onChange={onChange} onValidateField={onValidateField} />);
 
-    fireEvent.change(screen.getByPlaceholderText("editor.personal.placeholders.fullName"), { target: { value: "Ada Lovelace" } });
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ fullName: "Ada Lovelace" }));
-    expect(onValidateField).toHaveBeenCalledWith("personal.fullName", "Ada Lovelace");
+    // "Nombres" and "Apellidos" are joined into the full name that is validated.
+    fireEvent.change(screen.getByPlaceholderText("Ej.: Ana María"), { target: { value: "Ada" } });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Ada", fullName: "Ada" }));
+    expect(onValidateField).toHaveBeenCalledWith("personal.fullName", "Ada");
+    fireEvent.change(screen.getByPlaceholderText("Ej.: Pérez Gómez"), { target: { value: "Lovelace" } });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ lastName: "Lovelace" }));
 
     fireEvent.change(screen.getByPlaceholderText("editor.personal.placeholders.professionalTitle"), { target: { value: "Ingeniera" } });
     expect(onValidateField).toHaveBeenCalledWith("personal.professionalTitle", "Ingeniera");

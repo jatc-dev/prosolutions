@@ -1,6 +1,7 @@
 import React from "react";
 import { densityConfig, sectionTitleGap } from "../cvSpacing";
 import "../styles/cv-spacing.css";
+import { pageColorFor } from "../pageColor";
 import { TemplateRenderer } from "./TemplateRenderer";
 import { CVData as RendererCVData } from "./TemplateRenderer";
 import { cvFontFamily, normalizeFontScale } from "../fonts";
@@ -47,7 +48,7 @@ export const PHOTO_ZOOM_MIN = 1;
 export const PHOTO_ZOOM_MAX = 2.5;
 const clampZoom = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, value)) : null);
 
-export function CustomStylesWrapper({ settings, photo, children }: { settings: unknown; photo?: { x?: number; y?: number; zoom?: number }; children: React.ReactNode }) {
+export function CustomStylesWrapper({ settings, photo, template, children }: { settings: unknown; photo?: { x?: number; y?: number; zoom?: number }; template?: string; children: React.ReactNode }) {
   const s: Record<string, string | number | undefined> = (settings as Record<string, string | number | undefined>) || {};
 
   const bodyFont = cvFontFamily(s.fontBody as string | undefined);
@@ -94,6 +95,11 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
     classes.push("cv-leading");
   }
   cssVars["--cv-title-gap"] = sectionTitleGap(s.sectionSpacing, s.density);
+  const pageColor = pageColorFor(template, s);
+  if (pageColor) {
+    cssVars["--cv-page-bg"] = pageColor;
+    classes.push("cv-c-page");
+  }
   const photoX = clampPercent(photo?.x);
   const photoY = clampPercent(photo?.y);
   if (photoX !== null) cssVars["--cv-photo-x"] = `${photoX}%`;
@@ -110,7 +116,7 @@ export function CustomStylesWrapper({ settings, photo, children }: { settings: u
 
 export function WithCustomStyles({ template, data }: WithCustomStylesProps) {
   return (
-    <CustomStylesWrapper settings={data.settings} photo={{ x: data.personal?.profileImagePositionX, y: data.personal?.profileImagePositionY, zoom: data.personal?.profileImageZoom }}>
+    <CustomStylesWrapper settings={data.settings} template={template} photo={{ x: data.personal?.profileImagePositionX, y: data.personal?.profileImagePositionY, zoom: data.personal?.profileImageZoom }}>
       <TemplateRenderer template={template} data={data} />
     </CustomStylesWrapper>
   );

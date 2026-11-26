@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, LayoutTemplate, SlidersHorizontal } from "lucide-react";
 import type { CVTemplateOption } from "../../../../../shared/utils/templateCatalog";
-import type { CVData } from "../../../../../shared/types";
+import type { CVData, PersonalData } from "../../../../../shared/types";
 import { TemplateSelector } from "./TemplateSelector";
-import { CustomizerPanel } from "./CustomizerPanel";
+import { CustomizerPanel, type CustomizerTab } from "./CustomizerPanel";
 
 type Panel = "template" | "customize" | null;
 const STORAGE_KEY = "procv.editor.design-panel";
@@ -16,6 +16,14 @@ interface PreviewDesignBarProps {
   onSettingsChange: (settings: NonNullable<CVData["settings"]>) => void;
   /** Each change folds the open panel (the user went back to the form). */
   closeSignal?: number;
+  personal?: PersonalData;
+  onPersonalChange?: (updates: Partial<PersonalData>) => void;
+}
+
+/** Opens "Personalizar" on a tab from anywhere (e.g. the photo field of the form). */
+export const OPEN_CUSTOMIZER_EVENT = "procv:open-customizer";
+export function openCustomizer(tab: CustomizerTab) {
+  window.dispatchEvent(new CustomEvent(OPEN_CUSTOMIZER_EVENT, { detail: tab }));
 }
 
 function readPanel(): Panel {
@@ -33,8 +41,18 @@ function readPanel(): Panel {
  * panels, "Plantilla" and "Personalizar". Only one opens at a time and it
  * has a maximum height, so most of the preview stays visible.
  */
-export function PreviewDesignBar({ templates, currentTemplate, onTemplateSelect, settings, onSettingsChange, closeSignal }: PreviewDesignBarProps) {
+export function PreviewDesignBar({ templates, currentTemplate, onTemplateSelect, settings, onSettingsChange, closeSignal, personal, onPersonalChange }: PreviewDesignBarProps) {
   const [panel, setPanel] = useState<Panel>(readPanel);
+  const [requestedTab, setRequestedTab] = useState<{ tab: CustomizerTab; at: number } | undefined>();
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const tab = (event as CustomEvent<CustomizerTab>).detail;
+      setPanel("customize");
+      setRequestedTab({ tab, at: Date.now() });
+    };
+    window.addEventListener(OPEN_CUSTOMIZER_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_CUSTOMIZER_EVENT, onOpen);
+  }, []);
   useEffect(() => {
     try {
       if (panel) window.localStorage.setItem(STORAGE_KEY, panel);
@@ -108,7 +126,7 @@ export function PreviewDesignBar({ templates, currentTemplate, onTemplateSelect,
       ) : null}
       {panel === "customize" ? (
         <div id="preview-customize-panel" className="mt-2 max-h-[50vh] overflow-y-auto rounded-xl shadow-sm">
-          <CustomizerPanel settings={settings} onSettingsChange={onSettingsChange} />
+          <CustomizerPanel settings={settings} onSettingsChange={onSettingsChange} personal={personal} onPersonalChange={onPersonalChange} requestedTab={requestedTab} template={currentTemplate} />
         </div>
       ) : null}
     </div>

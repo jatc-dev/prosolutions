@@ -2,6 +2,7 @@ import React from "react";
 import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
+import { splitSurnames } from "../personName";
 import { TemplateChronological, TemplateStandard, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
 import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
@@ -52,6 +53,9 @@ export interface CVData {
     /** Tarjeta profesional, already formatted (empty when hidden). */
     professionalCard?: string;
     sidebarIntroMode?: "valueProposition" | "summary" | "none";
+    /** Given names and surnames (empty when the name is hidden). */
+    firstName?: string;
+    lastName?: string;
     references?: Array<{ id: string; isVisible?: boolean; hiddenFields?: string[]; type: "laboral" | "personal" | "familiar"; name: string; position?: string; company?: string; relationship?: string; phone?: string; email?: string }>;
     showReferences?: boolean;
     referencesAvailableOnRequest?: boolean;
@@ -78,6 +82,7 @@ export interface CVData {
     density?: "tight" | "compact" | "balanced" | "spacious" | "airy";
     sectionSpacing?: number;
     accentColor?: string;
+    pageColor?: string;
     headingColor?: string;
     textColor?: string;
     mutedTextColor?: string;
@@ -2784,7 +2789,11 @@ function TemplateDafp({ data }: { data: CVData }) {
   const experience = data.experience || [];
   const languages = normalizeLanguages(data.languages).filter((item) => item.name);
   const documentText = [personal.documentType, personal.documentNumber].filter(Boolean).join(" ");
-  const hasSplitName = Boolean(value("dafpFirstSurname") || value("dafpGivenNames"));
+  // Nombres / Apellidos from the Personal form (surnames split into first and
+  // second); older CVs may still have them in the form's own fields.
+  const surnames = personal.lastName ? splitSurnames(personal.lastName) : { first: value("dafpFirstSurname"), second: value("dafpSecondSurname") };
+  const givenNames = personal.firstName || value("dafpGivenNames");
+  const hasSplitName = Boolean(surnames.first || givenNames);
   const ineligible = value("dafpIneligible").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const signDate = formatSpanishDate(value("dafpSignDate"));
 
@@ -2800,9 +2809,9 @@ function TemplateDafp({ data }: { data: CVData }) {
         <Grid>
           {hasSplitName ? (
             <>
-              <Row label="Primer apellido">{value("dafpFirstSurname")}</Row>
-              <Row label="Segundo apellido">{value("dafpSecondSurname")}</Row>
-              <Row label="Nombres" wide>{value("dafpGivenNames")}</Row>
+              <Row label="Primer apellido">{surnames.first}</Row>
+              <Row label="Segundo apellido">{surnames.second}</Row>
+              <Row label="Nombres" wide>{givenNames}</Row>
             </>
           ) : (
             <Row label="Nombres y apellidos" wide>{personal.name}</Row>

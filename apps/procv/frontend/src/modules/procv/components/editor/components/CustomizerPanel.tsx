@@ -1,23 +1,35 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LayoutPanelLeft, Palette, Type, type LucideIcon } from "lucide-react";
+import { Camera, LayoutPanelLeft, Palette, Type, type LucideIcon } from "lucide-react";
 import { FontSelector, FontSizeStepper } from "./FontSelector";
 import { ColorCustomizer } from "./ColorCustomizer";
 import { LayoutCustomizer } from "./LayoutCustomizer";
 import { SectionTitlesEditor } from "./SectionTitlesEditor";
-import { CVData } from "../../../../../shared/types";
+import { PhotoCustomizer } from "./PhotoCustomizer";
+import { CVData, PersonalData } from "../../../../../shared/types";
 
 interface CustomizerPanelProps {
   settings: NonNullable<CVData["settings"]>;
   onSettingsChange: (settings: NonNullable<CVData["settings"]>) => void;
+  /** Photo options edit personal data (the photo lives there). */
+  personal?: PersonalData;
+  onPersonalChange?: (updates: Partial<PersonalData>) => void;
+  /** Tab to show when the panel is opened from elsewhere (e.g. "Ajustar foto"). */
+  requestedTab?: { tab: CustomizerTab; at: number };
+  /** Current template (page colour does not apply to every template). */
+  template?: string;
 }
 
-type Tab = "fonts" | "colors" | "layout";
+export type CustomizerTab = "fonts" | "colors" | "layout" | "photo";
+type Tab = CustomizerTab;
 
-export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelProps) {
+export function CustomizerPanel({ settings, onSettingsChange, personal, onPersonalChange, requestedTab, template }: CustomizerPanelProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<Tab>("fonts");
+  const [activeTab, setActiveTab] = useState<Tab>(requestedTab?.tab ?? "fonts");
+  useEffect(() => {
+    if (requestedTab) setActiveTab(requestedTab.tab);
+  }, [requestedTab]);
 
   const update = (partial: NonNullable<CVData["settings"]>) => {
     onSettingsChange({ ...settings, ...partial });
@@ -27,6 +39,7 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
     { key: "fonts", label: t("customizer.tabs.fonts", "Fuentes"), icon: Type },
     { key: "colors", label: t("customizer.tabs.colors", "Colores"), icon: Palette },
     { key: "layout", label: t("customizer.tabs.layout", "Diseño"), icon: LayoutPanelLeft },
+    ...(personal && onPersonalChange ? [{ key: "photo" as Tab, label: t("customizer.tabs.photo", "Foto"), icon: Camera }] : []),
   ];
 
   return (
@@ -82,10 +95,15 @@ export function CustomizerPanel({ settings, onSettingsChange }: CustomizerPanelP
 
         {activeTab === "colors" && (
           <ColorCustomizer
+            template={template}
             settings={settings}
             onChange={update}
           />
         )}
+
+        {activeTab === "photo" && personal && onPersonalChange ? (
+          <PhotoCustomizer personal={personal} onChange={onPersonalChange} />
+        ) : null}
 
         {activeTab === "layout" && (
           <div className="space-y-5">

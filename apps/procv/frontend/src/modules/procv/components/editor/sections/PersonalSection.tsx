@@ -4,7 +4,7 @@ import { CONTACT_LABEL_STYLES, normalizeContactLabelStyle } from '../../../conta
 import { useTranslation } from 'react-i18next';
 import { CountrySelect } from "../../../../../components/ui/CountrySelect";
 import toast from 'react-hot-toast';
-import { PersonalData, ContactItem, PhoneItem, ProfileImageSize, ProfileImageStyle, ValidationErrors } from "../../../../../shared/types";
+import { PersonalData, ContactItem, PhoneItem, ProfileImageStyle, ValidationErrors } from "../../../../../shared/types";
 import {
   FormSection,
   FormField,
@@ -18,6 +18,9 @@ import { appendPhrase } from "../../../phrases";
 import { PHOTO_MAX_UPLOAD_BYTES, shrinkPhoto } from "../../../photo";
 import { PROFESSIONAL_CARD_ISSUERS } from "../../../professionalCard";
 import { PHOTO_ZOOM_MAX, PHOTO_ZOOM_MIN } from "../../withCustomStyles";
+import { SlidersHorizontal } from "lucide-react";
+import { openCustomizer } from "../components/PreviewDesignBar";
+import { composeFullName, formNames } from "../../../personName";
 
 interface PersonalSectionProps {
   data: PersonalData;
@@ -37,13 +40,6 @@ const VisibilityToggle: React.FC<{ checked: boolean; onChange: (checked: boolean
 
 const CUSTOM_LABEL_VALUE = '__custom__';
 const COMBINED_VALUE_SEPARATOR = '__::__';
-const PHOTO_SIZE_OPTIONS: Array<{ value: ProfileImageSize; label: string }> = [
-  { value: 'sm', label: 'Pequeña' },
-  { value: 'md', label: 'Mediana' },
-  { value: 'lg', label: 'Grande' },
-  { value: 'xl', label: 'Muy grande' },
-];
-
 const resolveLabelSelection = (label: string | undefined, options: string[]) => {
   const normalized = (label || '').trim();
   if (!normalized) {
@@ -181,27 +177,20 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
     }
   };
 
-  // Photo framing (0–100 %, 50 = centred) and border, shared with the templates.
+  // Photo framing (0–100 %, 50 = centred), shown on the thumbnail as on the
+  // CV. It is edited in Personalizar → Foto, next to the preview.
   const photoX = typeof data.profileImagePositionX === 'number' ? data.profileImagePositionX : 50;
   const photoY = typeof data.profileImagePositionY === 'number' ? data.profileImagePositionY : 50;
-  const clampPct = (value: number) => Math.round(Math.min(100, Math.max(0, value)));
-  const setPhotoPosition = (x: number, y: number) => onChange({ ...data, profileImagePositionX: clampPct(x), profileImagePositionY: clampPct(y) });
   const photoZoom = typeof data.profileImageZoom === 'number' ? Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, data.profileImageZoom)) : 1;
-  const setPhotoZoom = (zoom: number) => onChange({ ...data, profileImageZoom: Math.round(Math.min(PHOTO_ZOOM_MAX, Math.max(PHOTO_ZOOM_MIN, zoom)) * 100) / 100 });
-  const resetPhotoFrame = () => onChange({ ...data, profileImagePositionX: 50, profileImagePositionY: 50, profileImageZoom: 1 });
-  const dragRef = useRef<{ startX: number; startY: number; x: number; y: number; width: number; height: number } | null>(null);
-  const onPhotoPointerDown = (event: React.PointerEvent<HTMLImageElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    dragRef.current = { startX: event.clientX, startY: event.clientY, x: photoX, y: photoY, width: box.width, height: box.height };
-    event.currentTarget.setPointerCapture(event.pointerId);
+
+  // "Nombres" and "Apellidos"; fullName (shown on the CV) is both joined.
+  const names = formNames(data);
+  const updateName = (changes: { firstName?: string; lastName?: string }) => {
+    const next = { ...names, ...changes };
+    const fullName = composeFullName(next.firstName, next.lastName);
+    onChange({ ...data, firstName: next.firstName, lastName: next.lastName, fullName });
+    onValidateField?.('personal.fullName', fullName);
   };
-  const onPhotoPointerMove = (event: React.PointerEvent<HTMLImageElement>) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    // Dragging the photo right reveals more of its left side (lower object-position).
-    setPhotoPosition(drag.x - ((event.clientX - drag.startX) / drag.width) * 150, drag.y - ((event.clientY - drag.startY) / drag.height) * 150);
-  };
-  const onPhotoPointerUp = () => { dragRef.current = null; };
 
   const imageStyle = (data.profileImageStyle || 'round') as ProfileImageStyle;
   const imagePreviewClass =
@@ -343,51 +332,45 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       isLoading={isLoading}
       grouped
     >
-      {/* Profile Image */}
+      {/* Profile photo: the data (upload, change, remove). How it looks on the CV
+          (shape, size, border, framing) is in Personalizar → Foto, by the preview. */}
       <FormField
         label={t('editor.personal.fields.profileImage')}
         error={errors.profileImage?.[0]}
         help={t('editor.personal.help.profileImage')}
       >
-        <div className="space-y-3">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="relative">
             {imagePreview ? (
               <div className="relative">
-                {/* Frame keeps the shape; the photo inside is framed and zoomed like on the CV. */}
                 <span className={`${imagePreviewClass} block overflow-hidden ${data.profileImageBorder === false ? '' : 'border-2 border-slate-200'}`}>
                   <img
                     src={imagePreview}
                     alt={t('editor.personal.profileImageAlt')}
-                    title={tx('editor.ui.photoDragHint', 'Arrastra para encuadrar la foto')}
-                    draggable={false}
-                    onPointerDown={onPhotoPointerDown}
-                    onPointerMove={onPhotoPointerMove}
-                    onPointerUp={onPhotoPointerUp}
-                    onPointerCancel={onPhotoPointerUp}
-                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: `scale(${photoZoom})`, transformOrigin: `${photoX}% ${photoY}%`, touchAction: 'none' }}
-                    className="block h-full w-full cursor-move select-none object-cover"
+                    style={{ objectPosition: `${photoX}% ${photoY}%`, transform: `scale(${photoZoom})`, transformOrigin: `${photoX}% ${photoY}%` }}
+                    className={`block h-full w-full object-cover ${data.showProfileImage === false ? 'opacity-40' : ''}`}
                   />
                 </span>
                 <button
                   type="button"
                   onClick={removeImage}
+                  aria-label={tx('editor.ui.removePhoto', 'Quitar foto')}
                   className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             ) : (
               <div className={`${imagePreviewClass} bg-slate-200 flex items-center justify-center border-2 border-slate-300`}>
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
             )}
           </div>
-          <div className="flex-1">
+          <div className="flex flex-wrap gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -400,118 +383,73 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
               htmlFor="profile-image"
               className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               {imagePreview ? t('editor.personal.changePhoto') : t('editor.personal.uploadPhoto')}
             </label>
+            {imagePreview ? (
+              <button
+                type="button"
+                data-opens-design
+                onClick={() => openCustomizer('photo')}
+                className="inline-flex items-center gap-2 rounded-md border border-brand-700 bg-white px-4 py-2 text-sm font-medium text-brand-900 hover:bg-brand-50 dark:border-brand-500 dark:bg-slate-900 dark:text-brand-300"
+              >
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                {tx('editor.ui.adjustPhoto', 'Ajustar foto')}
+              </button>
+            ) : null}
           </div>
         </div>
-
-        {/* Compact photo options: visibility toggles in one row, style and size side by side. */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-            <input
-              type="checkbox"
-              checked={data.showProfileImage !== false}
-              onChange={(e) => updateField('showProfileImage', e.target.checked)}
-              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
-            />
-            {t('editor.personal.showProfileImage')}
-          </label>
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-            <input
-              type="checkbox"
-              checked={data.profileImageBorder !== false}
-              onChange={(e) => updateField('profileImageBorder', e.target.checked)}
-              className="rounded border-brand-300 text-brand-800 focus:ring-brand-700"
-            />
-            {tx('editor.ui.photoBorder', 'Mostrar borde en la foto')}
-          </label>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label={t('editor.personal.fields.profileImageStyle')}>
-            <select
-              value={imageStyle}
-              onChange={(e) => updateField('profileImageStyle', e.target.value as ProfileImageStyle)}
-              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="round">{t('editor.personal.profileImageStyles.round')}</option>
-              <option value="square">{t('editor.personal.profileImageStyles.square')}</option>
-              <option value="portrait">{t('editor.personal.profileImageStyles.portrait')}</option>
-              <option value="oval">{t('editor.personal.profileImageStyles.oval', 'Ovalada')}</option>
-              <option value="arch">{t('editor.personal.profileImageStyles.arch', 'Arco')}</option>
-            </select>
-          </FormField>
-
-          <FormField label={tx('editor.ui.photoSize', 'Tamaño de la foto')}>
-            <select
-              value={data.profileImageSize || 'md'}
-              onChange={(e) => updateField('profileImageSize', e.target.value as ProfileImageSize)}
-              className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-700 focus:border-brand-700 sm:text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            >
-              {PHOTO_SIZE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{tx(`editor.ui.photoSize_${option.value}`, option.label)}</option>
-              ))}
-            </select>
-          </FormField>
-        </div>
-
         {imagePreview ? (
-          <FormField label={tx('editor.ui.photoFrame', 'Encuadre de la foto')} help={tx('editor.ui.photoFrameHelp', 'Arrastra la foto en la miniatura o usa los controles para centrarla y acercarla.')}>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,1fr,1fr,auto] sm:items-end">
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-                {tx('editor.ui.horizontal', 'Horizontal')}
-                <input type="range" min={0} max={100} value={photoX} onChange={(e) => setPhotoPosition(Number(e.target.value), photoY)} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameX', 'Encuadre horizontal de la foto')} />
-              </label>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-                {tx('editor.ui.vertical', 'Vertical')}
-                <input type="range" min={0} max={100} value={photoY} onChange={(e) => setPhotoPosition(photoX, Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoFrameY', 'Encuadre vertical de la foto')} />
-              </label>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">
-                {tx('editor.ui.photoZoom', 'Zoom')} <span className="tabular-nums text-slate-500">{Math.round(photoZoom * 100)} %</span>
-                <input type="range" min={PHOTO_ZOOM_MIN} max={PHOTO_ZOOM_MAX} step={0.05} value={photoZoom} onChange={(e) => setPhotoZoom(Number(e.target.value))} className="mt-1 w-full accent-brand-700" aria-label={tx('editor.ui.photoZoomAria', 'Acercar o alejar la foto')} />
-              </label>
-              <button type="button" onClick={resetPhotoFrame} disabled={photoX === 50 && photoY === 50 && photoZoom === 1} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
-                {tx('editor.ui.resetFrame', 'Restablecer')}
-              </button>
-            </div>
-          </FormField>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            {data.showProfileImage === false
+              ? tx('editor.ui.photoHiddenHint', 'La foto está oculta en la hoja de vida. Puedes mostrarla en «Ajustar foto».')
+              : tx('editor.ui.photoAdjustHint', 'Forma, tamaño, borde y encuadre se ajustan en «Ajustar foto», junto a la vista previa.')}
+          </p>
         ) : null}
-
-        </div>
       </FormField>
 
 
-      {/* Basic Information */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      {/* Names and surnames (the DAFP form prints them apart; the CV joins them), then the title. */}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
         <FormField
-          label={t('editor.personal.fields.fullName')}
+          label={tx('editor.ui.firstNames', 'Nombres')}
           required
           error={errors.fullName?.[0]}
         >
           <InputField
-            value={data.fullName}
-            onChange={(value) => updateField('fullName', value)}
-            placeholder={t('editor.personal.placeholders.fullName')}
+            value={names.firstName}
+            onChange={(value) => updateName({ firstName: value })}
+            placeholder={tx('editor.ui.firstNamesPh', 'Ej.: Ana María')}
             required
           />
         </FormField>
-
-        <FormField
-          label={t('editor.personal.fields.professionalTitle')}
-          error={errors.professionalTitle?.[0]}
-          help={t('editor.personal.help.professionalTitle')}
-        >
+        <FormField label={tx('editor.ui.lastNames', 'Apellidos')} required>
           <InputField
-            value={data.professionalTitle}
-            onChange={(value) => updateField('professionalTitle', value)}
-            placeholder={t('editor.personal.placeholders.professionalTitle')}
+            value={names.lastName}
+            onChange={(value) => updateName({ lastName: value })}
+            placeholder={tx('editor.ui.lastNamesPh', 'Ej.: Pérez Gómez')}
+            required
           />
         </FormField>
-        <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label={tx('editor.ui.showName', 'Mostrar nombre')} />
-        <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label={tx('editor.ui.showTitle', 'Mostrar título profesional')} />
+        <div className="-mt-3 sm:col-span-2">
+          <VisibilityToggle checked={data.showFullName !== false} onChange={(value) => updateField('showFullName', value)} label={tx('editor.ui.showName', 'Mostrar nombre')} />
+        </div>
+        <div className="sm:col-span-2">
+          <FormField
+            label={t('editor.personal.fields.professionalTitle')}
+            error={errors.professionalTitle?.[0]}
+            help={t('editor.personal.help.professionalTitle')}
+          >
+            <InputField
+              value={data.professionalTitle}
+              onChange={(value) => updateField('professionalTitle', value)}
+              placeholder={t('editor.personal.placeholders.professionalTitle')}
+            />
+          </FormField>
+          <VisibilityToggle checked={data.showProfessionalTitle !== false} onChange={(value) => updateField('showProfessionalTitle', value)} label={tx('editor.ui.showTitle', 'Mostrar título profesional')} />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -530,18 +468,23 @@ export const PersonalSection: React.FC<PersonalSectionProps> = ({
       <VisibilityToggle checked={data.showNationality !== false} onChange={(value) => updateField('showNationality', value)} label={tx('editor.ui.showNationality', 'Mostrar nacionalidad')} />
       </div>
 
+      {/* Identity document: type and number side by side, each with its own "Mostrar" below. */}
       <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label={tx('editor.ui.docType', 'Tipo de documento de identidad')}>
-          <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <FormField label={tx('editor.ui.docType', 'Tipo de documento de identidad')}>
+              <select value={data.documentType || ''} onChange={(e) => updateField('documentType', e.target.value)} className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
             <option value="">{tx('editor.ui.select', 'Seleccionar')}</option><option value="CC">{tx('editor.ui.docCC', 'Cédula de ciudadanía')}</option><option value="CE">{tx('editor.ui.docCE', 'Cédula de extranjería')}</option><option value="Pasaporte">{tx('editor.ui.docPassport', 'Pasaporte')}</option><option value="PEP">{tx('editor.ui.docPEP', 'Permiso especial de permanencia')}</option><option value="PPT">{tx('editor.ui.docPPT', 'Permiso por protección temporal')}</option><option value="Otro">{tx('editor.ui.other', 'Otro')}</option>
           </select>
-        </FormField>
-        <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label={tx('editor.ui.showDocType', 'Mostrar tipo de documento')} />
-        <FormField label={tx('editor.ui.docNumber', 'Número de documento')}><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder={tx('editor.ui.docNumberPh', 'Número de identificación')} /></FormField>
-        <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
-      </div>
-      <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
+            </FormField>
+            <VisibilityToggle checked={data.showDocumentType !== false} onChange={(value) => updateField('showDocumentType', value)} label={tx('editor.ui.showDocType', 'Mostrar tipo de documento')} />
+          </div>
+          <div>
+            <FormField label={tx('editor.ui.docNumber', 'Número de documento')}><InputField value={data.documentNumber || ''} onChange={(value) => updateField('documentNumber', value)} placeholder={tx('editor.ui.docNumberPh', 'Número de identificación')} /></FormField>
+            <VisibilityToggle checked={data.showDocumentNumber !== false} onChange={(value) => updateField('showDocumentNumber', value)} label={tx('editor.ui.showDocNumber', 'Mostrar número de documento')} />
+          </div>
+        </div>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={Boolean(data.showDocumentIdentity)} onChange={(e) => updateField('showDocumentIdentity', e.target.checked)} className="rounded border-brand-300 text-brand-800 focus:ring-brand-700" />{tx('editor.ui.showDocument', 'Mostrar documento de identidad en la hoja de vida')}</label>
       </div>
 
       {/* Professional card / licence: number, issuing body and date. */}

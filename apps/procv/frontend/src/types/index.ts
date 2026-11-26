@@ -97,6 +97,9 @@ export interface PersonalData {
   showDocumentType?: boolean;
   showDocumentNumber?: boolean;
   sidebarIntroMode?: 'valueProposition' | 'summary' | 'none';
+  /** Given names and surnames as entered; fullName is both joined (see personName.ts). */
+  firstName?: string;
+  lastName?: string;
   references?: ReferenceItem[];
   showReferences?: boolean;
   referencesAvailableOnRequest?: boolean;
@@ -281,6 +284,8 @@ export interface CVData {
     sectionSpacing?: number; // 0-6, see cvSpacing.ts
     // Acentos
     accentColor?: string;
+    /** Page (paper) colour, see pageColor.ts. */
+    pageColor?: string;
     headingColor?: string;
     textColor?: string;
     mutedTextColor?: string;
