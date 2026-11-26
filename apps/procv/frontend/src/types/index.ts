@@ -277,8 +277,8 @@ export interface CVData {
     /** User-renamed section titles; empty or missing uses the default. */
     sectionTitles?: Partial<Record<"summary" | "experience" | "education" | "skills" | "languages" | "certificates" | "links", string>>;
     // Densidad y layout
-    density?: "compact" | "balanced" | "spacious";
-    sectionSpacing?: number; // 0-3
+    density?: "tight" | "compact" | "balanced" | "spacious" | "airy";
+    sectionSpacing?: number; // 0-6, see cvSpacing.ts
     // Acentos
     accentColor?: string;
     headingColor?: string;

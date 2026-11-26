@@ -29,7 +29,7 @@ describe("public editor template selection", () => {
     expect(buttons).toHaveLength(CURATED_CV_TEMPLATES.length);
 
     CURATED_CV_TEMPLATES.forEach((template) => {
-      fireEvent.click(screen.getByTitle(template.label));
+      fireEvent.click(screen.getByRole("button", { name: template.label }));
       expect(onTemplateSelect).toHaveBeenLastCalledWith(template.key);
     });
 

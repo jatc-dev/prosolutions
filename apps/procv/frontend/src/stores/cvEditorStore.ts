@@ -375,7 +375,7 @@ const validationRules: Record<string, (value: any) => string | null> = {
   'experience.*.description': (value) => !value || value.trim().length < 10 ? 'La descripción debe tener al menos 10 caracteres' : null,
   'education.*.degree': (value) => !value ? 'El título es requerido' : null,
   'education.*.institution': (value) => !value || value.trim().length < 2 ? 'La institución es requerida' : null,
-  'education.*.startDate': (value) => !value ? 'La fecha de inicio es requerida' : null,
+  // Education start dates are optional: what usually matters is when it ended.
   'skills.*.name': (value) => !value || value.trim().length < 2 ? 'El nombre de la habilidad es requerido' : null,
   'languages.*.language': (value) => !value ? 'El idioma es requerido' : null,
   'certificates.*.title': (value) => !value || value.trim().length < 2 ? 'El título es requerido' : null,

@@ -170,9 +170,9 @@ describe("section titles", () => {
 });
 
 describe("profile photo size", () => {
-  it("shrinks to at most 800 px on the longest side, never enlarges", () => {
-    expect(fitWithin(4000, 3000)).toEqual({ width: 800, height: 600 });
-    expect(fitWithin(1080, 1920)).toEqual({ width: 450, height: 800 });
+  it("shrinks to at most 1200 px on the longest side, never enlarges", () => {
+    expect(fitWithin(4000, 3000)).toEqual({ width: 1200, height: 900 });
+    expect(fitWithin(1080, 1920)).toEqual({ width: 675, height: 1200 });
     expect(fitWithin(300, 300)).toEqual({ width: 300, height: 300 });
   });
 
@@ -287,5 +287,16 @@ describe("photo zoom", () => {
     expect(img).toBeTruthy();
     expect(img.parentElement?.className).toContain("cv-photo-frame");
     expect(img.parentElement?.className).toContain("overflow-hidden");
+  });
+});
+
+describe("PDF sharpness", () => {
+  it("renders short CVs at 3x and longer ones lower, never below 2x", async () => {
+    const { pdfRenderScale } = await import("../src/modules/procv/components/editor/CompleteCVEditor");
+    // One A4 page (~750 x 1100 CSS px) and two pages: 3x fits the pixel budget.
+    expect(pdfRenderScale({ scrollWidth: 750, scrollHeight: 1100 })).toBe(3);
+    expect(pdfRenderScale({ scrollWidth: 750, scrollHeight: 2200 })).toBe(2.91);
+    // Very long documents stay at the old 2x instead of going lower.
+    expect(pdfRenderScale({ scrollWidth: 750, scrollHeight: 9000 })).toBe(2);
   });
 });

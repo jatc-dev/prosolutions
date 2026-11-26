@@ -2,12 +2,13 @@
  * Profile photos are stored inside the CV (base64), and every saved version
  * used to copy them, so a phone photo of several MB weighed a lot. Before it
  * is stored, the photo is shrunk to at most PHOTO_MAX_SIDE pixels and saved as
- * JPEG: plenty for a CV (shown at up to ~180 px, exported at 2×) and usually
- * 60–120 KB. It is reduced in halving steps: one big drawImage step (e.g.
- * 4000 → 800 px) skips pixels and looks soft.
+ * JPEG: enough for a CV photo shown at up to ~180 px, exported at 3× and
+ * zoomed in up to 2.5× (it used to be 800 px, which looked soft once zoomed
+ * or printed), usually 120–250 KB. It is reduced in halving steps: one big
+ * drawImage step (e.g. 4000 → 1200 px) skips pixels and looks soft.
  */
-export const PHOTO_MAX_SIDE = 800;
-export const PHOTO_JPEG_QUALITY = 0.9;
+export const PHOTO_MAX_SIDE = 1200;
+export const PHOTO_JPEG_QUALITY = 0.92;
 /** Larger files are rejected before decoding (they are shrunk anyway). */
 export const PHOTO_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 

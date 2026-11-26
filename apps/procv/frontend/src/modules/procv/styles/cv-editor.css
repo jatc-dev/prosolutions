@@ -442,58 +442,7 @@
     color: var(--color-link);
   }
 
-  /* Densidad: Compacto */
-  .cv-custom-wrapper.density-compact {
-    --density-gap: 0.5rem;
-    --density-padding: 0.75rem;
-  }
-
-  .cv-custom-wrapper.density-compact .ats-section {
-    margin-bottom: 0.5rem;
-  }
-
-  .cv-custom-wrapper.density-compact .ats-experience-item,
-  .cv-custom-wrapper.density-compact .ats-education-item {
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-
-  /* Densidad: Equilibrado (default) */
-  .cv-custom-wrapper.density-balanced {
-    --density-gap: 1rem;
-    --density-padding: 1rem;
-  }
-
-  .cv-custom-wrapper.density-balanced .ats-section {
-    margin-bottom: 1rem;
-  }
-
-  .cv-custom-wrapper.density-balanced .ats-experience-item,
-  .cv-custom-wrapper.density-balanced .ats-education-item {
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  /* Densidad: Espacioso */
-  .cv-custom-wrapper.density-spacious {
-    --density-gap: 1.5rem;
-    --density-padding: 1.5rem;
-  }
-
-  .cv-custom-wrapper.density-spacious .ats-section {
-    margin-bottom: 1.5rem;
-  }
-
-  .cv-custom-wrapper.density-spacious .ats-experience-item,
-  .cv-custom-wrapper.density-spacious .ats-education-item {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-
-  /* Espaciado entre secciones */
-  .cv-custom-wrapper.cv-spacing-custom [class*="mb-"] {
-    margin-bottom: calc(var(--section-spacing, 2) * 0.25rem) !important;
-  }
+  /* Density and section spacing: see cv-spacing.css. */
 
   /* Aplicar color de acento a elementos brand */
   .cv-custom-wrapper.cv-c-accent :is(.bg-brand-800, .bg-brand-900) {
@@ -554,13 +503,6 @@
       border: 1px solid #e5e7eb;
     }
   }
-
-/* Section titles: extra room above, so each title clearly opens a new section
-   instead of reading as one more line of the previous one. Padding, not
-   margin: a margin would collapse with the section's own top margin. */
-.cv-custom-wrapper [data-cv-section-title] {
-  padding-top: 0.75rem;
-}
 
 /* The block after the template (references, document, professional card)
    continues the same page: no border or shadow line between the two. */

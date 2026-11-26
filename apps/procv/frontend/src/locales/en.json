@@ -713,6 +713,7 @@
         "gpa": "GPA"
       },
       "help": {
+        "startDateOptional": "Optional",
         "degree": "Select the academic type",
         "fieldOfStudy": "e.g. Business Administration, Nursing",
         "location": "City, Country (optional)",
@@ -1344,6 +1345,15 @@
       "cvTitlePlaceholder": "My Professional CV"
     },
     "templates": {
+      "ats": "Standard",
+      "harvard": "Harvard",
+      "europea": "European",
+      "competencias": "Skills-based",
+      "moderna": "Modern",
+      "elegante": "Refined",
+      "primer-empleo": "First job",
+      "dos-columnas": "Two columns",
+      "cronologica": "Chronological",
       "sidebar": "Sidebar",
       "minimal": "Minimal",
       "corporate": "Professional",

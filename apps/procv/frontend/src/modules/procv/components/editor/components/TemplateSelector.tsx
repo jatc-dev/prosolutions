@@ -14,6 +14,10 @@ export function TemplateSelector({ templates, currentTemplate, onTemplateSelect 
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-3" role="group" aria-label={t("editor.templateSelector.title", "Plantillas de CV")}>
+      {/* Every template is ATS-readable (PDF text layer), so no per-template badge. */}
+      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        Todas las plantillas son legibles por los sistemas de selección (ATS) que usan las empresas: el PDF incluye tu texto real.
+      </p>
       {CV_TEMPLATE_GROUPS.map((group) => {
         const groupTemplates = templates.filter((template) => template.group === group.id);
         if (!groupTemplates.length) return null;
@@ -28,11 +32,10 @@ export function TemplateSelector({ templates, currentTemplate, onTemplateSelect 
                 const selected = currentTemplate === template.key;
                 return (
                   <button key={template.key} type="button" onClick={() => onTemplateSelect(template.key)} aria-pressed={selected}
-                    title={t(`workspace.templates.${template.key}`, { defaultValue: template.label })}
+                    title={template.hint ?? t(`workspace.templates.${template.key}`, { defaultValue: template.label })}
                     className={`relative inline-flex min-h-9 max-w-full shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-left text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${selected ? "border-brand-800 bg-brand-50 text-brand-950 shadow-sm dark:border-brand-400 dark:bg-brand-950/50 dark:text-brand-200" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:bg-brand-50/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-brand-800 dark:hover:bg-slate-800"}`}>
                     <svg className={`h-4 w-4 shrink-0 ${selected ? "text-brand-800 dark:text-brand-300" : "text-slate-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 3.75h7l5 5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1zM14 4v5h5M9 13h6M9 16.5h6" /></svg>
                     <span className="whitespace-nowrap">{t(`workspace.templates.${template.key}`, { defaultValue: template.label })}</span>
-                    {template.atsFriendly ? <span className="rounded bg-brand-100 px-1 py-0.5 text-[9px] font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">ATS</span> : null}
                     {selected ? <span className="h-1.5 w-1.5 rounded-full bg-brand-800 dark:bg-brand-400" aria-hidden="true" /> : null}
                   </button>
                 );
