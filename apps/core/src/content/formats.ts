@@ -15,26 +15,40 @@ export interface TemplateCard {
   key: string;
   name: string;
   description: string;
+  /** Kept for the cards: every template is ATS-readable (the PDF carries its text). */
   ats: boolean;
   photo: boolean;
-  group: "Formatos oficiales" | "Profesionales" | "Compatibles con ATS" | "Diseño";
+  group: "Clásicas y sencillas" | "Profesionales" | "Diseños visuales" | "Formatos oficiales";
 }
 
-/** Same keys as the ProCV template catalog (apps/procv/frontend/src/utils/templateCatalog.ts). */
+/**
+ * Same keys, names and groups as the ProCV catalog
+ * (apps/procv/frontend/src/utils/templateCatalog.ts; a test keeps them in
+ * sync). Preview images: apps/core/public/plantillas/<key>.webp, generated
+ * with apps/procv/frontend/scripts/template-previews.mjs.
+ */
 export const TEMPLATE_CARDS: TemplateCard[] = [
-  { key: "dafp", name: "Función Pública (DAFP)", group: "Formatos oficiales", ats: true, photo: false, description: "Estructura del Formato Único de Hoja de Vida para entidades públicas y contratistas del Estado." },
-  { key: "employment", name: "Formato 1003", group: "Formatos oficiales", ats: true, photo: true, description: "El formato clásico de solicitud de empleo con datos personales, estudios, experiencia y referencias." },
-  { key: "ats", name: "ATS Profesional", group: "Compatibles con ATS", ats: true, photo: true, description: "Una columna y títulos estándar: la opción más segura para portales de empleo y empresas grandes." },
-  { key: "minimal", name: "Minimalista", group: "Compatibles con ATS", ats: true, photo: false, description: "Limpia y directa, sin adornos. Ideal cuando quieres que el contenido hable por sí solo." },
-  { key: "compact", name: "Compacta", group: "Compatibles con ATS", ats: true, photo: false, description: "Aprovecha el espacio para que una trayectoria amplia quepa en una o dos páginas." },
-  { key: "classic", name: "Clásica", group: "Profesionales", ats: true, photo: false, description: "Tipografía con serifa y estilo sobrio, para sectores tradicionales como el jurídico o el financiero." },
-  { key: "corporate", name: "Profesional", group: "Profesionales", ats: true, photo: true, description: "Equilibrio entre diseño y lectura fácil, con espacio para foto y datos de contacto destacados." },
-  { key: "executive", name: "Ejecutiva", group: "Profesionales", ats: true, photo: true, description: "Encabezado en banda oscura para perfiles con experiencia y cargos de coordinación o dirección." },
+  { key: "minimal", name: "Minimalista", group: "Clásicas y sencillas", ats: true, photo: false, description: "Limpia y directa, sin adornos. Ideal cuando quieres que el contenido hable por sí solo." },
+  { key: "ats", name: "Estándar", group: "Clásicas y sencillas", ats: true, photo: true, description: "El formato clásico de procesador de texto: foto opcional, contacto en dos columnas y títulos en franja gris." },
+  { key: "cronologica", name: "Cronológica", group: "Clásicas y sencillas", ats: true, photo: true, description: "Fechas en su propia columna y experiencia de la más reciente a la más antigua: la más usada en Latinoamérica." },
+  { key: "harvard", name: "Harvard", group: "Clásicas y sencillas", ats: true, photo: false, description: "Académica y sobria, con tipografía con serifa y la educación primero. Ideal para estudiantes, docentes e investigadores." },
+  { key: "classic", name: "Clásica", group: "Clásicas y sencillas", ats: true, photo: false, description: "Tipografía con serifa y estilo sobrio, para sectores tradicionales como el jurídico o el financiero." },
+  { key: "compact", name: "Compacta", group: "Clásicas y sencillas", ats: true, photo: false, description: "Aprovecha el espacio para que una trayectoria amplia quepa en una o dos páginas." },
+  { key: "primer-empleo", name: "Primer empleo", group: "Clásicas y sencillas", ats: true, photo: true, description: "Pone estudios, habilidades e idiomas antes que la experiencia: pensada para tu primer trabajo o tus prácticas." },
+  { key: "competencias", name: "Por competencias", group: "Clásicas y sencillas", ats: true, photo: true, description: "Tus competencias clave primero, en un recuadro destacado. Útil al cambiar de sector o tras una pausa laboral." },
+  { key: "corporate", name: "Profesional", group: "Profesionales", ats: true, photo: true, description: "Equilibrio entre diseño y lectura fácil, con el perfil destacado y espacio para foto y contacto." },
+  { key: "moderna", name: "Moderna", group: "Profesionales", ats: true, photo: true, description: "Nombre grande y títulos con barra de color: actual sin perder sobriedad." },
+  { key: "elegante", name: "Elegante", group: "Profesionales", ats: true, photo: true, description: "Encabezado centrado y tipografía distinguida, para cargos de atención, ventas o dirección." },
+  { key: "europea", name: "Europea", group: "Profesionales", ats: true, photo: true, description: "Títulos en una columna a la izquierda y detalles a la derecha, al estilo de los formatos europeos." },
+  { key: "dos-columnas", name: "Dos columnas", group: "Profesionales", ats: true, photo: true, description: "Experiencia y educación a la izquierda; habilidades, idiomas y certificados en una columna lateral." },
   { key: "timeline", name: "Timeline", group: "Profesionales", ats: true, photo: false, description: "Muestra tu experiencia como una línea de tiempo, fácil de recorrer de un vistazo." },
-  { key: "developer", name: "Contraste", group: "Profesionales", ats: true, photo: true, description: "Fondo oscuro de alto contraste, pensado para perfiles digitales y de tecnología." },
-  { key: "extensa", name: "Extensa", group: "Diseño", ats: true, photo: true, description: "Más espacio para detalles: proyectos, logros y habilidades con niveles visuales." },
-  { key: "sidebar", name: "Panel lateral", group: "Diseño", ats: false, photo: true, description: "Columna lateral con foto y contacto. Muy visual, recomendable para enviar directamente a una persona." },
-  { key: "creative", name: "Creativa", group: "Diseño", ats: false, photo: true, description: "Fondo con degradado para perfiles creativos. Mejor para enviar por correo que para portales con filtro ATS." },
+  { key: "sidebar", name: "Panel lateral", group: "Diseños visuales", ats: true, photo: true, description: "Panel de color con foto y contacto, muy visual." },
+  { key: "executive", name: "Ejecutiva", group: "Diseños visuales", ats: true, photo: true, description: "Banda superior de color para perfiles con experiencia y cargos de coordinación o dirección." },
+  { key: "extensa", name: "Extensa", group: "Diseños visuales", ats: true, photo: true, description: "Encabezado centrado y títulos en etiquetas de color, con espacio para trayectorias largas." },
+  { key: "developer", name: "Contraste", group: "Diseños visuales", ats: true, photo: true, description: "Fondo oscuro de alto contraste, pensado para perfiles digitales y de tecnología." },
+  { key: "creative", name: "Creativa", group: "Diseños visuales", ats: true, photo: true, description: "Fondo con degradado para perfiles creativos y de comunicación." },
+  { key: "employment", name: "Formato 1003", group: "Formatos oficiales", ats: true, photo: true, description: "El formato clásico de solicitud de empleo con datos personales, estudios, experiencia y referencias." },
+  { key: "dafp", name: "Función Pública (DAFP)", group: "Formatos oficiales", ats: true, photo: false, description: "Formato Único de Hoja de Vida para entidades públicas y contratistas del Estado." },
 ];
 
 export const DAFP_FAQ: FaqItem[] = [

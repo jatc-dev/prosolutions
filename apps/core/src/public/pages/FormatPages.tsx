@@ -250,7 +250,7 @@ export function TemplatesGalleryPage() {
         <p className="text-sm font-semibold text-ui-accent">ProCV · {TEMPLATE_CARDS.length} plantillas gratis</p>
         <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight text-ui-text sm:text-4xl">Plantillas de hoja de vida gratis para descargar en Word y PDF</h1>
         <p className="mt-4 max-w-3xl text-lg leading-8 text-ui-muted">
-          Elige un diseño, llénalo en línea y descárgalo en PDF o Word. Sin registro y sin marcas de agua. {TEMPLATE_CARDS.filter((template) => template.ats).length} de las {TEMPLATE_CARDS.length} plantillas son compatibles con los filtros ATS que usan los portales de empleo.
+          Elige un diseño, llénalo en línea y descárgalo en PDF o Word. Sin registro y sin marcas de agua. Todas son compatibles con los filtros ATS que usan los portales de empleo: el PDF incluye tu texto real.
         </p>
       </section>
 
