@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import { CloudUpload, Download, LogOut, Trash2, X } from "lucide-react";
 
 export type GuestDataDialogMode = "leave" | "clear";
@@ -68,6 +69,7 @@ export function GuestDataDialog({ mode, onClose, onDownload, onLeave, onClear, s
           </button>
           <a
             href={signUpHref}
+            onClick={() => trackEvent("cta_click", { cta: "signup", location: `guest_${mode}` })}
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-brand-800 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
           >
             <CloudUpload className="h-4 w-4" aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { Button, Input, Select } from "@prosolutions/ui";
+import { Button, Input, Select, trackEvent } from "@prosolutions/ui";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -192,6 +192,7 @@ export function JobEditorPage() {
         : await request<{ job: JobDetail }>("/api/employer/jobs", { method: "POST", body: payload() });
       if (intent === "publish" && saved.job.status !== "published") {
         await request(`/api/employer/jobs/${saved.job.id}/publish`, { method: "POST" });
+        trackEvent("job_publish", { new_job: !jobId });
       }
       navigate(`/empresa?empresa=${saved.job.company.id}`);
     } catch (err) {

@@ -168,6 +168,12 @@ export interface EducationItem {
   endDate?: string;
   isCurrentlyStudying: boolean;
   gpa?: string;
+  /** Formato único (Función Pública): academic modality code, see education.ts. */
+  dafpModality?: string;
+  /** Formato único: approved semesters. */
+  dafpSemesters?: string;
+  /** Formato único: graduated ("yes" / "no"); empty = from the dates. */
+  dafpGraduated?: string;
   activities: string[];
   achievements: string[];
   order: number;

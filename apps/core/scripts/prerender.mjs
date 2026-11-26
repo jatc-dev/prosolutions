@@ -97,18 +97,17 @@ writeFileSync(
   `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapIndex}\n</sitemapindex>\n`,
 );
 
+// Private areas only. The sign-in screens (/login, /register,
+// /forgot-password, /reset-password, /verify-email, /auth) must stay
+// crawlable: they are served by the noindex app shell, and blocking them made
+// Google index them anyway from links ("indexed, though blocked by
+// robots.txt"), without ever reading their noindex.
 const disallow = [
   "/admin",
   "/settings",
-  "/auth",
   "/dashboard",
   "/modules",
   "/security",
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
 ];
 writeFileSync(
   join(dist, "robots.txt"),

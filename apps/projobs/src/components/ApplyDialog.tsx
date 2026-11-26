@@ -1,4 +1,4 @@
-import { LEGAL_URLS, Button, Input, cn } from "@prosolutions/ui";
+import { LEGAL_URLS, Button, Input, cn, trackEvent } from "@prosolutions/ui";
 import { CheckCircle2, FileText, PencilLine } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -80,6 +80,7 @@ export function ApplyDialog({ job, onClose, onApplied }: ApplyDialogProps) {
               },
             };
       const result = await request<{ id: string; match: MatchResult }>(`/api/jobs/${job.id}/applications`, { method: "POST", body });
+      trackEvent("job_apply", { cv_source: mode === "procv" ? "procv" : "manual", cover_letter: Boolean(coverLetter.trim()) });
       setDone(result.match);
     } catch (error) {
       setSubmitError(errorMessage(error));

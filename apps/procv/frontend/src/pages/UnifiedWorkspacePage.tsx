@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import { Loader2 } from "lucide-react";
 import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +50,7 @@ export function UnifiedWorkspacePage() {
       const response = await api.post("/cvs", { title: t("dashboard.newCV"), template: "sidebar" });
       const cv = response?.data?.cv;
       if (!cv?.id) throw new Error("El servidor no devolvió el identificador de la hoja de vida.");
+      trackEvent("cv_created", { source: "dashboard" });
       navigate(`/editor/${cv.id}`);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || t("dashboard.errorCreatingCV"));
@@ -68,6 +70,7 @@ export function UnifiedWorkspacePage() {
       });
       const duplicate = response?.data?.cv;
       if (duplicate?.id) {
+        trackEvent("cv_created", { source: "duplicate" });
         toast.success(t("workspace.success.cvDuplicated"));
         await loadCvs();
         navigate(`/editor/${duplicate.id}`);

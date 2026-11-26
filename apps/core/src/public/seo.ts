@@ -3,6 +3,8 @@ import { ARTICLES, AUTHORS, CATEGORIES, getArticle } from "../content/academy";
 import { ABOUT_PAGE, LEGAL_DOCUMENTS } from "../content/legal";
 import { SITE, absoluteUrl } from "../content/site";
 import { TOOLS, getTool } from "../content/tools";
+import { TEMPLATE_LANDINGS, getTemplateLanding } from "../content/templateLandings";
+import { toolGuide } from "../content/toolGuides";
 import { DAFP_FAQ, FORMAT_1003_FAQ, FORMAT_PAGES_UPDATED, TEMPLATE_CARDS, type FaqItem } from "../content/formats";
 import { PHRASE_FAMILIES as ALL_PHRASE_FAMILIES } from "../../../procv/frontend/src/modules/procv/phrases";
 /** Example pages exist for job families only ("general" is the editor catch-all). */
@@ -97,9 +99,9 @@ const CREATE_CV_UPDATED = "2026-11-19";
 /** Landing pages for the CV formats people search for, and the template gallery. */
 export const FORMAT_HEADS: Record<string, PageHead> = {
   "/formato-unico-hoja-de-vida": {
-    title: "Formato único de hoja de vida Función Pública: llénalo en línea gratis | ProSolutions",
+    title: "Formato único de hoja de vida Función Pública 2026: llénalo en línea en PDF o Word | ProSolutions",
     description:
-      "Diligencia el Formato Único de Hoja de Vida (Función Pública, Ley 190 de 1995) en línea y descárgalo en PDF o Word. Gratis, sin registro y con guía paso a paso.",
+      "Llena el Formato Único de Hoja de Vida – Persona Natural de la Función Pública (Ley 190 de 1995) en línea y descárgalo en PDF o Word. Gratis, sin registro, con guía campo por campo.",
     path: "/formato-unico-hoja-de-vida",
   },
   "/hoja-de-vida-formato-1003": {
@@ -261,6 +263,26 @@ export function headForPath(rawPath: string): PageHead | null {
     };
   }
 
+  const landingMatch = path.match(/^\/plantillas-hoja-de-vida\/([a-z0-9-]+)$/);
+  if (landingMatch) {
+    const landing = getTemplateLanding(landingMatch[1]!);
+    if (!landing) return null;
+    return {
+      title: `${landing.title} | ProSolutions`,
+      description: landing.description,
+      path,
+      modifiedAt: landing.updatedAt,
+      jsonLd: [
+        webPage("WebPage", landing.title, landing.description, path, { dateModified: landing.updatedAt, image: absoluteUrl(`/plantillas/${landing.template}.webp`) }),
+        faqPage(landing.faq),
+        breadcrumb([
+          { name: "Plantillas", path: "/plantillas-hoja-de-vida" },
+          { name: landing.name, path },
+        ]),
+      ],
+    };
+  }
+
   const formatHead = FORMAT_HEADS[path];
   if (formatHead) {
     const isGallery = path === "/plantillas-hoja-de-vida";
@@ -307,6 +329,7 @@ export function headForPath(rawPath: string): PageHead | null {
       modifiedAt: tool.updatedAt,
       jsonLd: [
         webPage("WebPage", tool.title, tool.description, path, { dateModified: tool.updatedAt }),
+        ...(toolGuide(tool.slug) ? [faqPage(toolGuide(tool.slug)!.faq)] : []),
         breadcrumb([
           { name: "Herramientas", path: "/tools" },
           { name: tool.shortTitle, path },
@@ -359,6 +382,7 @@ export function publicRoutes(): PublicRoute[] {
   return [
     { path: CREATE_CV_HEAD.path, lastmod: CREATE_CV_UPDATED, priority: 0.9, changefreq: "monthly" },
     ...Object.keys(FORMAT_HEADS).map((formatPath) => ({ path: formatPath, lastmod: FORMAT_PAGES_UPDATED, priority: 0.9, changefreq: "monthly" as const })),
+    ...TEMPLATE_LANDINGS.map((landing) => ({ path: `/plantillas-hoja-de-vida/${landing.slug}`, lastmod: landing.updatedAt, priority: 0.8, changefreq: "monthly" as const })),
     { path: "/ejemplos-hoja-de-vida", lastmod: EXAMPLES_UPDATED, priority: 0.8, changefreq: "monthly" },
     ...PHRASE_FAMILIES.map((family) => ({ path: `/ejemplos-hoja-de-vida/${family.id}`, lastmod: EXAMPLES_UPDATED, priority: 0.7, changefreq: "monthly" as const })),
     { path: "/salario-minimo-colombia", lastmod: paramsFor().reviewedAt, priority: 0.9, changefreq: "monthly" },

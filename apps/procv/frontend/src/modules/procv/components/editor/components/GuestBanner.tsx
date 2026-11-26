@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { trackEvent } from "@prosolutions/ui";
 import { ArrowRight, HardDrive, Trash2, X } from "lucide-react";
 
 export const GUEST_BANNER_DISMISSED_KEY = "procv.guestBannerDismissed";
@@ -44,6 +45,7 @@ export function GuestBanner({ onClearData }: { onClearData: () => void }) {
         </p>
         <a
           href="/auth"
+          onClick={() => trackEvent("cta_click", { cta: "signup", location: "guest_banner" })}
           className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-800 px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-1"
         >
           <span className="sm:hidden">Guardar en la nube</span>

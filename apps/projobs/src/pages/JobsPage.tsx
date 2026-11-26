@@ -294,6 +294,7 @@ function CreateAlertButton({ filters }: { filters: JobFilters }) {
         method: "POST",
         body: { label: filters.q.trim() || null, frequency: "daily", query: filtersToAlertQuery(filters) },
       });
+      trackEvent("job_alert_create", { frequency: "daily" });
       setState("saved");
     } catch {
       setState("error");
