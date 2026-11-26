@@ -1182,7 +1182,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
               ones live in "Más"; Descargar and Guardar close the row. Secondary
               buttons show only their icon on medium screens (name in title/aria). */}
           <div className="cv-editor-header-bar border-b border-brand-200 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:px-4">
-            <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-2">
+            <div className="mx-auto flex w-full max-w-[88rem] flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleBack}

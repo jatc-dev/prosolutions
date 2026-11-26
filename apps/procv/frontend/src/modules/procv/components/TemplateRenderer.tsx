@@ -1217,6 +1217,12 @@ function TemplateCorporate({ data }: { data: CVData }) {
   );
 }
 
+/**
+ * Contact boxes of the developer template. Roomier padding and line height:
+ * in the PDF the text sat on the bottom border of the old, tighter boxes.
+ */
+const DEV_CHIP = "cv-dev-chip rounded-md border px-2.5 py-1.5 break-words";
+
 function TemplateDeveloper({ data }: { data: CVData }) {
   const personal = data.personal ?? {};
   const emails = normalizeContactItems(personal.emails ?? personal.email);
@@ -1244,22 +1250,22 @@ function TemplateDeveloper({ data }: { data: CVData }) {
           <h1 className="text-3xl font-semibold tracking-tight" style={{ color: textStrong }}>{personal.name || ""}</h1>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>{personal.role || ""}</p>
         </div>
-        <div className="space-y-1 text-xs" style={{ color: textMuted }}>
+        <div className="space-y-1.5 text-xs leading-snug" style={{ color: textMuted }}>
           {emails.map((email, idx) => (
-            <div key={`email-${idx}`} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
+            <div key={`email-${idx}`} className={DEV_CHIP} style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
               <ContactPrefix item={email} /> {email.value}
             </div>
           ))}
           {phones.map((phone, idx) => (
-            <div key={`phone-${idx}`} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
+            <div key={`phone-${idx}`} className={DEV_CHIP} style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>
               <ContactPrefix item={phone} /> {phone.value}
             </div>
           ))}
           {personalMetaLines.map((line) => (
-            <div key={line} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>{line}</div>
+            <div key={line} className={DEV_CHIP} style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>{line}</div>
           ))}
           {Object.keys(data.links || {}).map((label) => (
-            <div key={label} className="px-2 py-1 rounded-md border" style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>{label}</div>
+            <div key={label} className={DEV_CHIP} style={{ backgroundColor: chipBackground, borderColor: chipBorder }}>{label}</div>
           ))}
         </div>
       </div>
