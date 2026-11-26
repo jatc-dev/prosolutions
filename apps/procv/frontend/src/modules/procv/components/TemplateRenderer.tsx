@@ -103,7 +103,14 @@ export interface CVData {
   education?: Array<{
     id: string;
     institution: string;
+    /** Title shown: the programme, or the type of studies when there is none. */
     degree: string;
+    /** Type of studies (high-school, bachelor, master…). */
+    degreeType?: string;
+    /** Formato único (Función Pública). */
+    dafpModality?: string;
+    dafpSemesters?: string;
+    dafpGraduated?: string;
     from: string;
     to?: string;
     city?: string;
@@ -2840,12 +2847,16 @@ function TemplateDafp({ data }: { data: CVData }) {
           <table className="w-full border-collapse text-[11px]">
             <thead>
               <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
-                <th className={CELL}>Educación superior: estudios o título</th><th className={CELL}>Institución</th><th className={CELL}>Terminación</th>
+                <th className={CELL}>Modalidad</th><th className={CELL}>Semestres</th><th className={CELL}>Graduado</th><th className={CELL}>Educación superior: estudios o título</th><th className={CELL}>Institución</th><th className={CELL}>Terminación</th>
               </tr>
             </thead>
             <tbody>
-              {education.map((item) => (
+              {/* Secondary school goes in "Educación básica y media", not here. */}
+              {education.filter((item) => item.degreeType !== "high-school").map((item) => (
                 <tr key={item.id}>
+                  <td className={`${CELL} text-center`}>{item.dafpModality}</td>
+                  <td className={`${CELL} text-center`}>{item.dafpSemesters}</td>
+                  <td className={`${CELL} text-center`}>{item.dafpGraduated}</td>
                   <td className={`${CELL} font-semibold`}>{getLocalizedDegreeLabel(item.degree)}</td>
                   <td className={CELL}>{item.institution}</td>
                   <td className={`${CELL} whitespace-nowrap`}>{item.to ? formatMonthYear(item.to) : "En curso"}</td>

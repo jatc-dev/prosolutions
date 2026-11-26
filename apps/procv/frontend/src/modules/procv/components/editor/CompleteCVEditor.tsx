@@ -31,6 +31,7 @@ import { TemplateColorCustomizer } from "./TemplateColorCustomizer";
 import { createEmptyItem } from "./components/DraggableBlock";
 import { OPEN_CUSTOMIZER_EVENT, PreviewDesignBar } from "./components/PreviewDesignBar";
 import { personNames } from "../../personName";
+import { dafpGraduated, inferDafpModality } from "../../education";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
@@ -387,7 +388,13 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
     education: hiddenIn(cvData, 'education') ? [] : cvData.education?.filter((edu: any) => edu.isVisible !== false).map((edu: any) => ({
       id: edu.id,
       institution: edu.institution,
-      degree: edu.degree,
+      // The programme the person wrote ("Administración de empresas"); the
+      // type of studies only when there is none (see education.ts).
+      degree: String(edu.fieldOfStudy || '').trim() || edu.degree,
+      degreeType: edu.degree,
+      dafpModality: edu.dafpModality || inferDafpModality(edu.degree),
+      dafpSemesters: String(edu.dafpSemesters || '').trim(),
+      dafpGraduated: dafpGraduated(edu),
       from: edu.startDate,
       // Ongoing studies without a start date still say so.
       to: edu.isCurrentlyStudying ? (edu.startDate ? undefined : 'En curso') : edu.endDate,
@@ -1154,6 +1161,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <EducationSection
             data={cvData.education}
             onChange={updateEducation}
+            template={cvData.template}
             {...commonProps}
           />
         );

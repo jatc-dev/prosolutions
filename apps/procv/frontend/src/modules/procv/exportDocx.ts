@@ -3,6 +3,8 @@ import { defaultGreeting, formatLetterDate, letterParagraphs } from "./coverLett
 import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
 import { sectionTitle } from "./sectionTitles";
 import { pageColorFor } from "./pageColor";
+import { educationTitle } from "./education";
+import { getLocalizedDegreeLabel } from "./components/TemplateRenderer";
 import { groupReferences, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences } from "./references";
 
 /**
@@ -70,7 +72,9 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
       key: "education",
       heading: sectionTitle(cv.settings, "education"),
       blocks: education.map((item) => ({
-        title: [item.degree, item.fieldOfStudy && item.fieldOfStudy !== item.degree ? item.fieldOfStudy : ""].filter(Boolean).join(" — "),
+        // The programme ("Administración de empresas"), or the type of studies
+        // in words; it used to print the internal key ("bachelor — …").
+        title: educationTitle(item, getLocalizedDegreeLabel),
         subtitle: [item.institution, period(item.startDate, item.endDate, item.isCurrentlyStudying), item.location].filter(Boolean).join(" · "),
       })),
     });

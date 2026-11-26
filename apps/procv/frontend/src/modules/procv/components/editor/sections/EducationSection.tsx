@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { DAFP_MODALITIES, inferDafpModality } from "../../../education";
 import { tx } from '../../../uiText';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -17,6 +18,8 @@ interface EducationSectionProps {
   onChange: (data: EducationItem[]) => void;
   errors?: ValidationErrors;
   isLoading?: boolean;
+  /** Current template: the public-sector form data opens by itself for "dafp". */
+  template?: string;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -126,6 +129,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
   onChange,
   errors = {},
   isLoading = false,
+  template,
 }) => {
   const { t, i18n } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<string[]>(() => {
@@ -601,6 +605,49 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                       </div>
                     </FormField>
                   </div>
+
+                  {/* Extra data of the public-sector form (Formato Único, Función Pública). */}
+                  {education.degree !== 'high-school' ? (
+                    <details open={template === 'dafp'} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/40">
+                      <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {tx('editor.education.dafpTitle', 'Datos para el formato de Función Pública (opcional)')}
+                      </summary>
+                      <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <FormField label={tx('editor.education.dafpModality', 'Modalidad académica')}>
+                          <select
+                            value={education.dafpModality || ''}
+                            onChange={(e) => updateEducation(education.id, { dafpModality: e.target.value })}
+                            className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            <option value="">{inferDafpModality(education.degree) ? `${tx('editor.education.dafpModalityAuto', 'Según el tipo')}: ${inferDafpModality(education.degree)}` : tx('editor.ui.select', 'Seleccionar')}</option>
+                            {DAFP_MODALITIES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                          </select>
+                        </FormField>
+                        <FormField label={tx('editor.education.dafpSemesters', 'Semestres aprobados')}>
+                          <InputField
+                            type="text"
+                            value={education.dafpSemesters || ''}
+                            onChange={(value) => updateEducation(education.id, { dafpSemesters: value.replace(/[^0-9]/g, '').slice(0, 2) })}
+                            placeholder="Ej.: 10"
+                          />
+                        </FormField>
+                        <FormField label={tx('editor.education.dafpGraduated', '¿Graduado?')}>
+                          <select
+                            value={education.dafpGraduated || ''}
+                            onChange={(e) => updateEducation(education.id, { dafpGraduated: e.target.value })}
+                            className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            <option value="">{tx('editor.education.dafpGraduatedAuto', 'Según las fechas')}</option>
+                            <option value="yes">{tx('editor.ui.yes', 'Sí')}</option>
+                            <option value="no">{tx('editor.ui.no', 'No')}</option>
+                          </select>
+                        </FormField>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                        {tx('editor.education.dafpHint', 'Solo aparecen en el formato de Función Pública. El título obtenido sale del campo de arriba.')}
+                      </p>
+                    </details>
+                  ) : null}
 
                   {/* GPA */}
                   <FormField

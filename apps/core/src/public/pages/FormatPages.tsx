@@ -182,7 +182,7 @@ export function DafpFormatPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-ui-muted">También se anotan los semestres aprobados, si te graduaste, el título obtenido, la fecha de terminación y la tarjeta o matrícula profesional si tu profesión la exige; en idiomas, tu nivel para hablarlo, leerlo y escribirlo. ProCV incluye el título, la institución, la fecha de terminación, la tarjeta profesional y los idiomas; la modalidad y los semestres complétalos a mano si la entidad los exige.</p>
+            <p className="mt-3 text-ui-muted">También se anotan los semestres aprobados, si te graduaste, el título obtenido, la fecha de terminación y la tarjeta o matrícula profesional si tu profesión la exige; en idiomas, tu nivel para hablarlo, leerlo y escribirlo. En ProCV llenas todo esto: en cada estudio, abre «Datos para el formato de Función Pública» para indicar la modalidad, los semestres y si te graduaste.</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold">3. Experiencia laboral</h3>

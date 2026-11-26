@@ -51,7 +51,7 @@ const sample = (template) => ({
       description: "Atención de huéspedes, reservas y caja.\n• Mantuve una calificación de servicio de 4,8/5.", order: 1, isVisible: true,
     },
   ],
-  education: [{ id: "d1", institution: "SENA", degree: "Técnico en gestión documental", fieldOfStudy: "", startDate: "2017-01", endDate: "2018-12", isCurrentlyStudying: false, order: 0, isVisible: true }],
+  education: [{ id: "d1", institution: "SENA", degree: "associate", fieldOfStudy: "Técnico en gestión documental", dafpModality: "TC", dafpSemesters: "4", startDate: "2017-01", endDate: "2018-12", isCurrentlyStudying: false, order: 0, isVisible: true }],
   skills: ["Excel", "Atención al cliente", "Gestión documental", "Redacción"].map((name, index) => ({ id: `s${index}`, name, level: "advanced", category: "technical", isVisible: true })),
   languages: [{ id: "l1", language: "Inglés", listeningLevel: "B1", isVisible: true }],
   certificates: [],
