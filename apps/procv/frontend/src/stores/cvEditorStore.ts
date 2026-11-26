@@ -62,6 +62,8 @@ interface CVEditorState {
   // Guest Mode
   isGuest: boolean;
   setIsGuest: (value: boolean) => void;
+  /** Delete the guest CV from this browser and start empty. */
+  discardGuestData: () => void;
 
   // Templates
   loadTemplates: () => Promise<void>;
@@ -414,6 +416,101 @@ const expandValidationPath = (root: unknown, path: string[]): Array<{ path: stri
   return visit(root, path, []);
 };
 
+export const GUEST_DRAFT_KEY = 'procv_guest_resume';
+export const EDITOR_STORAGE_KEY = 'cv-editor-storage';
+/**
+ * A guest CV is kept in the browser only this long after its last change, so
+ * nothing stays behind on public or shared computers.
+ */
+export const GUEST_DATA_TTL_MS = 2 * 60 * 60 * 1000;
+
+const readJson = (key: string): any => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+/** Last time the guest CV changed in this browser, or null if unknown. */
+const guestActivityAt = (): number | null => {
+  const persisted = readJson(EDITOR_STORAGE_KEY)?.state;
+  const draft = readJson(GUEST_DRAFT_KEY);
+  const times = [persisted?.cvData ? persisted?.persistedAt : null, draft?.savedAt]
+    .filter((value): value is number => typeof value === 'number');
+  return times.length ? Math.max(...times) : null;
+};
+
+/** True when a guest CV is stored and has not changed for GUEST_DATA_TTL_MS. */
+export const isGuestDataExpired = (now = Date.now()): boolean => {
+  const hasData = Boolean(readJson(GUEST_DRAFT_KEY) || readJson(EDITOR_STORAGE_KEY)?.state?.cvData);
+  if (!hasData) return false;
+  const last = guestActivityAt();
+  // Drafts from before the time limit carry no time: treat them as expired.
+  return last === null || now - last > GUEST_DATA_TTL_MS;
+};
+
+/** Remove every copy of the CV kept by the editor in this browser. */
+export const clearGuestData = () => {
+  try {
+    localStorage.removeItem(GUEST_DRAFT_KEY);
+    localStorage.removeItem(EDITOR_STORAGE_KEY);
+  } catch {
+    // Storage unavailable: nothing was kept.
+  }
+};
+
+/** Whether the CV has anything the person wrote (used for notices). */
+export const hasCvContent = (data: CVData): boolean =>
+  Boolean(
+    data.personal?.fullName?.trim() ||
+      data.personal?.summary?.trim() ||
+      data.experience?.length ||
+      data.education?.length ||
+      data.skills?.length ||
+      data.coverLetter?.body?.trim(),
+  );
+
+/**
+ * The guest draft, or null. A draft with a server id is an account CV that
+ * leaked into guest storage (older versions copied it on sign-out): it is
+ * discarded so a signed-out browser never shows someone's saved CV.
+ */
+export const readGuestDraft = (): CVData | null => {
+  if (isGuestDataExpired()) {
+    clearGuestData();
+    return null;
+  }
+  try {
+    const saved = localStorage.getItem(GUEST_DRAFT_KEY);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    const data = normalizeLoadedCVData(parsed?.data ?? parsed);
+    if (data.id) {
+      localStorage.removeItem(GUEST_DRAFT_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+/** Forget the account CV kept by the editor in this browser (on sign-out). */
+export const clearAccountEditorData = () => {
+  try {
+    localStorage.removeItem(EDITOR_STORAGE_KEY);
+    const saved = localStorage.getItem(GUEST_DRAFT_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if ((parsed?.data ?? parsed)?.id) localStorage.removeItem(GUEST_DRAFT_KEY);
+    }
+  } catch {
+    // Storage unavailable: nothing was kept.
+  }
+};
+
 export const useCVEditorStore = create<CVEditorState>()(
   devtools(
     persist(
@@ -645,12 +742,19 @@ export const useCVEditorStore = create<CVEditorState>()(
           try {
             // Guest mode: save to localStorage only
             if (state.isGuest) {
+              if (state.cvData.id) {
+                // An account CV is on screen after signing out: never copy it
+                // into this browser's guest draft.
+                set({ isSaving: false });
+                return;
+              }
               const guestData = {
+                savedAt: Date.now(),
                 title: state.cvData.title,
                 template: state.cvData.template,
                 data: state.cvData,
               };
-              localStorage.setItem('procv_guest_resume', JSON.stringify(guestData));
+              localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(guestData));
 
               set({
                 isSaving: false,
@@ -747,27 +851,40 @@ export const useCVEditorStore = create<CVEditorState>()(
 
         // Guest Mode
         setIsGuest: (value: boolean) => {
-          // Load the saved draft only when entering guest mode: calling this
-          // again while already a guest must not overwrite in-memory edits.
-          const wasGuest = get().isGuest;
-          set({ isGuest: value });
-          if (value && !wasGuest) {
-            // Load from localStorage when entering guest mode
-            const saved = localStorage.getItem('procv_guest_resume');
-            if (saved) {
-              try {
-                const parsed = JSON.parse(saved);
-                const normalized = normalizeLoadedCVData(parsed?.data ?? parsed);
-                set({
-                  cvData: normalized,
-                  originalCvData: { ...normalized },
-                  hasUnsavedChanges: false,
-                });
-              } catch (error) {
-                console.error('Error loading guest resume from localStorage:', error);
-              }
-            }
+          // Load the draft only when entering guest mode: calling this again
+          // while already a guest must not overwrite in-memory edits. An
+          // account CV still in memory (signed out mid-edit, or restored from
+          // storage) is always replaced by the guest draft or an empty CV.
+          const { isGuest: wasGuest, cvData: current } = get();
+          if (!(value && (!wasGuest || current.id))) {
+            set({ isGuest: value });
+            return;
           }
+          // Read the draft before switching: switching stores the CV in
+          // memory, which would look like fresh guest activity.
+          const draft = readGuestDraft() ?? createInitialCVData();
+          set({
+            isGuest: true,
+            cvData: draft,
+            originalCvData: { ...draft },
+            hasUnsavedChanges: false,
+            lastSaved: null,
+            validationErrors: {},
+            touchedFields: new Set(),
+          });
+        },
+
+        discardGuestData: () => {
+          clearGuestData();
+          const empty = createInitialCVData();
+          set({
+            cvData: empty,
+            originalCvData: { ...empty },
+            hasUnsavedChanges: false,
+            lastSaved: null,
+            validationErrors: {},
+            touchedFields: new Set(),
+          });
         },
 
         // Templates
@@ -891,13 +1008,28 @@ export const useCVEditorStore = create<CVEditorState>()(
         },
       }),
       {
-        name: 'cv-editor-storage',
+        name: EDITOR_STORAGE_KEY,
+        // Account CVs are loaded from the server: keeping them in this
+        // browser would show them to whoever uses it after signing out.
         partialize: (state) => ({
-          cvData: state.cvData,
+          ...(state.isGuest && !state.cvData.id ? { cvData: state.cvData } : {}),
+          // Time of the last change: guest CVs expire GUEST_DATA_TTL_MS later.
+          persistedAt: Date.now(),
           activeSection: state.activeSection,
           lastSaved: state.lastSaved,
           isGuest: state.isGuest,
         }),
+        // A stored guest CV older than the time limit (or from before it
+        // existed) is not restored.
+        merge: (persisted, current) => {
+          const stored = { ...((persisted as Record<string, unknown>) || {}) };
+          const at = stored.persistedAt;
+          if (stored.cvData && (typeof at !== 'number' || Date.now() - at > GUEST_DATA_TTL_MS)) {
+            delete stored.cvData;
+          }
+          delete stored.persistedAt;
+          return { ...current, ...(stored as Partial<CVEditorState>) };
+        },
         onRehydrateStorage: () => (rawState) => {
           if (rawState) {
             const parsed = rawState.lastSaved ? new Date(rawState.lastSaved) : null;

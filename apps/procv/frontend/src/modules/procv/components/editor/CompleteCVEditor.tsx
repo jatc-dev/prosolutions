@@ -49,7 +49,9 @@ import { Format1003Fields, FormatDafpFields } from "./sections/EmploymentApplica
 import { AutoSaveIndicator, ValidationSummary, ImportReviewModal } from "./components";
 import { VersionHistoryDialog } from "./components/VersionHistoryDialog";
 import { GuestBanner } from "./components/GuestBanner";
-import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Upload } from "lucide-react";
+import { GuestDataDialog, type GuestDataDialogMode } from "./components/GuestDataDialog";
+import { hasCvContent, isGuestDataExpired } from "../../../../shared/stores/cvEditorStore";
+import { Eye, EyeOff, FileText, History, Mail, MoreHorizontal, RotateCcw, Save, Target, Trash2, Upload } from "lucide-react";
 import { ActionMenu } from "./components/ActionMenu";
 import { DownloadMenu } from "./components/DownloadMenu";
 import { professionalCardText } from "../../professionalCard";
@@ -431,6 +433,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     getSectionCompletion,
     setTemplate,
     setIsGuest,
+    discardGuestData,
   } = useCVEditorStore();
 
   // Which document is being edited: the CV or its cover letter (remembered per browser).
@@ -524,9 +527,12 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
   // A guest draft already lives in this browser (persisted editor store).
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
+  const [guestDialog, setGuestDialog] = useState<GuestDataDialogMode | null>(null);
   const handleBack = useCallback(async () => {
     if (!isAuthenticated) {
-      navigate('/');
+      // Guests are reminded that the CV only lives in this browser.
+      if (hasCvContent(useCVEditorStore.getState().cvData)) setGuestDialog('leave');
+      else navigate('/');
       return;
     }
     if (hasUnsavedChanges) {
@@ -540,6 +546,38 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     }
     navigate('/dashboard');
   }, [isAuthenticated, hasUnsavedChanges, saveCV, navigate, t]);
+
+  const clearGuestCv = useCallback((thenLeave: boolean) => {
+    discardGuestData();
+    setGuestDialog(null);
+    toast.success(tx('editor.guest.cleared', 'Borramos tu hoja de vida de este navegador.'));
+    if (thenLeave) navigate('/');
+  }, [discardGuestData, navigate]);
+
+  // Public computers: a guest CV is deleted 2 hours after its last change,
+  // also while the tab stays open.
+  useEffect(() => {
+    if (!isGuest) return;
+    const check = () => {
+      if (!isGuestDataExpired()) return;
+      const hadContent = hasCvContent(useCVEditorStore.getState().cvData);
+      discardGuestData();
+      if (hadContent) toast(tx('editor.guest.expired', 'Por seguridad borramos tu hoja de vida de este navegador tras 2 horas sin cambios.'), { duration: 8000 });
+    };
+    check();
+    const timer = window.setInterval(check, 60_000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [isGuest, discardGuestData]);
+
+  // After a guest downloads, remind them where the CV lives.
+  const remindGuestAfterDownload = useCallback(() => {
+    if (!useCVEditorStore.getState().isGuest) return;
+    toast(tx('editor.guest.afterDownload', 'Listo. En este equipo tu hoja de vida se borra tras 2 horas sin cambios: crea una cuenta gratis para guardarla en la nube.'), { duration: 9000, icon: '☁️' });
+  }, []);
 
   // Handle manual save
   const handleSave = useCallback(async () => {
@@ -743,6 +781,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       if (docMode === 'letter') await exportCoverLetterDocx(cvData);
       else await exportCvDocx(cvData);
       toast.success(t("editor.export.docxSuccess", "Documento de Word descargado"));
+      remindGuestAfterDownload();
       trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'docx', template: cvData.template });
     } catch (error) {
       console.error("DOCX export error:", error);
@@ -750,7 +789,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
     } finally {
       setIsExportingDocx(false);
     }
-  }, [cvData, docMode, t]);
+  }, [cvData, docMode, t, remindGuestAfterDownload]);
 
   // Export PDF using html2pdf.js - works with local guest state (no cvId required)
   const handleExportPdf = useCallback(async () => {
@@ -833,6 +872,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
         .save()
         .then(() => {
           toast.success(t("workspace.export.pdfSuccess"), { id: "pdf-export" });
+          remindGuestAfterDownload();
           trackEvent("document_download", { document: docMode === 'letter' ? 'cover_letter' : 'cv', format: 'pdf', template: cvData.template });
         })
         .catch((error: any) => {
@@ -847,7 +887,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
       toast.error(t("workspace.errors.exportPdf"), { id: "pdf-export" });
       setIsExportingPdf(false);
     }
-  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t]);
+  }, [cvData.title, cvData.coverLetter?.body, cvData.template, docMode, t, remindGuestAfterDownload]);
 
   // Get completion status for all sections
   const completionStatus = {
@@ -1097,7 +1137,22 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
             onApply={handleApplyImportReview}
           />
 
-          {isGuest && <GuestBanner />}
+          {isGuest && <GuestBanner onClearData={() => setGuestDialog('clear')} />}
+          {guestDialog ? (
+            <GuestDataDialog
+              mode={guestDialog}
+              onClose={() => setGuestDialog(null)}
+              onDownload={() => {
+                setGuestDialog(null);
+                void handleExportPdf();
+              }}
+              onLeave={() => {
+                setGuestDialog(null);
+                navigate('/');
+              }}
+              onClear={() => clearGuestCv(guestDialog === 'leave')}
+            />
+          ) : null}
 
           {/* Header: one row of actions. Frequent ones are buttons; occasional
               ones live in "Más"; Descargar and Guardar close the row. Secondary
@@ -1212,6 +1267,13 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
                     icon: <Upload className="h-5 w-5 text-brand-700" />,
                     onSelect: handleImportClick,
                   },
+                  ...(isGuest ? [{
+                    label: tx('editor.guest.clearData', 'Borrar mis datos de este navegador'),
+                    description: tx('editor.guest.clearDataHint', 'Para computadores públicos. Se borran solos tras 2 horas sin cambios.'),
+                    icon: <Trash2 className="h-5 w-5 text-red-600" />,
+                    onSelect: () => setGuestDialog('clear'),
+                    tone: 'danger' as const,
+                  }] : []),
                   {
                     label: t('editor.actions.reset'),
                     description: tx('editor.ui.resetHint', 'Borra el contenido y empieza de cero. Pide confirmación.'),

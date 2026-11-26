@@ -2,6 +2,7 @@ import create from "zustand";
 import { useEffect } from "react";
 import React from "react";
 import { api } from "../services/api";
+import { clearAccountEditorData } from "./cvEditorStore";
 import { identityAuthApiUrl } from "../lib/identityUrl";
 import { fetchWithTimeout, refreshAccessToken } from "../services/authRefresh";
 
@@ -50,6 +51,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Clear the local view even if Identity is temporarily unreachable.
     }
     api.setToken(null);
+    clearAccountEditorData();
     set({ user: null, accessToken: null, isAuthenticated: false });
   },
 

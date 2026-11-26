@@ -7,7 +7,7 @@ describe("Guest banner", () => {
   afterEach(() => window.sessionStorage.clear());
 
   it("is one line with the cloud link and can be closed for the session", () => {
-    const { unmount } = render(<GuestBanner />);
+    const { unmount } = render(<GuestBanner onClearData={() => undefined} />);
     const banner = screen.getByTestId("guest-banner");
     expect(banner.textContent).toContain("Modo invitado");
     expect(screen.getByRole("link").getAttribute("href")).toBe("/auth");
@@ -17,7 +17,7 @@ describe("Guest banner", () => {
     expect(window.sessionStorage.getItem(GUEST_BANNER_DISMISSED_KEY)).toBe("1");
     unmount();
 
-    render(<GuestBanner />);
+    render(<GuestBanner onClearData={() => undefined} />);
     expect(screen.queryByTestId("guest-banner")).toBeNull();
   });
 });
