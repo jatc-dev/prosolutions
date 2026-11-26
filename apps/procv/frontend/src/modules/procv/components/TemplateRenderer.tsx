@@ -1655,7 +1655,6 @@ function TemplateSidebar({ data }: { data: CVData }) {
   const personal = data.personal ?? {};
   const emails = normalizeContactItems(personal.emails ?? personal.email);
   const phones = normalizeContactItems(personal.phones ?? personal.phone);
-  const links = data.links ?? {};
   const certificates = normalizeCertificates(data.certificates);
   const sidebarBg = data.settings?.sidebarBg ?? "#0f172a";
   const personalMetaLines = getPersonalMetaLines(personal);
@@ -1665,8 +1664,6 @@ function TemplateSidebar({ data }: { data: CVData }) {
   const headingColor = isLight ? "#0f172a" : "#ffffff";
   const mutedColor = isLight ? "#334155" : rgbaFromHex("#ffffff", 0.82);
   const softColor = isLight ? "#475569" : rgbaFromHex("#ffffff", 0.72);
-  const linkColor = isLight ? "#0f172a" : "#ffffff";
-  const linkDecoration = isLight ? "rgba(15, 23, 42, 0.45)" : "rgba(255, 255, 255, 0.5)";
 
   return (
     <div className="max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm [&_a]:inline-block [&_a]:max-w-full [&_a]:break-all [&_a]:whitespace-normal">
@@ -1695,24 +1692,7 @@ function TemplateSidebar({ data }: { data: CVData }) {
               {personalMetaLines.map((line) => (
                 <div key={line}>{line}</div>
               ))}
-              {Object.keys(links).length ? (
-                <div className="pt-2">
-                  {Object.entries(links).map(([label, url]) => (
-                    <div key={label}>
-                      <span className="font-semibold">{label}:</span>{" "}
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline underline-offset-2"
-                          style={{ color: linkColor, textDecorationColor: linkDecoration }}
-                        >
-                        {url}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              {/* Links are listed in their own section in the main column. */}
             </div>
           </div>
 
@@ -1828,7 +1808,21 @@ function TemplateSidebar({ data }: { data: CVData }) {
             </section>
           ) : null}
 
-          {/* Links are already listed with the contact details in the side panel. */}
+          {Object.keys(data.links || {}).length ? (
+            <section className="mt-8">
+              <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "links")}</h3>
+              <div className="mt-2 text-xs text-slate-700 space-y-1">
+                {Object.entries(data.links || {}).map(([label, url]) => (
+                  <div key={label}>
+                    <span className="font-semibold">{label}:</span>{" "}
+                    <a href={url} target="_blank" rel="noreferrer" className="text-brand-800 hover:underline">
+                      {url}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {personal.showReferences !== false && (visibleReferences(personal.references).length || personal.referencesAvailableOnRequest) ? (
             <section className="mt-8">
               <h3 data-cv-section-title className="text-sm font-semibold uppercase tracking-wide text-slate-600">{sectionTitle(data.settings, "references")}</h3>
