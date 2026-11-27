@@ -3,7 +3,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { dafpExperienceDays, dafpSector, dafpTimeSummary, formatDafpDuration } from "../src/modules/procv/dafpExperience";
 import * as docx from "docx";
-import JSZip from "jszip";
+import { inflateRawSync } from "node:zlib";
 import { buildCvDocument } from "../src/modules/procv/exportDocx";
 import { dafpFormModel } from "../src/modules/procv/dafpDocx";
 import { TemplateRenderer } from "../src/modules/procv/components/TemplateRenderer";
@@ -11,10 +11,21 @@ import { createInitialCVData } from "../src/stores/cvEditorStore";
 
 const NOW = new Date(2026, 10, 26);
 
-/** word/document.xml of a built document (jszip ships with docx). */
+/** word/document.xml of a built document, read from the .docx zip with node's zlib. */
 async function documentXml(document: InstanceType<typeof docx.Document>): Promise<string> {
-  const zip = await JSZip.loadAsync(await docx.Packer.toBuffer(document));
-  return zip.file("word/document.xml")!.async("string");
+  const zip = Buffer.from(await docx.Packer.toBuffer(document));
+  // Central directory entries (signature 0x02014b50) hold reliable sizes and offsets.
+  for (let at = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02])); at >= 0; at = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]), at - 1)) {
+    const method = zip.readUInt16LE(at + 10);
+    const size = zip.readUInt32LE(at + 20);
+    const nameLength = zip.readUInt16LE(at + 28);
+    const offset = zip.readUInt32LE(at + 42);
+    if (zip.toString("utf8", at + 46, at + 46 + nameLength) !== "word/document.xml") continue;
+    const start = offset + 30 + zip.readUInt16LE(offset + 26) + zip.readUInt16LE(offset + 28);
+    const data = zip.subarray(start, start + size);
+    return (method === 8 ? inflateRawSync(data) : data).toString("utf8");
+  }
+  throw new Error("word/document.xml not found");
 }
 
 describe("public-sector form: work experience", () => {
