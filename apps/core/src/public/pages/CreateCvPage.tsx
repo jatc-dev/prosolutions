@@ -12,7 +12,7 @@ const trim = (url: string) => url.replace(/\/+$/, "");
 const STEPS = [
   {
     title: "Elige una plantilla",
-    text: "Hay trece diseños, incluidos el formato 1003 y el de Función Pública (DAFP). Si vas a postularte por portales de empleo o a empresas grandes, empieza por una de las marcadas como compatibles con ATS: usan texto real, orden lógico y títulos estándar.",
+    text: "Hay 21 plantillas, incluidos el formato 1003 y el de Función Pública (DAFP). Todas son compatibles con ATS: usan texto real, orden lógico y títulos estándar. Si vas a postularte por portales de empleo o a empresas grandes, las más sobrias son las más seguras.",
   },
   {
     title: "Importa tu CV o empieza desde cero",

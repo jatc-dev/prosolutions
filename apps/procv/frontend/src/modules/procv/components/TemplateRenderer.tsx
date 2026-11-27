@@ -3,6 +3,7 @@ import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
 import { splitSurnames } from "../personName";
+import { dafpTimeSummary } from "../dafpExperience";
 import { TemplateChronological, TemplateStandard, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
 import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
@@ -99,6 +100,15 @@ export interface CVData {
     description?: string;
     city?: string;
     country?: string;
+    /** Still working there (no end date). */
+    current?: boolean;
+    /** Formato único (Función Pública) only; see dafpExperience.ts. */
+    dafpSector?: "public" | "private" | "independent";
+    dafpDependency?: string;
+    dafpDepartment?: string;
+    dafpAddress?: string;
+    dafpPhone?: string;
+    dafpEmail?: string;
   }>;
   education?: Array<{
     id: string;
@@ -2803,6 +2813,11 @@ function TemplateDafp({ data }: { data: CVData }) {
   const hasSplitName = Boolean(surnames.first || givenNames);
   const ineligible = value("dafpIneligible").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const signDate = formatSpanishDate(value("dafpSignDate"));
+  // Computed from the jobs' dates; lines the person typed take precedence.
+  const timeSummary = dafpTimeSummary(
+    experience.map((item) => ({ sector: item.dafpSector || "private", from: item.from, to: item.to, current: item.current })),
+    { public: value("dafpTimePublic"), private: value("dafpTimePrivate"), independent: value("dafpTimeIndependent") },
+  );
 
   return (
     <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
@@ -2887,33 +2902,47 @@ function TemplateDafp({ data }: { data: CVData }) {
 
       {experience.length ? (
         <Section title="3. Experiencia laboral">
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
-                <th className={CELL}>Empresa o entidad</th><th className={CELL}>Cargo o contrato</th><th className={CELL}>Ingreso</th><th className={CELL}>Retiro</th><th className={CELL}>Ciudad</th>
-              </tr>
-            </thead>
-            <tbody>
-              {experience.map((item) => (
-                <tr key={item.id}>
-                  <td className={`${CELL} font-semibold`}>{item.company}</td>
-                  <td className={CELL}>{item.role}</td>
-                  <td className={`${CELL} whitespace-nowrap`}>{formatMonthYear(item.from)}</td>
-                  <td className={`${CELL} whitespace-nowrap`}>{item.to ? formatMonthYear(item.to) : "Actual"}</td>
-                  <td className={CELL}>{formatLocation(item.city, item.country)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* One block per job, current first, with the fields of the official form. */}
+          {experience.map((item) => {
+            const sector = item.dafpSector || "private";
+            return (
+              <div key={item.id} data-dafp-job className="break-inside-avoid border-x border-b border-slate-300">
+                <p className="bg-slate-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600">
+                  {!item.to || item.current ? "Empleo actual o contrato vigente" : "Empleo o contrato anterior"}
+                </p>
+                <Grid>
+                  <Row label="Empresa o entidad" wide>{item.company}</Row>
+                  <Row label="Tipo de entidad">
+                    {sector === "independent" ? (
+                      "Trabajador independiente"
+                    ) : (
+                      <span className="whitespace-nowrap">Pública <CheckBox checked={sector === "public"} /> Privada <CheckBox checked={sector === "private"} /></span>
+                    )}
+                  </Row>
+                  <Row label="País">{formatCountry(item.country)}</Row>
+                  <Row label="Departamento">{item.dafpDepartment}</Row>
+                  <Row label="Municipio">{item.city}</Row>
+                  <Row label="Correo electrónico de la entidad">{item.dafpEmail}</Row>
+                  <Row label="Teléfonos">{item.dafpPhone}</Row>
+                  <Row label="Fecha de ingreso">{formatMonthYear(item.from)}</Row>
+                  <Row label="Fecha de retiro">{item.to && !item.current ? formatMonthYear(item.to) : "Actual"}</Row>
+                  <Row label="Cargo o contrato">{item.role}</Row>
+                  <Row label="Dependencia">{item.dafpDependency}</Row>
+                  <Row label="Dirección" wide>{item.dafpAddress}</Row>
+                </Grid>
+              </div>
+            );
+          })}
         </Section>
       ) : null}
 
-      {value("dafpTimePublic") || value("dafpTimePrivate") || value("dafpTimeIndependent") ? (
+      {timeSummary.public || timeSummary.private || timeSummary.independent ? (
         <Section title="4. Tiempo total de experiencia">
           <Grid>
-            <Row label="Servidor público">{value("dafpTimePublic")}</Row>
-            <Row label="Sector privado">{value("dafpTimePrivate")}</Row>
-            <Row label="Trabajador independiente" wide>{value("dafpTimeIndependent")}</Row>
+            <Row label="Servidor público">{timeSummary.public || "—"}</Row>
+            <Row label="Empleado del sector privado">{timeSummary.private || "—"}</Row>
+            <Row label="Trabajador independiente">{timeSummary.independent || "—"}</Row>
+            <Row label="Total tiempo de experiencia">{timeSummary.total}</Row>
           </Grid>
         </Section>
       ) : null}

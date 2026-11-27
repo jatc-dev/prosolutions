@@ -69,6 +69,10 @@ export const DAFP_FAQ: FaqItem[] = [
     a: "Empezando por el empleo o contrato actual (o el último) y siguiendo hacia atrás, con fechas de ingreso y retiro que coincidan con tus certificados laborales.",
   },
   {
+    q: "¿Cómo se calcula el tiempo total de experiencia?",
+    a: "Se suma el tiempo de cada empleo o contrato entre la fecha de ingreso y la de retiro, separado en servidor público, empleado del sector privado y trabajador independiente, y se expresa en años y meses. Si tuviste dos trabajos al mismo tiempo, ese periodo cuenta una sola vez. En ProCV el cálculo se hace solo con tus fechas y el tipo de entidad; si tus certificados dan otro resultado, puedes escribirlo a mano.",
+  },
+  {
     q: "¿El Formato Único de Hoja de Vida es obligatorio?",
     a: "Lo exigen las entidades públicas para vincular servidores públicos y para celebrar contratos de prestación de servicios con el Estado (Ley 190 de 1995). Cada entidad indica si debes entregarlo firmado en papel o en PDF, o registrar la misma información en el SIGEP II.",
   },

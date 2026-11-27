@@ -117,11 +117,12 @@ export const FORMAT_DAFP_GROUPS: FieldGroup[] = [
     ],
   },
   {
-    title: "Tiempo total de experiencia",
+    title: "Tiempo total de experiencia (se calcula solo)",
     fields: [
-      { key: "dafpTimePublic", label: "Como servidor público (años y meses)" },
-      { key: "dafpTimePrivate", label: "En el sector privado (años y meses)" },
-      { key: "dafpTimeIndependent", label: "Como trabajador independiente (años y meses)" },
+      // Empty = computed from the jobs' dates and sector (dafpExperience.ts).
+      { key: "dafpTimePublic", label: "Como servidor público (años y meses)", placeholder: "Automático con tus fechas" },
+      { key: "dafpTimePrivate", label: "En el sector privado (años y meses)", placeholder: "Automático con tus fechas" },
+      { key: "dafpTimeIndependent", label: "Como trabajador independiente (años y meses)", placeholder: "Automático con tus fechas" },
     ],
   },
   {
@@ -232,7 +233,7 @@ export const FormatDafpFields: React.FC<Props> = (props) => (
     {...props}
     id="formato-dafp"
     title="Datos del formato de Función Pública"
-    intro="Tu educación superior, idiomas y experiencia laboral se toman del resto del formulario. Aquí van los datos que exige el Formato Único de Hoja de Vida y que el formulario normal no tiene. Si no llenas los apellidos por separado, se usa tu nombre completo."
+    intro="Tu educación superior, idiomas y experiencia laboral se toman del resto del formulario. Aquí van los datos que exige el Formato Único de Hoja de Vida y que el formulario normal no tiene. En cada experiencia puedes indicar si la entidad es pública o privada, la dependencia y sus datos de contacto; con eso se calcula el tiempo total de experiencia."
     groups={FORMAT_DAFP_GROUPS}
   />
 );

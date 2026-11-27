@@ -32,6 +32,7 @@ import { createEmptyItem } from "./components/DraggableBlock";
 import { OPEN_CUSTOMIZER_EVENT, PreviewDesignBar } from "./components/PreviewDesignBar";
 import { personNames } from "../../personName";
 import { dafpGraduated, inferDafpModality } from "../../education";
+import { dafpSector } from "../../dafpExperience";
 import { EditorDisclosure } from "./components/EditorDisclosure";
 import { useAuthenticatedCVLoader } from "./useAuthenticatedCVLoader";
 import { useEditorLayout } from "./useEditorLayout";
@@ -384,6 +385,14 @@ export function mergeCvDataWithParsed(current: CVData, parsed: ParsedCvDraft): P
       ].filter(Boolean).join('\n'),
       city: exp.location?.split(',')[0]?.trim() || '',
       country: exp.location?.split(',')[1]?.trim() || '',
+      current: Boolean(exp.isCurrentPosition),
+      // Formato único (Función Pública) only.
+      dafpSector: dafpSector(exp),
+      dafpDependency: String(exp.dafpDependency || '').trim(),
+      dafpDepartment: String(exp.dafpDepartment || '').trim(),
+      dafpAddress: String(exp.dafpAddress || '').trim(),
+      dafpPhone: String(exp.dafpPhone || '').trim(),
+      dafpEmail: String(exp.dafpEmail || '').trim(),
     })) || [],
     education: hiddenIn(cvData, 'education') ? [] : cvData.education?.filter((edu: any) => edu.isVisible !== false).map((edu: any) => ({
       id: edu.id,
@@ -1153,6 +1162,7 @@ export const CompleteCVEditor: React.FC<CompleteCVEditorProps> = ({
           <ExperienceSection
             data={cvData.experience}
             onChange={updateExperience}
+            template={cvData.template}
             {...commonProps}
           />
         );

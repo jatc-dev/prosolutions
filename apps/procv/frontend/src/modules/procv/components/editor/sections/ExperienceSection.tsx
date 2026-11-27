@@ -14,12 +14,15 @@ import { getPrefixMatches } from "../utils/suggestions";
 import { PhraseSuggestions } from "../components/PhraseSuggestions";
 import { AiImproveField } from "../components/AiImproveField";
 import { appendPhrase } from "../../../phrases";
+import { DAFP_SECTORS, dafpSector } from "../../../dafpExperience";
 
 interface ExperienceSectionProps {
   data: ExperienceItem[];
   onChange: (data: ExperienceItem[]) => void;
   errors?: ValidationErrors;
   isLoading?: boolean;
+  /** Current template: the public-sector form data opens by itself for "dafp". */
+  template?: string;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -106,6 +109,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
   onChange,
   errors = {},
   isLoading = false,
+  template,
 }) => {
   const { t, i18n } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<string[]>(() => {
@@ -538,6 +542,65 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
                       )}
                     </FormField>
                   </div>
+
+                  {/* Extra data of the public-sector form (Formato Único, Función Pública). */}
+                  <details open={template === 'dafp'} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/40">
+                    <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200">
+                      {tx('editor.experience.dafpTitle', 'Datos para el formato de Función Pública (opcional)')}
+                    </summary>
+                    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <FormField label={tx('editor.experience.dafpSector', 'Tipo de entidad')}>
+                        <select
+                          value={experience.dafpSector || ''}
+                          onChange={(e) => updateExperience(experience.id, { dafpSector: e.target.value })}
+                          className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="">{`${tx('editor.experience.dafpSectorAuto', 'Según el tipo de empleo')}: ${DAFP_SECTORS.find((option) => option.value === dafpSector({ employmentType: experience.employmentType }))?.label}`}</option>
+                          {DAFP_SECTORS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                        </select>
+                      </FormField>
+                      <FormField label={tx('editor.experience.dafpDependency', 'Dependencia o área')}>
+                        <InputField
+                          value={experience.dafpDependency || ''}
+                          onChange={(value) => updateExperience(experience.id, { dafpDependency: value })}
+                          placeholder="Ej.: Secretaría de Hacienda"
+                        />
+                      </FormField>
+                      <FormField label={tx('editor.experience.dafpDepartment', 'Departamento')}>
+                        <InputField
+                          value={experience.dafpDepartment || ''}
+                          onChange={(value) => updateExperience(experience.id, { dafpDepartment: value })}
+                          placeholder="Ej.: Antioquia"
+                        />
+                      </FormField>
+                      <FormField label={tx('editor.experience.dafpAddress', 'Dirección de la entidad')}>
+                        <InputField
+                          value={experience.dafpAddress || ''}
+                          onChange={(value) => updateExperience(experience.id, { dafpAddress: value })}
+                          placeholder="Ej.: Calle 44 # 52-165"
+                        />
+                      </FormField>
+                      <FormField label={tx('editor.experience.dafpPhone', 'Teléfono de la entidad')}>
+                        <InputField
+                          type="tel"
+                          value={experience.dafpPhone || ''}
+                          onChange={(value) => updateExperience(experience.id, { dafpPhone: value })}
+                          placeholder="Ej.: 604 385 5555"
+                        />
+                      </FormField>
+                      <FormField label={tx('editor.experience.dafpEmail', 'Correo electrónico de la entidad')}>
+                        <InputField
+                          type="email"
+                          value={experience.dafpEmail || ''}
+                          onChange={(value) => updateExperience(experience.id, { dafpEmail: value })}
+                          placeholder="Ej.: contacto@entidad.gov.co"
+                        />
+                      </FormField>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                      {tx('editor.experience.dafpHint', 'Solo aparecen en el formato de Función Pública. El municipio y el país salen de «Ubicación» y el tiempo total de experiencia se calcula con las fechas.')}
+                    </p>
+                  </details>
 
                   {/* Description */}
                   <FormField
