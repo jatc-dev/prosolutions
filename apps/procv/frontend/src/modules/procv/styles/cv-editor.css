@@ -536,6 +536,13 @@
   padding-bottom: var(--pdf-page-top-gap, 32px) !important;
 }
 
+/* Section bars of the official forms (1003, Función Pública): same shift, or
+   the title sits on the bar's bottom border in the PDF. */
+.cv-pdf-export .cv-form-heading {
+  padding-top: 0.0625rem !important;
+  padding-bottom: 0.4375rem !important;
+}
+
 /* Developer template contact boxes: html2canvas draws text a few pixels
    lower than the browser, so in the PDF the text sat on the bottom border.
    Shift the padding to keep it visually centred in the exported file. */

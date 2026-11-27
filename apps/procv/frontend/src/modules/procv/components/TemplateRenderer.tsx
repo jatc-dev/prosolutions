@@ -376,7 +376,7 @@ export function formatRange(from?: string, to?: string) {
   return `${formatMonthYear(from)} – ${formatMonthYear(to)}`;
 }
 
-function formatCountry(value?: string) {
+export function formatCountry(value?: string) {
   const country = String(value || "").trim();
   if (!country) return "";
   if (/^[A-Z]{2}$/.test(country)) {
@@ -416,7 +416,7 @@ export function renderNationality(personal: CVData["personal"], textColor?: stri
   );
 }
 
-function formatBirthDate(value?: string) {
+export function formatBirthDate(value?: string) {
   if (!value) return "";
   const raw = String(value).trim();
   if (!raw) return "";
@@ -2527,7 +2527,7 @@ function Format1003Row({ label, children, wide = false }: { label: string; child
 function Format1003Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-4 break-inside-avoid">
-      <h2 className="border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
+      <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
       {children}
     </section>
   );
@@ -2764,7 +2764,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
 }
 
 /** CEFR level → the three levels of the public-sector form. */
-function dafpLanguageLevel(level?: string): string {
+export function dafpLanguageLevel(level?: string): string {
   const value = String(level || "").toUpperCase();
   if (value.startsWith("C")) return "Muy bien";
   if (value.startsWith("B")) return "Bien";
@@ -2781,7 +2781,13 @@ function dafpLanguageLevel(level?: string): string {
 /** Square box of the official form, marked with an X when checked. */
 function CheckBox({ checked }: { checked: boolean }) {
   return (
-    <span className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px] text-[9px] leading-none">{checked ? "X" : ""}</span>
+    // Drawn X (not a letter): the PDF renderer places text a few pixels lower
+    // than the browser, which pushed a typed "X" out of the box.
+    <span role="img" aria-label={checked ? "marcado" : "sin marcar"} className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px]">
+      {checked ? (
+        <svg viewBox="0 0 10 10" className="h-2 w-2" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.6" /></svg>
+      ) : null}
+    </span>
   );
 }
 
@@ -2793,13 +2799,37 @@ function formatSpanishDate(value: string): string {
   return `${Number(match[3])} de ${SPANISH_MONTHS[Number(match[2]) - 1] ?? ""} de ${match[1]}`;
 }
 
+/**
+ * A box of the official form. Unlike the 1003 rows, an empty box is still
+ * drawn (as on the paper form), so every grid keeps its two columns and all
+ * its lines.
+ */
+function DafpRow({ label, children, wide = false }: { label: string; children?: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className={`border-b border-r border-slate-300 px-2 py-1.5 ${wide ? "col-span-2" : ""}`}>
+      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-0.5 min-h-[1rem] whitespace-pre-wrap break-words text-[11px] leading-4 text-slate-900">{children || " "}</div>
+    </div>
+  );
+}
+
+/** Section of the form; `keep` moves it whole to the next PDF page instead of splitting it. */
+function DafpSection({ title, children, keep = false }: { title: string; children: React.ReactNode; keep?: boolean }) {
+  return (
+    <section className="mt-4 break-inside-avoid" {...(keep ? { "data-cv-item": "" } : {})}>
+      <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
 function TemplateDafp({ data }: { data: CVData }) {
   const app = data.application || {};
   const personal = data.personal || {};
   const value = (key: string) => String(app[key] || "").trim();
-  const Row = Format1003Row;
+  const Row = DafpRow;
   const Grid = Format1003Grid;
-  const Section = Format1003Section;
+  const Section = DafpSection;
   const emails = normalizeContactItems(personal.emails).map((item) => item.value).filter(Boolean);
   const phones = normalizeContactItems(personal.phones).map((item) => item.value).filter(Boolean);
   const education = data.education || [];
@@ -2827,7 +2857,7 @@ function TemplateDafp({ data }: { data: CVData }) {
         <p className="text-[11px] text-slate-600">Leyes 190 de 1995, 489 y 443 de 1998</p>
       </header>
 
-      <Format1003Section title="1. Datos personales">
+      <Section title="1. Datos personales">
         <Grid>
           {hasSplitName ? (
             <>
@@ -2848,7 +2878,7 @@ function TemplateDafp({ data }: { data: CVData }) {
           <Row label="Teléfono">{phones.join(" · ")}</Row>
           <Row label="Correo electrónico">{emails.join(" · ")}</Row>
         </Grid>
-      </Format1003Section>
+      </Section>
 
       <Section title="2. Formación académica">
         {value("dafpLastGrade") || value("dafpSchoolTitle") ? (
@@ -2901,13 +2931,16 @@ function TemplateDafp({ data }: { data: CVData }) {
       </Section>
 
       {experience.length ? (
-        <Section title="3. Experiencia laboral">
-          {/* One block per job, current first, with the fields of the official form. */}
-          {experience.map((item) => {
+        <section className="mt-4">
+          {/* One block per job, current first, with the fields of the official
+              form. Each job stays on one PDF page (data-cv-item), and the
+              section title travels with the first one. */}
+          {experience.map((item, index) => {
             const sector = item.dafpSector || "private";
             return (
-              <div key={item.id} data-dafp-job className="break-inside-avoid border-x border-b border-slate-300">
-                <p className="bg-slate-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600">
+              <div key={item.id} data-cv-item data-dafp-job className="break-inside-avoid">
+                {index === 0 ? <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">3. Experiencia laboral</h2> : null}
+                <p className={`border-x border-b border-slate-300 bg-slate-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600 ${index > 0 ? "mt-2 border-t" : ""}`}>
                   {!item.to || item.current ? "Empleo actual o contrato vigente" : "Empleo o contrato anterior"}
                 </p>
                 <Grid>
@@ -2933,11 +2966,11 @@ function TemplateDafp({ data }: { data: CVData }) {
               </div>
             );
           })}
-        </Section>
+        </section>
       ) : null}
 
       {timeSummary.public || timeSummary.private || timeSummary.independent ? (
-        <Section title="4. Tiempo total de experiencia">
+        <Section title="4. Tiempo total de experiencia" keep>
           <Grid>
             <Row label="Servidor público">{timeSummary.public || "—"}</Row>
             <Row label="Empleado del sector privado">{timeSummary.private || "—"}</Row>
@@ -2947,7 +2980,7 @@ function TemplateDafp({ data }: { data: CVData }) {
         </Section>
       ) : null}
 
-      <Section title="5. Firma del servidor público o contratista">
+      <Section title="5. Firma del servidor público o contratista" keep>
         <p className="border-x border-b border-slate-300 px-2 py-2 text-[10px] leading-4">
           Manifiesto bajo la gravedad del juramento que{" "}
           <span className="whitespace-nowrap font-semibold">

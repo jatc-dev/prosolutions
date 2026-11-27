@@ -47,7 +47,8 @@ describe("Función Pública (DAFP) template", () => {
     expect(screen.getByText("Bien")).toBeTruthy(); // B2 → "Bien"
     // Official yes/no boxes: only "NO" is marked.
     const declaration = screen.getByText(/bajo la gravedad del juramento/);
-    expect(declaration.textContent?.replace(/\s+/g, " ")).toMatch(/SÍ\s*NO\s*X/);
+    const boxes = Array.from(declaration.querySelectorAll("[role='img']")).map((box) => box.getAttribute("aria-label"));
+    expect(boxes).toEqual(["sin marcar", "marcado"]);
     expect(container.textContent).toContain("Facatativá, 20 de noviembre de 2026");
     // The supplemental references block is not appended to official forms.
     expect(screen.queryByText(/disponibles a solicitud/)).toBeNull();

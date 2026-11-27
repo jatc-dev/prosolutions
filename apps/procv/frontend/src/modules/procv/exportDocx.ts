@@ -4,9 +4,7 @@ import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
 import { sectionTitle } from "./sectionTitles";
 import { pageColorFor } from "./pageColor";
 import { educationTitle } from "./education";
-import { dafpSector, dafpTimeSummary } from "./dafpExperience";
-
-const DAFP_SECTOR_TEXT = { public: "Entidad pública", private: "Entidad privada", independent: "Trabajador independiente" } as const;
+import { buildDafpDocument } from "./dafpDocx";
 import { getLocalizedDegreeLabel } from "./components/TemplateRenderer";
 import { groupReferences, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences } from "./references";
 
@@ -58,45 +56,15 @@ export function cvDocxContent(cv: CVData): { name: string; headline: string; con
   }
   const experience = visible(cv.experience);
   if (experience.length) {
-    // The public-sector form also asks for the entity's sector, office and
-    // contact data, and the total time per sector.
-    const dafp = cv.template === "dafp";
-    const app = (cv.application || {}) as Record<string, string>;
-    const time = dafp
-      ? dafpTimeSummary(
-          experience.map((item) => ({ sector: dafpSector(item), from: item.startDate, to: item.endDate, current: item.isCurrentPosition })),
-          { public: app.dafpTimePublic, private: app.dafpTimePrivate, independent: app.dafpTimeIndependent },
-        )
-      : null;
     sections.push({
       key: "experience",
       heading: sectionTitle(cv.settings, "experience"),
-      blocks: [
-        ...experience.map((item) => ({
-          title: [item.position, item.company].filter(Boolean).join(" — "),
-          subtitle: [
-            period(item.startDate, item.endDate, item.isCurrentPosition),
-            item.location,
-            ...(dafp ? [DAFP_SECTOR_TEXT[dafpSector(item)], item.dafpDepartment, item.dafpDependency] : []),
-          ].map((part) => String(part || "").trim()).filter(Boolean).join(" · "),
-          text: [
-            item.description?.trim(),
-            dafp ? [item.dafpAddress, item.dafpPhone, item.dafpEmail].map((part) => String(part || "").trim()).filter(Boolean).join(" · ") : "",
-          ].filter(Boolean).join("\n") || undefined,
-          bullets: (item.achievements ?? []).map((achievement) => achievement.trim()).filter(Boolean),
-        })),
-        ...(time && (time.public || time.private || time.independent)
-          ? [{
-              title: "Tiempo total de experiencia",
-              bullets: [
-                `Servidor público: ${time.public || "—"}`,
-                `Empleado del sector privado: ${time.private || "—"}`,
-                `Trabajador independiente: ${time.independent || "—"}`,
-                ...(time.total ? [`Total: ${time.total}`] : []),
-              ],
-            }]
-          : []),
-      ],
+      blocks: experience.map((item) => ({
+        title: [item.position, item.company].filter(Boolean).join(" — "),
+        subtitle: [period(item.startDate, item.endDate, item.isCurrentPosition), item.location].filter(Boolean).join(" · "),
+        text: item.description?.trim() || undefined,
+        bullets: (item.achievements ?? []).map((achievement) => achievement.trim()).filter(Boolean),
+      })),
     });
   }
   const education = visible(cv.education);
@@ -336,6 +304,8 @@ async function loadPhoto(source?: string): Promise<{ data: Uint8Array; type: "pn
 
 /** Builds the CV as a docx Document styled like its template. */
 export async function buildCvDocument(cv: CVData, docx: Docx) {
+  // The public-sector form is drawn as the official bordered form, not as a CV.
+  if (cv.template === "dafp") return buildDafpDocument(cv, docx);
   const { AlignmentType, BorderStyle, Document, HeightRule, ImageRun, Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, WidthType } = docx;
   const content = cvDocxContent(cv);
   const theme = docxTheme(cv.template, cv.settings);
