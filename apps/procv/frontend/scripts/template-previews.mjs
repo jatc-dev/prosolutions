@@ -45,6 +45,8 @@ const sample = (template) => ({
     {
       id: "x1", company: "Alcaldía Local de Suba", position: "Auxiliar administrativa", location: "Bogotá", startDate: "2022-02", endDate: "", isCurrentPosition: true,
       description: "Gestión documental y atención al ciudadano en ventanilla.\n• Digitalicé 3.000 expedientes en seis meses.\n• Reduje en 30 % el tiempo de respuesta a solicitudes.", order: 0, isVisible: true,
+      // Only the public-sector form (dafp) shows these.
+      dafpSector: "public", dafpDepartment: "Bogotá D. C.", dafpDependency: "Área de gestión documental", dafpAddress: "Calle 146C Bis # 90-57", dafpPhone: "601 662 5021",
     },
     {
       id: "x2", company: "Hotel Andino", position: "Recepcionista", location: "Bogotá", startDate: "2019-03", endDate: "2022-01", isCurrentPosition: false,

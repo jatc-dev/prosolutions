@@ -3,6 +3,7 @@ import i18n from "../../../shared/i18n";
 import { type ContactKind, type ContactLabelStyle } from "../contactLabels";
 import { sectionTitle, type SectionTitleKey } from "../sectionTitles";
 import { splitSurnames } from "../personName";
+import { dafpTimeSummary } from "../dafpExperience";
 import { TemplateChronological, TemplateStandard, TemplateElegant, TemplateEuropean, TemplateFirstJob, TemplateFunctional, TemplateHarvard, TemplateModern, TemplateTwoColumn } from "./extraTemplates";
 import { groupReferences, normalizeReferenceType, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences, type ReferenceLike } from "../references";
 
@@ -99,6 +100,15 @@ export interface CVData {
     description?: string;
     city?: string;
     country?: string;
+    /** Still working there (no end date). */
+    current?: boolean;
+    /** Formato único (Función Pública) only; see dafpExperience.ts. */
+    dafpSector?: "public" | "private" | "independent";
+    dafpDependency?: string;
+    dafpDepartment?: string;
+    dafpAddress?: string;
+    dafpPhone?: string;
+    dafpEmail?: string;
   }>;
   education?: Array<{
     id: string;
@@ -366,7 +376,7 @@ export function formatRange(from?: string, to?: string) {
   return `${formatMonthYear(from)} – ${formatMonthYear(to)}`;
 }
 
-function formatCountry(value?: string) {
+export function formatCountry(value?: string) {
   const country = String(value || "").trim();
   if (!country) return "";
   if (/^[A-Z]{2}$/.test(country)) {
@@ -406,7 +416,7 @@ export function renderNationality(personal: CVData["personal"], textColor?: stri
   );
 }
 
-function formatBirthDate(value?: string) {
+export function formatBirthDate(value?: string) {
   if (!value) return "";
   const raw = String(value).trim();
   if (!raw) return "";
@@ -2517,7 +2527,7 @@ function Format1003Row({ label, children, wide = false }: { label: string; child
 function Format1003Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-4 break-inside-avoid">
-      <h2 className="border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
+      <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
       {children}
     </section>
   );
@@ -2754,7 +2764,7 @@ function TemplateEmploymentApplication({ data }: { data: CVData }) {
 }
 
 /** CEFR level → the three levels of the public-sector form. */
-function dafpLanguageLevel(level?: string): string {
+export function dafpLanguageLevel(level?: string): string {
   const value = String(level || "").toUpperCase();
   if (value.startsWith("C")) return "Muy bien";
   if (value.startsWith("B")) return "Bien";
@@ -2771,7 +2781,13 @@ function dafpLanguageLevel(level?: string): string {
 /** Square box of the official form, marked with an X when checked. */
 function CheckBox({ checked }: { checked: boolean }) {
   return (
-    <span className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px] text-[9px] leading-none">{checked ? "X" : ""}</span>
+    // Drawn X (not a letter): the PDF renderer places text a few pixels lower
+    // than the browser, which pushed a typed "X" out of the box.
+    <span role="img" aria-label={checked ? "marcado" : "sin marcar"} className="mx-0.5 inline-flex h-3 w-3 items-center justify-center border border-slate-800 align-[-2px]">
+      {checked ? (
+        <svg viewBox="0 0 10 10" className="h-2 w-2" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.6" /></svg>
+      ) : null}
+    </span>
   );
 }
 
@@ -2783,13 +2799,37 @@ function formatSpanishDate(value: string): string {
   return `${Number(match[3])} de ${SPANISH_MONTHS[Number(match[2]) - 1] ?? ""} de ${match[1]}`;
 }
 
+/**
+ * A box of the official form. Unlike the 1003 rows, an empty box is still
+ * drawn (as on the paper form), so every grid keeps its two columns and all
+ * its lines.
+ */
+function DafpRow({ label, children, wide = false }: { label: string; children?: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className={`border-b border-r border-slate-300 px-2 py-1.5 ${wide ? "col-span-2" : ""}`}>
+      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-0.5 min-h-[1rem] whitespace-pre-wrap break-words text-[11px] leading-4 text-slate-900">{children || " "}</div>
+    </div>
+  );
+}
+
+/** Section of the form; `keep` moves it whole to the next PDF page instead of splitting it. */
+function DafpSection({ title, children, keep = false }: { title: string; children: React.ReactNode; keep?: boolean }) {
+  return (
+    <section className="mt-4 break-inside-avoid" {...(keep ? { "data-cv-item": "" } : {})}>
+      <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
 function TemplateDafp({ data }: { data: CVData }) {
   const app = data.application || {};
   const personal = data.personal || {};
   const value = (key: string) => String(app[key] || "").trim();
-  const Row = Format1003Row;
+  const Row = DafpRow;
   const Grid = Format1003Grid;
-  const Section = Format1003Section;
+  const Section = DafpSection;
   const emails = normalizeContactItems(personal.emails).map((item) => item.value).filter(Boolean);
   const phones = normalizeContactItems(personal.phones).map((item) => item.value).filter(Boolean);
   const education = data.education || [];
@@ -2803,6 +2843,11 @@ function TemplateDafp({ data }: { data: CVData }) {
   const hasSplitName = Boolean(surnames.first || givenNames);
   const ineligible = value("dafpIneligible").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const signDate = formatSpanishDate(value("dafpSignDate"));
+  // Computed from the jobs' dates; lines the person typed take precedence.
+  const timeSummary = dafpTimeSummary(
+    experience.map((item) => ({ sector: item.dafpSector || "private", from: item.from, to: item.to, current: item.current })),
+    { public: value("dafpTimePublic"), private: value("dafpTimePrivate"), independent: value("dafpTimeIndependent") },
+  );
 
   return (
     <article className="mx-auto max-w-[794px] bg-white p-7 text-slate-900 shadow-sm" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
@@ -2812,7 +2857,7 @@ function TemplateDafp({ data }: { data: CVData }) {
         <p className="text-[11px] text-slate-600">Leyes 190 de 1995, 489 y 443 de 1998</p>
       </header>
 
-      <Format1003Section title="1. Datos personales">
+      <Section title="1. Datos personales">
         <Grid>
           {hasSplitName ? (
             <>
@@ -2833,7 +2878,7 @@ function TemplateDafp({ data }: { data: CVData }) {
           <Row label="Teléfono">{phones.join(" · ")}</Row>
           <Row label="Correo electrónico">{emails.join(" · ")}</Row>
         </Grid>
-      </Format1003Section>
+      </Section>
 
       <Section title="2. Formación académica">
         {value("dafpLastGrade") || value("dafpSchoolTitle") ? (
@@ -2886,39 +2931,56 @@ function TemplateDafp({ data }: { data: CVData }) {
       </Section>
 
       {experience.length ? (
-        <Section title="3. Experiencia laboral">
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-slate-50 text-left text-[9px] uppercase text-slate-500">
-                <th className={CELL}>Empresa o entidad</th><th className={CELL}>Cargo o contrato</th><th className={CELL}>Ingreso</th><th className={CELL}>Retiro</th><th className={CELL}>Ciudad</th>
-              </tr>
-            </thead>
-            <tbody>
-              {experience.map((item) => (
-                <tr key={item.id}>
-                  <td className={`${CELL} font-semibold`}>{item.company}</td>
-                  <td className={CELL}>{item.role}</td>
-                  <td className={`${CELL} whitespace-nowrap`}>{formatMonthYear(item.from)}</td>
-                  <td className={`${CELL} whitespace-nowrap`}>{item.to ? formatMonthYear(item.to) : "Actual"}</td>
-                  <td className={CELL}>{formatLocation(item.city, item.country)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Section>
+        <section className="mt-4">
+          {/* One block per job, current first, with the fields of the official
+              form. Each job stays on one PDF page (data-cv-item), and the
+              section title travels with the first one. */}
+          {experience.map((item, index) => {
+            const sector = item.dafpSector || "private";
+            return (
+              <div key={item.id} data-cv-item data-dafp-job className="break-inside-avoid">
+                {index === 0 ? <h2 className="cv-form-heading border border-slate-400 bg-slate-200 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-800">3. Experiencia laboral</h2> : null}
+                <p className={`border-x border-b border-slate-300 bg-slate-50 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-600 ${index > 0 ? "mt-2 border-t" : ""}`}>
+                  {!item.to || item.current ? "Empleo actual o contrato vigente" : "Empleo o contrato anterior"}
+                </p>
+                <Grid>
+                  <Row label="Empresa o entidad" wide>{item.company}</Row>
+                  <Row label="Tipo de entidad">
+                    {sector === "independent" ? (
+                      "Trabajador independiente"
+                    ) : (
+                      <span className="whitespace-nowrap">Pública <CheckBox checked={sector === "public"} /> Privada <CheckBox checked={sector === "private"} /></span>
+                    )}
+                  </Row>
+                  <Row label="País">{formatCountry(item.country)}</Row>
+                  <Row label="Departamento">{item.dafpDepartment}</Row>
+                  <Row label="Municipio">{item.city}</Row>
+                  <Row label="Correo electrónico de la entidad">{item.dafpEmail}</Row>
+                  <Row label="Teléfonos">{item.dafpPhone}</Row>
+                  <Row label="Fecha de ingreso">{formatMonthYear(item.from)}</Row>
+                  <Row label="Fecha de retiro">{item.to && !item.current ? formatMonthYear(item.to) : "Actual"}</Row>
+                  <Row label="Cargo o contrato">{item.role}</Row>
+                  <Row label="Dependencia">{item.dafpDependency}</Row>
+                  <Row label="Dirección" wide>{item.dafpAddress}</Row>
+                </Grid>
+              </div>
+            );
+          })}
+        </section>
       ) : null}
 
-      {value("dafpTimePublic") || value("dafpTimePrivate") || value("dafpTimeIndependent") ? (
-        <Section title="4. Tiempo total de experiencia">
+      {timeSummary.public || timeSummary.private || timeSummary.independent ? (
+        <Section title="4. Tiempo total de experiencia" keep>
           <Grid>
-            <Row label="Servidor público">{value("dafpTimePublic")}</Row>
-            <Row label="Sector privado">{value("dafpTimePrivate")}</Row>
-            <Row label="Trabajador independiente" wide>{value("dafpTimeIndependent")}</Row>
+            <Row label="Servidor público">{timeSummary.public || "—"}</Row>
+            <Row label="Empleado del sector privado">{timeSummary.private || "—"}</Row>
+            <Row label="Trabajador independiente">{timeSummary.independent || "—"}</Row>
+            <Row label="Total tiempo de experiencia">{timeSummary.total}</Row>
           </Grid>
         </Section>
       ) : null}
 
-      <Section title="5. Firma del servidor público o contratista">
+      <Section title="5. Firma del servidor público o contratista" keep>
         <p className="border-x border-b border-slate-300 px-2 py-2 text-[10px] leading-4">
           Manifiesto bajo la gravedad del juramento que{" "}
           <span className="whitespace-nowrap font-semibold">

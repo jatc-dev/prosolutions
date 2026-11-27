@@ -151,6 +151,16 @@ export interface ExperienceItem {
   achievements: string[];
   technologies: string[];
   order: number;
+  /** Formato único (Función Pública): sector; empty = from the employment type (see dafpExperience.ts). */
+  dafpSector?: string;
+  /** Formato único: area or office ("dependencia") of the entity. */
+  dafpDependency?: string;
+  /** Formato único: department (Colombian administrative region) of the entity. */
+  dafpDepartment?: string;
+  /** Formato único: entity's address, phone and e-mail. */
+  dafpAddress?: string;
+  dafpPhone?: string;
+  dafpEmail?: string;
 }
 
 // ==============================================

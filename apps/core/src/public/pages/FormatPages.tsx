@@ -187,11 +187,11 @@ export function DafpFormatPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold">3. Experiencia laboral</h3>
-            <p className="mt-1 text-ui-muted">Cada empleo o contrato, empezando por el actual: empresa o entidad, cargo o contrato, ciudad y fechas de ingreso y retiro, que ProCV toma de tu experiencia. El formato oficial también pide si la entidad es pública o privada, la dependencia y sus datos de contacto.</p>
+            <p className="mt-1 text-ui-muted">Cada empleo o contrato, empezando por el actual: empresa o entidad, si es pública o privada, país, departamento y municipio, correo y teléfonos de la entidad, fechas de ingreso y retiro, cargo o contrato, dependencia y dirección. En ProCV, el cargo, la empresa, la ubicación y las fechas salen de tu experiencia; en cada empleo, abre «Datos para el formato de Función Pública» para indicar el tipo de entidad, la dependencia y los datos de contacto.</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold">4. Tiempo total de experiencia</h3>
-            <p className="mt-1 text-ui-muted">El resumen del tiempo trabajado como servidor público, como empleado del sector privado y como trabajador independiente, y el total. Sale de las fechas de la sección anterior, así que revisa que coincidan con tus certificados.</p>
+            <p className="mt-1 text-ui-muted">El resumen del tiempo trabajado como servidor público, como empleado del sector privado y como trabajador independiente, y el total. ProCV lo calcula solo con las fechas y el tipo de entidad de cada empleo, y cuenta una sola vez los periodos en que tuviste dos trabajos a la vez. Si tus certificados dicen otra cosa, puedes escribir el tiempo a mano.</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold">5. Firma del servidor público o contratista</h3>

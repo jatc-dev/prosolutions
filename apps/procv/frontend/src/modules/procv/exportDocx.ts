@@ -4,6 +4,7 @@ import { normalizeCvFont, normalizeFontScale, TEMPLATE_FONT } from "./fonts";
 import { sectionTitle } from "./sectionTitles";
 import { pageColorFor } from "./pageColor";
 import { educationTitle } from "./education";
+import { buildDafpDocument } from "./dafpDocx";
 import { getLocalizedDegreeLabel } from "./components/TemplateRenderer";
 import { groupReferences, referenceContact, referenceDetails, referenceName, REFERENCE_TYPE_LABELS, REFERENCES_ON_REQUEST_TEXT, visibleReferences } from "./references";
 
@@ -303,6 +304,8 @@ async function loadPhoto(source?: string): Promise<{ data: Uint8Array; type: "pn
 
 /** Builds the CV as a docx Document styled like its template. */
 export async function buildCvDocument(cv: CVData, docx: Docx) {
+  // The public-sector form is drawn as the official bordered form, not as a CV.
+  if (cv.template === "dafp") return buildDafpDocument(cv, docx);
   const { AlignmentType, BorderStyle, Document, HeightRule, ImageRun, Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, WidthType } = docx;
   const content = cvDocxContent(cv);
   const theme = docxTheme(cv.template, cv.settings);
